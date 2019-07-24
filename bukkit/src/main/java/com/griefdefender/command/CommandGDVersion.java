@@ -47,16 +47,10 @@ public class CommandGDVersion extends BaseCommand {
     @Subcommand("version")
     public void execute(CommandSender src) {
 
-        String version = GriefDefenderPlugin.IMPLEMENTATION_VERSION;
-        if (version == null) {
-            version = "unknown";
-        }
-
         Component gpVersion = TextComponent.builder("")
                 .append(GriefDefenderPlugin.GD_TEXT)
                 .append("Running ")
-                // TODO : Use version from manifest
-                .append("GriefDefender " + GriefDefenderPlugin.VERSION, TextColor.AQUA)
+                .append("GriefDefender " + GriefDefenderPlugin.IMPLEMENTATION_VERSION, TextColor.AQUA)
                 .build();
         Component bukkitVersion = TextComponent.builder("")
                 .append(GriefDefenderPlugin.GD_TEXT)

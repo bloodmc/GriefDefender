@@ -131,6 +131,7 @@ public class GDClaim implements Claim {
     private UUID ownerUniqueId;
 
     public boolean cuboid = false;
+    public boolean markVisualDirty = false;
 
     protected ClaimStorageData claimStorage;
     protected IClaimData claimData;
@@ -243,8 +244,9 @@ public class GDClaim implements Claim {
     }
 
     public ClaimVisual getVisualizer() {
-        if (this.claimVisual == null) {
+        if (this.claimVisual == null || this.markVisualDirty) {
             this.claimVisual = new ClaimVisual(this, ClaimVisual.getClaimVisualType(this));
+            this.markVisualDirty = false;
         }
         return this.claimVisual;
     }

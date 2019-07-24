@@ -526,6 +526,8 @@ public class BlockEventHandler implements Listener {
                 GriefDefenderPlugin.sendClaimDenyMessage(targetClaim, player, message);
             }
             event.setCancelled(true);
+        } else {
+            targetClaim.markVisualDirty = true;
         }
 
         GDTimings.BLOCK_BREAK_EVENT.stopTiming();

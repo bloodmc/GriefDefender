@@ -180,8 +180,9 @@ public class GDPlayerData implements PlayerData {
             this.visualRevertTask = null;
         }
 
+        GDClaim claim = null;
         if (this.visualClaimId != null) {
-            GDClaim claim = (GDClaim) GriefDefenderPlugin.getInstance().dataStore.getClaim(this.worldUniqueId, this.visualClaimId);
+            claim = (GDClaim) GriefDefenderPlugin.getInstance().dataStore.getClaim(this.worldUniqueId, this.visualClaimId);
             if (claim != null) {
                 claim.playersWatching.remove(this.playerID);
             }
@@ -193,6 +194,13 @@ public class GDPlayerData implements PlayerData {
 
         for (int i = 0; i < this.visualBlocks.size(); i++) {
             BlockSnapshot snapshot = this.visualBlocks.get(i).getOriginal();
+            // If original block does not exist, do not send to player
+            if (NMSUtil.getInstance().getBlockData(snapshot.getLocation().getBlock()) != snapshot.getState()) {
+                if (claim != null) {
+                    claim.markVisualDirty = true;
+                }
+                continue;
+            }
             NMSUtil.getInstance().sendBlockChange(player, snapshot);
         }
     }

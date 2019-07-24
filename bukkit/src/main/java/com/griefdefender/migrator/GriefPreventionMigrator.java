@@ -76,6 +76,10 @@ public class GriefPreventionMigrator {
                         int claimId = Integer.parseInt(file.getName().replaceFirst("[.][^.]+$", ""));
                         idToUUID.put(claimId, UUID.randomUUID());
                     } catch (NumberFormatException e) {
+                        if (file.getName().equalsIgnoreCase("_nextClaimID")) {
+                            // GP keeps track of next claim ID in this file so we can safely ignore the exception
+                            continue;
+                        }
                         e.printStackTrace();
                         continue;
                     }

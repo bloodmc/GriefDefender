@@ -189,15 +189,14 @@ public class GriefDefenderPlugin {
     public static final String MOD_ID = "GriefDefender";
     public static final String API_VERSION = GriefDefenderPlugin.class.getPackage().getSpecificationVersion();
     public static final String IMPLEMENTATION_NAME = GriefDefenderPlugin.class.getPackage().getImplementationTitle();
-    public static final String IMPLEMENTATION_VERSION =  GriefDefenderPlugin.class.getPackage().getImplementationVersion();
-    public static String VERSION = "1.0.0";
+    public static final String IMPLEMENTATION_VERSION =  GriefDefenderPlugin.class.getPackage().getImplementationVersion() == null ? "unknown" : GriefDefenderPlugin.class.getPackage().getImplementationVersion();
     private Path configPath = Paths.get(".", "plugins", "GriefDefender");
     public MessageStorage messageStorage;
     public MessageDataConfig messageData;
     public Map<UUID, Random> worldGeneratorRandoms = new HashMap<>();
     public static ClaimBlockSystem CLAIM_BLOCK_SYSTEM;
 
-    public static final String CONFIG_HEADER = "1.0.0\n"
+    public static final String CONFIG_HEADER = IMPLEMENTATION_VERSION + "\n"
             + "# If you need help with the configuration or have any issues related to GriefDefender,\n"
             + "# create a ticket on https://github.com/bloodmc/GriefDefender/issues.\n"
             + "# Note: If you have not purchased GriefDefender, please consider doing so to get \n"
