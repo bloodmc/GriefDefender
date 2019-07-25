@@ -1,0 +1,3 @@
+[submodule "GriefDefenderAPI"]
+	path = GriefDefenderAPI
+	url = https://github.com/bloodmc/GriefDefenderAPI.git
