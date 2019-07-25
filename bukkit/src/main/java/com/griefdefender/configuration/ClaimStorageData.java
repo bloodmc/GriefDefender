@@ -161,7 +161,22 @@ public class ClaimStorageData {
                 this.configMapper = (ObjectMapper.BoundInstance) ObjectMapper.forClass(ClaimDataConfig.class).bindToNew();
             }
             this.configMapper.getInstance().setClaimStorageData(this);
-            reload();
+            try {
+                this.root = this.loader.load(ConfigurationOptions.defaults());
+                CommentedConfigurationNode rootNode = this.root.getNode(GriefDefenderPlugin.MOD_ID);
+                // Check if server is using existing Sponge GP data
+                if (rootNode.isVirtual()) {
+                    // check GriefPrevention
+                    CommentedConfigurationNode gpRootNode = this.root.getNode("GriefPrevention");
+                    if (!gpRootNode.isVirtual()) {
+                        rootNode.setValue(gpRootNode.getValue());
+                        gpRootNode.setValue(null);
+                    }
+                }
+                this.configBase = this.configMapper.populate(rootNode);
+            } catch (Exception e) {
+                GriefDefenderPlugin.getInstance().getLogger().log(Level.SEVERE, "Failed to load configuration", e);
+            }
             ((EconomyDataConfig) this.configMapper.getInstance().getEconomyData()).activeConfig = GriefDefenderPlugin.getActiveConfig(worldUniqueId);
         } catch (Exception e) {
             GriefDefenderPlugin.getInstance().getLogger().log(Level.SEVERE, "Failed to initialize configuration", e);

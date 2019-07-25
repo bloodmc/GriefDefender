@@ -62,6 +62,7 @@ import com.griefdefender.command.CommandClaimFlag;
 import com.griefdefender.command.CommandClaimFlagDebug;
 import com.griefdefender.command.CommandClaimFlagGroup;
 import com.griefdefender.command.CommandClaimFlagPlayer;
+import com.griefdefender.command.CommandClaimFlagReset;
 import com.griefdefender.command.CommandClaimGreeting;
 import com.griefdefender.command.CommandClaimIgnore;
 import com.griefdefender.command.CommandClaimInfo;
@@ -531,6 +532,7 @@ public class GriefDefenderPlugin {
         manager.registerCommand(new CommandClaimFlagDebug());
         manager.registerCommand(new CommandClaimFlagGroup());
         manager.registerCommand(new CommandClaimFlagPlayer());
+        manager.registerCommand(new CommandClaimFlagReset());
         manager.registerCommand(new CommandClaimGreeting());
         manager.registerCommand(new CommandClaimIgnore());
         manager.registerCommand(new CommandClaimInfo());
@@ -658,7 +660,7 @@ public class GriefDefenderPlugin {
                 localeString = "en_US";
             }
             final Path localePath = this.getConfigPath().resolve("lang").resolve(localeString + ".conf");
-            if (!localePath.toFile().exists()) {
+            if (!localeString.equalsIgnoreCase("en_US") && !localePath.toFile().exists()) {
                 // Check for a default locale asset and copy to lang folder
                 try {
                     final InputStream in = getClass().getResourceAsStream("/assets/lang/" + localeString + ".conf");
