@@ -60,9 +60,12 @@ public class MessageStorage {
     public static final String BOOK_TOOLS = "book-tools";
     public static final String CLAIM_ABANDON_SUCCESS = "claim-abandon-success";
     public static final String CLAIM_ABOVE_LEVEL = "claim-above-level";
+    public static final String CLAIM_AUTOMATIC_NOTIFICATION = "claim-automatic-notification";
     public static final String CLAIM_BANK_INFO = "claim-bank-info";
     public static final String CLAIM_BELOW_LEVEL = "claim-below-level";
+    public static final String CLAIM_CHEST_CONFIRMATION = "claim-chest-confirmation";
     public static final String CLAIM_DISABLED_WORLD = "claim-disabled-world";
+    public static final String CLAIM_IGNORE = "claim-ignore";
     public static final String CLAIM_OWNER_ONLY = "claim-owner-only";
     public static final String CLAIM_NO_CLAIMS = "claim-no-claims";
     public static final String CLAIM_NOT_FOUND = "claim-not-found";
@@ -71,6 +74,7 @@ public class MessageStorage {
     public static final String CLAIM_SIZE_NEED_BLOCKS_3D = "size-need-blocks-3d";
     public static final String CLAIM_RESIZE_SUCCESS_2D = "resize-success-2d";
     public static final String CLAIM_RESIZE_SUCCESS_3D = "resize-success-3d";
+    public static final String CLAIM_RESPECTING = "claim-respecting";
     public static final String CLAIM_SIZE_MIN = "claim-size-min";
     public static final String CLAIM_SIZE_MAX = "claim-size-max";
     public static final String CLAIM_SIZE_TOO_SMALL = "claim-size-too-small";
@@ -82,6 +86,8 @@ public class MessageStorage {
     public static final String CREATE_SUBDIVISION_ONLY = "create-subdivision-only";
     public static final String CREATE_FAILED_CLAIM_LIMIT = "create-failed-claim-limit";
     public static final String ECONOMY_BLOCK_BUY_INVALID = "economy-block-buy-invalid";
+    public static final String ECONOMY_BLOCK_NOT_AVAILABLE = "economy-block-not-available";
+    public static final String ECONOMY_BLOCK_ONLY_BUY = "economy-block-only-buy";
     public static final String ECONOMY_BLOCK_ONLY_SELL = "economy-block-only-sell";
     public static final String ECONOMY_BLOCK_PURCHASE_CONFIRMATION = "economy-block-purchase-confirmation";
     public static final String ECONOMY_BLOCK_PURCHASE_COST = "economy-block-purchase-cost";
@@ -108,6 +114,7 @@ public class MessageStorage {
     public static final String TAX_CLAIM_EXPIRED = "tax-claim-expired";
     public static final String TOWN_CREATE_NOT_ENOUGH_FUNDS = "town-create-not-enough-funds";
     public static final String TOWN_NOT_IN = "town-not-in";
+    public static final String TUTORIAL_CLAIM_BASIC = "tutorial-claim-basic";
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     public MessageStorage(Path path) {

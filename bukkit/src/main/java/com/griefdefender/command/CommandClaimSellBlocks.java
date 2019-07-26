@@ -35,6 +35,7 @@ import co.aikar.commands.annotation.Syntax;
 import com.google.common.collect.ImmutableMap;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
+import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.permission.GDPermissions;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
@@ -58,19 +59,19 @@ public class CommandClaimSellBlocks extends BaseCommand {
 
         // if economy is disabled, don't do anything
         if (GriefDefenderPlugin.getInstance().getVaultProvider() == null) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.economyNotInstalled.toText());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_NOT_INSTALLED));
             return;
         }
 
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
         if (playerData.getEconomyClaimBlockCost() == 0 && playerData.getEconomyClaimBlockReturn() == 0) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.economyBuySellNotConfigured.toText());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_BUY_SELL_DISABLED));
             return;
         }
 
         // if selling disabled, send error message
         if (playerData.getEconomyClaimBlockReturn() == 0) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.economyOnlyBuyBlocks.toText());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_BLOCK_ONLY_BUY));
             return;
         }
 
@@ -88,7 +89,7 @@ public class CommandClaimSellBlocks extends BaseCommand {
                 GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.economyBuyInvalidBlockCount.toText());
                 return;
             } else if (blockCount > availableBlocks) {
-                GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.economyBlocksNotAvailable.toText());
+                GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_BLOCK_NOT_AVAILABLE));
                 return;
             }
 

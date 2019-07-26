@@ -33,6 +33,7 @@ import com.google.common.collect.ImmutableMap;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.claim.GDClaim;
+import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.permission.GDPermissions;
 import net.kyori.text.Component;
 import org.bukkit.entity.Player;
@@ -58,9 +59,9 @@ public class CommandClaimIgnore extends BaseCommand {
         playerData.ignoreClaims = !playerData.ignoreClaims;
 
         if (!playerData.ignoreClaims) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.claimRespecting.toText());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_RESPECTING));
         } else {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.claimIgnore.toText());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_IGNORE));
         }
     }
 }

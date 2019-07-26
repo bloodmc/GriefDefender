@@ -41,6 +41,7 @@ import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.claim.GDClaimManager;
 import com.griefdefender.configuration.GriefDefenderConfig;
+import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.event.GDCauseStackManager;
 import com.griefdefender.internal.tracking.chunk.GDChunk;
 import com.griefdefender.internal.util.BlockUtil;
@@ -619,7 +620,7 @@ public class BlockEventHandler implements Listener {
                         final Claim claim = result.getClaim().get();
                         final GDClaimManager claimManager = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(world.getUID());
                         claimManager.addClaim(claim, true);
-                        GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.claimChestConfirmation.toText());
+                        GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_CHEST_CONFIRMATION));
                         GDTimings.BLOCK_PLACE_EVENT.stopTiming();
                         return;
                     }
@@ -645,7 +646,7 @@ public class BlockEventHandler implements Listener {
                             radius--;
                         } else {
                             // notify and explain to player
-                            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.claimAutomaticNotification.toText());
+                            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_AUTOMATIC_NOTIFICATION));
 
                             // show the player the protected area
                             GDClaim newClaim = this.storage.getClaimAt(block.getLocation());
@@ -660,7 +661,7 @@ public class BlockEventHandler implements Listener {
                 }
 
                 if (player.hasPermission(GDPermissions.CLAIM_SHOW_TUTORIAL)) {
-                    GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.tutorialClaimBasic.toText());
+                    GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.TUTORIAL_CLAIM_BASIC));
                 }
             }
         }
