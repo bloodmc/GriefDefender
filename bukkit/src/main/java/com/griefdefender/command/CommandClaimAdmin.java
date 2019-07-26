@@ -32,6 +32,7 @@ import co.aikar.commands.annotation.Subcommand;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.claim.ShovelTypes;
+import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.permission.GDPermissions;
 import org.bukkit.entity.Player;
 
@@ -46,6 +47,6 @@ public class CommandClaimAdmin extends BaseCommand {
 
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
         playerData.shovelMode = ShovelTypes.ADMIN;
-        GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.claimModeAdmin.toText());
+        GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.MODE_ADMIN));
     }
 }

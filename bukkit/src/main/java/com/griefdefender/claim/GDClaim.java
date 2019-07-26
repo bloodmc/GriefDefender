@@ -55,6 +55,7 @@ import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.configuration.ClaimDataConfig;
 import com.griefdefender.configuration.ClaimStorageData;
 import com.griefdefender.configuration.IClaimData;
+import com.griefdefender.configuration.MessageDataConfig;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.configuration.TownDataConfig;
 import com.griefdefender.configuration.TownStorageData;
@@ -141,6 +142,7 @@ public class GDClaim implements Claim {
     public ClaimVisual claimVisual;
     public List<UUID> playersWatching = new ArrayList<>();
     public Map<String, ClaimSchematic> schematics = new HashMap<>();
+    public MessageDataConfig messageData = GriefDefenderPlugin.getInstance().messageData;
 
     private GDPlayerData ownerPlayerData;
     private static final int MAX_AREA = GriefDefenderPlugin.CLAIM_BLOCK_SYSTEM == ClaimBlockSystem.VOLUME ? 2560000 : 10000;
@@ -440,10 +442,8 @@ public class GDClaim implements Claim {
             return this.parent.allowEdit(holder);
         }
 
-        final Component message = GriefDefenderPlugin.getInstance().messageData.claimOwnerOnly
-                .apply(ImmutableMap.of(
-                "owner", this.getOwnerName()
-        )).build();
+        final Component message = messageData.getMessage(MessageStorage.CLAIM_OWNER_ONLY, ImmutableMap.of(
+                "player", this.getOwnerName()));
         return message;
     }
 
@@ -463,10 +463,8 @@ public class GDClaim implements Claim {
             return this.parent.allowGrantPermission(player);
         }
 
-        final Component reason = GriefDefenderPlugin.getInstance().messageData.permissionTrust
-                .apply(ImmutableMap.of(
-                "owner", this.getOwnerName()
-        )).build();
+        final Component reason = messageData.getMessage(MessageStorage.PERMISSION_TRUST, ImmutableMap.of(
+                "player", this.getOwnerName()));
         return reason;
     }
 
@@ -483,7 +481,7 @@ public class GDClaim implements Claim {
     @Override
     public Component getOwnerName() {
         if (this.isAdminClaim() || this.isWilderness()) {
-            return GriefDefenderPlugin.getInstance().messageData.ownerAdmin.toText();
+            return messageData.getMessage(MessageStorage.OWNER_ADMIN);
         }
 
         if (this.getOwnerPlayerData() == null) {
@@ -849,9 +847,9 @@ public class GDClaim implements Claim {
         final Double createClaimLimit = GDPermissionManager.getInstance().getInternalOptionValue(newOwnerData.getSubject(), Options.CREATE_LIMIT, this, newOwnerData);
         if (createClaimLimit != null && createClaimLimit > 0 && (newOwnerData.getInternalClaims().size() + 1) > createClaimLimit.intValue()) {
             if (currentOwner != null) {
-                GriefDefenderPlugin.sendMessage(currentOwner, GriefDefenderPlugin.getInstance().messageData.claimTransferExceedsLimit.toText());
+                GriefDefenderPlugin.sendMessage(currentOwner, messageData.getMessage(MessageStorage.CLAIM_TRANSFER_EXCEEDS_LIMIT));
             }
-            return new GDClaimResult(this, ClaimResultType.EXCEEDS_MAX_CLAIM_LIMIT, GriefDefenderPlugin.getInstance().messageData.claimTransferExceedsLimit.toText());
+            return new GDClaimResult(this, ClaimResultType.EXCEEDS_MAX_CLAIM_LIMIT, messageData.getMessage(MessageStorage.CLAIM_TRANSFER_EXCEEDS_LIMIT));
         }
 
         // transfer
@@ -1176,10 +1174,9 @@ public class GDClaim implements Claim {
                     if (!result.transactionSuccess()) {
                         Component message = null;
                         if (player != null) {
-                            message = GriefDefenderPlugin.getInstance().messageData.economyNotEnoughFunds
-                                    .apply(ImmutableMap.of(
+                            message = messageData.getMessage(MessageStorage.ECONOMY_NOT_ENOUGH_FUNDS, ImmutableMap.of(
                                     "balance", this.vaultProvider.getApi().getBalance(player),
-                                    "cost", requiredFunds)).build();
+                                    "amount", requiredFunds));
                             GriefDefenderPlugin.sendMessage(player, message);
                         }
     
@@ -1196,14 +1193,12 @@ public class GDClaim implements Claim {
                     if (player != null) {
                         if (GriefDefenderPlugin.CLAIM_BLOCK_SYSTEM == ClaimBlockSystem.VOLUME) {
                             final double claimableChunks = Math.abs(remainingClaimBlocks / 65536.0);
-                            final Map<String, ?> params = ImmutableMap.of(
-                                    "chunks", Math.round(claimableChunks * 100.0)/100.0,
-                                    "blocks", Math.abs(remainingClaimBlocks));
-                            GriefDefenderPlugin.sendMessage(player, MessageStorage.CLAIM_SIZE_NEED_BLOCKS_3D, GriefDefenderPlugin.getInstance().messageData.claimSizeNeedBlocks3d, params);
+                            GriefDefenderPlugin.sendMessage(player, messageData.getMessage(MessageStorage.CLAIM_SIZE_NEED_BLOCKS_3D, ImmutableMap.of(
+                                    "chunk-amount", Math.round(claimableChunks * 100.0)/100.0,
+                                    "block-amount", Math.abs(remainingClaimBlocks))));
                         } else {
-                            final Map<String, ?> params = ImmutableMap.of(
-                                    "blocks", Math.abs(remainingClaimBlocks));
-                            GriefDefenderPlugin.sendMessage(player, MessageStorage.CLAIM_SIZE_NEED_BLOCKS_2D, GriefDefenderPlugin.getInstance().messageData.claimSizeNeedBlocks2d, params);
+                            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_SIZE_NEED_BLOCKS_2D, ImmutableMap.of(
+                                    "block-amount", Math.abs(remainingClaimBlocks))));
                         }
                     }
                     playerData.lastShovelLocation = null;
@@ -1308,17 +1303,15 @@ public class GDClaim implements Claim {
 
         final int minClaimLevel = this.getOwnerMinClaimLevel();
         if (playerData != null && playerData.shovelMode != ShovelTypes.ADMIN && smallY < minClaimLevel) {
-            final Component message = GriefDefenderPlugin.getInstance().messageData.claimBelowLevel
-                    .apply(ImmutableMap.of(
-                    "claim-level", minClaimLevel)).build();
+            final Component message = messageData.getMessage(MessageStorage.CLAIM_BELOW_LEVEL, ImmutableMap.of(
+                    "claim-level", minClaimLevel));
             GriefDefenderPlugin.sendMessage(player, message);
             return new GDClaimResult(ClaimResultType.BELOW_MIN_LEVEL);
         }
         final int maxClaimLevel = this.getOwnerMaxClaimLevel();
         if (playerData != null && playerData.shovelMode != ShovelTypes.ADMIN && bigY > maxClaimLevel) {
-            final Component message = GriefDefenderPlugin.getInstance().messageData.claimAboveLevel
-                    .apply(ImmutableMap.of(
-                    "claim-level", maxClaimLevel)).build();
+            final Component message = messageData.getMessage(MessageStorage.CLAIM_ABOVE_LEVEL, ImmutableMap.of(
+                    "limit", maxClaimLevel));
             GriefDefenderPlugin.sendMessage(player, message);
             return new GDClaimResult(ClaimResultType.ABOVE_MAX_LEVEL);
         }
@@ -1414,7 +1407,7 @@ public class GDClaim implements Claim {
         // Handle single block selection
         if ((this.isCuboid() && greaterCorner.equals(lesserCorner)) || (!this.isCuboid() && greaterCorner.getX() == lesserCorner.getX() && greaterCorner.getZ() == lesserCorner.getZ())) {
             if (playerData.claimResizing != null) {
-                final Component message = GriefDefenderPlugin.getInstance().messageData.claimResizeSameLocation.toText();
+                final Component message = messageData.getMessage(MessageStorage.RESIZE_SAME_LOCATION);
                 GriefDefenderPlugin.sendMessage(player, message);
                 playerData.lastShovelLocation = null;
                 playerData.claimResizing = null;
@@ -1422,7 +1415,7 @@ public class GDClaim implements Claim {
                 return new GDClaimResult(ClaimResultType.BELOW_MIN_SIZE_X, message);
             }
             if (playerData.claimSubdividing == null) {
-                final Component message = GriefDefenderPlugin.getInstance().messageData.claimCreateOnlySubdivision.toText();
+                final Component message = messageData.getMessage(MessageStorage.CREATE_SUBDIVISION_ONLY);
                 GriefDefenderPlugin.sendMessage(player, message);
                 playerData.lastShovelLocation = null;
                 // TODO: Add new result type for this
@@ -1435,19 +1428,19 @@ public class GDClaim implements Claim {
             if (size > maxClaimX) {
                 if (player != null) {
                     if (this.isCuboid()) {
-                        message = GriefDefenderPlugin.getInstance().messageData.claimSizeMaxX
-                                .apply(ImmutableMap.of(
-                                        "size", size,
-                                        "max-size", maxClaimX,
-                                        "min-area", minClaimX + "x" + minClaimY + "x" + minClaimZ,
-                                        "max-area", maxClaimX + "x" + maxClaimY + "x" + minClaimZ)).build();
+                        message = messageData.getMessage(MessageStorage.CLAIM_SIZE_MAX, ImmutableMap.of(
+                                "axis", "x",
+                                "size", size,
+                                "max-size", maxClaimX,
+                                "min-area", minClaimX + "x" + minClaimY + "x" + minClaimZ,
+                                "max-area", maxClaimX + "x" + maxClaimY + "x" + minClaimZ));
                     } else {
-                        message = GriefDefenderPlugin.getInstance().messageData.claimSizeMaxX
-                                .apply(ImmutableMap.of(
-                                        "size", size,
-                                        "max-size", maxClaimX,
-                                        "min-area", minClaimX + "x" + minClaimZ,
-                                        "max-area", maxClaimX + "x" + minClaimZ)).build();
+                        message = messageData.getMessage(MessageStorage.CLAIM_SIZE_MAX, ImmutableMap.of(
+                                "axis", "x",
+                                "size", size,
+                                "max-size", maxClaimX,
+                                "min-area", minClaimX + "x" + minClaimZ,
+                                "max-area", maxClaimX + "x" + minClaimZ));
                     }
                     GriefDefenderPlugin.sendMessage(player, message);
                 }
@@ -1459,19 +1452,19 @@ public class GDClaim implements Claim {
             if (size > maxClaimY) {
                 if (player != null) {
                     if (this.isCuboid()) {
-                        message = GriefDefenderPlugin.getInstance().messageData.claimSizeMaxY
-                                .apply(ImmutableMap.of(
-                                        "size", size,
-                                        "max-size", maxClaimY,
-                                        "min-area", minClaimX + "x" + minClaimY + "x" + minClaimZ,
-                                        "max-area", maxClaimX + "x" + maxClaimY + "x" + minClaimZ)).build();
+                        message = messageData.getMessage(MessageStorage.CLAIM_SIZE_MAX, ImmutableMap.of(
+                                "axis", "y",
+                                "size", size,
+                                "max-size", maxClaimY,
+                                "min-area", minClaimX + "x" + minClaimY + "x" + minClaimZ,
+                                "max-area", maxClaimX + "x" + maxClaimY + "x" + minClaimZ));
                     } else {
-                        message = GriefDefenderPlugin.getInstance().messageData.claimSizeMaxY
-                                .apply(ImmutableMap.of(
-                                        "size", size,
-                                        "max-size", maxClaimY,
-                                        "min-area", minClaimX + "x" + minClaimZ,
-                                        "max-area", maxClaimX + "x" + minClaimZ)).build();
+                        message = messageData.getMessage(MessageStorage.CLAIM_SIZE_MAX, ImmutableMap.of(
+                                "axis", "y",
+                                "size", size,
+                                "max-size", maxClaimY,
+                                "min-area", minClaimX + "x" + minClaimZ,
+                                "max-area", maxClaimX + "x" + minClaimZ));
                     }
                     GriefDefenderPlugin.sendMessage(player, message);
                 }
@@ -1483,19 +1476,19 @@ public class GDClaim implements Claim {
             if (size > maxClaimZ) {
                 if (player != null) {
                     if (this.isCuboid()) {
-                        message = GriefDefenderPlugin.getInstance().messageData.claimSizeMaxZ
-                            .apply(ImmutableMap.of(
-                                    "size", size,
-                                    "max-size", maxClaimZ,
-                                    "min-area", minClaimX + "x" + minClaimY + "x" + minClaimZ,
-                                    "max-area", maxClaimX + "x" + maxClaimY + "x" + minClaimZ)).build();
+                        message = messageData.getMessage(MessageStorage.CLAIM_SIZE_MAX, ImmutableMap.of(
+                                "axis", "z",
+                                "size", size,
+                                "max-size", maxClaimY,
+                                "min-area", minClaimX + "x" + minClaimY + "x" + minClaimZ,
+                                "max-area", maxClaimX + "x" + maxClaimY + "x" + minClaimZ));
                     } else {
-                        message = GriefDefenderPlugin.getInstance().messageData.claimSizeMaxZ
-                            .apply(ImmutableMap.of(
-                                    "size", size,
-                                    "max-size", maxClaimZ,
-                                    "min-area", minClaimX + "x" + minClaimZ,
-                                    "max-area", maxClaimX + "x" + minClaimZ)).build();
+                        message = messageData.getMessage(MessageStorage.CLAIM_SIZE_MAX, ImmutableMap.of(
+                                "axis", "z",
+                                "size", size,
+                                "max-size", maxClaimY,
+                                "min-area", minClaimX + "x" + minClaimZ,
+                                "max-area", maxClaimX + "x" + minClaimZ));
                     }
                     GriefDefenderPlugin.sendMessage(player, message);
                 }
@@ -1507,19 +1500,19 @@ public class GDClaim implements Claim {
             if (size < minClaimX) {
                 if (player != null) {
                     if (this.isCuboid()) {
-                        message = GriefDefenderPlugin.getInstance().messageData.claimSizeMinX
-                                .apply(ImmutableMap.of(
-                                        "size", size,
-                                        "min-size", minClaimX,
-                                        "min-area", minClaimX + "x" + minClaimY + "x" + minClaimZ,
-                                        "max-area", maxClaimX + "x" + maxClaimY + "x" + maxClaimZ)).build();
+                        message = messageData.getMessage(MessageStorage.CLAIM_SIZE_MIN, ImmutableMap.of(
+                                "axis", "x",
+                                "size", size,
+                                "min-size", minClaimX,
+                                "min-area", minClaimX + "x" + minClaimY + "x" + minClaimZ,
+                                "max-area", maxClaimX + "x" + maxClaimY + "x" + maxClaimZ));
                     } else {
-                        message = GriefDefenderPlugin.getInstance().messageData.claimSizeMinX
-                                .apply(ImmutableMap.of(
-                                        "size", size,
-                                        "min-size", minClaimX,
-                                        "min-area", minClaimX + "x" + minClaimZ,
-                                        "max-area", maxClaimX + "x" + maxClaimZ)).build();
+                        message = messageData.getMessage(MessageStorage.CLAIM_SIZE_MIN, ImmutableMap.of(
+                                "axis", "x",
+                                "size", size,
+                                "min-size", minClaimX,
+                                "min-area", minClaimX + "x" + minClaimZ,
+                                "max-area", maxClaimX + "x" + maxClaimZ));
                     }
                     GriefDefenderPlugin.sendMessage(player, message);
                 }
@@ -1531,19 +1524,19 @@ public class GDClaim implements Claim {
             if (size < minClaimY) {
                 if (player != null) {
                     if (this.isCuboid()) {
-                        message = GriefDefenderPlugin.getInstance().messageData.claimSizeMinY
-                                .apply(ImmutableMap.of(
-                                        "size", size,
-                                        "min-size", minClaimY,
-                                        "min-area", minClaimX + "x" + minClaimY + "x" + minClaimZ,
-                                        "max-area", maxClaimX + "x" + maxClaimY + "x" + maxClaimZ)).build();
+                        message = messageData.getMessage(MessageStorage.CLAIM_SIZE_MIN, ImmutableMap.of(
+                                "axis", "y",
+                                "size", size,
+                                "min-size", minClaimX,
+                                "min-area", minClaimX + "x" + minClaimY + "x" + minClaimZ,
+                                "max-area", maxClaimX + "x" + maxClaimY + "x" + maxClaimZ));
                     } else {
-                        message = GriefDefenderPlugin.getInstance().messageData.claimSizeMinY
-                                .apply(ImmutableMap.of(
-                                        "size", size,
-                                        "min-size", minClaimY,
-                                        "min-area", minClaimX + "x" + minClaimZ,
-                                        "max-area", maxClaimX + "x" + maxClaimZ)).build();
+                        message = messageData.getMessage(MessageStorage.CLAIM_SIZE_MIN, ImmutableMap.of(
+                                "axis", "y",
+                                "size", size,
+                                "min-size", minClaimX,
+                                "min-area", minClaimX + "x" + minClaimZ,
+                                "max-area", maxClaimX + "x" + maxClaimZ));
                     }
                     GriefDefenderPlugin.sendMessage(player, message);
                 }
@@ -1555,19 +1548,19 @@ public class GDClaim implements Claim {
             if (size < minClaimZ) {
                 if (player != null) {
                     if (this.isCuboid()) {
-                        message = GriefDefenderPlugin.getInstance().messageData.claimSizeMinZ
-                                .apply(ImmutableMap.of(
-                                        "size", size,
-                                        "min-size", minClaimZ,
-                                        "min-area", minClaimX + "x" + minClaimY + "x" + minClaimZ,
-                                        "max-area", maxClaimX + "x" + maxClaimY + "x" + maxClaimZ)).build();
+                        message = messageData.getMessage(MessageStorage.CLAIM_SIZE_MIN, ImmutableMap.of(
+                                "axis", "z",
+                                "size", size,
+                                "min-size", minClaimX,
+                                "min-area", minClaimX + "x" + minClaimY + "x" + minClaimZ,
+                                "max-area", maxClaimX + "x" + maxClaimY + "x" + maxClaimZ));
                     } else {
-                        message = GriefDefenderPlugin.getInstance().messageData.claimSizeMinZ
-                                .apply(ImmutableMap.of(
-                                        "size", size,
-                                        "min-size", minClaimZ,
-                                        "min-area", minClaimX + "x" + minClaimZ,
-                                        "max-area", maxClaimX + "x" + maxClaimZ)).build();
+                        message = messageData.getMessage(MessageStorage.CLAIM_SIZE_MIN, ImmutableMap.of(
+                                "axis", "z",
+                                "size", size,
+                                "min-size", minClaimX,
+                                "min-area", minClaimX + "x" + minClaimZ,
+                                "max-area", maxClaimX + "x" + maxClaimZ));
                     }
                     GriefDefenderPlugin.sendMessage(player, message);
                 }
@@ -2686,9 +2679,8 @@ public class GDClaim implements Claim {
                     if (claim.getLesserBoundaryCorner().getY() < minClaimLevel) {
                         Component message = null;
                         if (player != null) {
-                            message = GriefDefenderPlugin.getInstance().messageData.claimBelowLevel
-                                    .apply(ImmutableMap.of(
-                                    "claim-level", minClaimLevel)).build();
+                            message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_BELOW_LEVEL, ImmutableMap.of(
+                                    "limit", minClaimLevel));
                             GriefDefenderPlugin.sendMessage(player, message);
                         }
                         return new GDClaimResult(claim, ClaimResultType.BELOW_MIN_LEVEL, message);
@@ -2697,9 +2689,8 @@ public class GDClaim implements Claim {
                     if (claim.getGreaterBoundaryCorner().getY() > maxClaimLevel) {
                         Component message = null;
                         if (player != null) {
-                            message = GriefDefenderPlugin.getInstance().messageData.claimAboveLevel
-                                    .apply(ImmutableMap.of(
-                                    "claim-level", maxClaimLevel)).build();
+                            message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_ABOVE_LEVEL, ImmutableMap.of(
+                                    "limit", maxClaimLevel));
                             GriefDefenderPlugin.sendMessage(player, message);
                         }
                         return new GDClaimResult(claim, ClaimResultType.ABOVE_MAX_LEVEL, message);
@@ -2717,14 +2708,13 @@ public class GDClaim implements Claim {
                 if (this.createLimitRestrictions && !PermissionUtil.getInstance().holderHasPermission(user, GDPermissions.OVERRIDE_CLAIM_LIMIT)) {
                     final Double createClaimLimit = GDPermissionManager.getInstance().getInternalOptionValue(user, Options.CREATE_LIMIT, claim, playerData);
                     if (createClaimLimit != null && createClaimLimit > 0 && (playerData.getClaimTypeCount(claim.getType()) + 1) > createClaimLimit.intValue()) {
+                        final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CREATE_FAILED_CLAIM_LIMIT, ImmutableMap.of(
+                                "limit", createClaimLimit,
+                                "type", claim.getType().getName()));
                         if (player != null) {
-                            final Component message = GriefDefenderPlugin.getInstance().messageData.claimCreateFailedLimit
-                                    .apply(ImmutableMap.of(
-                                    "limit", createClaimLimit,
-                                    "type", claim.getType().getName())).build();
                             GriefDefenderPlugin.sendMessage(player, message);
                         }
-                        return new GDClaimResult(claim, ClaimResultType.EXCEEDS_MAX_CLAIM_LIMIT, GriefDefenderPlugin.getInstance().messageData.claimCreateFailedLimit.toText());
+                        return new GDClaimResult(claim, ClaimResultType.EXCEEDS_MAX_CLAIM_LIMIT, message);
                     }
                 }
 
@@ -2743,10 +2733,9 @@ public class GDClaim implements Claim {
                         if (currentFunds < requiredFunds) {
                             Component message = null;
                             if (player != null) {
-                                message = GriefDefenderPlugin.getInstance().messageData.economyNotEnoughFunds
-                                        .apply(ImmutableMap.of(
+                                message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_NOT_ENOUGH_FUNDS, ImmutableMap.of(
                                         "balance", currentFunds,
-                                        "cost", requiredFunds)).build();
+                                        "amount", requiredFunds));
                                 GriefDefenderPlugin.sendMessage(player, message);
                             }
 
@@ -2759,9 +2748,8 @@ public class GDClaim implements Claim {
                         if (!result.transactionSuccess()) {
                             Component message = null;
                             if (player != null) {
-                                message = GriefDefenderPlugin.getInstance().messageData.economyWithdrawError
-                                        .apply(ImmutableMap.of(
-                                        "reason", result.errorMessage)).build();
+                                message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_WITHDRAW_ERROR, ImmutableMap.of(
+                                        "reason", result.errorMessage));
                                 GriefDefenderPlugin.sendMessage(player, message);
                             }
 
@@ -2776,13 +2764,12 @@ public class GDClaim implements Claim {
                             if (player != null) {
                                 if (GriefDefenderPlugin.CLAIM_BLOCK_SYSTEM == ClaimBlockSystem.VOLUME) {
                                     final double claimableChunks = Math.abs(remainingClaimBlocks / 65536.0);
-                                    message = GriefDefenderPlugin.getInstance().messageData.claimSizeNeedBlocks3d
-                                            .apply(ImmutableMap.of(
-                                            "chunks", Math.round(claimableChunks * 100.0)/100.0,
-                                            "blocks", Math.abs(remainingClaimBlocks))).build();
+                                    message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_SIZE_NEED_BLOCKS_3D, ImmutableMap.of(
+                                            "chunk-amount", Math.round(claimableChunks * 100.0)/100.0,
+                                            "block-amount", Math.abs(remainingClaimBlocks)));
                                 } else {
-                                    message = GriefDefenderPlugin.getInstance().messageData.claimSizeNeedBlocks2d
-                                            .apply(ImmutableMap.of("blocks", Math.abs(remainingClaimBlocks))).build();
+                                    message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_SIZE_NEED_BLOCKS_2D, ImmutableMap.of(
+                                            "block-amount", Math.abs(remainingClaimBlocks)));
                                 }
                                 GriefDefenderPlugin.sendMessage(player, message);
                             }
@@ -2798,19 +2785,17 @@ public class GDClaim implements Claim {
                     if (townCost > 0) {
                         final Economy economy = GriefDefenderPlugin.getInstance().getVaultProvider().getApi();
                         if (!economy.hasAccount(player)) {
-                            final Component message = GriefDefenderPlugin.getInstance().messageData.economyUserNotFound
-                                    .apply(ImmutableMap.of(
-                                    "user", claim.getOwnerName())).build();
+                            final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_USER_NOT_FOUND, ImmutableMap.of(
+                                    "player", claim.getOwnerName()));
                             GriefDefenderPlugin.sendMessage(player, message);
                             return new GDClaimResult(claim, ClaimResultType.NOT_ENOUGH_FUNDS, message);
                         }
                         final double balance = economy.getBalance(player);
                         if (balance < townCost) {
-                            final Component message = GriefDefenderPlugin.getInstance().messageData.townCreateNotEnoughFunds
-                                    .apply(ImmutableMap.of(
-                                    "create_cost", townCost,
+                            final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.TOWN_CREATE_NOT_ENOUGH_FUNDS, ImmutableMap.of(
+                                    "amount", townCost,
                                     "balance", balance,
-                                    "amount_needed", townCost - balance)).build();
+                                    "amount-needed", townCost - balance));
                             GriefDefenderPlugin.sendMessage(player, message);
                             return new GDClaimResult(claim, ClaimResultType.NOT_ENOUGH_FUNDS, message);
                         }

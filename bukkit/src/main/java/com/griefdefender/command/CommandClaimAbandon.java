@@ -38,6 +38,7 @@ import com.griefdefender.api.claim.TrustTypes;
 import com.griefdefender.api.permission.option.Options;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.claim.GDClaimManager;
+import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.event.GDCauseStackManager;
 import com.griefdefender.event.GDDeleteClaimEvent;
 import com.griefdefender.permission.GDPermissionManager;
@@ -72,21 +73,21 @@ public class CommandClaimAbandon extends BaseCommand {
         final boolean isAdmin = playerData.canIgnoreClaim(claim);
         final boolean isTown = claim.isTown();
         if (claim.isWilderness()) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.commandAbandonClaimMissing.toText());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ABANDON_CLAIM_MISSING));
             return;
         } else if (!isAdmin && !player.getUniqueId().equals(ownerId) && claim.isUserTrusted(player, TrustTypes.MANAGER)) {
             if (claim.parent == null) {
                 // Managers can only abandon child claims
-                GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.claimNotYours.toText());
+                GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_NOT_YOURS));
                 return;
             }
         } else if (!isAdmin && (claim.allowEdit(player) != null || (!claim.isAdminClaim() && !player.getUniqueId().equals(ownerId)))) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.claimNotYours.toText());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_NOT_YOURS));
             return;
         }
 
         if (!claim.isTown() && !claim.isAdminClaim() && claim.children.size() > 0 && !this.abandonTopClaim) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.commandAbandonTopLevel.toText());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ABANDON_TOP_LEVEL));
             return;
         } else {
             if (this.abandonTopClaim && (claim.isTown() || claim.isAdminClaim()) && claim.children.size() > 0) {
@@ -99,7 +100,7 @@ public class CommandClaimAbandon extends BaseCommand {
                 }
 
                 if (!invalidClaims.isEmpty()) {
-                    GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.commandAbandonTownChildren.toText());
+                    GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ABANDON_TOWN_CHILDREN));
                     CommandHelper.showClaims(player, invalidClaims, 0, true);
                     return;
                 }
@@ -110,7 +111,7 @@ public class CommandClaimAbandon extends BaseCommand {
             GriefDefender.getEventManager().post(event);
             GDCauseStackManager.getInstance().popCause();
             if (event.cancelled()) {
-                TextAdapter.sendComponent(player, event.getMessage().orElse(TextComponent.of("Could not abandon claim. A plugin has denied it.").color(TextColor.RED)));
+                TextAdapter.sendComponent(player, event.getMessage().orElse(GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PLUGIN_EVENT_CANCEL)));
                 return;
             }
 
@@ -143,20 +144,16 @@ public class CommandClaimAbandon extends BaseCommand {
                     final double refund = requiredClaimBlocks * claim.getOwnerEconomyBlockCost();
                     final EconomyResponse result = economy.depositPlayer(player, refund);
                     if (result.transactionSuccess()) {
-                        final Component message = GriefDefenderPlugin.getInstance().messageData.economyClaimAbandonSuccess
-                                .apply(ImmutableMap.of(
-                                "refund", refund
-                        )).build();
+                        final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_CLAIM_ABANDON_SUCCESS, ImmutableMap.of(
+                                "amount", refund));
                         GriefDefenderPlugin.sendMessage(player, message);
                     }
                 } else {
                     int newAccruedClaimCount = playerData.getAccruedClaimBlocks() - ((int) Math.ceil(claim.getClaimBlocks() * (1 - abandonReturnRatio)));
                     playerData.setAccruedClaimBlocks(newAccruedClaimCount);
                     int remainingBlocks = playerData.getRemainingClaimBlocks();
-                    final Component message = GriefDefenderPlugin.getInstance().messageData.claimAbandonSuccess
-                            .apply(ImmutableMap.of(
-                            "remaining-blocks", remainingBlocks
-                    )).build();
+                    final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ABANDON_SUCCESS, ImmutableMap.of(
+                            "amount", remainingBlocks));
                     GriefDefenderPlugin.sendMessage(player, message);
                 }
             }

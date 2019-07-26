@@ -34,6 +34,7 @@ import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.claim.ClaimResult;
 import com.griefdefender.claim.GDClaim;
+import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.event.GDCauseStackManager;
 import com.griefdefender.permission.GDPermissions;
 import com.griefdefender.util.PermissionUtil;
@@ -56,7 +57,7 @@ public class CommandClaimDelete extends BaseCommand {
         final GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAt(player.getLocation());
         final boolean isTown = claim.isTown();
         if (claim.isWilderness()) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.claimNotFound.toText());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_NOT_FOUND));
             return;
         }
 

@@ -33,6 +33,7 @@ import com.google.common.collect.ImmutableMap;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.claim.Claim;
 import com.griefdefender.claim.GDClaimManager;
+import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.internal.pagination.PaginationList;
 import com.griefdefender.permission.GDPermissions;
 import net.kyori.text.Component;
@@ -56,15 +57,14 @@ public class CommandClaimBuy extends BaseCommand {
     @Subcommand("buy claim")
     public void execute(Player player) {
         if (GriefDefenderPlugin.getInstance().getVaultProvider() == null) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.economyNotInstalled.toText());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_NOT_INSTALLED));
             return;
         }
 
         final Economy economy = GriefDefenderPlugin.getInstance().getVaultProvider().getApi();
         if (!economy.hasAccount(player)) {
-            final Component message = GriefDefenderPlugin.getInstance().messageData.economyUserNotFound
-                    .apply(ImmutableMap.of(
-                    "user", player.getName())).build();
+            final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_PLAYER_NOT_FOUND, ImmutableMap.of(
+                    "player", player.getName()));
             GriefDefenderPlugin.sendMessage(player, message);
             return;
         }

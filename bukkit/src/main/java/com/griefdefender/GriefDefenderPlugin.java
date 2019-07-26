@@ -660,7 +660,7 @@ public class GriefDefenderPlugin {
                 localeString = "en_US";
             }
             final Path localePath = this.getConfigPath().resolve("lang").resolve(localeString + ".conf");
-            if (!localeString.equalsIgnoreCase("en_US") && !localePath.toFile().exists()) {
+            if (!localePath.toFile().exists()) {
                 // Check for a default locale asset and copy to lang folder
                 try {
                     final InputStream in = getClass().getResourceAsStream("/assets/lang/" + localeString + ".conf");
@@ -730,19 +730,6 @@ public class GriefDefenderPlugin {
         }
 
         sendMessage(source, message);
-    }
-
-    public static void sendMessage(CommandSender src, String messageKey, TextTemplate template, Map<String, ?>  params) {
-        Component message = null;
-        //try {
-            message = template.apply(params).build();
-        /*} catch (TextTemplateArgumentException e) {
-            // fix message data
-            GriefDefenderPlugin.getInstance().messageStorage.resetMessageData(messageKey);
-        }*/
-        if (message != null) {
-            sendMessage(src, message);
-        }
     }
 
     public static void sendMessage(CommandSender source, Component message) {

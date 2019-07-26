@@ -35,6 +35,7 @@ import com.griefdefender.api.permission.option.Options;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.configuration.GriefDefenderConfig;
+import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.configuration.PlayerStorageData;
 import com.griefdefender.internal.block.BlockSnapshot;
 import com.griefdefender.internal.block.BlockTransaction;
@@ -336,27 +337,27 @@ public class GDPlayerData implements PlayerData {
         if (this.shovelMode == ShovelTypes.BASIC) {
             if (createMode == 0 && !player.hasPermission(GDPermissions.CLAIM_CREATE_BASIC)) {
                 if (sendMessage) {
-                    GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.permissionClaimCreate.toText());
+                    GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_CLAIM_CREATE));
                 }
                 return false;
             }
             if (createMode == 1 && !player.hasPermission(GDPermissions.CLAIM_CUBOID_BASIC)) {
                 if (sendMessage) {
-                    GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.permissionCuboid.toText());
-                    GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.claimCuboidDisabled.toText());
+                    GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_CUBOID));
+                    GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.COMMAND_CUBOID_DISABLED));
                 }
                 return false;
             }
         } else if (this.shovelMode == ShovelTypes.SUBDIVISION) {
             if (createMode == 0 && !player.hasPermission(GDPermissions.CLAIM_CREATE_SUBDIVISION)) {
                 if (sendMessage) {
-                    GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.permissionClaimCreate.toText());
+                    GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_CLAIM_CREATE));
                 }
                 return false;
             } else if (!player.hasPermission(GDPermissions.CLAIM_CUBOID_SUBDIVISION)) {
                 if (sendMessage) {
-                    GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.permissionCuboid.toText());
-                    GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.claimCuboidDisabled.toText());
+                    GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_CUBOID));
+                    GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.COMMAND_CUBOID_DISABLED));
                 }
                 return false;
             }
@@ -578,10 +579,9 @@ public class GDPlayerData implements PlayerData {
         final double taxRate = GDPermissionManager.getInstance().getInternalOptionValue(player, Options.TAX_RATE, claim, this);
         final double taxOwed = claim.getClaimBlocks() * taxRate;
         final double remainingDays = GDPermissionManager.getInstance().getInternalOptionValue(player, Options.TAX_EXPIRATION_DAYS_KEEP, claim, this).intValue();
-        final Component message = GriefDefenderPlugin.getInstance().messageData.taxClaimExpired
-                .apply(ImmutableMap.of(
-                "remaining_days", remainingDays,
-                "tax_owed", taxOwed)).build();
+        final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.TAX_CLAIM_EXPIRED, ImmutableMap.of(
+                "days", remainingDays,
+                "amount", taxOwed));
         GriefDefenderPlugin.sendClaimDenyMessage(claim, player, message);
     }
 
