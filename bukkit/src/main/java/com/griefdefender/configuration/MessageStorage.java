@@ -100,6 +100,7 @@ public class MessageStorage {
     public static final String OWNER_ADMIN = "owner-admin";
     public static final String PERMISSION_CLAIM_CREATE = "permission-claim-create";
     public static final String PERMISSION_CUBOID = "permission-cuboid";
+    public static final String PERMISSION_OVERRIDE_DENY = "permission-override-deny";
     public static final String PERMISSION_TRUST = "permission-trust";
     public static final String PLUGIN_EVENT_CANCEL = "plugin-event-cancel";
     public static final String RESIZE_SAME_LOCATION = "resize-same-location";
