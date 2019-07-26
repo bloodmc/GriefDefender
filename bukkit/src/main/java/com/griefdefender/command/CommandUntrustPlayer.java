@@ -69,9 +69,9 @@ public class CommandUntrustPlayer extends BaseCommand {
 
         System.out.println("user = " + user);
         if (user == null) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.commandPlayerInvalid
-                    .apply(ImmutableMap.of(
-                    "player", target)).build());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.COMMAND_INVALID_PLAYER,
+                    ImmutableMap.of(
+                    "player", target)));
             return;
         }
         if (!GriefDefenderPlugin.getInstance().claimsEnabledForWorld(player.getWorld().getUID())) {
@@ -93,7 +93,7 @@ public class CommandUntrustPlayer extends BaseCommand {
         }
 
         if (user != null && claim.getOwnerUniqueId().equals(user.getUniqueId())) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.claimOwnerAlready.toText());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_OWNER_ALREADY));
             return;
         }
 
@@ -112,9 +112,9 @@ public class CommandUntrustPlayer extends BaseCommand {
         claim.getInternalClaimData().setRequiresSave(true);
         claim.getInternalClaimData().save();
 
-        final Component message = GriefDefenderPlugin.getInstance().messageData.untrustIndividualSingleClaim
-            .apply(ImmutableMap.of(
-                "target", user.getName())).build();
+        final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.UNTRUST_INDIVIDUAL_SINGLE_CLAIM,
+            ImmutableMap.of(
+                "target", user.getName()));
         GriefDefenderPlugin.sendMessage(player, message);
     }
 }

@@ -91,9 +91,9 @@ public class CommandTrustPlayerAll extends BaseCommand {
 
         // validate player argument
         if (user == null) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.commandPlayerInvalid
-                    .apply(ImmutableMap.of(
-                    "player", target)).build());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.COMMAND_INVALID_PLAYER,
+                    ImmutableMap.of(
+                    "player", target));
             return;
         }
 
@@ -127,9 +127,9 @@ public class CommandTrustPlayerAll extends BaseCommand {
             this.addAllUserTrust(claim, user, trustType);
         }
 
-        final Component message = GriefDefenderPlugin.getInstance().messageData.trustIndividualAllClaims
-                .apply(ImmutableMap.of(
-                "player", user.getName())).build();
+        final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.TRUST_INDIVIDUAL_ALL_CLAIMS,
+                ImmutableMap.of(
+                "player", user.getName()));
         GriefDefenderPlugin.sendMessage(player, message);
     }
 

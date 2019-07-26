@@ -273,10 +273,10 @@ public class BlockEventHandler implements Listener {
         final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, claim, GDPermissions.BLOCK_BREAK, source, target, user, TrustTypes.BUILDER, true);
         if (result != Tristate.TRUE) {
             if (sendDenyMessage && user != null) {
-                final TextComponent message = GriefDefenderPlugin.getInstance().messageData.permissionBuild
-                        .apply(ImmutableMap.of(
+                final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_BUILD,
+                        ImmutableMap.of(
                         "player", claim.getOwnerName()
-                )).build();
+                ));
                 final Player player = Bukkit.getPlayer(user.getUniqueId());
                 if (player != null && player.isOnline()) {
                     GriefDefenderPlugin.sendClaimDenyMessage(claim, (Player) player, message);
@@ -519,10 +519,10 @@ public class BlockEventHandler implements Listener {
             if (player != null) {
                 Component message = GDPermissionManager.getInstance().getEventMessage();
                 if (message == null) {
-                    message = GriefDefenderPlugin.getInstance().messageData.permissionBuild
-                            .apply(ImmutableMap.of(
+                    message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_BUILD,
+                            ImmutableMap.of(
                             "player", targetClaim.getOwnerName()
-                    )).build();
+                    ));
                 }
                 GriefDefenderPlugin.sendClaimDenyMessage(targetClaim, player, message);
             }
@@ -595,10 +595,10 @@ public class BlockEventHandler implements Listener {
             final int minClaimLevel = GDPermissionManager.getInstance().getGlobalInternalOptionValue(player, Options.MIN_LEVEL, playerData).intValue();
             final int maxClaimLevel = GDPermissionManager.getInstance().getGlobalInternalOptionValue(player, Options.MAX_LEVEL, playerData).intValue();
             if (blockPos.getY() < minClaimLevel || blockPos.getY() > maxClaimLevel) {
-                final TextComponent message = GriefDefenderPlugin.getInstance().messageData.claimChestOutsideLevel
-                        .apply(ImmutableMap.of(
-                        "min-claim-level", minClaimLevel,
-                        "max-claim-level", maxClaimLevel)).build();
+                final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_CHEST_OUTSIDE_LEVEL,
+                        ImmutableMap.of(
+                        "min-level", minClaimLevel,
+                        "max-level", maxClaimLevel));
                 GriefDefenderPlugin.sendMessage(player, message);
                 GDTimings.BLOCK_PLACE_EVENT.stopTiming();
                 return;

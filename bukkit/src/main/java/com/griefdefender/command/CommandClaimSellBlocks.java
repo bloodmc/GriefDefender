@@ -77,10 +77,10 @@ public class CommandClaimSellBlocks extends BaseCommand {
 
         int availableBlocks = playerData.getRemainingClaimBlocks();
         if (blockCount == null) {
-            final Component message = GriefDefenderPlugin.getInstance().messageData.economyBlockPurchaseCost
-                    .apply(ImmutableMap.of(
-                    "cost", playerData.getEconomyClaimBlockReturn(),
-                    "balance", availableBlocks)).build();
+            final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_BLOCK_PURCHASE_COST,
+                    ImmutableMap.of(
+                    "amount", playerData.getEconomyClaimBlockReturn(),
+                    "balance", availableBlocks));
             GriefDefenderPlugin.sendMessage(player, message);
             return;
         } else {
@@ -112,10 +112,10 @@ public class CommandClaimSellBlocks extends BaseCommand {
             playerData.setBonusClaimBlocks(playerData.getBonusClaimBlocks() - blockCount);
             playerData.getStorageData().save();*/
 
-            final Component message = GriefDefenderPlugin.getInstance().messageData.economyBlockSaleConfirmation
-                    .apply(ImmutableMap.of(
+            final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_BLOCK_SALE_CONFIRMATION,
+                    ImmutableMap.of(
                     "deposit", totalValue,
-                    "remaining-blocks", playerData.getRemainingClaimBlocks())).build();
+                    "amount", playerData.getRemainingClaimBlocks()));
             // inform player
             GriefDefenderPlugin.sendMessage(player, message);
         }

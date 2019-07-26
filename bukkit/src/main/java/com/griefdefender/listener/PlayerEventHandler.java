@@ -409,10 +409,10 @@ public class PlayerEventHandler implements Listener {
         }
 
         if (GDPermissionManager.getInstance().getFinalPermission(event, location, claim, ITEM_PERMISSION, player, itemInHand, player, TrustTypes.ACCESSOR, true) == Tristate.FALSE) {
-            Component message = GriefDefenderPlugin.getInstance().messageData.permissionInteractItem
-                    .apply(ImmutableMap.of(
-                    "owner", claim.getOwnerName(),
-                    "item", NMSUtil.getInstance().getMaterialKey(itemInHand.getType()))).build();
+            Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_INTERACT_ITEM,
+                    ImmutableMap.of(
+                    "player", claim.getOwnerName(),
+                    "item", NMSUtil.getInstance().getMaterialKey(itemInHand.getType())));
             GriefDefenderPlugin.sendClaimDenyMessage(claim, player, message);
             event.setCancelled(true);
             lastInteractItemCancelled = true;
@@ -1133,9 +1133,9 @@ public class PlayerEventHandler implements Listener {
             return;
         } else {
             playerData.lastShovelLocation = null;
-            final Component message = GriefDefenderPlugin.getInstance().messageData.claimCreateSuccess
-                    .apply(ImmutableMap.of(
-                    "type", gpClaim.getType().getName())).build();
+            final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CREATE_SUCCESS,
+                    ImmutableMap.of(
+                    "type", gpClaim.getType().getName()));
             GriefDefenderPlugin.sendMessage(player, message);
             if (this.worldEditProvider != null) {
                 this.worldEditProvider.stopVisualDrag(player);
