@@ -152,7 +152,7 @@ public class CommandClaimSchematic extends BaseCommand {
             schematic.apply();
             final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.SCHEMATIC_RESTORE_CONFIRMED,
                     ImmutableMap.of(
-                    "schematic_name", schematic.getName())).build();
+                    "name", schematic.getName())).build();
             GriefDefenderPlugin.sendMessage(src, message);
         };
     }
