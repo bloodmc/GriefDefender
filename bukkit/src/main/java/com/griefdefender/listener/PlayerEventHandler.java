@@ -1128,7 +1128,7 @@ public class PlayerEventHandler implements Listener {
                 claims.add(overlapClaim);
                 CommandHelper.showOverlapClaims(player, claims, location.getBlockY());
             } else if (result.getResultType() == ClaimResultType.CLAIM_EVENT_CANCELLED) {
-                GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.claimCreateCancel.toText());
+                GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CREATE_CANCEL));
             }
             return;
         } else {

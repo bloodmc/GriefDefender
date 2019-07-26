@@ -74,6 +74,7 @@ public class MessageStorage {
     public static final String COMMAND_INVALID_PLAYER = "command-invalid-player";
     public static final String COMMAND_OPTION_EXCEEDS_ADMIN = "command-option-exceeds-admin";
     public static final String CREATE_CUBOID_DISABLED = "create-cuboid-disabled";
+    public static final String CREATE_CANCEL = "create-cancel";
     public static final String CREATE_FAILED_CLAIM_LIMIT = "create-failed-claim-limit";
     public static final String CREATE_INSUFFICIENT_BLOCKS_2D = "create-insufficient-blocks-2d";
     public static final String CREATE_INSUFFICIENT_BLOCKS_3D = "create-insufficient-blocks-3d";
