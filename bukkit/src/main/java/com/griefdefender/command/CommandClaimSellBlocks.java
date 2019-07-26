@@ -86,7 +86,7 @@ public class CommandClaimSellBlocks extends BaseCommand {
         } else {
             // try to parse number of blocks
             if (blockCount <= 0) {
-                GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.economyBuyInvalidBlockCount.toText());
+                GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_BLOCK_BUY_INVALID));
                 return;
             } else if (blockCount > availableBlocks) {
                 GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_BLOCK_NOT_AVAILABLE));

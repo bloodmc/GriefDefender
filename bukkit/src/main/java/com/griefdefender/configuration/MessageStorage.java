@@ -58,6 +58,10 @@ public class MessageStorage {
     public static final String BLOCK_CLAIMED = "block-claimed";
     public static final String BLOCK_SALE_VALUE = "block-sale-value";
     public static final String BOOK_TOOLS = "book-tools";
+    public static final String CREATE_OVERLAP = "create-overlap";
+    public static final String CREATE_OVERLAP_PLAYER = "create-overlap-player";
+    public static final String CREATE_OVERLAP_SHORT = "create-overlap-short";
+    public static final String CREATE_SUBDIVISION_FAIL = "create-subdivision-fail";
     public static final String CLAIM_ABANDON_SUCCESS = "claim-abandon-success";
     public static final String CLAIM_ABOVE_LEVEL = "claim-above-level";
     public static final String CLAIM_AUTOMATIC_NOTIFICATION = "claim-automatic-notification";
@@ -79,6 +83,7 @@ public class MessageStorage {
     public static final String CLAIM_SIZE_MAX = "claim-size-max";
     public static final String CLAIM_SIZE_TOO_SMALL = "claim-size-too-small";
     public static final String CLAIM_TRANSFER_EXCEEDS_LIMIT = "claim-transfer-exceeds-limit";
+    public static final String CLAIM_TRANSFER_SUCCESS = "claim-transfer-success";
     public static final String CLAIM_CREATE_INSUFFICIENT_BLOCKS_2D = "claim-create-insufficient-blocks-2d";
     public static final String CLAIM_CREATE_INSUFFICIENT_BLOCKS_3D = "claim-create-insufficient-blocks-3d";
     public static final String COMMAND_CUBOID_DISABLED = "command-cuboid-disabled";
@@ -105,6 +110,15 @@ public class MessageStorage {
     public static final String MODE_TOWN = "mode-town";
     public static final String OWNER_ADMIN = "owner-admin";
     public static final String PERMISSION_CLAIM_CREATE = "permission-claim-create";
+    public static final String PERMISSION_CLAIM_DELETE = "permission-claim-delete";
+    public static final String PERMISSION_CLAIM_ENTER = "permission-claim-enter";
+    public static final String PERMISSION_CLAIM_EXIT = "permission-claim-exit";
+    public static final String PERMISSION_CLAIM_IGNORE = "permission-claim-ignore";
+    public static final String PERMISSION_CLAIM_LIST = "permission-claim-list";
+    public static final String PERMISSION_CLAIM_MANAGE = "permission-claim-manage";
+    public static final String PERMISSION_CLAIM_TRANSFER_ADMIN = "permission-claim-transfer-admin";
+    public static final String PERMISSION_CREATE_RESET_FLAGS = "permission-claim-reset-flags";
+    public static final String PERMISSION_COMMAND_TRUST = "permission-command-trust";
     public static final String PERMISSION_CUBOID = "permission-cuboid";
     public static final String PERMISSION_OVERRIDE_DENY = "permission-override-deny";
     public static final String PERMISSION_TRUST = "permission-trust";
@@ -114,7 +128,12 @@ public class MessageStorage {
     public static final String TAX_CLAIM_EXPIRED = "tax-claim-expired";
     public static final String TOWN_CREATE_NOT_ENOUGH_FUNDS = "town-create-not-enough-funds";
     public static final String TOWN_NOT_IN = "town-not-in";
+    public static final String TRUST_INVALID = "trust-invalid";
+    public static final String TRUST_LIST_HEADER = "trust-list-header";
+    public static final String TRUST_NO_CLAIMS = "trust-no-claims";
+    public static final String TRUST_SELF = "trust-self";
     public static final String TUTORIAL_CLAIM_BASIC = "tutorial-claim-basic";
+    public static final String UNTRUST_SELF = "untrust-self";
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     public MessageStorage(Path path) {

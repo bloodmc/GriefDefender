@@ -30,6 +30,7 @@ import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Subcommand;
 import co.aikar.commands.annotation.Syntax;
+import com.griefdefender.configuration.MessageStorage;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.adapter.bukkit.TextAdapter;
@@ -74,7 +75,7 @@ public class CommandUntrustPlayer extends BaseCommand {
             return;
         }
         if (!GriefDefenderPlugin.getInstance().claimsEnabledForWorld(player.getWorld().getUID())) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.claimDisabledWorld.toText());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_DISABLED_WORLD));
             return;
         }
 
@@ -82,12 +83,12 @@ public class CommandUntrustPlayer extends BaseCommand {
         GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
         GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAtPlayer(playerData, player.getLocation());
         if (!claim.getOwnerUniqueId().equals(player.getUniqueId()) && !playerData.canIgnoreClaim(claim) && claim.allowEdit(player) != null) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.permissionCommandTrust.toText());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_COMMAND_TRUST));
             return;
         }
 
         if (user.getUniqueId().equals(player.getUniqueId()) && !playerData.canIgnoreClaim(claim)) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.untrustSelf.toText());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.UNTRUST_SELF));
             return;
         }
 

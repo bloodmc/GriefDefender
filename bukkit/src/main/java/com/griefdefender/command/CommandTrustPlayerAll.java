@@ -42,6 +42,7 @@ import com.griefdefender.api.claim.TrustType;
 import com.griefdefender.api.claim.TrustTypes;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
+import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.event.GDCauseStackManager;
 import com.griefdefender.event.GDUserTrustClaimEvent;
 import com.griefdefender.permission.GDPermissionUser;
@@ -76,7 +77,7 @@ public class CommandTrustPlayerAll extends BaseCommand {
         } else {
             trustType = CommandHelper.getTrustType(type);
             if (trustType == null) {
-                GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.trustInvalid.toText());
+                GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.TRUST_INVALID));
                 return;
             }
         }
@@ -97,7 +98,7 @@ public class CommandTrustPlayerAll extends BaseCommand {
         }
 
         if (user.getUniqueId().equals(player.getUniqueId())) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.trustSelf.toText());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.TRUST_SELF));
             return;
         }
 
@@ -108,7 +109,7 @@ public class CommandTrustPlayerAll extends BaseCommand {
         }
 
         if (playerData == null || claimList == null || claimList.size() == 0) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.trustNoClaims.toText());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.TRUST_NO_CLAIMS));
             return;
         }
 
