@@ -39,6 +39,7 @@ import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.claim.Claim;
 import com.griefdefender.api.claim.ClaimSchematic;
 import com.griefdefender.claim.GDClaim;
+import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.internal.pagination.PaginationList;
 import com.griefdefender.permission.GDPermissions;
 import com.griefdefender.text.action.GDCallbackHolder;
@@ -149,8 +150,8 @@ public class CommandClaimSchematic extends BaseCommand {
     private static Consumer<CommandSender> createConfirmationConsumer(CommandSender src, Claim claim, ClaimSchematic schematic) {
         return confirm -> {
             schematic.apply();
-            final Component message = GriefDefenderPlugin.getInstance().messageData.schematicRestoreConfirmed
-                    .apply(ImmutableMap.of(
+            final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.SCHEMATIC_RESTORE_CONFIRMED,
+                    ImmutableMap.of(
                     "schematic_name", schematic.getName())).build();
             GriefDefenderPlugin.sendMessage(src, message);
         };

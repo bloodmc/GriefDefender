@@ -49,8 +49,8 @@ public class CommandClaimIgnore extends BaseCommand {
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
         final GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAt(player.getLocation());
         if (claim.isBasicClaim() && !playerData.ignoreBasicClaims || claim.isWilderness() && !playerData.ignoreWilderness || claim.isAdminClaim() && !playerData.ignoreAdminClaims) {
-            final Component message = GriefDefenderPlugin.getInstance().messageData.permissionClaimIgnore
-                    .apply(ImmutableMap.of(
+            final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_CLAIM_IGNORE,
+                    ImmutableMap.of(
                     "type", claim.getType().getName())).build();
             GriefDefenderPlugin.sendMessage(player, message);
             return;
