@@ -34,6 +34,7 @@ import co.aikar.commands.annotation.Syntax;
 import com.google.common.collect.ImmutableMap;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.cache.PermissionHolderCache;
+import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.permission.GDPermissions;
 import com.griefdefender.util.PermissionUtil;
 import net.kyori.text.Component;
@@ -57,7 +58,7 @@ public class CommandClaimFlagGroup extends ClaimFlagBase {
         }
 
         if (!PermissionUtil.getInstance().hasGroupSubject(group)) {
-            final Component message = GriefDefenderPlugin.getInstance().messageData.commandGroupInvalid
+            final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.COMMAND_INVALID_GROUP)
                     .apply(ImmutableMap.of(
                     "group", group)).build();
             GriefDefenderPlugin.sendMessage(player, message);

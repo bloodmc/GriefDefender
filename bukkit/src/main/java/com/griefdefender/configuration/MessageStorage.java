@@ -114,6 +114,7 @@ public class MessageStorage {
     public static final String CLAIM_SIZE_MAX = "claim-size-max";
     public static final String CLAIM_SIZE_NEED_BLOCKS_2D = "claim-size-need-blocks-2d";
     public static final String CLAIM_SIZE_NEED_BLOCKS_3D = "claim-size-need-blocks-3d";
+    public static final String CLAIM_SIZE_TOO_SMALL = "size-too-small";
     public static final String CLAIM_NO_SET_HOME = "claim-no-set-home";
     public static final String CLAIM_START = "claim-start";
     public static final String CLAIM_TOO_FAR = "claim-too-far";
@@ -216,7 +217,6 @@ public class MessageStorage {
     public static final String RESIZE_START = "resize-start";
     public static final String RESIZE_SUCCESS_2D = "resize-success-2d";
     public static final String RESIZE_SUCCESS_3D = "resize-success-3d";
-    public static final String SIZE_TOO_SMALL = "size-too-small";
     public static final String SCHEMATIC_RESTORE_CONFIRMED = "schematic-restore-confirmed";
     public static final String SPAWN_NOT_SET = "spawn-not-set";
     public static final String SPAWN_SET_SUCCESS = "spawn-set-success";
