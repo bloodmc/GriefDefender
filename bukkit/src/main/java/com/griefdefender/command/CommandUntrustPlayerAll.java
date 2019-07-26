@@ -40,6 +40,7 @@ import com.griefdefender.api.claim.Claim;
 import com.griefdefender.api.claim.TrustTypes;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
+import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.event.GDCauseStackManager;
 import com.griefdefender.event.GDUserTrustClaimEvent;
 import com.griefdefender.permission.GDPermissionUser;
@@ -71,14 +72,14 @@ public class CommandUntrustPlayerAll extends BaseCommand {
 
         // validate player argument
         if (user == null) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.commandPlayerInvalid
-                    .apply(ImmutableMap.of(
-                    "player", target)).build());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.COMMAND_INVALID_PLAYER,
+                    ImmutableMap.of(
+                    "player", target));
             return;
         }
 
         if (user.getUniqueId().equals(player.getUniqueId())) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.untrustSelf.toText());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.UNTRUST_SELF));
             return;
         }
 
@@ -89,7 +90,7 @@ public class CommandUntrustPlayerAll extends BaseCommand {
         }
 
         if (playerData == null || claimList == null || claimList.size() == 0) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.trustNoClaims.toText());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.UNTRUST_NO_CLAIMS));
             return;
         }
 
@@ -107,9 +108,9 @@ public class CommandUntrustPlayerAll extends BaseCommand {
             this.removeAllUserTrust(claim, user);
         }
 
-        final Component message = GriefDefenderPlugin.getInstance().messageData.untrustIndividualAllClaims
-                .apply(ImmutableMap.of(
-                "player", user.getName())).build();
+        final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.UNTRUST_INDIVIDUAL_ALL_CLAIMS,
+               ImmutableMap.of(
+                "player", user.getName()));
         GriefDefenderPlugin.sendMessage(player, message);
     }
 

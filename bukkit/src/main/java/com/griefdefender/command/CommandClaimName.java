@@ -34,6 +34,7 @@ import com.google.common.collect.ImmutableMap;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.claim.GDClaim;
+import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.permission.GDPermissions;
 
 import net.kyori.text.Component;
@@ -64,9 +65,9 @@ public class CommandClaimName extends BaseCommand {
             claim.getInternalClaimData().setName(text);
         }
         claim.getInternalClaimData().setRequiresSave(true);
-        final Component message = GriefDefenderPlugin.getInstance().messageData.commandClaimName
-                .apply(ImmutableMap.of(
-                "name", text)).build();
+        final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_NAME,
+                ImmutableMap.of(
+                "name", text));
         GriefDefenderPlugin.sendMessage(player, message);
     }
 }

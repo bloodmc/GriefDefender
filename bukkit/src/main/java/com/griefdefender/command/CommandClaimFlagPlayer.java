@@ -34,6 +34,7 @@ import co.aikar.commands.annotation.Syntax;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.Tristate;
 import com.griefdefender.cache.PermissionHolderCache;
+import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.permission.GDPermissions;
 import com.griefdefender.util.PermissionUtil;
 import org.bukkit.OfflinePlayer;
@@ -56,7 +57,7 @@ public class CommandClaimFlagPlayer extends ClaimFlagBase  {
         this.friendlySubjectName = player.getName();
 
         if (PermissionUtil.getInstance().getPermissionValue(this.subject, GDPermissions.COMMAND_ADMIN_CLAIMS) == Tristate.TRUE && !src.hasPermission(GDPermissions.SET_ADMIN_FLAGS)) {
-            GriefDefenderPlugin.sendMessage(src, GriefDefenderPlugin.getInstance().messageData.permissionSetAdminFlags.toText());
+            GriefDefenderPlugin.sendMessage(src, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_PLAYER_ADMIN_FLAGS));
             return;
         }
 

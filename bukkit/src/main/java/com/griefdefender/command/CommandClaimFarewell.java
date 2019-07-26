@@ -35,6 +35,7 @@ import com.google.common.collect.ImmutableMap;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.claim.GDClaim;
+import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.permission.GDPermissions;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
@@ -54,7 +55,7 @@ public class CommandClaimFarewell extends BaseCommand {
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
         final GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAtPlayer(playerData, player.getLocation());
         if (claim.allowEdit(player) != null) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.permissionEditClaim.toText());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_EDIT_CLAIM));
             return;
         }
 
@@ -67,11 +68,11 @@ public class CommandClaimFarewell extends BaseCommand {
         claim.getInternalClaimData().setRequiresSave(true);
         Component resultMessage = null;
         if (!claim.getInternalClaimData().getFarewell().isPresent()) {
-            resultMessage = GriefDefenderPlugin.getInstance().messageData.claimFarewellClear.toText();
+            resultMessage = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_FAREWELL_CLEAR);
         } else {
-            resultMessage = GriefDefenderPlugin.getInstance().messageData.claimFarewell
-                    .apply(ImmutableMap.of(
-                    "farewell", farewell)).build();
+            resultMessage = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_FAREWELL,
+                    ImmutableMap.of(
+                    "farewell", farewell));
         }
         TextAdapter.sendComponent(player, resultMessage);
     }

@@ -37,6 +37,7 @@ import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.GriefDefender;
 import com.griefdefender.api.claim.TrustTypes;
 import com.griefdefender.claim.GDClaim;
+import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.event.GDCauseStackManager;
 import com.griefdefender.event.GDGroupTrustClaimEvent;
 import com.griefdefender.permission.GDPermissions;
@@ -59,14 +60,14 @@ public class CommandUntrustGroup extends BaseCommand {
     public void execute(Player player, String target) {
         final Group group = PermissionUtil.getInstance().getGroupSubject(target);
         if (group == null) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.commandGroupInvalid
-                    .apply(ImmutableMap.of(
-                    "group", target)).build());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.COMMAND_INVALID_GROUP,
+                    ImmutableMap.of(
+                    "group", target));
             return;
         }
 
         if (!GriefDefenderPlugin.getInstance().claimsEnabledForWorld(player.getWorld().getUID())) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.claimDisabledWorld.toText());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_DISABLED_WORLD));
             return;
         }
 
@@ -74,15 +75,15 @@ public class CommandUntrustGroup extends BaseCommand {
         GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
         GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAtPlayer(playerData, player.getLocation());
         if (!playerData.canIgnoreClaim(claim) && claim.allowEdit(player) != null) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.permissionCommandTrust.toText());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_COMMAND_TRUST));
             return;
         }
 
         //check permission here
         if(claim.allowGrantPermission(player) != null) {
-            final Component message = GriefDefenderPlugin.getInstance().messageData.permissionTrust
-                    .apply(ImmutableMap.of(
-                    "owner", claim.getOwnerName())).build();
+            final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_TRUST,
+                    ImmutableMap.of(
+                    "player", claim.getOwnerName()));
             GriefDefenderPlugin.sendMessage(player, message);
             return;
         }
@@ -100,9 +101,9 @@ public class CommandUntrustGroup extends BaseCommand {
         claim.removeAllTrustsFromGroup(group.getName());
         claim.getInternalClaimData().setRequiresSave(true);
 
-        final Component message = GriefDefenderPlugin.getInstance().messageData.untrustIndividualSingleClaim
-                .apply(ImmutableMap.of(
-                "target", group)).build();
+        final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.UNTRUST_INDIVIDUAL_SINGLE_CLAIM,
+                ImmutableMap.of(
+                "target", group));
         GriefDefenderPlugin.sendMessage(player, message);
     }
 }

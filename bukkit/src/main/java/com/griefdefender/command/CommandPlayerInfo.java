@@ -41,6 +41,7 @@ import com.griefdefender.api.claim.ClaimBlockSystem;
 import com.griefdefender.api.claim.ClaimTypes;
 import com.griefdefender.api.permission.option.Options;
 import com.griefdefender.claim.GDClaim;
+import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.internal.pagination.PaginationList;
 import com.griefdefender.internal.util.NMSUtil;
 import com.griefdefender.permission.GDPermissionManager;
@@ -90,7 +91,7 @@ public class CommandPlayerInfo extends BaseCommand {
 
         if (user == null) {
             if (!(src instanceof Player)) {
-                GriefDefenderPlugin.sendMessage(src, GriefDefenderPlugin.getInstance().messageData.commandPlayerInvalid.toText());
+                GriefDefenderPlugin.sendMessage(src, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.COMMAND_INVALID_PLAYER));
                 return;
             }
 

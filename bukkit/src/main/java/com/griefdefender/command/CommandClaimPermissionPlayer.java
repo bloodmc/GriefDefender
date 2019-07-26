@@ -41,6 +41,7 @@ import com.griefdefender.api.Tristate;
 import com.griefdefender.api.permission.Context;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
+import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.internal.pagination.PaginationList;
 import com.griefdefender.permission.GDPermissionHolder;
 import com.griefdefender.permission.GDPermissions;
@@ -75,7 +76,7 @@ public class CommandClaimPermissionPlayer extends BaseCommand {
             }
             permission = args[0];
             if (permission != null && !player.hasPermission(permission)) {
-                GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.permissionAssignWithoutHaving.toText());
+                GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_ASSIGN_WITHOUT_HAVING));
                 return;
             }
     
@@ -84,9 +85,9 @@ public class CommandClaimPermissionPlayer extends BaseCommand {
 
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
         final GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAtPlayer(playerData, player.getLocation());
-        final Component message = GriefDefenderPlugin.getInstance().messageData.permissionClaimManage
-                .apply(ImmutableMap.of(
-                "type", claim.getType().getName())).build();
+        final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_CLAIM_MANAGE,
+                ImmutableMap.of(
+                "type", claim.getType().getName()));
         if (claim.isWilderness() && !playerData.canManageWilderness) {
             GriefDefenderPlugin.sendMessage(player, message);
             return;

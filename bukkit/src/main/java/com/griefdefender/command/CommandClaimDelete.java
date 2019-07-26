@@ -61,9 +61,9 @@ public class CommandClaimDelete extends BaseCommand {
             return;
         }
 
-        final Component message = GriefDefenderPlugin.getInstance().messageData.permissionClaimDelete
-                .apply(ImmutableMap.of(
-                "type", claim.getType().getName())).build();
+        final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_CLAIM_DELETE,
+                ImmutableMap.of(
+                "type", claim.getType().getName()));
 
         if (claim.isAdminClaim() && !player.hasPermission(GDPermissions.DELETE_CLAIM_ADMIN)) {
             GriefDefenderPlugin.sendMessage(player, message);
@@ -75,7 +75,7 @@ public class CommandClaimDelete extends BaseCommand {
         }
 
         if (!this.deleteTopLevelClaim && !claim.isTown() && claim.children.size() > 0 /*&& !playerData.warnedAboutMajorDeletion*/) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.claimChildrenWarning.toText());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_CHILDREN_WARNING));
             return;
         }
 

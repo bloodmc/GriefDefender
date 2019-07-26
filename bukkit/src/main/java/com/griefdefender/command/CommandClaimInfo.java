@@ -41,6 +41,7 @@ import com.griefdefender.api.claim.ClaimTypes;
 import com.griefdefender.api.claim.TrustTypes;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.claim.GDClaimManager;
+import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.internal.pagination.PaginationList;
 import com.griefdefender.internal.util.VecHelper;
 import com.griefdefender.permission.GDPermissions;
@@ -107,7 +108,7 @@ public class CommandClaimInfo extends BaseCommand {
         if (src instanceof Player) {
             player = (Player) src;
             if (!GriefDefenderPlugin.getInstance().claimsEnabledForWorld(player.getWorld().getUID())) {
-                GriefDefenderPlugin.sendMessage(src, GriefDefenderPlugin.getInstance().messageData.claimDisabledWorld.toText());
+                GriefDefenderPlugin.sendMessage(src, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_DISABLED_WORLD));
                 return;
             }
         }
@@ -154,13 +155,13 @@ public class CommandClaimInfo extends BaseCommand {
         }
 
         if (claim == null) {
-            GriefDefenderPlugin.sendMessage(src, GriefDefenderPlugin.getInstance().messageData.claimNotFound.toText());
+            GriefDefenderPlugin.sendMessage(src, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_NOT_FOUND);
             return;
         }
 
         if (this.useTownInfo) {
             if (!claim.isInTown()) {
-                GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.townNotIn.toText());
+                GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.TOWN_NOT_IN));
                 return;
             }
             claim = claim.getTown().get();
@@ -178,7 +179,7 @@ public class CommandClaimInfo extends BaseCommand {
                     && !gpClaim.getInternalClaimData().getBuilders().contains(player.getUniqueId())
                     && !gpClaim.getInternalClaimData().getManagers().contains(player.getUniqueId())
                     && !player.hasPermission(GDPermissions.COMMAND_CLAIM_INFO_OTHERS)) {
-                TextAdapter.sendComponent(player, GriefDefenderPlugin.getInstance().messageData.claimNotYours.toText()); 
+                TextAdapter.sendComponent(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_NOT_YOURS));
                 return;
             }
         }
@@ -826,7 +827,7 @@ public class CommandClaimInfo extends BaseCommand {
 
             final Player player = (Player) src;
             if (!isAdmin && ((GDClaim) gpClaim).allowEdit(player) != null) {
-                TextAdapter.sendComponent(src, GriefDefenderPlugin.getInstance().messageData.claimNotYours.toText());
+                TextAdapter.sendComponent(src, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_NOT_YOURS));
                 return;
             }
             final ClaimResult result = claim.changeType(clicked, Optional.of(player.getUniqueId()), src);
