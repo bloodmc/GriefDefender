@@ -2,6 +2,7 @@ package com.griefdefender.command;
 
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.CommandAlias;
+import co.aikar.commands.annotation.CommandCompletion;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Subcommand;
@@ -26,6 +27,7 @@ import java.util.UUID;
 @CommandPermission(GDPermissions.COMMAND_TRANSFER_CLAIM)
 public class CommandClaimTransfer extends BaseCommand {
 
+    @CommandCompletion("@gdplayers @gddummy")
     @CommandAlias("claimtransfer|transferclaim")
     @Description("Transfers a basic or admin claim to another player.")
     @Subcommand("claim transfer")

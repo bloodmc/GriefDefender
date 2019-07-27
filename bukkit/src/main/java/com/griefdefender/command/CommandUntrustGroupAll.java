@@ -26,6 +26,7 @@ package com.griefdefender.command;
 
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.CommandAlias;
+import co.aikar.commands.annotation.CommandCompletion;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Subcommand;
@@ -58,6 +59,7 @@ import java.util.Set;
 @CommandPermission(GDPermissions.COMMAND_UNTRUSTALL_GROUP)
 public class CommandUntrustGroupAll extends BaseCommand {
 
+    @CommandCompletion("@gdgroups @gdtrusttypes @gddummy")
     @CommandAlias("untrustallgroup")
     @Description("Revokes group access to all your claims")
     @Syntax("<group>")

@@ -26,6 +26,7 @@ package com.griefdefender.command;
 
 import co.aikar.commands.InvalidCommandArgument;
 import co.aikar.commands.annotation.CommandAlias;
+import co.aikar.commands.annotation.CommandCompletion;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Optional;
@@ -43,6 +44,7 @@ public class CommandClaimFlag extends ClaimFlagBase {
         super(ClaimSubjectType.GLOBAL);
     }
 
+    @CommandCompletion("@gdflags @gdmcids @gdtristates @gdcontexts @gddummy")
     @CommandAlias("cf|claimflag")
     @Description("Gets/Sets claim flags in the claim you are standing in.")
     @Syntax("<flag> <target> <value> [context[key=value]]")

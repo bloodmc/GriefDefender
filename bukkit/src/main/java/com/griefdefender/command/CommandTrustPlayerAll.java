@@ -26,6 +26,7 @@ package com.griefdefender.command;
 
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.CommandAlias;
+import co.aikar.commands.annotation.CommandCompletion;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Optional;
@@ -62,6 +63,7 @@ import java.util.UUID;
 @CommandPermission(GDPermissions.COMMAND_TRUSTALL_PLAYER)
 public class CommandTrustPlayerAll extends BaseCommand {
 
+    @CommandCompletion("@gdplayers @gdtrusttypes @gddummy")
     @CommandAlias("trustall")
     @Description("Grants a player access to all your claims."
             + "\nAccessor: access to interact with all blocks except inventory."

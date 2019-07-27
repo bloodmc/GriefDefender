@@ -26,6 +26,7 @@ package com.griefdefender.command;
 
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.CommandAlias;
+import co.aikar.commands.annotation.CommandCompletion;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Subcommand;
@@ -59,6 +60,7 @@ import java.util.Set;
 @CommandPermission(GDPermissions.COMMAND_TRUSTALL_GROUP)
 public class CommandTrustGroupAll extends BaseCommand {
 
+    @CommandCompletion("@gdgroups @gdtrusttypes @gddummy")
     @CommandAlias("trustallgroup")
     @Description("Grants a group access to all your claims."
             + "\nAccessor: access to interact with all blocks except inventory."

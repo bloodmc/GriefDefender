@@ -26,6 +26,7 @@ package com.griefdefender.command;
 
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.CommandAlias;
+import co.aikar.commands.annotation.CommandCompletion;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Subcommand;
@@ -49,6 +50,7 @@ import org.bukkit.entity.Player;
 @CommandPermission(GDPermissions.COMMAND_DELETE_CLAIMS)
 public class CommandClaimDeleteAll extends BaseCommand {
 
+    @CommandCompletion("@gdplayers @gddummy")
     @CommandAlias("deleteall")
     @Description("Delete all of another player's claims.")
     @Subcommand("delete all")

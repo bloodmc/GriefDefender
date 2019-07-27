@@ -51,8 +51,10 @@ import org.apache.commons.io.FilenameUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -142,6 +144,34 @@ public class PermissionUtil {
             return null;
         }
     }
+
+    public List<String> getAllLoadedPlayerNames() {
+        List<String> subjectList = new ArrayList<>();
+        for (User user : this.luckPermsApi.getUserManager().getLoadedUsers()) {
+            final String name = user.getName();
+            if (name != null) {
+                subjectList.add(name);
+            }
+        }
+        if (!subjectList.contains("public")) {
+            subjectList.add("public");
+        }
+        return subjectList;
+    } 
+
+    public List<String> getAllLoadedGroupNames() {
+        List<String> subjectList = new ArrayList<>();
+        for (Group group : this.luckPermsApi.getGroupManager().getLoadedGroups()) {
+            final String name = group.getName();
+            if (name != null) {
+                subjectList.add(name);
+            }
+        }
+        if (!subjectList.contains("public")) {
+            subjectList.add("public");
+        }
+        return subjectList;
+    } 
 
     public MutableContextSet getActiveContexts(GDPermissionHolder permissionHolder) {
         return getActiveContexts(permissionHolder, null, null);

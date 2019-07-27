@@ -913,8 +913,7 @@ public abstract class ClaimFlagBase extends BaseCommand {
                 hoverEventText = TextComponent.of("You do not have permission to change flag defaults.").color(TextColor.RED);
                 hasPermission = false;
             }
-        }
-        if (flagType == FlagType.OVERRIDE) {
+        } else if (flagType == FlagType.OVERRIDE) {
             flagColor = TextColor.RED;
             if (!src.hasPermission(GDPermissions.MANAGE_FLAG_OVERRIDES)) {
                 hoverEventText = TextComponent.of("This flag has been forced by an admin and cannot be changed.").color(TextColor.RED);

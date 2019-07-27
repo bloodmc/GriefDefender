@@ -31,13 +31,16 @@ import co.aikar.commands.RootCommand;
 import co.aikar.timings.lib.MCTiming;
 import co.aikar.timings.lib.TimingManager;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
 import com.google.inject.Guice;
 import com.google.inject.Stage;
 import com.griefdefender.api.Tristate;
 import com.griefdefender.api.claim.ClaimBlockSystem;
 import com.griefdefender.api.claim.ClaimType;
+import com.griefdefender.api.claim.TrustType;
 import com.griefdefender.api.permission.flag.Flag;
+import com.griefdefender.api.permission.option.Option;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.claim.GDClaimManager;
@@ -109,11 +112,12 @@ import com.griefdefender.configuration.category.BlacklistCategory;
 import com.griefdefender.configuration.type.ConfigBase;
 import com.griefdefender.configuration.type.GlobalConfig;
 import com.griefdefender.inject.GriefDefenderImplModule;
-import com.griefdefender.internal.material.GDMaterials;
 import com.griefdefender.internal.provider.WorldEditProvider;
 import com.griefdefender.internal.provider.WorldGuardProvider;
 import com.griefdefender.internal.registry.BlockTypeRegistryModule;
 import com.griefdefender.internal.registry.EntityTypeRegistryModule;
+import com.griefdefender.internal.registry.GDEntityType;
+import com.griefdefender.internal.registry.GDItemType;
 import com.griefdefender.internal.registry.ItemTypeRegistryModule;
 import com.griefdefender.internal.util.NMSUtil;
 import com.griefdefender.internal.util.VecHelper;
@@ -142,6 +146,7 @@ import com.griefdefender.task.ClaimCleanupTask;
 import com.griefdefender.text.ComponentConfigSerializer;
 import com.griefdefender.text.TextTemplate;
 import com.griefdefender.text.TextTemplateConfigSerializer;
+import com.griefdefender.util.PermissionUtil;
 
 import me.lucko.luckperms.api.LuckPermsApi;
 import me.lucko.luckperms.api.User;
@@ -159,7 +164,6 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.LocaleUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
@@ -174,6 +178,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -227,8 +232,8 @@ public class GriefDefenderPlugin {
 
     private boolean isEconomyModeEnabled = false;
 
-    public Material modificationTool;
-    public Material investigationTool;
+    public GDItemType modificationTool;
+    public GDItemType investigationTool;
     public int maxInspectionDistance = 100;
 
     public static boolean debugLogging = false;
@@ -630,7 +635,60 @@ public class GriefDefenderPlugin {
         ID_MAP.add("griefdefender:claimflag");
         ID_MAP.add("griefdefender:claimflaggroup");
         ID_MAP.add("griefdefender:claimflagplayer");
-        //ID_MAP.add("unknown");
+
+        manager.getCommandCompletions().registerCompletion("gdplayers", c -> {
+            return ImmutableList.copyOf(PermissionUtil.getInstance().getAllLoadedPlayerNames());
+        });
+        manager.getCommandCompletions().registerCompletion("gdgroups", c -> {
+            return ImmutableList.copyOf(PermissionUtil.getInstance().getAllLoadedGroupNames());
+        });
+        manager.getCommandCompletions().registerCompletion("gdclaimtypes", c -> {
+            List<String> tabList = new ArrayList<>();
+            for (ClaimType type : ClaimTypeRegistryModule.getInstance().getAll()) {
+                tabList.add(type.getName());
+            }
+            return ImmutableList.copyOf(tabList);
+        });
+        manager.getCommandCompletions().registerCompletion("gdtrusttypes", c -> {
+            List<String> tabList = new ArrayList<>();
+            for (TrustType type : TrustTypeRegistryModule.getInstance().getAll()) {
+                tabList.add(type.getName());
+            }
+            return ImmutableList.copyOf(tabList);
+        });
+        manager.getCommandCompletions().registerCompletion("gdflags", c -> {
+            List<String> tabList = new ArrayList<>();
+            for (Flag type : FlagRegistryModule.getInstance().getAll()) {
+                tabList.add(type.getName());
+            }
+            return ImmutableList.copyOf(tabList);
+        });
+        manager.getCommandCompletions().registerCompletion("gdoptions", c -> {
+            List<String> tabList = new ArrayList<>();
+            for (Option type : OptionRegistryModule.getInstance().getAll()) {
+                tabList.add(type.getName());
+            }
+            return ImmutableList.copyOf(tabList);
+        });
+        manager.getCommandCompletions().registerCompletion("gdmcids", c -> {
+            List<String> tabList = new ArrayList<>();
+            for (GDItemType type : ItemTypeRegistryModule.getInstance().getAll()) {
+                tabList.add(type.getName());
+            }
+            for (GDEntityType type : EntityTypeRegistryModule.getInstance().getAll()) {
+                tabList.add(type.getName());
+            }
+            return ImmutableList.copyOf(tabList);
+        });
+        manager.getCommandCompletions().registerCompletion("gdtristates", c -> {
+            return ImmutableList.of("true", "false", "undefined");
+        });
+        manager.getCommandCompletions().registerCompletion("gdcontexts", c -> {
+            return ImmutableList.of("context[<override|default|used_item|source|world|server|player|group>]");
+        });
+        manager.getCommandCompletions().registerCompletion("gddummy", c -> {
+            return ImmutableList.of();
+        });
     }
 
     public PaperCommandManager getCommandManager() {
@@ -675,10 +733,8 @@ public class GriefDefenderPlugin {
             GDFlags.populateFlagStatus();
             PermissionHolderCache.getInstance().getOrCreatePermissionCache(GriefDefenderPlugin.DEFAULT_HOLDER).invalidateAll();
             CLAIM_BLOCK_SYSTEM = BaseStorage.globalConfig.getConfig().playerdata.claimBlockSystem;
-            final Material modTool = Material.getMaterial(BaseStorage.globalConfig.getConfig().claim.modificationTool);
-            final Material invTool = Material.getMaterial(BaseStorage.globalConfig.getConfig().claim.investigationTool);
-            this.modificationTool = modTool == null ? GDMaterials.GOLDEN_SHOVEL : modTool;
-            this.investigationTool = invTool == null?  Material.STICK : invTool;
+            this.modificationTool  = ItemTypeRegistryModule.getInstance().getById(BaseStorage.globalConfig.getConfig().claim.modificationTool).orElse(ItemTypeRegistryModule.getInstance().getById("minecraft:golden_shovel").get());
+            this.investigationTool = ItemTypeRegistryModule.getInstance().getById(BaseStorage.globalConfig.getConfig().claim.investigationTool).orElse(ItemTypeRegistryModule.getInstance().getById("minecraft:stick").get());
             this.maxInspectionDistance = BaseStorage.globalConfig.getConfig().general.maxClaimInspectionDistance;
             if (this.dataStore != null) {
                 for (World world : Bukkit.getServer().getWorlds()) {

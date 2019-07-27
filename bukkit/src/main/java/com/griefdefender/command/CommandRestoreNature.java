@@ -56,7 +56,7 @@ public class CommandRestoreNature extends BaseCommand {
         if (!NMSUtil.getInstance().hasItemInOneHand(player, GriefDefenderPlugin.getInstance().modificationTool)) {
             TextAdapter.sendComponent(player, TextComponent.builder("")
                     .append("You do not have ", TextColor.RED)
-                    .append(GriefDefenderPlugin.getInstance().modificationTool.name().toLowerCase(), TextColor.GREEN)
+                    .append(GriefDefenderPlugin.getInstance().modificationTool.getName().toLowerCase(), TextColor.GREEN)
                     .append(" equipped.", TextColor.RED).build());
             return;
         }

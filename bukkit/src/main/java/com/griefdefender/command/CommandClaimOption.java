@@ -27,6 +27,7 @@ package com.griefdefender.command;
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.InvalidCommandArgument;
 import co.aikar.commands.annotation.CommandAlias;
+import co.aikar.commands.annotation.CommandCompletion;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Optional;
@@ -70,6 +71,7 @@ public class CommandClaimOption extends BaseCommand {
     private ClaimSubjectType subjectType = ClaimSubjectType.GLOBAL;
     private String friendlySubjectName;
 
+    @CommandCompletion("@gdoptions @gddummy")
     @CommandAlias("cop|claimoption")
     @Description("Gets/Sets claim options in the claim you are standing in.")
     @Syntax("[<option> <value> [context[key=value]]")

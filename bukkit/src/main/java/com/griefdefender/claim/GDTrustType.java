@@ -32,8 +32,8 @@ public class GDTrustType implements TrustType {
     private final String name;
 
     public GDTrustType(String id, String name) {
-        this.id = id;
-        this.name = name;
+        this.id = id.toLowerCase();
+        this.name = name.toLowerCase();
     }
 
     @Override
@@ -48,6 +48,6 @@ public class GDTrustType implements TrustType {
 
     @Override
     public String toString() {
-        return this.id + ":" + this.name;
+        return this.id;
     }
 }

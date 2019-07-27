@@ -26,6 +26,7 @@ package com.griefdefender.command;
 
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.CommandAlias;
+import co.aikar.commands.annotation.CommandCompletion;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Optional;
@@ -60,6 +61,7 @@ import org.bukkit.entity.Player;
 @CommandPermission(GDPermissions.COMMAND_TRUST_PLAYER)
 public class CommandTrustPlayer extends BaseCommand {
 
+    @CommandCompletion("@gdplayers @gdtrusttypes @gddummy")
     @CommandAlias("trust")
     @Description("Grants a player access to your claim."
             + "\nAccessor: access to interact with all blocks except inventory."

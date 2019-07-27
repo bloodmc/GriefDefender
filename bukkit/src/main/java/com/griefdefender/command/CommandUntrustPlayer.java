@@ -26,6 +26,7 @@ package com.griefdefender.command;
 
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.CommandAlias;
+import co.aikar.commands.annotation.CommandCompletion;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Subcommand;
@@ -55,6 +56,7 @@ import org.bukkit.entity.Player;
 @CommandPermission(GDPermissions.COMMAND_UNTRUST_PLAYER)
 public class CommandUntrustPlayer extends BaseCommand {
 
+    @CommandCompletion("@gdplayers @gddummy")
     @CommandAlias("untrust")
     @Description("Revokes player access to your claim.")
     @Syntax("<player>")

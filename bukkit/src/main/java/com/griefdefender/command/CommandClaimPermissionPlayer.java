@@ -27,6 +27,7 @@ package com.griefdefender.command;
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.InvalidCommandArgument;
 import co.aikar.commands.annotation.CommandAlias;
+import co.aikar.commands.annotation.CommandCompletion;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Optional;
@@ -63,6 +64,7 @@ import java.util.Set;
 @CommandPermission(GDPermissions.COMMAND_CLAIM_PERMISSION_PLAYER)
 public class CommandClaimPermissionPlayer extends BaseCommand {
 
+    @CommandCompletion("@gdplayers @gddummy")
     @CommandAlias("cpp")
     @Description("Sets a permission on a player with a claim context.")
     @Syntax("<player> [<permission> <value>]")

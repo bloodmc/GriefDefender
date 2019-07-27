@@ -27,6 +27,7 @@ package com.griefdefender.command;
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.InvalidCommandArgument;
 import co.aikar.commands.annotation.CommandAlias;
+import co.aikar.commands.annotation.CommandCompletion;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Subcommand;
@@ -49,6 +50,7 @@ import org.bukkit.command.CommandSender;
 @CommandPermission(GDPermissions.COMMAND_SET_ACCRUED_CLAIM_BLOCKS)
 public class CommandSetAccruedClaimBlocks extends BaseCommand {
 
+    @CommandCompletion("@gdplayers @gddummy")
     @CommandAlias("setaccruedblocks")
     @Description("Updates a player's accrued claim block total.")
     @Syntax("<amount>")

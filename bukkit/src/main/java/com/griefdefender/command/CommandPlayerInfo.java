@@ -27,6 +27,7 @@ package com.griefdefender.command;
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.InvalidCommandArgument;
 import co.aikar.commands.annotation.CommandAlias;
+import co.aikar.commands.annotation.CommandCompletion;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Optional;
@@ -67,6 +68,7 @@ import java.util.List;
 @CommandPermission(GDPermissions.COMMAND_PLAYER_INFO_BASE)
 public class CommandPlayerInfo extends BaseCommand {
 
+    @CommandCompletion("@gdplayers @gddummy")
     @CommandAlias("playerinfo")
     @Description("Gets information about a player.")
     @Syntax("[<player>|<player> <world>]")

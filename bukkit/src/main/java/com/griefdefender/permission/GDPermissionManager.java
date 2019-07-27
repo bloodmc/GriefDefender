@@ -146,7 +146,7 @@ public class GDPermissionManager implements PermissionManager {
         final Set<Context> contexts = new HashSet<>();
         if (permissionHolder instanceof GDPermissionUser) {
             GDPermissionUser user = (GDPermissionUser) permissionHolder;
-            if (user.getOnlinePlayer() != null && NMSUtil.getInstance().getActiveItem(user.getOnlinePlayer()) != null) {
+            if (user.getOnlinePlayer() != null && NMSUtil.getInstance().getActiveItem(user.getOnlinePlayer(), event) != null) {
                 contexts.add(new Context("used_item", getPermissionIdentifier(NMSUtil.getInstance().getActiveItem(user.getOnlinePlayer()))));
             }
         }
@@ -682,7 +682,7 @@ public class GDPermissionManager implements PermissionManager {
         CompletableFuture<PermissionResult> result = new CompletableFuture<>();
         if (flag != Flags.COMMAND_EXECUTE && flag != Flags.COMMAND_EXECUTE_PVP) {
             String[] parts = target.split(":");
-            if (parts.length > 1) {
+            if (parts.length > 1 && parts[0].equalsIgnoreCase("minecraft")) {
                 target = parts[1];
             }
             if (target != null && !GriefDefenderPlugin.ID_MAP.contains(target)) {

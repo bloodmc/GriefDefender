@@ -26,6 +26,7 @@ package com.griefdefender.command;
 
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.CommandAlias;
+import co.aikar.commands.annotation.CommandCompletion;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Subcommand;
@@ -64,6 +65,7 @@ import org.bukkit.entity.Player;
 @CommandPermission(GDPermissions.COMMAND_TRUST_GROUP)
 public class CommandTrustGroup extends BaseCommand {
 
+    @CommandCompletion("@gdgroups @gdtrusttypes @gddummy")
     @CommandAlias("trustgroup")
     @Description("Grants a group access to your claim."
             + "\nAccessor: access to interact with all blocks except inventory."

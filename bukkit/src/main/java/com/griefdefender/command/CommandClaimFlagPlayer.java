@@ -26,6 +26,7 @@ package com.griefdefender.command;
 
 import co.aikar.commands.InvalidCommandArgument;
 import co.aikar.commands.annotation.CommandAlias;
+import co.aikar.commands.annotation.CommandCompletion;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Optional;
@@ -48,6 +49,7 @@ public class CommandClaimFlagPlayer extends ClaimFlagBase  {
         super(ClaimSubjectType.PLAYER);
     }
 
+    @CommandCompletion("@gdplayers @gdflags @gdmcids @gdtristates @gdcontexts @gddummy")
     @CommandAlias("cfp")
     @Description("Gets/Sets flag permission for a player in claim you are standing in.")
     @Syntax("<player> <flag> <target> <value> [context[key=value]]")
