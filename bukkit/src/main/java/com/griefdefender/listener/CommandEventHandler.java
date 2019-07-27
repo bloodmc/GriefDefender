@@ -32,12 +32,14 @@ import com.griefdefender.api.Tristate;
 import com.griefdefender.api.claim.TrustTypes;
 import com.griefdefender.api.permission.flag.Flags;
 import com.griefdefender.claim.GDClaim;
+import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.event.GDCauseStackManager;
 import com.griefdefender.permission.GDFlags;
 import com.griefdefender.permission.GDPermissionManager;
 import com.griefdefender.permission.GDPermissions;
 import com.griefdefender.storage.BaseStorage;
 import com.griefdefender.util.PaginationUtil;
+import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.adapter.bukkit.TextAdapter;
 import org.bukkit.Bukkit;
@@ -134,10 +136,10 @@ public class CommandEventHandler implements Listener {
         if (GDFlags.COMMAND_EXECUTE && !commandExecuteSourceBlacklisted && !GriefDefenderPlugin.isTargetIdBlacklisted(Flags.COMMAND_EXECUTE.getName(), commandPermission + argument, player.getWorld().getUID())) {
             final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, player.getLocation(), claim, GDPermissions.COMMAND_EXECUTE, player, commandPermission + argument, player, TrustTypes.ACCESSOR, true);
             if (result == Tristate.FALSE) {
-                final TextComponent denyMessage = GriefDefenderPlugin.getInstance().messageData.commandBlocked
-                        .apply(ImmutableMap.of(
+                final Component denyMessage = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.COMMAND_BLOCKED,
+                        ImmutableMap.of(
                         "command", command,
-                        "owner", claim.getOwnerName())).build();
+                        "player", claim.getOwnerName()));
                 TextAdapter.sendComponent(player, denyMessage);
                 event.setCancelled(true);
                 GDTimings.PLAYER_COMMAND_EVENT.stopTiming();

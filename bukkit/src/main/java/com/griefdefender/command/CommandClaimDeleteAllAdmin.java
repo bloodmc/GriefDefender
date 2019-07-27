@@ -34,6 +34,7 @@ import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.claim.ClaimResult;
 import com.griefdefender.api.claim.ClaimTypes;
+import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.permission.GDPermissions;
 import net.kyori.text.Component;
 import org.bukkit.entity.Player;
@@ -48,14 +49,14 @@ public class CommandClaimDeleteAllAdmin extends BaseCommand {
     public void execute(Player player) {
         ClaimResult claimResult = GriefDefenderPlugin.getInstance().dataStore.deleteAllAdminClaims(player, player.getWorld());
         if (!claimResult.successful()) {
-            final Component message = GriefDefenderPlugin.getInstance().messageData.claimTypeNotFound
-                    .apply(ImmutableMap.of(
-                    "type", ClaimTypes.ADMIN.getName().toLowerCase())).build();
+            final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_TYPE_NOT_FOUND,
+                    ImmutableMap.of(
+                    "type", ClaimTypes.ADMIN.getName().toLowerCase()));
             GriefDefenderPlugin.sendMessage(player, claimResult.getMessage().orElse(message));
             return;
         }
 
-        GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.claimDeleteAllAdminSuccess.toText());
+        GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.DELETE_ALL_ADMIN_SUCCESS));
         GriefDefenderPlugin.getInstance().getLogger().info(player.getName() + " deleted all administrative claims.");
         GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
         playerData.revertActiveVisual(player);

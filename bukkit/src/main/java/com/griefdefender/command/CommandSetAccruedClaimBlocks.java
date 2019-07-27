@@ -35,6 +35,7 @@ import co.aikar.commands.annotation.Syntax;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.cache.PermissionHolderCache;
+import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.permission.GDPermissions;
 import net.kyori.text.TextComponent;
@@ -78,7 +79,7 @@ public class CommandSetAccruedClaimBlocks extends BaseCommand {
         }
 
         if (!GriefDefenderPlugin.getInstance().claimsEnabledForWorld(world.getUID())) {
-            GriefDefenderPlugin.sendMessage(src, GriefDefenderPlugin.getInstance().messageData.claimDisabledWorld.toText());
+            GriefDefenderPlugin.sendMessage(src, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_DISABLED_WORLD));
             return;
         }
 
@@ -91,6 +92,6 @@ public class CommandSetAccruedClaimBlocks extends BaseCommand {
         }
 
         playerData.getStorageData().save();
-        GriefDefenderPlugin.sendMessage(src, GriefDefenderPlugin.getInstance().messageData.commandAcbSuccess.toText());
+        GriefDefenderPlugin.sendMessage(src, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ADJUST_ACCRUED_BLOCKS_SUCCESS));
     }
 }

@@ -32,6 +32,7 @@ import co.aikar.commands.annotation.Subcommand;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.claim.GDClaim;
+import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.permission.GDPermissions;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
@@ -55,7 +56,7 @@ public class CommandClaimInherit extends BaseCommand {
         }
 
         if (claim.parent == null) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.commandInherit.toText());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.COMMAND_INHERIT));
             return;
         }
         claim.getData().setInheritParent(!claim.getData().doesInheritParent());

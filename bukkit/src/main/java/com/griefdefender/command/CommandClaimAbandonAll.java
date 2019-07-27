@@ -36,6 +36,7 @@ import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.GriefDefender;
 import com.griefdefender.api.claim.Claim;
 import com.griefdefender.api.permission.option.Options;
+import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.event.GDCauseStackManager;
 import com.griefdefender.event.GDDeleteClaimEvent;
 import com.griefdefender.permission.GDPermissionManager;
@@ -62,7 +63,7 @@ public class CommandClaimAbandonAll extends BaseCommand {
 
         if (originalClaimCount == 0) {
             try {
-                throw new CommandException(GriefDefenderPlugin.getInstance().messageData.claimNoClaims.toText());
+                throw new CommandException(GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_NO_CLAIMS));
             } catch (CommandException e) {
                 TextAdapter.sendComponent(player, e.getText());
                 return;
@@ -103,18 +104,14 @@ public class CommandClaimAbandonAll extends BaseCommand {
 
             final EconomyResponse result = economy.depositPlayer(player, refund);
             if (result.transactionSuccess()) {
-                final Component message = GriefDefenderPlugin.getInstance().messageData.economyClaimAbandonSuccess
-                        .apply(ImmutableMap.of(
-                        "refund", TextComponent.of(String.valueOf(refund))
-                )).build();
+                final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_CLAIM_ABANDON_SUCCESS, ImmutableMap.of(
+                        "amount", TextComponent.of(String.valueOf(refund))));
                 GriefDefenderPlugin.sendMessage(player, message);
             }
         } else {
             int remainingBlocks = playerData.getRemainingClaimBlocks();
-            final Component message = GriefDefenderPlugin.getInstance().messageData.claimAbandonSuccess
-                    .apply(ImmutableMap.of(
-                    "remaining-blocks", remainingBlocks
-            )).build();
+            final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ABANDON_SUCCESS, ImmutableMap.of(
+                    "amount", remainingBlocks));
             GriefDefenderPlugin.sendMessage(player, message);
         }
 

@@ -35,6 +35,7 @@ import com.google.common.collect.ImmutableMap;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.claim.GDClaim;
+import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.permission.GDPermissions;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
@@ -68,11 +69,11 @@ public class CommandClaimGreeting extends BaseCommand {
         claim.getInternalClaimData().setRequiresSave(true);
         Component resultMessage = null;
         if (!claim.getInternalClaimData().getGreeting().isPresent()) {
-            resultMessage = GriefDefenderPlugin.getInstance().messageData.claimGreetingClear.toText();
+            resultMessage = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_GREETING_CLEAR);
         } else {
-            resultMessage = GriefDefenderPlugin.getInstance().messageData.claimGreeting
-                    .apply(ImmutableMap.of(
-                    "greeting", greeting)).build();
+            resultMessage = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_GREETING,
+                    ImmutableMap.of(
+                    "greeting", greeting));
         }
         TextAdapter.sendComponent(player, resultMessage);
     }

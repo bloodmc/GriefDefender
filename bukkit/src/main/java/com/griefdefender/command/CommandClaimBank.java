@@ -33,6 +33,7 @@ import co.aikar.commands.annotation.Subcommand;
 import co.aikar.commands.annotation.Syntax;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.claim.GDClaim;
+import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.permission.GDPermissions;
 import org.bukkit.entity.Player;
 
@@ -48,13 +49,13 @@ public class CommandClaimBank extends BaseCommand {
     @Subcommand("claim bank")
     public void execute(Player player, @Optional String[] args) throws CommandException {
         if (!GriefDefenderPlugin.getActiveConfig(player.getWorld().getUID()).getConfig().claim.bankTaxSystem) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.claimBankTaxSystemNotEnabled.toText());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.BANK_TAX_SYSTEM_DISABLED));
             return;
         }
         GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAt(player.getLocation());
         if (this.townOnly) {
             if (!claim.isInTown()) {
-                GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.townNotIn.toText());
+                GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.TOWN_NOT_IN));
                 return;
             }
             claim = claim.getTownClaim();

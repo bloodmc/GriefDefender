@@ -46,6 +46,7 @@ import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.command.ClaimFlagBase.FlagType;
 import com.griefdefender.configuration.GriefDefenderConfig;
+import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.economy.GDBankTransaction;
 import com.griefdefender.internal.pagination.PaginationList;
 import com.griefdefender.internal.registry.BlockTypeRegistryModule;
@@ -222,10 +223,9 @@ public class CommandHelper {
                         try {
                             Integer.parseInt(parts[1]);
                         } catch (NumberFormatException e) {
-                            final Component message = GriefDefenderPlugin.getInstance().messageData.permissionClaimManage
-                                    .apply(ImmutableMap.of(
+                            final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_CLAIM_MANAGE, ImmutableMap.of(
                                     "meta", parts[1],
-                                    "flag", baseFlag)).build();
+                                    "flag", baseFlag));
                             GriefDefenderPlugin.sendMessage(src, message);
                             return new GDPermissionResult(ResultTypes.TARGET_NOT_VALID);
                         }
@@ -277,7 +277,7 @@ public class CommandHelper {
             }
 
             if (result != Tristate.TRUE) {
-                GriefDefenderPlugin.sendMessage(src, GriefDefenderPlugin.getInstance().messageData.permissionFlagUse.toText());
+                GriefDefenderPlugin.sendMessage(src, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_FLAG_USE));
                 return new GDPermissionResult(ResultTypes.NO_PERMISSION);
             }
         }
@@ -967,7 +967,7 @@ public class CommandHelper {
 
     public static void handleBankTransaction(CommandSender src, String[] args, GDClaim claim) {
         if (GriefDefenderPlugin.getInstance().getVaultProvider() == null) {
-            GriefDefenderPlugin.sendMessage(src, GriefDefenderPlugin.getInstance().messageData.economyNotInstalled.toText());
+            GriefDefenderPlugin.sendMessage(src, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_NOT_INSTALLED));
             return;
         }
 
@@ -976,7 +976,7 @@ public class CommandHelper {
         }
 
         if (!claim.getEconomyAccountId().isPresent()) {
-            GriefDefenderPlugin.sendMessage(src, GriefDefenderPlugin.getInstance().messageData.economyVirtualNotSupported.toText());
+            GriefDefenderPlugin.sendMessage(src, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_VIRTUAL_NOT_SUPPORTED));
             return;
         }
 
@@ -989,24 +989,23 @@ public class CommandHelper {
         if (playerData.canIgnoreClaim(claim) || claim.getOwnerUniqueId().equals(playerSource) || claim.getUserTrusts(TrustTypes.MANAGER).contains(playerData.playerID)) {
             final UUID bankAccount = claim.getEconomyAccountId().orElse(null);
             if (bankAccount == null) {
-                GriefDefenderPlugin.sendMessage(src, GriefDefenderPlugin.getInstance().messageData.economyVirtualNotSupported.toText());
+                GriefDefenderPlugin.sendMessage(src, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_VIRTUAL_NOT_SUPPORTED));
                 return;
             }
             if (command.equalsIgnoreCase("withdraw")) {
                 EconomyResponse result = economy.bankWithdraw(bankAccount.toString(), amount);
                 if (result.transactionSuccess()) {
-                    final Component message = GriefDefenderPlugin.getInstance().messageData.claimBankWithdraw
-                        .apply(ImmutableMap.of(
-                            "amount", amount)).build();
-                    GriefDefenderPlugin.sendMessage(src, message);
+                    final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.BANK_WITHDRAW,
+                        ImmutableMap.of(
+                            "amount", amount));
                     economy.depositPlayer(((Player) src), amount);
                     claim.getData().getEconomyData().addBankTransaction(
                         new GDBankTransaction(BankTransactionType.WITHDRAW_SUCCESS, playerData.playerID, Instant.now(), amount));
                 } else {
-                    final Component message = GriefDefenderPlugin.getInstance().messageData.claimBankWithdrawNoFunds
-                        .apply(ImmutableMap.of(
+                    final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.BANK_WITHDRAW_NO_FUNDS,
+                        ImmutableMap.of(
                             "balance", economy.bankBalance(bankAccount.toString()),
-                            "amount", amount)).build();
+                            "amount", amount));
                     GriefDefenderPlugin.sendMessage(src, message);
                     claim.getData().getEconomyData()
                         .addBankTransaction(new GDBankTransaction(BankTransactionType.WITHDRAW_FAIL, playerData.playerID, Instant.now(), amount));
@@ -1024,9 +1023,9 @@ public class CommandHelper {
                             claim.getEconomyData().setTaxPastDueDate(null);
                             claim.getEconomyData().setTaxBalance(0);
                             claim.getInternalClaimData().setExpired(false);
-                            final Component message = GriefDefenderPlugin.getInstance().messageData.taxClaimPaidBalance
-                                    .apply(ImmutableMap.of(
-                                        "amount", taxBalance)).build();
+                            final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.TAX_CLAIM_PAID_BALANCE,
+                                    ImmutableMap.of(
+                                        "amount", taxBalance));
                             GriefDefenderPlugin.sendMessage(src, message);
                             if (depositAmount == 0) {
                                 return;
@@ -1034,32 +1033,31 @@ public class CommandHelper {
                         } else {
                             final double newTaxBalance = Math.abs(depositAmount);
                             claim.getEconomyData().setTaxBalance(newTaxBalance);
-                            final Component message = GriefDefenderPlugin.getInstance().messageData.taxClaimPaidPartial
-                                    .apply(ImmutableMap.of(
+                            final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.TAX_CLAIM_PAID_PARTIAL,
+                                    ImmutableMap.of(
                                         "amount", depositAmount,
-                                        "balance", newTaxBalance)).build();
+                                        "balance", newTaxBalance));
                             GriefDefenderPlugin.sendMessage(src, message);
                             return;
                         }
                     }
-                    final Component message = GriefDefenderPlugin.getInstance().messageData.claimBankDeposit
-                        .apply(ImmutableMap.of(
-                            "amount", depositAmount)).build();
+                    final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.BANK_DEPOSIT, ImmutableMap.of(
+                            "amount", depositAmount));
                     GriefDefenderPlugin.sendMessage(src, message);
                     economy.bankDeposit(bankAccount.toString(), depositAmount);
                     claim.getData().getEconomyData().addBankTransaction(
                         new GDBankTransaction(BankTransactionType.DEPOSIT_SUCCESS, playerData.playerID, Instant.now(), depositAmount));
                 } else {
-                    GriefDefenderPlugin.sendMessage(src, GriefDefenderPlugin.getInstance().messageData.claimBankDepositNoFunds.toText());
+                    GriefDefenderPlugin.sendMessage(src, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.BANK_WITHDRAW_NO_FUNDS));
                     claim.getData().getEconomyData()
                         .addBankTransaction(new GDBankTransaction(BankTransactionType.DEPOSIT_FAIL, playerData.playerID, Instant.now(), amount));
                     return;
                 }
             }
         } else {
-            final Component message = GriefDefenderPlugin.getInstance().messageData.claimBankNoPermission
-                    .apply(ImmutableMap.of(
-                            "owner", claim.getOwnerName())).build();
+            final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.BANK_NO_PERMISSION,
+                    ImmutableMap.of(
+                            "player", claim.getOwnerName()));
             GriefDefenderPlugin.sendMessage(src, message);
         }
     }
@@ -1070,12 +1068,12 @@ public class CommandHelper {
 
     public static void displayClaimBankInfo(CommandSender player, GDClaim claim, boolean checkTown, boolean returnToClaimInfo) {
         if (GriefDefenderPlugin.getInstance().getVaultProvider() == null) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.economyNotInstalled.toText());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_NOT_INSTALLED));
             return;
         }
 
         if (checkTown && !claim.isInTown()) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.townNotIn.toText());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.TOWN_NOT_IN));
             return;
         }
 
@@ -1086,7 +1084,7 @@ public class CommandHelper {
         final GDClaim town = claim.getTownClaim();
         final UUID bankAccount = checkTown ? town.getEconomyAccountId().orElse(null) : claim.getEconomyAccountId().orElse(null);
         if (bankAccount == null) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.economyVirtualNotSupported.toText());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_VIRTUAL_NOT_SUPPORTED));
             return;
         }
 
@@ -1115,12 +1113,12 @@ public class CommandHelper {
         Duration duration = Duration.between(Instant.now().truncatedTo(ChronoUnit.SECONDS), withdrawDate.toInstant()) ;
         final long s = duration.getSeconds();
         final String timeLeft = String.format("%d:%02d:%02d", s / 3600, (s % 3600) / 60, (s % 60));
-        final Component message = GriefDefenderPlugin.getInstance().messageData.claimBankInfo
-                .apply(ImmutableMap.of(
+        final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.BANK_INFO,
+                ImmutableMap.of(
                 "balance", claimBalance,
-                "amount", taxOwed,
-                "time_remaining", timeLeft,
-                "tax_balance", claim.getData().getEconomyData().getTaxBalance())).build();
+                "tax-amount", taxOwed,
+                "time-remaining", timeLeft,
+                "tax-balance", claim.getData().getEconomyData().getTaxBalance()));
         Component transactions = TextComponent.builder("")
                 .append("Bank Transactions", TextColor.AQUA, TextDecoration.ITALIC)
                 .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createBankTransactionsConsumer(player, claim, checkTown, returnToClaimInfo))))

@@ -30,6 +30,7 @@ import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Subcommand;
 import com.griefdefender.GriefDefenderPlugin;
+import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.permission.GDPermissions;
 import org.bukkit.command.CommandSender;
 
@@ -42,6 +43,6 @@ public class CommandGDReload extends BaseCommand {
     @Subcommand("reload")
     public void execute(CommandSender src) {
         GriefDefenderPlugin.getInstance().loadConfig();
-        GriefDefenderPlugin.sendMessage(src, GriefDefenderPlugin.getInstance().messageData.pluginReload.toText());
+        GriefDefenderPlugin.sendMessage(src, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PLUGIN_RELOAD));
     }
 }

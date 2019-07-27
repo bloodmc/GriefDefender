@@ -30,6 +30,7 @@ import com.griefdefender.api.claim.ClaimContexts;
 import com.griefdefender.api.permission.Context;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.claim.GDClaimManager;
+import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.internal.registry.GDItemType;
 import com.griefdefender.internal.registry.ItemTypeRegistryModule;
 import com.griefdefender.internal.tracking.chunk.GDChunk;
@@ -133,7 +134,7 @@ public class CauseContextHelper {
                 contextSet.add(new Context(contextName, arg1));
             } else if (contextName.equals("default")) {
                 if (!canManageDefaults) {
-                    GriefDefenderPlugin.sendMessage(src, GriefDefenderPlugin.getInstance().messageData.permissionFlagDefaults.toText());
+                    GriefDefenderPlugin.sendMessage(src, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_FLAG_DEFAULTS));
                     return new HashSet<>();
                 }
                 if (arg1.equals("any")) {
@@ -156,7 +157,7 @@ public class CauseContextHelper {
                     return null;
                 }
                 if (!canManageOverrides) {
-                    GriefDefenderPlugin.sendMessage(src, GriefDefenderPlugin.getInstance().messageData.permissionFlagOverrides.toText());
+                    GriefDefenderPlugin.sendMessage(src, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_FLAG_OVERRIDES));
                     return null;
                 }
                 if (arg1.equals("any")) {

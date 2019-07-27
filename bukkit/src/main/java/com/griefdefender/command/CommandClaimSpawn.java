@@ -34,6 +34,7 @@ import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.claim.TrustTypes;
 import com.griefdefender.claim.GDClaim;
+import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.permission.GDPermissions;
 import net.kyori.text.Component;
 import org.bukkit.Location;
@@ -49,21 +50,21 @@ public class CommandClaimSpawn extends BaseCommand {
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
         final GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAtPlayer(playerData, player.getLocation());
         if (!playerData.canIgnoreClaim(claim) && !claim.isUserTrusted(player, TrustTypes.ACCESSOR) && !player.hasPermission(GDPermissions.COMMAND_DELETE_CLAIMS)) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.permissionAccess.toText());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_ACCESS));
             return;
         }
 
         final Vector3i spawnPos = claim.getData().getSpawnPos().orElse(null);
         if (spawnPos == null) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.commandSpawnNotSet.toText());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.SPAWN_NOT_SET));
             return;
         }
 
         final Location spawnLocation = new Location(claim.getWorld(), spawnPos.getX(), spawnPos.getY(), spawnPos.getZ());
         player.teleport(spawnLocation);
-        final Component message = GriefDefenderPlugin.getInstance().messageData.commandSpawnTeleport
-                .apply(ImmutableMap.of(
-                "location", spawnPos)).build();
+        final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.SPAWN_TELEPORT,
+                ImmutableMap.of(
+                "location", spawnPos));
         GriefDefenderPlugin.sendMessage(player, message);
     }
 }

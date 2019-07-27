@@ -41,6 +41,7 @@ import com.griefdefender.api.permission.Context;
 import com.griefdefender.api.permission.PermissionResult;
 import com.griefdefender.api.permission.flag.Flag;
 import com.griefdefender.claim.GDClaim;
+import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.event.GDCauseStackManager;
 import com.griefdefender.event.GDFlagClaimEvent;
 import com.griefdefender.internal.pagination.PaginationList;
@@ -168,7 +169,7 @@ public abstract class ClaimFlagBase extends BaseCommand {
 
             GriefDefenderPlugin.sendMessage(player, TextComponent.of("Usage: /cf [<flag> <target> <value> [subject|context]]"));
         } else {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.claimNotFound.toText());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_NOT_FOUND));
         }
     }
 

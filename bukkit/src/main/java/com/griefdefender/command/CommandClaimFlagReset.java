@@ -34,6 +34,7 @@ import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.permission.Context;
 import com.griefdefender.claim.GDClaim;
+import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.permission.GDPermissions;
 import com.griefdefender.util.PermissionUtil;
 import net.kyori.text.Component;
@@ -51,9 +52,9 @@ public class CommandClaimFlagReset extends BaseCommand {
     public void execute(Player player) {
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
         final GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAtPlayer(playerData, player.getLocation());
-        final Component message = GriefDefenderPlugin.getInstance().messageData.permissionClaimResetFlags
-                .apply(ImmutableMap.of(
-                "type", claim.getType().getName())).build();
+        final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_CLAIM_RESET_FLAGS,
+                ImmutableMap.of(
+                "type", claim.getType().getName()));
         if (claim.isWilderness()) {
             if (!player.hasPermission(GDPermissions.MANAGE_WILDERNESS)) {
                 GriefDefenderPlugin.sendMessage(player, message);
@@ -65,7 +66,7 @@ public class CommandClaimFlagReset extends BaseCommand {
                 return;
             }
         } else if (!player.hasPermission(GDPermissions.COMMAND_ADMIN_CLAIMS) && (claim.isBasicClaim() || claim.isSubdivision()) && !player.getUniqueId().equals(claim.getOwnerUniqueId())) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.permissionClaimResetFlagsSelf.toText());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_CLAIM_RESET_FLAGS_SELF));
             return;
         }
 
@@ -76,6 +77,6 @@ public class CommandClaimFlagReset extends BaseCommand {
             }
         }
 
-        GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.flagResetSuccess.toText());
+        GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.FLAG_RESET_SUCCESS));
     }
 }

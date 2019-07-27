@@ -43,6 +43,7 @@ import com.griefdefender.api.permission.option.Option;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.command.CommandHelper;
+import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.event.GDCauseStackManager;
 import com.griefdefender.event.GDFlagClaimEvent;
 import com.griefdefender.internal.registry.EntityTypeRegistryModule;
@@ -369,7 +370,7 @@ public class GDPermissionManager implements PermissionManager {
                 }
             }
             if (value == Tristate.FALSE) {
-                this.eventMessage = GriefDefenderPlugin.getInstance().messageData.permissionOverrideDeny.toText();
+                this.eventMessage = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_OVERRIDE_DENY);
             }
             return processResult(claim, flagPermission, value, permissionHolder);
         }

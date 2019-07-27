@@ -33,6 +33,7 @@ import com.google.common.collect.ImmutableMap;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.claim.GDClaim;
+import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.permission.GDPermissions;
 import net.kyori.text.Component;
 import org.bukkit.entity.Player;
@@ -48,9 +49,8 @@ public class CommandClaimIgnore extends BaseCommand {
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
         final GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAt(player.getLocation());
         if (claim.isBasicClaim() && !playerData.ignoreBasicClaims || claim.isWilderness() && !playerData.ignoreWilderness || claim.isAdminClaim() && !playerData.ignoreAdminClaims) {
-            final Component message = GriefDefenderPlugin.getInstance().messageData.permissionClaimIgnore
-                    .apply(ImmutableMap.of(
-                    "type", claim.getType().getName())).build();
+            final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_CLAIM_IGNORE, ImmutableMap.of(
+                    "type", claim.getType().getName()));
             GriefDefenderPlugin.sendMessage(player, message);
             return;
         }
@@ -58,9 +58,9 @@ public class CommandClaimIgnore extends BaseCommand {
         playerData.ignoreClaims = !playerData.ignoreClaims;
 
         if (!playerData.ignoreClaims) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.claimRespecting.toText());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_RESPECTING));
         } else {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.claimIgnore.toText());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_IGNORE));
         }
     }
 }

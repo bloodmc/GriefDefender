@@ -12,6 +12,7 @@ import com.griefdefender.api.claim.ClaimResultType;
 import com.griefdefender.api.claim.TrustTypes;
 import com.griefdefender.api.data.PlayerData;
 import com.griefdefender.claim.GDClaim;
+import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.permission.GDPermissions;
 import net.kyori.text.TextComponent;
 import net.kyori.text.adapter.bukkit.TextAdapter;
@@ -33,7 +34,7 @@ public class CommandClaimTransfer extends BaseCommand {
         final GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAtPlayer(playerData, player.getLocation());
 
         if (claim == null || claim.isWilderness()) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.claimNotFound.toText());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_NOT_FOUND));
             return;
         }
 
@@ -41,17 +42,17 @@ public class CommandClaimTransfer extends BaseCommand {
         final boolean isAdmin = playerData.canIgnoreClaim(claim);
         // check permission
         if (!isAdmin && claim.isAdminClaim() && !player.hasPermission(GDPermissions.COMMAND_ADMIN_CLAIMS)) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.permissionClaimTransferAdmin.toText());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_CLAIM_TRANSFER_ADMIN));
             return;
         } else if (!isAdmin && !player.getUniqueId().equals(ownerId) && claim.isUserTrusted(player, TrustTypes.MANAGER)) {
             if (claim.parent == null) {
                 // Managers can only transfer child claims
-                GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.claimNotYours.toText());
+                GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_NOT_YOURS));
                 return;
             }
         } else if (!isAdmin && !claim.isAdminClaim() && !player.getUniqueId().equals(ownerId)) {
             // verify ownership
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.claimNotYours.toText());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_NOT_YOURS));
             return;
         }
 
@@ -71,7 +72,7 @@ public class CommandClaimTransfer extends BaseCommand {
                 TextAdapter.sendComponent(player, TextComponent.of("Could not transfer the claim. " + claimResult.getResultType().name(), TextColor.RED));
             }
         } else {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.claimTransferSuccess.toText());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_TRANSFER_SUCCESS));
         }
     }
 }

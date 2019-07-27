@@ -36,6 +36,7 @@ import com.griefdefender.api.permission.option.Options;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.command.CommandHelper;
+import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.event.GDCauseStackManager;
 import com.griefdefender.internal.provider.WorldEditProvider;
 import com.griefdefender.internal.util.BlockUtil;
@@ -72,9 +73,8 @@ public class EconomyUtil {
         final int claimCost = BlockUtil.getInstance().getClaimBlockCost(player.getWorld(), claim.lesserBoundaryCorner, claim.greaterBoundaryCorner, claim.cuboid);
         final Double economyBlockCost = GDPermissionManager.getInstance().getGlobalInternalOptionValue(user, Options.ECONOMY_BLOCK_COST, claim, playerData);
         final double requiredFunds = claimCost * economyBlockCost;
-        final Component message = GriefDefenderPlugin.getInstance().messageData.economyClaimBuyConfirmation
-                .apply(ImmutableMap.of(
-                "sale_price", requiredFunds)).build();
+        final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_CLAIM_BUY_CONFIRMED, ImmutableMap.of(
+                "amount", requiredFunds));
         GriefDefenderPlugin.sendMessage(player, message);
         final Component buyConfirmationText = TextComponent.builder("")
                 .append("\n[")
@@ -101,7 +101,7 @@ public class EconomyUtil {
             if (!result.successful()) {
                 if (result.getResultType() == ClaimResultType.OVERLAPPING_CLAIM) {
                     GDClaim overlapClaim = (GDClaim) result.getClaim().get();
-                    GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.claimCreateOverlapShort.toText());
+                    GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CREATE_OVERLAP_SHORT));
                     Set<Claim> claims = new HashSet<>();
                     claims.add(overlapClaim);
                     CommandHelper.showClaims(player, claims, height, true);
@@ -111,14 +111,12 @@ public class EconomyUtil {
 
             // otherwise, advise him on the /trust command and show him his new claim
             else {
-                Component message = GriefDefenderPlugin.getInstance().messageData.economyClaimBuyConfirmed
-                        .apply(ImmutableMap.of(
-                            "sale_price", requiredFunds)).build();
+                Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_CLAIM_BUY_CONFIRMED, ImmutableMap.of(
+                            "amount", requiredFunds));
                 GriefDefenderPlugin.sendMessage(player, message);
                 playerData.lastShovelLocation = null;
-                message = GriefDefenderPlugin.getInstance().messageData.claimCreateSuccess
-                        .apply(ImmutableMap.of(
-                        "type", gpClaim.getType().getName())).build();
+                message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CREATE_SUCCESS, ImmutableMap.of(
+                        "type", gpClaim.getType().getName()));
                 GriefDefenderPlugin.sendMessage(player, message);
                 final WorldEditProvider worldEditProvider = GriefDefenderPlugin.getInstance().getWorldEditProvider();
                 if (worldEditProvider != null) {

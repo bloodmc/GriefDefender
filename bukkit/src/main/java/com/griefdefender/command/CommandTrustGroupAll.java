@@ -40,6 +40,7 @@ import com.griefdefender.api.claim.Claim;
 import com.griefdefender.api.claim.TrustType;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
+import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.event.GDCauseStackManager;
 import com.griefdefender.event.GDGroupTrustClaimEvent;
 import com.griefdefender.permission.GDPermissionGroup;
@@ -69,7 +70,7 @@ public class CommandTrustGroupAll extends BaseCommand {
     public void execute(Player player, String target, String type) {
         final TrustType trustType = CommandHelper.getTrustType(type);
         if (trustType == null) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.trustInvalid.toText());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.TRUST_INVALID));
             return;
         }
 
@@ -77,9 +78,8 @@ public class CommandTrustGroupAll extends BaseCommand {
 
         // validate player argument
         if (group == null) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.commandGroupInvalid
-                    .apply(ImmutableMap.of(
-                    "group", target)).build());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.COMMAND_INVALID_GROUP, ImmutableMap.of(
+                    "group", target)));
             return;
         }
 
@@ -90,7 +90,7 @@ public class CommandTrustGroupAll extends BaseCommand {
         }
 
         if (playerData == null || claimList == null || claimList.size() == 0) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.trustNoClaims.toText());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.TRUST_NO_CLAIMS));
             return;
         }
 
@@ -108,9 +108,9 @@ public class CommandTrustGroupAll extends BaseCommand {
             this.addAllGroupTrust(claim, group, trustType);
         }
 
-        final Component message = GriefDefenderPlugin.getInstance().messageData.trustIndividualAllClaims
-                .apply(ImmutableMap.of(
-                "player", group.getName())).build();
+        final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.TRUST_INDIVIDUAL_ALL_CLAIMS,
+                ImmutableMap.of(
+                "player", group.getName()));
         GriefDefenderPlugin.sendMessage(player, message);
     }
 

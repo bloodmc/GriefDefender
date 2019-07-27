@@ -61,7 +61,7 @@ public class CommandClaimSell extends BaseCommand {
     public void execute(Player player, String arg) throws InvalidCommandArgument {
         // if economy is disabled, don't do anything
         if (GriefDefenderPlugin.getInstance().getVaultProvider() == null) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.economyNotInstalled.toText());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_NOT_INSTALLED));
             return;
         }
 
@@ -69,24 +69,24 @@ public class CommandClaimSell extends BaseCommand {
         final GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAt(player.getLocation());
 
         if (claim.isAdminClaim() || claim.isWilderness()) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.economyClaimNotForSale.toText());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_CLAIM_NOT_FOR_SALE));
             return;
         }
 
         if (!playerData.canIgnoreClaim(claim) && !player.getUniqueId().equals(claim.getOwnerUniqueId())) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.permissionClaimSale.toText());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_CLAIM_SALE));
             return;
         }
 
         Double salePrice = null;
         if (!claim.getEconomyData().isForSale()) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.economyClaimNotForSale.toText());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_CLAIM_NOT_FOR_SALE));
             return;
         }
         if (arg.equalsIgnoreCase("cancel")) {
             claim.getEconomyData().setForSale(false);
             claim.getEconomyData().setSalePrice(-1);
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.economyClaimSaleCancelled.toText());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_CLAIM_SALE_CANCELLED));
             return;
         } else {
             try {
@@ -97,16 +97,16 @@ public class CommandClaimSell extends BaseCommand {
         }
 
         if (salePrice == null || salePrice < 0) {
-            final Component message = GriefDefenderPlugin.getInstance().messageData.economyClaimSaleInvalidPrice
-                    .apply(ImmutableMap.of(
-                    "sale_price", salePrice)).build();
+            final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_CLAIM_SALE_INVALID_PRICE,
+                    ImmutableMap.of(
+                    "amount", salePrice));
             GriefDefenderPlugin.sendMessage(player, message);
             return;
         }
 
-        final Component message = GriefDefenderPlugin.getInstance().messageData.economyClaimSaleConfirmation
-                .apply(ImmutableMap.of(
-                "sale_price", salePrice)).build();
+        final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_CLAIM_SALE_CONFIRMATION,
+                ImmutableMap.of(
+                "amount", salePrice));
         GriefDefenderPlugin.sendMessage(player, message);
 
         final Component saleConfirmationText = TextComponent.builder("")
@@ -125,9 +125,9 @@ public class CommandClaimSell extends BaseCommand {
             claim.getEconomyData().setSalePrice(price);
             claim.getEconomyData().setForSale(true);
             claim.getData().save();
-            Map<String, ?> params = ImmutableMap.of(
-                    "sale_price", price);
-            GriefDefenderPlugin.sendMessage(src, MessageStorage.ECONOMY_CLAIM_SALE_CONFIRMED, GriefDefenderPlugin.getInstance().messageData.economyClaimSaleConfirmed, params);
+            final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_CLAIM_SALE_CONFIRMED,
+                    ImmutableMap.of("amount", price));
+            GriefDefenderPlugin.sendMessage(src, message);
         };
     }
 }

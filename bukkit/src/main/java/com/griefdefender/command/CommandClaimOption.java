@@ -42,6 +42,7 @@ import com.griefdefender.api.permission.Context;
 import com.griefdefender.api.permission.option.Option;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
+import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.internal.pagination.PaginationList;
 import com.griefdefender.permission.GDPermissionHolder;
 import com.griefdefender.permission.GDPermissionManager;
@@ -88,7 +89,7 @@ public class CommandClaimOption extends BaseCommand {
             option = OptionRegistryModule.getInstance().getById(commandOption).orElse(null);
             // Check if global option
             if (option != null && option.isGlobal() && !player.hasPermission(GDPermissions.MANAGE_GLOBAL_OPTIONS)) {
-                GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.permissionGlobalOption.toText());
+                GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_GLOBAL_OPTION));
                 return;
             }
             try {
@@ -153,18 +154,18 @@ public class CommandClaimOption extends BaseCommand {
 
         if (option != null && !option.isGlobal()) {
             if (claim.isSubdivision()) {
-                GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.commandOptionInvalidClaim.toText());
+                GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.COMMAND_INVALID_CLAIM));
                 return;
             }
 
             if (!playerData.canManageOption(player, claim, true)) {
-                GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.permissionGroupOption.toText());
+                GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_GROUP_OPTION));
                 return;
             }
 
-            final Component message = GriefDefenderPlugin.getInstance().messageData.permissionClaimManage
-                    .apply(ImmutableMap.of(
-                    "type", claim.getType().getName())).build();
+            final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_CLAIM_MANAGE,
+                    ImmutableMap.of(
+                    "type", claim.getType().getName()));
             if (claim.isWilderness() && !player.hasPermission(GDPermissions.MANAGE_WILDERNESS)) {
                 GriefDefenderPlugin.sendMessage(player, message);
                 return;
@@ -177,10 +178,10 @@ public class CommandClaimOption extends BaseCommand {
             if (option != null && optionValue != null && isClaimContext) {
                 Double tempValue = GDPermissionManager.getInstance().getInternalOptionValue(player, option, claim, playerData);
                 if (tempValue > optionValue || tempValue < optionValue) {
-                    final Component message2 = GriefDefenderPlugin.getInstance().messageData.commandOptionExceedsAdmin
-                            .apply(ImmutableMap.of(
-                            "original_value", optionValue,
-                            "admin_value", tempValue)).build();
+                    final Component message2 = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.COMMAND_OPTION_EXCEEDS_ADMIN,
+                            ImmutableMap.of(
+                            "value", optionValue,
+                            "admin_value", tempValue));
                     GriefDefenderPlugin.sendMessage(player, message2);
                     return;
                 }

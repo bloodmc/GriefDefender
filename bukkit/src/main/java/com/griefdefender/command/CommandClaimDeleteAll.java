@@ -34,6 +34,7 @@ import com.google.common.collect.ImmutableMap;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.GriefDefender;
+import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.event.GDCauseStackManager;
 import com.griefdefender.event.GDDeleteClaimEvent;
 import com.griefdefender.permission.GDPermissions;
@@ -70,9 +71,8 @@ public class CommandClaimDeleteAll extends BaseCommand {
         }
 
         GriefDefenderPlugin.getInstance().dataStore.deleteClaimsForPlayer(otherPlayer.getUniqueId());
-        final Component message = GriefDefenderPlugin.getInstance().messageData.claimDeleteAllSuccess
-                .apply(ImmutableMap.of(
-                "owner", otherPlayer.getName())).build();
+        final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.DELETE_ALL_SUCCESS, ImmutableMap.of(
+                "player", otherPlayer.getName()));
         GriefDefenderPlugin.sendMessage(player, message);
         if (player != null) {
             GriefDefenderPlugin.getInstance().getLogger().info(player.getName() + " deleted all claims belonging to " + otherPlayer.getName() + ".");

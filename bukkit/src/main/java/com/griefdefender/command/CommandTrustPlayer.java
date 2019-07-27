@@ -31,6 +31,7 @@ import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Optional;
 import co.aikar.commands.annotation.Subcommand;
 import co.aikar.commands.annotation.Syntax;
+import com.griefdefender.configuration.MessageStorage;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.adapter.bukkit.TextAdapter;
@@ -74,7 +75,7 @@ public class CommandTrustPlayer extends BaseCommand {
         } else {
             trustType = CommandHelper.getTrustType(type);
             if (trustType == null) {
-                GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.trustInvalid.toText());
+                GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.TRUST_INVALID));
                 return;
             }
         }
@@ -87,13 +88,13 @@ public class CommandTrustPlayer extends BaseCommand {
         }
 
         if (user == null) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.commandPlayerInvalid
-                    .apply(ImmutableMap.of(
-                    "player", target)).build());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.COMMAND_INVALID_PLAYER,
+                    ImmutableMap.of(
+                    "player", target)));
             return;
         }
         if (!GriefDefenderPlugin.getInstance().claimsEnabledForWorld(player.getWorld().getUID())) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.claimDisabledWorld.toText());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_DISABLED_WORLD));
             return;
         }
 
@@ -101,24 +102,24 @@ public class CommandTrustPlayer extends BaseCommand {
         GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
         GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAtPlayer(playerData, player.getLocation());
         if (!claim.getOwnerUniqueId().equals(player.getUniqueId()) && !playerData.canIgnoreClaim(claim) && claim.allowEdit(player) != null) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.permissionCommandTrust.toText());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_COMMAND_TRUST));
             return;
         }
 
         if (user.getUniqueId().equals(player.getUniqueId()) && !playerData.canIgnoreClaim(claim)) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.trustSelf.toText());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.TRUST_SELF));
             return;
         }
 
         if (user != null && claim.getOwnerUniqueId().equals(user.getUniqueId())) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.claimOwnerAlready.toText());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_OWNER_ALREADY));
             return;
         } else {
             //check permission here
             if(claim.allowGrantPermission(player) != null) {
-                final Component message = GriefDefenderPlugin.getInstance().messageData.permissionTrust
-                        .apply(ImmutableMap.of(
-                        "owner", claim.getOwnerName())).build();
+                final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_TRUST,
+                        ImmutableMap.of(
+                        "player", claim.getOwnerName()));
                 GriefDefenderPlugin.sendMessage(player, message);
                 return;
             }
@@ -126,7 +127,7 @@ public class CommandTrustPlayer extends BaseCommand {
             if(trustType == TrustTypes.MANAGER) {
                 Component denyReason = claim.allowEdit(player);
                 if(denyReason != null) {
-                    GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.permissionGrant.toText());
+                    GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_GRANT));
                     return;
                 }
             }
@@ -145,10 +146,10 @@ public class CommandTrustPlayer extends BaseCommand {
 
         final List<UUID> trustList = claim.getUserTrustList(trustType);
         if (trustList.contains(user.getUniqueId())) {
-            final Component message = GriefDefenderPlugin.getInstance().messageData.trustAlreadyHas
-                .apply(ImmutableMap.of(
+            final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.TRUST_ALREADY_HAS,
+                ImmutableMap.of(
                     "target", user.getName(),
-                    "type", trustType.getName())).build();
+                    "type", trustType.getName()));
             GriefDefenderPlugin.sendMessage(player, message);
             return;
         }
@@ -157,10 +158,9 @@ public class CommandTrustPlayer extends BaseCommand {
         claim.getInternalClaimData().setRequiresSave(true);
         claim.getInternalClaimData().save();
 
-        final Component message = GriefDefenderPlugin.getInstance().messageData.trustGrant
-            .apply(ImmutableMap.of(
+        final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.TRUST_GRANT, ImmutableMap.of(
                 "target", user.getName(),
-                "type", trustType.getName())).build();
+                "type", trustType.getName()));
         GriefDefenderPlugin.sendMessage(player, message);
     }
 }

@@ -34,6 +34,7 @@ import co.aikar.commands.annotation.Syntax;
 
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.claim.GDClaim;
+import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.internal.util.NMSUtil;
 import com.griefdefender.permission.GDPermissions;
 import net.kyori.text.Component;
@@ -61,7 +62,7 @@ public class CommandClaimClear extends BaseCommand {
     public void execute(Player player, String target, @Optional String claimId) {
         World world = player.getWorld();
         if (!GriefDefenderPlugin.getInstance().claimsEnabledForWorld(world.getUID())) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.claimDisabledWorld.toText());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_DISABLED_WORLD));
             return;
         }
 

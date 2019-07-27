@@ -32,6 +32,7 @@ import co.aikar.commands.annotation.Subcommand;
 import com.google.common.collect.ImmutableMap;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.claim.GDClaim;
+import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.internal.util.BlockUtil;
 import com.griefdefender.permission.GDPermissions;
 import com.griefdefender.text.action.GDCallbackHolder;
@@ -60,13 +61,13 @@ public class CommandRestoreClaim extends BaseCommand {
         final GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAt(player.getLocation());
 
         if (claim.isWilderness()) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.claimNotFound.toText());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_NOT_FOUND));
             return;
         }
 
-        final Component message = GriefDefenderPlugin.getInstance().messageData.permissionClaimDelete
-                .apply(ImmutableMap.of(
-                "type", claim.getType().getName())).build();
+        final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_CLAIM_DELETE,
+                ImmutableMap.of(
+                "type", claim.getType().getName()));
 
         if (!player.hasPermission(GDPermissions.DELETE_CLAIM_ADMIN)) {
             GriefDefenderPlugin.sendMessage(player, message);
@@ -90,7 +91,7 @@ public class CommandRestoreClaim extends BaseCommand {
     private static Consumer<CommandSender> createConfirmationConsumer(CommandSender src, GDClaim claim) {
         return confirm -> {
             BlockUtil.getInstance().restoreClaim(claim);
-            final Component message = GriefDefenderPlugin.getInstance().messageData.claimRestoreSuccess.toText();
+            final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_RESTORE_SUCCESS);
             GriefDefenderPlugin.sendMessage(src, message);
         };
     }

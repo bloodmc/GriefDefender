@@ -35,6 +35,7 @@ import co.aikar.commands.annotation.Syntax;
 import com.google.common.collect.ImmutableMap;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
+import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.permission.GDPermissions;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
@@ -69,7 +70,7 @@ public class CommandAdjustBonusClaimBlocks extends BaseCommand {
             }
         }
         if (world == null || !GriefDefenderPlugin.getInstance().claimsEnabledForWorld(world.getUID())) {
-            GriefDefenderPlugin.sendMessage(src, GriefDefenderPlugin.getInstance().messageData.claimDisabledWorld.toText());
+            GriefDefenderPlugin.sendMessage(src, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_DISABLED_WORLD));
             return;
         }
 
@@ -81,11 +82,10 @@ public class CommandAdjustBonusClaimBlocks extends BaseCommand {
         GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(world.getUID(), user.getUniqueId());
         playerData.setBonusClaimBlocks(playerData.getBonusClaimBlocks() + adjustment);
         playerData.getStorageData().save();
-        final Component message = GriefDefenderPlugin.getInstance().messageData.adjustBlocksSuccess
-                .apply(ImmutableMap.of(
+        final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ADJUST_BONUS_BLOCKS_SUCCESS, ImmutableMap.of(
                 "player", user.getName(),
-                "adjustment", adjustment,
-                "total", playerData.getBonusClaimBlocks())).build();
+                "amount", adjustment,
+                "total", playerData.getBonusClaimBlocks()));
         TextAdapter.sendComponent(src, message);
         GriefDefenderPlugin.getInstance().getLogger().info(
                 src.getName() + " adjusted " + user.getName() + "'s bonus claim blocks by " + adjustment + ".");

@@ -32,6 +32,7 @@ import com.griefdefender.api.claim.ShovelType;
 import com.griefdefender.api.claim.ShovelTypes;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
+import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.visual.ClaimVisualType;
 import net.kyori.text.Component;
@@ -123,16 +124,14 @@ public class PlayerUtil {
         }
 
         if (playerItem == null || playerItem.getType() == Material.AIR) {
-            final Component message = GriefDefenderPlugin.getInstance().messageData.permissionInteractEntity
-                    .apply(ImmutableMap.of(
-                    "owner", claim.getOwnerName(),
-                    "entity", entity.getName())).build();
+            final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_INTERACT_ENTITY, ImmutableMap.of(
+                    "player", claim.getOwnerName(),
+                    "entity", entity.getName()));
             GriefDefenderPlugin.sendClaimDenyMessage(claim, player, message);
         } else {
-            final Component message = GriefDefenderPlugin.getInstance().messageData.permissionInteractItemEntity
-                    .apply(ImmutableMap.of(
+            final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_INTERACT_ITEM_ENTITY, ImmutableMap.of(
                     "item", playerItem.getType().name(),
-                    "entity", entity.getName())).build();
+                    "entity", entity.getName()));
             GriefDefenderPlugin.sendClaimDenyMessage(claim, player, message);
         }
     }

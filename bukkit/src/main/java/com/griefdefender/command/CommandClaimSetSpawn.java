@@ -33,6 +33,7 @@ import com.google.common.collect.ImmutableMap;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.claim.GDClaim;
+import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.internal.util.VecHelper;
 import com.griefdefender.permission.GDPermissions;
 
@@ -56,9 +57,9 @@ public class CommandClaimSetSpawn extends BaseCommand {
 
         final Vector3i pos = VecHelper.toVector3i(player.getLocation());
         claim.getInternalClaimData().setSpawnPos(pos);
-        final Component message = GriefDefenderPlugin.getInstance().messageData.commandSpawnSet
-                .apply(ImmutableMap.of(
-                "location", pos)).build();
+        final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.SPAWN_SET_SUCCESS,
+                ImmutableMap.of(
+                "location", pos));
         GriefDefenderPlugin.sendMessage(player, message);
     }
 }

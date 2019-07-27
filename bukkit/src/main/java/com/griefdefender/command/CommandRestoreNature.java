@@ -32,6 +32,7 @@ import co.aikar.commands.annotation.Subcommand;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.claim.ShovelTypes;
+import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.internal.util.NMSUtil;
 import com.griefdefender.permission.GDPermissions;
 import net.kyori.text.TextComponent;
@@ -62,6 +63,6 @@ public class CommandRestoreNature extends BaseCommand {
 
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
         playerData.shovelMode = ShovelTypes.RESTORE;
-        GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.restoreNatureActivate.toText());
+        GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_RESTORE_NATURE_ACTIVATE));
     }
 }
