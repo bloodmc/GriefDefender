@@ -59,7 +59,7 @@ public class ClaimBlockTask extends BukkitRunnable {
                     Location lastLocation = playerData.lastAfkCheckLocation;
                     // if he's not in a vehicle and has moved at least three blocks since the last check and he's not being pushed around by fluids
                     if (player.getVehicle() == null &&
-                            (lastLocation == null || lastLocation.distanceSquared(player.getLocation()) >= 0) &&
+                            (lastLocation == null || lastLocation.getWorld() != player.getWorld() || lastLocation.distanceSquared(player.getLocation()) >= 0) &&
                             !NMSUtil.getInstance().isBlockWater(player.getLocation().getBlock())) {
                         int accruedBlocks = playerData.getBlocksAccruedPerHour() / 12;
                         if (accruedBlocks < 0) {
