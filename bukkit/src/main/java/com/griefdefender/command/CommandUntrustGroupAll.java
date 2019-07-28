@@ -110,6 +110,7 @@ public class CommandUntrustGroupAll extends BaseCommand {
         GDClaim gdClaim = (GDClaim) claim;
         gdClaim.removeAllTrustsFromGroup(holder.getName());
         gdClaim.getInternalClaimData().setRequiresSave(true);
+        gdClaim.getInternalClaimData().save();
         for (Claim child : gdClaim.children) {
             this.removeAllGroupTrust(child, holder);
         }

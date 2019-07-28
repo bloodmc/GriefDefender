@@ -101,6 +101,7 @@ public class CommandUntrustGroup extends BaseCommand {
 
         claim.removeAllTrustsFromGroup(group.getName());
         claim.getInternalClaimData().setRequiresSave(true);
+        claim.getInternalClaimData().save();
 
         final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.UNTRUST_INDIVIDUAL_SINGLE_CLAIM,
                 ImmutableMap.of(

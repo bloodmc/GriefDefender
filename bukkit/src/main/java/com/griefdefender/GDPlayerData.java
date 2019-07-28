@@ -49,7 +49,6 @@ import me.lucko.luckperms.api.context.MutableContextSet;
 import net.kyori.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
@@ -196,7 +195,7 @@ public class GDPlayerData implements PlayerData {
         for (int i = 0; i < this.visualBlocks.size(); i++) {
             BlockSnapshot snapshot = this.visualBlocks.get(i).getOriginal();
             // If original block does not exist, do not send to player
-            if (NMSUtil.getInstance().getBlockData(snapshot.getLocation().getBlock()) != snapshot.getState()) {
+            if (!snapshot.matchesWorldState()) {
                 if (claim != null) {
                     claim.markVisualDirty = true;
                 }

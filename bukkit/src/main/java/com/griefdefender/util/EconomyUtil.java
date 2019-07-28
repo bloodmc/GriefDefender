@@ -96,7 +96,7 @@ public class EconomyUtil {
                     claimType, player.getUniqueId(), cuboid);
             GDCauseStackManager.getInstance().popCause();
 
-            GDClaim gpClaim = (GDClaim) result.getClaim().orElse(null);
+            GDClaim gdClaim = (GDClaim) result.getClaim().orElse(null);
             // if it didn't succeed, tell the player why
             if (!result.successful()) {
                 if (result.getResultType() == ClaimResultType.OVERLAPPING_CLAIM) {
@@ -116,15 +116,15 @@ public class EconomyUtil {
                 GriefDefenderPlugin.sendMessage(player, message);
                 playerData.lastShovelLocation = null;
                 message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CREATE_SUCCESS, ImmutableMap.of(
-                        "type", gpClaim.getType().getName()));
+                        "type", gdClaim.getFriendlyNameType(true)));
                 GriefDefenderPlugin.sendMessage(player, message);
                 final WorldEditProvider worldEditProvider = GriefDefenderPlugin.getInstance().getWorldEditProvider();
                 if (worldEditProvider != null) {
                     worldEditProvider.stopVisualDrag(player);
-                    worldEditProvider.visualizeClaim(gpClaim, player, playerData, false);
+                    worldEditProvider.visualizeClaim(gdClaim, player, playerData, false);
                 }
-                gpClaim.getVisualizer().createClaimBlockVisuals(height, player.getLocation(), playerData);
-                gpClaim.getVisualizer().apply(player, false);
+                gdClaim.getVisualizer().createClaimBlockVisuals(height, player.getLocation(), playerData);
+                gdClaim.getVisualizer().apply(player, false);
             }
         };
     }

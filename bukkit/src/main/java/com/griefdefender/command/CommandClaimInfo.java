@@ -285,16 +285,16 @@ public class CommandClaimInfo extends BaseCommand {
         }
 
         // groups
-        for (String group : gpClaim.getInternalClaimData().getAccessorGroups()) {
+        for (String group : gpClaim.getGroupTrustList(TrustTypes.ACCESSOR, true)) {
             accessorGroups += group + " ";
         }
-        for (String group : gpClaim.getInternalClaimData().getBuilderGroups()) {
+        for (String group : gpClaim.getGroupTrustList(TrustTypes.BUILDER, true)) {
             builderGroups += group + " ";
         }
-        for (String group : gpClaim.getInternalClaimData().getContainerGroups()) {
+        for (String group : gpClaim.getGroupTrustList(TrustTypes.CONTAINER, true)) {
             containerGroups += group + " ";
         }
-        for (String group : gpClaim.getInternalClaimData().getManagerGroups()) {
+        for (String group : gpClaim.getGroupTrustList(TrustTypes.MANAGER, true)) {
             managerGroups += group + " ";
         }
 

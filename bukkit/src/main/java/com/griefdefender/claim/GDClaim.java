@@ -355,27 +355,27 @@ public class GDClaim implements Claim {
     public Component getFriendlyNameType(boolean upper) {
         if (this.type == ClaimTypes.ADMIN) {
             if (upper) {
-                return TextComponent.of(this.type.getName(), TextColor.RED);
+                return TextComponent.of(this.type.getName().toUpperCase(), TextColor.RED);
             }
             return TextComponent.of("Admin", TextColor.RED);
         }
 
         if (this.type == ClaimTypes.BASIC) {
             if (upper) {
-                return TextComponent.of(this.type.getName(), TextColor.YELLOW);
+                return TextComponent.of(this.type.getName().toUpperCase(), TextColor.YELLOW);
             }
             return TextComponent.of("Basic", TextColor.YELLOW);
         }
 
         if (this.type == ClaimTypes.SUBDIVISION) {
             if (upper) {
-                return TextComponent.of(this.type.getName(), TextColor.AQUA);
+                return TextComponent.of(this.type.getName().toUpperCase(), TextColor.AQUA);
             }
             return TextComponent.of("Subdivision", TextColor.AQUA);
         }
 
         if (upper) {
-            return TextComponent.of(this.type.getName(), TextColor.GREEN);
+            return TextComponent.of(this.type.getName().toUpperCase(), TextColor.GREEN);
         }
         return TextComponent.of("Town", TextColor.GREEN);
     }
@@ -2419,7 +2419,19 @@ public class GDClaim implements Claim {
     }
 
     public List<String> getGroupTrustList(TrustType type) {
-        return this.getGroupTrustList(type, false);
+        if (type == TrustTypes.NONE) {
+            return new ArrayList<>();
+        }
+        if (type == TrustTypes.ACCESSOR) {
+            return this.claimData.getAccessorGroups();
+        }
+        if (type == TrustTypes.CONTAINER) {
+            return this.claimData.getContainerGroups();
+        }
+        if (type == TrustTypes.BUILDER) {
+            return this.claimData.getBuilderGroups();
+        }
+        return this.claimData.getManagerGroups();
     }
 
     public List<String> getGroupTrustList(TrustType type, boolean includeParents) {

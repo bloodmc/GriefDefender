@@ -117,14 +117,15 @@ public class CommandTrustGroupAll extends BaseCommand {
     }
 
     private void addAllGroupTrust(Claim claim, GDPermissionGroup holder, TrustType trustType) {
-        GDClaim gpClaim = (GDClaim) claim;
-        List<String> trustList = gpClaim.getGroupTrustList(trustType);
+        GDClaim gdClaim = (GDClaim) claim;
+        List<String> trustList = gdClaim.getGroupTrustList(trustType);
         if (!trustList.contains(holder.getFriendlyName())) {
             trustList.add(holder.getFriendlyName());
         }
 
-        gpClaim.getInternalClaimData().setRequiresSave(true);
-        for (Claim child : gpClaim.children) {
+        gdClaim.getInternalClaimData().setRequiresSave(true);
+        gdClaim.getInternalClaimData().save();
+        for (Claim child : gdClaim.children) {
             this.addAllGroupTrust(child, holder, trustType);
         }
     }

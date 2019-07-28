@@ -136,14 +136,15 @@ public class CommandTrustPlayerAll extends BaseCommand {
     }
 
     private void addAllUserTrust(Claim claim, GDPermissionUser user, TrustType trustType) {
-        GDClaim gpClaim = (GDClaim) claim;
-        List<UUID> trustList = gpClaim.getUserTrustList(trustType);
+        GDClaim gdClaim = (GDClaim) claim;
+        List<UUID> trustList = gdClaim.getUserTrustList(trustType);
         if (!trustList.contains(user.getUniqueId())) {
             trustList.add(user.getUniqueId());
         }
 
-        gpClaim.getInternalClaimData().setRequiresSave(true);
-        for (Claim child : gpClaim.children) {
+        gdClaim.getInternalClaimData().setRequiresSave(true);
+        gdClaim.getInternalClaimData().save();
+        for (Claim child : gdClaim.children) {
             this.addAllUserTrust(child, user, trustType);
         }
     }

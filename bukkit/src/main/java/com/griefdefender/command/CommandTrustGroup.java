@@ -126,10 +126,18 @@ public class CommandTrustGroup extends BaseCommand {
         final List<String> groupTrustList = claim.getGroupTrustList(trustType);
         if (!groupTrustList.contains(group.getName())) {
             groupTrustList.add(group.getName());
+        } else {
+            final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.TRUST_ALREADY_HAS,
+                ImmutableMap.of(
+                    "target", group.getName(),
+                    "type", trustType.getName()));
+            GriefDefenderPlugin.sendMessage(player, message);
+            return;
         }
         final GDPermissionHolder holder = PermissionHolderCache.getInstance().getOrCreateGroup(group);
         PermissionUtil.getInstance().setPermissionValue(claim, holder, permission, Tristate.TRUE, contexts);
         claim.getInternalClaimData().setRequiresSave(true);
+        claim.getInternalClaimData().save();
 
         final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.TRUST_GRANT, ImmutableMap.of(
                 "target", group.getName(),

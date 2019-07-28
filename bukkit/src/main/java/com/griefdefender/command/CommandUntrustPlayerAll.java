@@ -119,6 +119,7 @@ public class CommandUntrustPlayerAll extends BaseCommand {
         final GDClaim gdClaim = ((GDClaim) claim);
         gdClaim.removeAllTrustsFromUser(user.getUniqueId());
         gdClaim.getInternalClaimData().setRequiresSave(true);
+        gdClaim.getInternalClaimData().save();
         for (Claim child : gdClaim.children) {
             this.removeAllUserTrust(child, user);
         }

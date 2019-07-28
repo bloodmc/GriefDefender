@@ -1184,7 +1184,7 @@ public class PlayerEventHandler implements Listener {
                 type, player.getUniqueId(), cuboid);
         GDCauseStackManager.getInstance().popCause();
 
-        GDClaim gpClaim = (GDClaim) result.getClaim().orElse(null);
+        GDClaim gdClaim = (GDClaim) result.getClaim().orElse(null);
         if (!result.successful()) {
             if (result.getResultType() == ClaimResultType.OVERLAPPING_CLAIM) {
                 GDClaim overlapClaim = (GDClaim) result.getClaim().get();
@@ -1200,14 +1200,14 @@ public class PlayerEventHandler implements Listener {
             playerData.lastShovelLocation = null;
             final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CREATE_SUCCESS,
                     ImmutableMap.of(
-                    "type", gpClaim.getType().getName()));
+                    "type", gdClaim.getFriendlyNameType(true)));
             GriefDefenderPlugin.sendMessage(player, message);
             if (this.worldEditProvider != null) {
                 this.worldEditProvider.stopVisualDrag(player);
-                this.worldEditProvider.visualizeClaim(gpClaim, player, playerData, false);
+                this.worldEditProvider.visualizeClaim(gdClaim, player, playerData, false);
             }
-            gpClaim.getVisualizer().createClaimBlockVisuals(location.getBlockY(), player.getLocation(), playerData);
-            gpClaim.getVisualizer().apply(player, false);
+            gdClaim.getVisualizer().createClaimBlockVisuals(location.getBlockY(), player.getLocation(), playerData);
+            gdClaim.getVisualizer().apply(player, false);
         }
     }
 
@@ -1269,12 +1269,12 @@ public class PlayerEventHandler implements Listener {
                 lesserBoundaryCorner, greaterBoundaryCorner, PlayerUtil.getInstance().getClaimTypeFromShovel(playerData.shovelMode),
                 player.getUniqueId(), playerData.getClaimCreateMode() == 1, playerData.claimSubdividing);
 
-        GDClaim gpClaim = (GDClaim) result.getClaim().orElse(null);
+        GDClaim gdClaim = (GDClaim) result.getClaim().orElse(null);
         if (!result.successful()) {
             if (result.getResultType() == ClaimResultType.OVERLAPPING_CLAIM) {
                 GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CREATE_OVERLAP_SHORT));
                 Set<Claim> claims = new HashSet<>();
-                claims.add(gpClaim);
+                claims.add(gdClaim);
                 CommandHelper.showOverlapClaims(player, claims, location.getBlockY());
             }
             event.setCancelled(true);
@@ -1283,13 +1283,13 @@ public class PlayerEventHandler implements Listener {
             playerData.lastShovelLocation = null;
             playerData.claimSubdividing = null;
             final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CREATE_SUCCESS, ImmutableMap.of(
-                    "type", playerData.shovelMode.getName()));
+                    "type", gdClaim.getFriendlyNameType(true)));
             GriefDefenderPlugin.sendMessage(player, message);
-            gpClaim.getVisualizer().createClaimBlockVisuals(location.getBlockY(), player.getLocation(), playerData);
-            gpClaim.getVisualizer().apply(player, false);
+            gdClaim.getVisualizer().createClaimBlockVisuals(location.getBlockY(), player.getLocation(), playerData);
+            gdClaim.getVisualizer().apply(player, false);
             if (this.worldEditProvider != null) {
                 this.worldEditProvider.stopVisualDrag(player);
-                this.worldEditProvider.visualizeClaim(gpClaim, player, playerData, false);
+                this.worldEditProvider.visualizeClaim(gdClaim, player, playerData, false);
             }
         }
     }
