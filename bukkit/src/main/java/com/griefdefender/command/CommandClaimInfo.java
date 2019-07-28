@@ -262,25 +262,25 @@ public class CommandClaimInfo extends BaseCommand {
         for (UUID uuid : accessorList) {
             final String userName = PlayerUtil.getInstance().getUserName(uuid);
             if (userName != null) {
-                accessors += PlayerUtil.getInstance().getUserName(uuid) + " ";
+                accessors += userName + " ";
             }
         }
         for (UUID uuid : builderList) {
             final String userName = PlayerUtil.getInstance().getUserName(uuid);
             if (userName != null) {
-                builders += PlayerUtil.getInstance().getUserName(uuid) + " ";
+                builders += userName + " ";
             }
         }
         for (UUID uuid : containerList) {
             final String userName = PlayerUtil.getInstance().getUserName(uuid);
             if (userName != null) {
-                containers += PlayerUtil.getInstance().getUserName(uuid) + " ";
+                containers += userName + " ";
             }
         }
         for (UUID uuid : managerList) {
             final String userName = PlayerUtil.getInstance().getUserName(uuid);
             if (userName != null) {
-                managers += PlayerUtil.getInstance().getUserName(uuid) + " ";
+                managers += userName + " ";
             }
         }
 
@@ -361,7 +361,7 @@ public class CommandClaimInfo extends BaseCommand {
         Component ownerLine = TextComponent.builder("")
                 .append("Owner", TextColor.YELLOW)
                 .append(" : ")
-                .append(ownerName != null && !claim.isAdminClaim() ? ownerName : "administrator", TextColor.GOLD).build();
+                .append(ownerName != null && !claim.isAdminClaim() && !claim.isWilderness() ? ownerName : "administrator", TextColor.GOLD).build();
         Component adminShowText = TextComponent.empty();
         Component basicShowText = TextComponent.empty();
         Component subdivisionShowText = TextComponent.empty();

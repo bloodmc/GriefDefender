@@ -99,6 +99,13 @@ public class PlayerUtil {
 
     @Nullable
     public String getUserName(UUID uuid) {
+        if (uuid == GriefDefenderPlugin.PUBLIC_UUID) {
+            return "public";
+        }
+        if (uuid == GriefDefenderPlugin.ADMIN_USER_UUID || uuid == GriefDefenderPlugin.WORLD_USER_UUID) {
+            return "administrator";
+        }
+
         final GDPermissionUser user = PermissionHolderCache.getInstance().getOrCreateUser(uuid);
         if (user == null) {
             return null;
