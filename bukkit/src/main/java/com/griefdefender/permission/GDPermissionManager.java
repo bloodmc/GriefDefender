@@ -799,6 +799,11 @@ public class GDPermissionManager implements PermissionManager {
             contexts.addAll(PermissionUtil.getInstance().getActiveContexts(holder, playerData, claim));
         }
 
+        if (claim != null) {
+            contexts.add(claim.getDefaultTypeContext());
+            contexts.add(claim.getOverrideTypeContext());
+            contexts.add(claim.getOverrideClaimContext());
+        }
         Contexts context = Contexts.global().setContexts(contexts);
         MetaData metaData = holder.getLuckPermsHolder().getCachedData().getMetaData(context);
         String value = metaData.getMeta().get(option.getPermission());
@@ -846,7 +851,8 @@ public class GDPermissionManager implements PermissionManager {
             if (playerData != null) {
                 playerData.ignoreActiveContexts = true;
             }
-            contexts.addAll(PermissionUtil.getInstance().getActiveContexts(holder));
+            //contexts.addAll(PermissionUtil.getInstance().getActiveContexts(holder));
+            contexts.addAll(PermissionUtil.getInstance().getActiveContexts(holder, playerData, claim));
         }
 
         // Check type override
@@ -878,8 +884,13 @@ public class GDPermissionManager implements PermissionManager {
             return this.getDoubleValue(value);
         }
 
-        // Check global
-        return this.getGlobalInternalOptionValue(holder, option, claim, playerData);
+        // Check default holder
+        if (holder != GriefDefenderPlugin.DEFAULT_HOLDER) {
+            return getInternalOptionValue(GriefDefenderPlugin.DEFAULT_HOLDER, option, claim, type, playerData);
+        }
+
+        // Should never happen
+        return 0.0;
     }
 
     private Double getDoubleValue(String option) {

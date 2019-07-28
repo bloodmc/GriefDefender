@@ -134,6 +134,15 @@ public class GDBootstrap extends JavaPlugin {
         name = "me.lucko:jar-relocator:1.3";
         file = this.jarMap.get(name);
         BootstrapUtil.addUrlToClassLoader(name, file);
+        // inject reflect helper
+        final String javaVersion = System.getProperty("java.version");
+        if (javaVersion.startsWith("11") || javaVersion.startsWith("12")) {
+            name = "com.griefdefender:reflect-helper:2.0";
+        } else {
+            name = "com.griefdefender:reflect-helper:1.0";
+        }
+        file = this.jarMap.get(name);
+        BootstrapUtil.addUrlToClassLoader(name, file);
     }
 
     public void downloadLibrary(String name, String relocate, String sha1, String url, Path libPath) {

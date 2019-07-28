@@ -14,6 +14,18 @@
             "url": "https://repo.glaremasters.me/repository/bloodshot/com/griefdefender/api/1.0.0-SNAPSHOT/api-1.0.0-20190727.235445-3.jar"
         },
         {
+            "name": "com.griefdefender:reflect-helper:1.0",
+            "sha1": "7a50bffa9f0062ac4ca376d95a0e6599aa5f3257",
+            "path": "com/griefdefender/reflect-helper/1.0/reflect-helper-1.0.jar",
+            "url": "https://repo.glaremasters.me/repository/bloodshot/com/griefdefender/reflect-helper/1.0/reflect-helper-1.0.jar"
+        },
+        {
+            "name": "com.griefdefender:reflect-helper:2.0",
+            "sha1": "ee45d077344ae67e155e37eb61025401944ffabc",
+            "path": "com/griefdefender/reflect-helper/2.0/reflect-helper-2.0.jar",
+            "url": "https://repo.glaremasters.me/repository/bloodshot/com/griefdefender/reflect-helper/2.0/reflect-helper-2.0.jar"
+        },
+        {
             "name": "org.ow2.asm:asm-debug-all:5.2",
             "sha1": "3354e11e2b34215f06dab629ab88e06aca477c19",
             "path": "org/ow2/asm/asm-debug-all/5.2/asm-debug-all-5.2.jar",

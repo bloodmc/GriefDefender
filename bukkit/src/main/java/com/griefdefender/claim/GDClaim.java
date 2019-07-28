@@ -707,7 +707,7 @@ public class GDClaim implements Claim {
 
     public double getOwnerEconomyBlockCost(GDPlayerData playerData) {
         final GDPermissionHolder subject = playerData == null ? GriefDefenderPlugin.DEFAULT_HOLDER : playerData.getSubject();
-        return GDPermissionManager.getInstance().getGlobalInternalOptionValue(subject, Options.ECONOMY_BLOCK_COST, playerData).intValue();
+        return GDPermissionManager.getInstance().getGlobalInternalOptionValue(subject, Options.ECONOMY_BLOCK_COST, this, playerData).intValue();
     }
 
     public int getOwnerMinClaimLevel() {
@@ -716,7 +716,7 @@ public class GDClaim implements Claim {
 
     public int getOwnerMinClaimLevel(GDPlayerData playerData) {
         final GDPermissionHolder subject = playerData == null ? GriefDefenderPlugin.DEFAULT_HOLDER : playerData.getSubject();
-        return GDPermissionManager.getInstance().getGlobalInternalOptionValue(subject, Options.MIN_LEVEL, playerData).intValue();
+        return GDPermissionManager.getInstance().getGlobalInternalOptionValue(subject, Options.MIN_LEVEL, this, playerData).intValue();
     }
 
     public int getOwnerMaxClaimLevel() {
@@ -725,7 +725,7 @@ public class GDClaim implements Claim {
 
     public int getOwnerMaxClaimLevel(GDPlayerData playerData) {
         final GDPermissionHolder subject = playerData == null ? GriefDefenderPlugin.DEFAULT_HOLDER : playerData.getSubject();
-        return GDPermissionManager.getInstance().getGlobalInternalOptionValue(subject, Options.MAX_LEVEL, playerData).intValue();
+        return GDPermissionManager.getInstance().getGlobalInternalOptionValue(subject, Options.MAX_LEVEL, this, playerData).intValue();
     }
 
     @Override
@@ -1428,6 +1428,15 @@ public class GDClaim implements Claim {
             }
         }
         Component message = null;
+        String maxCuboidArea = maxClaimX + "x" + maxClaimY + "x" + maxClaimZ;
+        if (maxClaimX == 0 && maxClaimY == 0 && maxClaimZ == 0) {
+            maxCuboidArea = "∞";
+        }
+        String maxArea = maxClaimX + "x" + maxClaimZ;
+        if (maxClaimX == 0 && maxClaimZ == 0) {
+            maxArea = "∞";
+        }
+
         if (maxClaimX > 0) {
             int size = Math.abs(greaterCorner.getX() - lesserCorner.getX()) + 1;
             if (size > maxClaimX) {
@@ -1436,16 +1445,16 @@ public class GDClaim implements Claim {
                         message = messageData.getMessage(MessageStorage.CLAIM_SIZE_MAX, ImmutableMap.of(
                                 "axis", "x",
                                 "size", size,
-                                "max-size", maxClaimX,
+                                "max-size", maxClaimX == 0 ? "∞" : maxClaimX,
                                 "min-area", minClaimX + "x" + minClaimY + "x" + minClaimZ,
-                                "max-area", maxClaimX + "x" + maxClaimY + "x" + minClaimZ));
+                                "max-area", maxCuboidArea));
                     } else {
                         message = messageData.getMessage(MessageStorage.CLAIM_SIZE_MAX, ImmutableMap.of(
                                 "axis", "x",
                                 "size", size,
-                                "max-size", maxClaimX,
+                                "max-size", maxClaimX == 0 ? "∞" : maxClaimX,
                                 "min-area", minClaimX + "x" + minClaimZ,
-                                "max-area", maxClaimX + "x" + minClaimZ));
+                                "max-area", maxArea));
                     }
                     GriefDefenderPlugin.sendMessage(player, message);
                 }
@@ -1460,16 +1469,16 @@ public class GDClaim implements Claim {
                         message = messageData.getMessage(MessageStorage.CLAIM_SIZE_MAX, ImmutableMap.of(
                                 "axis", "y",
                                 "size", size,
-                                "max-size", maxClaimY,
+                                "max-size", maxClaimY == 0 ? "∞" : maxClaimY,
                                 "min-area", minClaimX + "x" + minClaimY + "x" + minClaimZ,
-                                "max-area", maxClaimX + "x" + maxClaimY + "x" + minClaimZ));
+                                "max-area", maxCuboidArea));
                     } else {
                         message = messageData.getMessage(MessageStorage.CLAIM_SIZE_MAX, ImmutableMap.of(
                                 "axis", "y",
                                 "size", size,
-                                "max-size", maxClaimY,
+                                "max-size", maxClaimY == 0 ? "∞" : maxClaimY,
                                 "min-area", minClaimX + "x" + minClaimZ,
-                                "max-area", maxClaimX + "x" + minClaimZ));
+                                "max-area", maxArea));
                     }
                     GriefDefenderPlugin.sendMessage(player, message);
                 }
@@ -1484,16 +1493,16 @@ public class GDClaim implements Claim {
                         message = messageData.getMessage(MessageStorage.CLAIM_SIZE_MAX, ImmutableMap.of(
                                 "axis", "z",
                                 "size", size,
-                                "max-size", maxClaimY,
+                                "max-size", maxClaimZ == 0 ? "∞" : maxClaimZ,
                                 "min-area", minClaimX + "x" + minClaimY + "x" + minClaimZ,
-                                "max-area", maxClaimX + "x" + maxClaimY + "x" + minClaimZ));
+                                "max-area", maxCuboidArea));
                     } else {
                         message = messageData.getMessage(MessageStorage.CLAIM_SIZE_MAX, ImmutableMap.of(
                                 "axis", "z",
                                 "size", size,
-                                "max-size", maxClaimY,
+                                "max-size", maxClaimZ == 0 ? "∞" : maxClaimZ,
                                 "min-area", minClaimX + "x" + minClaimZ,
-                                "max-area", maxClaimX + "x" + minClaimZ));
+                                "max-area", maxArea));
                     }
                     GriefDefenderPlugin.sendMessage(player, message);
                 }
@@ -1508,16 +1517,16 @@ public class GDClaim implements Claim {
                         message = messageData.getMessage(MessageStorage.CLAIM_SIZE_MIN, ImmutableMap.of(
                                 "axis", "x",
                                 "size", size,
-                                "min-size", minClaimX,
+                                "min-size", minClaimX == 0 ? "∞" : minClaimX,
                                 "min-area", minClaimX + "x" + minClaimY + "x" + minClaimZ,
-                                "max-area", maxClaimX + "x" + maxClaimY + "x" + maxClaimZ));
+                                "max-area", maxCuboidArea));
                     } else {
                         message = messageData.getMessage(MessageStorage.CLAIM_SIZE_MIN, ImmutableMap.of(
                                 "axis", "x",
                                 "size", size,
                                 "min-size", minClaimX,
                                 "min-area", minClaimX + "x" + minClaimZ,
-                                "max-area", maxClaimX + "x" + maxClaimZ));
+                                "max-area", maxArea));
                     }
                     GriefDefenderPlugin.sendMessage(player, message);
                 }
@@ -1532,16 +1541,16 @@ public class GDClaim implements Claim {
                         message = messageData.getMessage(MessageStorage.CLAIM_SIZE_MIN, ImmutableMap.of(
                                 "axis", "y",
                                 "size", size,
-                                "min-size", minClaimX,
+                                "min-size", minClaimY == 0 ? "∞" : minClaimY,
                                 "min-area", minClaimX + "x" + minClaimY + "x" + minClaimZ,
-                                "max-area", maxClaimX + "x" + maxClaimY + "x" + maxClaimZ));
+                                "max-area", maxCuboidArea));
                     } else {
                         message = messageData.getMessage(MessageStorage.CLAIM_SIZE_MIN, ImmutableMap.of(
                                 "axis", "y",
                                 "size", size,
-                                "min-size", minClaimX,
+                                "min-size", minClaimY == 0 ? "∞" : minClaimY,
                                 "min-area", minClaimX + "x" + minClaimZ,
-                                "max-area", maxClaimX + "x" + maxClaimZ));
+                                "max-area", maxArea));
                     }
                     GriefDefenderPlugin.sendMessage(player, message);
                 }
@@ -1556,16 +1565,16 @@ public class GDClaim implements Claim {
                         message = messageData.getMessage(MessageStorage.CLAIM_SIZE_MIN, ImmutableMap.of(
                                 "axis", "z",
                                 "size", size,
-                                "min-size", minClaimX,
+                                "min-size", minClaimZ == 0 ? "∞" : minClaimZ,
                                 "min-area", minClaimX + "x" + minClaimY + "x" + minClaimZ,
-                                "max-area", maxClaimX + "x" + maxClaimY + "x" + maxClaimZ));
+                                "max-area", maxCuboidArea));
                     } else {
                         message = messageData.getMessage(MessageStorage.CLAIM_SIZE_MIN, ImmutableMap.of(
                                 "axis", "z",
                                 "size", size,
-                                "min-size", minClaimX,
+                                "min-size", minClaimZ == 0 ? "∞" : minClaimZ,
                                 "min-area", minClaimX + "x" + minClaimZ,
-                                "max-area", maxClaimX + "x" + maxClaimZ));
+                                "max-area", maxArea));
                     }
                     GriefDefenderPlugin.sendMessage(player, message);
                 }
