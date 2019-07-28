@@ -27,8 +27,6 @@ package com.griefdefender.configuration;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
-
 import com.google.common.collect.ImmutableMap;
 import com.griefdefender.configuration.category.ConfigCategory;
 

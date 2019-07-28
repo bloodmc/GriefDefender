@@ -80,7 +80,7 @@ import com.griefdefender.command.CommandClaimSell;
 import com.griefdefender.command.CommandClaimSellBlocks;
 import com.griefdefender.command.CommandClaimSetSpawn;
 import com.griefdefender.command.CommandClaimSpawn;
-import com.griefdefender.command.CommandClaimSubdivide;
+import com.griefdefender.command.CommandClaimSubdivision;
 import com.griefdefender.command.CommandClaimTown;
 import com.griefdefender.command.CommandClaimTransfer;
 import com.griefdefender.command.CommandClaimWorldEdit;
@@ -552,7 +552,7 @@ public class GriefDefenderPlugin {
         manager.registerCommand(new CommandClaimSellBlocks());
         manager.registerCommand(new CommandClaimSetSpawn());
         manager.registerCommand(new CommandClaimSpawn());
-        manager.registerCommand(new CommandClaimSubdivide());
+        manager.registerCommand(new CommandClaimSubdivision());
         manager.registerCommand(new CommandClaimTown());
         manager.registerCommand(new CommandClaimTransfer());
         manager.registerCommand(new CommandClaimWorldEdit());
@@ -733,7 +733,8 @@ public class GriefDefenderPlugin {
             GDFlags.populateFlagStatus();
             PermissionHolderCache.getInstance().getOrCreatePermissionCache(GriefDefenderPlugin.DEFAULT_HOLDER).invalidateAll();
             CLAIM_BLOCK_SYSTEM = BaseStorage.globalConfig.getConfig().playerdata.claimBlockSystem;
-            this.modificationTool  = ItemTypeRegistryModule.getInstance().getById(BaseStorage.globalConfig.getConfig().claim.modificationTool).orElse(ItemTypeRegistryModule.getInstance().getById("minecraft:golden_shovel").get());
+            final GDItemType defaultModTool = ItemTypeRegistryModule.getInstance().getById("minecraft:golden_shovel").orElse(null);
+            this.modificationTool  = ItemTypeRegistryModule.getInstance().getById(BaseStorage.globalConfig.getConfig().claim.modificationTool).orElse(defaultModTool);
             this.investigationTool = ItemTypeRegistryModule.getInstance().getById(BaseStorage.globalConfig.getConfig().claim.investigationTool).orElse(ItemTypeRegistryModule.getInstance().getById("minecraft:stick").get());
             this.maxInspectionDistance = BaseStorage.globalConfig.getConfig().general.maxClaimInspectionDistance;
             if (this.dataStore != null) {

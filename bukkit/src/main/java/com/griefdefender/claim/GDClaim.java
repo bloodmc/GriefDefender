@@ -413,6 +413,11 @@ public class GDClaim implements Claim {
 
     @Override
     public int getHeight() {
+        return this.greaterBoundaryCorner.getY() - this.lesserBoundaryCorner.getY() + 1;
+    }
+
+    @Override
+    public int getLength() {
         return this.greaterBoundaryCorner.getZ() - this.lesserBoundaryCorner.getZ() + 1;
     }
 

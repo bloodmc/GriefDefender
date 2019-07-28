@@ -62,7 +62,7 @@ public class CommandClaimAbandon extends BaseCommand {
 
     protected boolean abandonTopClaim = false;
 
-    @CommandAlias("abandonclaim")
+    @CommandAlias("abandon|abandonclaim")
     @Description("Abandons a claim")
     @Subcommand("abandon claim")
     public void execute(Player player) {

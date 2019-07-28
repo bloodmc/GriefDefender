@@ -46,8 +46,10 @@ import com.griefdefender.command.CommandHelper;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.event.GDCauseStackManager;
 import com.griefdefender.event.GDFlagClaimEvent;
+import com.griefdefender.internal.registry.BlockTypeRegistryModule;
 import com.griefdefender.internal.registry.EntityTypeRegistryModule;
 import com.griefdefender.internal.registry.GDEntityType;
+import com.griefdefender.internal.registry.ItemTypeRegistryModule;
 import com.griefdefender.internal.util.NMSUtil;
 import com.griefdefender.registry.FlagRegistryModule;
 import com.griefdefender.registry.OptionRegistryModule;
@@ -423,11 +425,11 @@ public class GDPermissionManager implements PermissionManager {
 
                 return populateEventSourceTarget(id, isSource);
             } else if (obj instanceof Block) {
-                final String id = NMSUtil.getInstance().getMaterialKey(((Block) obj).getState().getType());
+                final String id = BlockTypeRegistryModule.getInstance().getNMSKey((Block) obj);
                 return populateEventSourceTarget(id, isSource);
             } else if (obj instanceof BlockState) {
                 final BlockState blockstate = (BlockState) obj;
-                final String id = NMSUtil.getInstance().getMaterialKey(blockstate.getType());
+                final String id = BlockTypeRegistryModule.getInstance().getNMSKey(blockstate);
                 return populateEventSourceTarget(id, isSource);
             } /*else if (obj instanceof TileEntity) {
                 TileEntity tileEntity = (TileEntity) obj;
@@ -440,7 +442,7 @@ public class GDPermissionManager implements PermissionManager {
                 
             } else if (obj instanceof ItemStack) {
                 final ItemStack itemstack = (ItemStack) obj;
-                String id = NMSUtil.getInstance().getMaterialKey(itemstack.getType());
+                String id = ItemTypeRegistryModule.getInstance().getNMSKey(itemstack);
                 return populateEventSourceTarget(id, isSource);
             } else if (obj instanceof DamageCause) {
                 final DamageCause damageCause = (DamageCause) obj;

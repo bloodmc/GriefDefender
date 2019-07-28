@@ -53,6 +53,8 @@ import com.griefdefender.event.GDBorderClaimEvent;
 import com.griefdefender.event.GDCauseStackManager;
 import com.griefdefender.internal.provider.WorldEditProvider;
 import com.griefdefender.internal.provider.WorldGuardProvider;
+import com.griefdefender.internal.registry.BlockTypeRegistryModule;
+import com.griefdefender.internal.registry.ItemTypeRegistryModule;
 import com.griefdefender.internal.util.BlockUtil;
 import com.griefdefender.internal.util.NMSUtil;
 import com.griefdefender.internal.util.VecHelper;
@@ -306,7 +308,7 @@ public class PlayerEventHandler implements Listener {
             final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_INVENTORY_OPEN,
                     ImmutableMap.of(
                     "player", claim.getOwnerName(),
-                    "block", NMSUtil.getInstance().getMaterialKey(block.getState().getType())));
+                    "block", BlockTypeRegistryModule.getInstance().getNMSKey(block)));
             GriefDefenderPlugin.sendClaimDenyMessage(claim, player, message);
             event.setCancelled(true);
         }
@@ -365,7 +367,7 @@ public class PlayerEventHandler implements Listener {
             final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_INTERACT_ITEM,
                     ImmutableMap.of(
                     "player", claim.getOwnerName(),
-                    "item", NMSUtil.getInstance().getMaterialKey(target.getType())));
+                    "item", ItemTypeRegistryModule.getInstance().getNMSKey(target)));
             GriefDefenderPlugin.sendClaimDenyMessage(claim, player, message);
             event.setCancelled(true);
         }
@@ -416,7 +418,7 @@ public class PlayerEventHandler implements Listener {
             Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_INTERACT_ITEM,
                     ImmutableMap.of(
                     "player", claim.getOwnerName(),
-                    "item", NMSUtil.getInstance().getMaterialKey(itemInHand.getType())));
+                    "item", ItemTypeRegistryModule.getInstance().getNMSKey(itemInHand)));
             GriefDefenderPlugin.sendClaimDenyMessage(claim, player, message);
             event.setCancelled(true);
             lastInteractItemCancelled = true;
@@ -455,9 +457,8 @@ public class PlayerEventHandler implements Listener {
                 Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_INTERACT_ITEM,
                         ImmutableMap.of(
                         "player", claim.getOwnerName(),
-                        "item", NMSUtil.getInstance().getMaterialKey(activeItem.getType())));
+                        "item", ItemTypeRegistryModule.getInstance().getNMSKey(activeItem)));
                 GriefDefenderPlugin.sendClaimDenyMessage(claim, player, message);
-                Thread.dumpStack();
                 event.setCancelled(true);
                 lastInteractItemCancelled = true;
                 return;
@@ -1585,7 +1586,7 @@ public class PlayerEventHandler implements Listener {
             GriefDefenderPlugin.sendClaimDenyMessage(claim, player, message);
         } else {
             final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_INTERACT_ITEM_ENTITY, ImmutableMap.of(
-                    "item", NMSUtil.getInstance().getMaterialKey(playerItem.getType()),
+                    "item", ItemTypeRegistryModule.getInstance().getNMSKey(playerItem),
                     "entity", entityId));
             GriefDefenderPlugin.sendClaimDenyMessage(claim, player, message);
         }
@@ -1602,13 +1603,13 @@ public class PlayerEventHandler implements Listener {
             final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_INTERACT_BLOCK,
                     ImmutableMap.of(
                     "player", claim.getOwnerName(),
-                    "block",  NMSUtil.getInstance().getMaterialKey(block.getState().getType())));
+                    "block",  BlockTypeRegistryModule.getInstance().getNMSKey(block)));
             GriefDefenderPlugin.sendClaimDenyMessage(claim, player, message);
         } else {
             final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_INTERACT_ITEM_BLOCK,
                     ImmutableMap.of(
-                    "item", NMSUtil.getInstance().getMaterialKey(playerItem.getType()),
-                    "block", NMSUtil.getInstance().getMaterialKey(block.getState().getType())));
+                    "item", ItemTypeRegistryModule.getInstance().getNMSKey(playerItem),
+                    "block", BlockTypeRegistryModule.getInstance().getNMSKey(block)));
             GriefDefenderPlugin.sendClaimDenyMessage(claim, player, message);
         }
     }
