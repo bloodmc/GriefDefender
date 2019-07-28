@@ -99,10 +99,10 @@ public class PlayerUtil {
 
     @Nullable
     public String getUserName(UUID uuid) {
-        if (uuid == GriefDefenderPlugin.PUBLIC_UUID) {
+        if (uuid.equals(GriefDefenderPlugin.PUBLIC_UUID)) {
             return "public";
         }
-        if (uuid == GriefDefenderPlugin.ADMIN_USER_UUID || uuid == GriefDefenderPlugin.WORLD_USER_UUID) {
+        if (uuid.equals(GriefDefenderPlugin.ADMIN_USER_UUID) || uuid.equals(GriefDefenderPlugin.WORLD_USER_UUID)) {
             return "administrator";
         }
 

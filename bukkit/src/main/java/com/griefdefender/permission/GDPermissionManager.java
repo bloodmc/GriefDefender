@@ -387,12 +387,12 @@ public class GDPermissionManager implements PermissionManager {
     public Tristate processResult(Claim claim, String permission, String trust, Tristate permissionValue, GDPermissionHolder permissionHolder) {
         if (GriefDefenderPlugin.debugActive) {
             if (this.currentEvent != null && (this.currentEvent instanceof BlockPhysicsEvent)) {
-                /*if (claim.getWorld().getProperties().getTotalTime() % 100 == 0L) {
-                    GriefDefenderPlugin.addEventLogEntry(this.currentEvent, claim, this.eventLocation, this.eventSubject, this.eventSourceId, this.eventTargetId, permissionSubject, permission, trust, permissionValue);
-                }*/
-            } else {
-                GriefDefenderPlugin.addEventLogEntry(this.currentEvent, this.eventLocation, this.eventSourceId, this.eventTargetId, this.eventSubject == null ? permissionHolder : this.eventSubject, permission, trust, permissionValue);
+                if (((GDClaim) claim).getWorld().getTime() % 100 != 0L) {
+                    return permissionValue;
+                }
             }
+
+            GriefDefenderPlugin.addEventLogEntry(this.currentEvent, this.eventLocation, this.eventSourceId, this.eventTargetId, this.eventSubject == null ? permissionHolder : this.eventSubject, permission, trust, permissionValue);
         }
 
         return permissionValue;

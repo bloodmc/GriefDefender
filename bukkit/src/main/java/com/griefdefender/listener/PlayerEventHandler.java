@@ -511,7 +511,7 @@ public class PlayerEventHandler implements Listener {
         final GDPlayerData playerData = this.dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
         final Location location = clickedBlock.getLocation();
         final GDClaim claim = this.dataStore.getClaimAt(location);
-        final TrustType trustType = NMSUtil.getInstance().isBlockContainer(clickedBlock) ? TrustTypes.CONTAINER : TrustTypes.ACCESSOR;
+        final TrustType trustType = NMSUtil.getInstance().hasBlockTileEntity(location) ? TrustTypes.CONTAINER : TrustTypes.ACCESSOR;
 
         Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, claim, GDPermissions.INTERACT_BLOCK_SECONDARY, source, clickedBlock, player, trustType, true);
         if (result == Tristate.FALSE) {
@@ -610,8 +610,7 @@ public class PlayerEventHandler implements Listener {
             return;
         }
         final GDClaim claim = this.dataStore.getClaimAt(location);
-        //GriefDefender.getPermissionManager().getFinalPermission(claim, Flags.ENTITY_SPAWN, source, target, user)
-        final TrustType trustType = NMSUtil.getInstance().isBlockContainer(clickedBlock) ? TrustTypes.CONTAINER : event.hasBlock() ? TrustTypes.BUILDER : TrustTypes.ACCESSOR;
+        final TrustType trustType = NMSUtil.getInstance().hasBlockTileEntity(clickedBlock.getLocation()) ? TrustTypes.CONTAINER : event.hasBlock() && event.getAction() != Action.PHYSICAL ? TrustTypes.BUILDER : TrustTypes.ACCESSOR;
         if (GDFlags.INTERACT_BLOCK_SECONDARY && playerData != null) {
             String permission = GDPermissions.INTERACT_BLOCK_SECONDARY;
             if (event.getAction() == Action.PHYSICAL) {
@@ -634,7 +633,13 @@ public class PlayerEventHandler implements Listener {
                 // Don't send a deny message if the player is holding an investigation tool
                 if (NMSUtil.getInstance().getRunningServerTicks() != lastInteractItemSecondaryTick || lastInteractItemCancelled != true) {
                     if (!NMSUtil.getInstance().hasItemInOneHand(player, GriefDefenderPlugin.getInstance().investigationTool)) {
-                        this.sendInteractBlockDenyMessage(itemInHand, clickedBlock, claim, player, playerData);
+                        if (event.getAction() == Action.PHYSICAL) {
+                            if (player.getWorld().getTime() % 100 == 0L) {
+                                this.sendInteractBlockDenyMessage(itemInHand, clickedBlock, claim, player, playerData);
+                            }
+                        } else {
+                            this.sendInteractBlockDenyMessage(itemInHand, clickedBlock, claim, player, playerData);
+                        }
                     }
                 }
 
