@@ -24,7 +24,6 @@
  */
 package com.griefdefender.cache;
 
-import com.github.benmanes.caffeine.cache.AsyncCache;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.griefdefender.api.Tristate;
@@ -36,19 +35,15 @@ import me.lucko.luckperms.api.Group;
 import me.lucko.luckperms.api.User;
 import org.bukkit.OfflinePlayer;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 public class PermissionHolderCache {
 
     private static PermissionHolderCache instance;
-    private final AsyncCache<String, GDPermissionHolder> holderCache = Caffeine.newBuilder().expireAfterAccess(10, TimeUnit.MINUTES)
-            .buildAsync();
+    private final Cache<String, GDPermissionHolder> holderCache = Caffeine.newBuilder().expireAfterAccess(10, TimeUnit.MINUTES)
+            .build();
     private final ConcurrentHashMap<GDPermissionHolder, Cache<Integer, Tristate>> permissionCache = new ConcurrentHashMap<>();
 
     public GDPermissionUser getOrCreateUser(OfflinePlayer player) {
@@ -61,22 +56,13 @@ public class PermissionHolderCache {
 
     public GDPermissionUser getOrCreateUser(UUID uuid) {
         GDPermissionUser user = null;
-        CompletableFuture<GDPermissionHolder> future = holderCache.getIfPresent(uuid.toString());
-        if (future != null) {
-            try {
-                user = (GDPermissionUser) future.get();
-                if (user != null) {
-                    return user;
-                }
-            } catch (InterruptedException | ExecutionException e) {
-                e.printStackTrace();
-            }
+        GDPermissionHolder holder = this.holderCache.getIfPresent(uuid.toString());
+        if (holder != null) {
+            return (GDPermissionUser) holder;
         }
 
         user = new GDPermissionUser(uuid);
-        final GDPermissionHolder holder = user;
-        future = CompletableFuture.supplyAsync(() -> holder);
-        holderCache.put(user.getIdentifier(), future);
+        this.holderCache.put(user.getIdentifier(), user);
         return user;
     }
 
@@ -89,17 +75,10 @@ public class PermissionHolderCache {
     }
 
     public GDPermissionGroup getOrCreateGroup(String groupName) {
-        GDPermissionGroup permissionHolder = null;
-        CompletableFuture<GDPermissionHolder> future = holderCache.getIfPresent(groupName);
-        if (future != null) {
-            try {
-                permissionHolder = (GDPermissionGroup) future.get();
-                if (permissionHolder != null) {
-                    return permissionHolder;
-                }
-            } catch (InterruptedException | ExecutionException e) {
-                e.printStackTrace();
-            }
+        GDPermissionGroup group = null;
+        GDPermissionHolder holder = this.holderCache.getIfPresent(groupName);
+        if (holder != null) {
+            return (GDPermissionGroup) holder;
         }
 
         final Group luckPermsGroup = PermissionUtil.getInstance().getGroupSubject(groupName);
@@ -107,52 +86,31 @@ public class PermissionHolderCache {
             return null;
         }
 
-        permissionHolder = new GDPermissionGroup(luckPermsGroup);
-        final GDPermissionGroup holder = permissionHolder;
-        future = CompletableFuture.supplyAsync(() -> holder);
-        holderCache.put(groupName, future);
-        return holder;
+        group = new GDPermissionGroup(luckPermsGroup);
+        this.holderCache.put(groupName, group);
+        return group;
     }
 
     public GDPermissionGroup getOrCreateGroup(Group group) {
         GDPermissionGroup permissionHolder = null;
-        CompletableFuture<GDPermissionHolder> future = holderCache.getIfPresent(group.getName());
-        if (future != null) {
-            try {
-                permissionHolder = (GDPermissionGroup) future.get();
-                if (permissionHolder != null) {
-                    return permissionHolder;
-                }
-            } catch (InterruptedException | ExecutionException e) {
-                e.printStackTrace();
-            }
+        GDPermissionHolder holder = this.holderCache.getIfPresent(group.getName());
+        if (holder != null) {
+            return (GDPermissionGroup) holder;
         }
 
         permissionHolder = new GDPermissionGroup(group);
-        final GDPermissionGroup holder = permissionHolder;
-        future = CompletableFuture.supplyAsync(() -> holder);
-        holderCache.put(group.getName(), future);
-        return holder;
+        this.holderCache.put(group.getName(), permissionHolder);
+        return permissionHolder;
     }
 
     public GDPermissionHolder getOrCreateHolder(String identifier) {
-        GDPermissionHolder permissionHolder = null;
-        CompletableFuture<GDPermissionHolder> future = holderCache.getIfPresent(identifier);
-        if (future != null) {
-            try {
-                permissionHolder = future.get();
-                if (permissionHolder != null) {
-                    return permissionHolder;
-                }
-            } catch (InterruptedException | ExecutionException e) {
-                e.printStackTrace();
-            }
+        GDPermissionHolder holder = this.holderCache.getIfPresent(identifier);
+        if (holder != null) {
+            return holder;
         }
 
-        permissionHolder = new GDPermissionHolder(identifier);
-        final GDPermissionHolder holder = permissionHolder;
-        future = CompletableFuture.supplyAsync(() -> holder);
-        holderCache.put(identifier, future);
+        holder = new GDPermissionHolder(identifier);
+        this.holderCache.put(identifier, holder);
         return holder;
     }
 
