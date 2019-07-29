@@ -610,7 +610,7 @@ public class PlayerEventHandler implements Listener {
             return;
         }
         final GDClaim claim = this.dataStore.getClaimAt(location);
-        final TrustType trustType = NMSUtil.getInstance().hasBlockTileEntity(clickedBlock.getLocation()) ? TrustTypes.CONTAINER : event.hasBlock() && event.getAction() != Action.PHYSICAL ? TrustTypes.BUILDER : TrustTypes.ACCESSOR;
+        final TrustType trustType = NMSUtil.getInstance().hasBlockTileEntity(clickedBlock.getLocation()) ? TrustTypes.CONTAINER : event.isBlockInHand() && event.getAction() != Action.PHYSICAL ? TrustTypes.BUILDER : TrustTypes.ACCESSOR;
         if (GDFlags.INTERACT_BLOCK_SECONDARY && playerData != null) {
             String permission = GDPermissions.INTERACT_BLOCK_SECONDARY;
             if (event.getAction() == Action.PHYSICAL) {
