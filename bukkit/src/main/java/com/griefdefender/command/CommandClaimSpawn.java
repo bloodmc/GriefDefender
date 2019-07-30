@@ -33,6 +33,7 @@ import com.google.common.collect.ImmutableMap;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.claim.TrustTypes;
+import com.griefdefender.cache.MessageCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.permission.GDPermissions;
@@ -56,7 +57,7 @@ public class CommandClaimSpawn extends BaseCommand {
 
         final Vector3i spawnPos = claim.getData().getSpawnPos().orElse(null);
         if (spawnPos == null) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.SPAWN_NOT_SET));
+            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().SPAWN_NOT_SET);
             return;
         }
 

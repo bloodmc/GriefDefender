@@ -30,7 +30,7 @@ import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Subcommand;
 import com.griefdefender.GriefDefenderPlugin;
-import com.griefdefender.configuration.MessageStorage;
+import com.griefdefender.cache.MessageCache;
 import com.griefdefender.permission.GDPermissions;
 import org.bukkit.entity.Player;
 
@@ -43,7 +43,7 @@ public class CommandClaimWorldEdit extends BaseCommand {
     @Subcommand("claim worldedit|claim we")
     public void execute(Player player) {
         if (GriefDefenderPlugin.getInstance().getWorldEditProvider() == null) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CREATE_WORLDEDIT_MISSING));
+            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().COMMAND_WORLDEDIT_MISSING);
             return;
         }
 

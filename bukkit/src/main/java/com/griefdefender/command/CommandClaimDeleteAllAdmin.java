@@ -37,6 +37,9 @@ import com.griefdefender.api.claim.ClaimTypes;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.permission.GDPermissions;
 import net.kyori.text.Component;
+import net.kyori.text.TextComponent;
+import net.kyori.text.format.TextColor;
+
 import org.bukkit.entity.Player;
 
 @CommandAlias("%griefdefender")
@@ -56,7 +59,8 @@ public class CommandClaimDeleteAllAdmin extends BaseCommand {
             return;
         }
 
-        GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.DELETE_ALL_ADMIN_SUCCESS));
+        GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.DELETE_ALL_TYPE_SUCCESS,
+                ImmutableMap.of("type", TextComponent.of("ADMIN").color(TextColor.RED))));
         GriefDefenderPlugin.getInstance().getLogger().info(player.getName() + " deleted all administrative claims.");
         GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
         playerData.revertActiveVisual(player);

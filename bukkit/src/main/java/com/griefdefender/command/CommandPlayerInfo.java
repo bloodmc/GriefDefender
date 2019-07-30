@@ -34,6 +34,7 @@ import co.aikar.commands.annotation.Optional;
 import co.aikar.commands.annotation.Subcommand;
 import co.aikar.commands.annotation.Syntax;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
@@ -41,11 +42,15 @@ import com.griefdefender.api.claim.Claim;
 import com.griefdefender.api.claim.ClaimBlockSystem;
 import com.griefdefender.api.claim.ClaimTypes;
 import com.griefdefender.api.permission.option.Options;
+import com.griefdefender.cache.MessageCache;
+import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
+import com.griefdefender.configuration.MessageDataConfig;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.internal.pagination.PaginationList;
 import com.griefdefender.internal.util.NMSUtil;
 import com.griefdefender.permission.GDPermissionManager;
+import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.permission.GDPermissions;
 import com.griefdefender.storage.BaseStorage;
 import net.kyori.text.Component;
@@ -68,6 +73,8 @@ import java.util.List;
 @CommandPermission(GDPermissions.COMMAND_PLAYER_INFO_BASE)
 public class CommandPlayerInfo extends BaseCommand {
 
+    private MessageDataConfig MESSAGE_DATA = GriefDefenderPlugin.getInstance().messageData;
+
     @CommandCompletion("@gdplayers @gddummy")
     @CommandAlias("playerinfo")
     @Description("Gets information about a player.")
@@ -77,18 +84,21 @@ public class CommandPlayerInfo extends BaseCommand {
         OfflinePlayer user = null;
         World world = null;
         if (args.length > 0) {
-            user = Bukkit.getServer().getOfflinePlayer(args[0]);
-            if (user == null) {
-                TextAdapter.sendComponent(src, TextComponent.of("User ' " + args[0] + "' could not be found.", TextColor.RED));
-                throw new InvalidCommandArgument();
+            GDPermissionUser holder = PermissionHolderCache.getInstance().getOrCreateUser(args[0]);
+            if (holder == null) {
+                TextAdapter.sendComponent(src, MESSAGE_DATA.getMessage(MessageStorage.COMMAND_PLAYER_NOT_FOUND,
+                        ImmutableMap.of("player", args[0])));
+                return;
             }
             if (args.length > 1) {
                 world = Bukkit.getServer().getWorld(args[1]);
                 if (world == null) {
-                    TextAdapter.sendComponent(src, TextComponent.of("World ' " + args[1] + "' could not be found.", TextColor.RED));
-                    throw new InvalidCommandArgument();
+                    TextAdapter.sendComponent(src, MESSAGE_DATA.getMessage(MessageStorage.COMMAND_WORLD_NOT_FOUND,
+                            ImmutableMap.of("world", args[1])));
+                    return;
                 }
             }
+            user = holder.getOfflinePlayer();
         }
 
         if (user == null) {
@@ -99,7 +109,7 @@ public class CommandPlayerInfo extends BaseCommand {
 
             user = (OfflinePlayer) src;
             if (world == null) {
-                world = ((Player) user).getWorld();
+                world = ((Player) src).getWorld();
             }
         }
         if (world == null) {
@@ -108,7 +118,7 @@ public class CommandPlayerInfo extends BaseCommand {
 
         // otherwise if no permission to delve into another player's claims data or self
         if ((user != null && user != src && !src.hasPermission(GDPermissions.COMMAND_PLAYER_INFO_OTHERS))) {
-           TextAdapter.sendComponent(src, TextComponent.of("No permission to view other players.", TextColor.RED));
+           TextAdapter.sendComponent(src, MessageCache.getInstance().PERMISSION_PLAYER_VIEW_OTHERS);
         }
 
 
@@ -129,82 +139,37 @@ public class CommandPlayerInfo extends BaseCommand {
             claimSizeLimit = TextComponent.of(playerData.getMaxClaimX(ClaimTypes.BASIC) + "," + playerData.getMaxClaimY(ClaimTypes.BASIC) + "," + playerData.getMaxClaimZ(ClaimTypes.BASIC), TextColor.GRAY);
         }
 
-
-        final Component WHITE_SEMI_COLON = TextComponent.of(" : ");
         final double claimableChunks = GriefDefenderPlugin.CLAIM_BLOCK_SYSTEM == ClaimBlockSystem.VOLUME ? (playerData.getRemainingClaimBlocks() / 65536.0) : (playerData.getRemainingClaimBlocks() / 256.0);
-        final Component uuidText = TextComponent.builder("")
-                .append("UUID", TextColor.YELLOW)
-                .append(WHITE_SEMI_COLON)
-                .append(user.getUniqueId().toString(), TextColor.GRAY)
-                .build();
-        final Component worldText = TextComponent.builder("")
-                .append("World", TextColor.YELLOW)
-                .append(WHITE_SEMI_COLON)
-                .append(world.getName(), TextColor.GRAY)
-                .build();
-        final Component sizeLimitText = TextComponent.builder("")
-                .append("Claim Size Limits", TextColor.YELLOW)
-                .append(WHITE_SEMI_COLON)
-                .append(claimSizeLimit)
-                .build();
-        final Component initialBlockText = TextComponent.builder("")
-                .append("Initial Blocks", TextColor.YELLOW)
-                .append(WHITE_SEMI_COLON)
-                .append(String.valueOf(playerData.getInitialClaimBlocks()), TextColor.GREEN)
-                .build();
-        final Component accruedBlockText = TextComponent.builder("")
-                .append("Accrued Blocks", TextColor.YELLOW)
-                .append(WHITE_SEMI_COLON)
-                .append(String.valueOf(playerData.getAccruedClaimBlocks()), TextColor.GREEN)
-                .append(" (", TextColor.GRAY)
-                .append(String.valueOf(playerData.getBlocksAccruedPerHour()), TextColor.LIGHT_PURPLE)
-                .append(" per hour")
-                .append(")", TextColor.GRAY).build();
-        final Component maxAccruedBlockText = TextComponent.builder("")
-                .append("Max Accrued Blocks", TextColor.YELLOW)
-                .append(WHITE_SEMI_COLON)
-                .append(String.valueOf(playerData.getMaxAccruedClaimBlocks()), TextColor.GREEN)
-                .build();
-        final Component bonusBlockText = TextComponent.builder("")
-                .append("Bonus Blocks", TextColor.YELLOW)
-                .append(WHITE_SEMI_COLON)
-                .append(String.valueOf(playerData.getBonusClaimBlocks()), TextColor.GREEN)
-                .build();
-        final Component remainingBlockText = TextComponent.builder("")
-                .append("Remaining Blocks", TextColor.YELLOW)
-                .append(WHITE_SEMI_COLON)
-                .append(String.valueOf(playerData.getRemainingClaimBlocks()), TextColor.GREEN)
-                .build();
-        final Component minMaxLevelText = TextComponent.builder("")
-                .append("Min/Max Claim Level", TextColor.YELLOW)
-                .append(WHITE_SEMI_COLON)
-                .append(String.valueOf(playerData.getMinClaimLevel() + "-" + playerData.getMaxClaimLevel()), TextColor.GREEN)
-                .build();
-        final Component abandonRatioText = TextComponent.builder("")
-                .append("Abandoned Return Ratio", TextColor.YELLOW)
-                .append(WHITE_SEMI_COLON)
-                .append(String.valueOf(playerData.getAbandonedReturnRatio(ClaimTypes.BASIC)), TextColor.GREEN)
-                .build();
-        final Component totalTaxText = TextComponent.builder("")
-                .append("Total Tax", TextColor.YELLOW)
-                .append(WHITE_SEMI_COLON)
-                .append(String.valueOf(playerData.getTotalTax()), TextColor.GREEN)
-                .build();
-        final Component totalBlockText = TextComponent.builder("")
-                .append("Total Blocks", TextColor.YELLOW)
-                .append(WHITE_SEMI_COLON)
-                .append(String.valueOf(playerData.getInitialClaimBlocks() + playerData.getAccruedClaimBlocks() + playerData.getBonusClaimBlocks()), TextColor.GREEN)
-                .build();
-        final Component totalClaimableChunkText = TextComponent.builder("")
-                .append("Total Claimable Chunks", TextColor.YELLOW)
-                .append(WHITE_SEMI_COLON)
-                .append(String.valueOf(Math.round(claimableChunks * 100.0)/100.0), TextColor.GREEN)
-                .build();
-        final Component totalClaimText = TextComponent.builder("")
-                .append("Total Claims", TextColor.YELLOW)
-                .append(WHITE_SEMI_COLON)
-                .append(String.valueOf(claimList.size()), TextColor.GREEN)
-                .build();
+        final Component uuidText = MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_UUID, 
+                ImmutableMap.of("id", user.getUniqueId().toString()));
+        final Component worldText = MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_WORLD, 
+                ImmutableMap.of("world", world.getName()));
+        final Component sizeLimitText = MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_CLAIM_SIZE_LIMIT, 
+                ImmutableMap.of("limit", claimSizeLimit));
+        final Component initialBlockText = MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_BLOCK_INITIAL, 
+                ImmutableMap.of("amount", String.valueOf(playerData.getInitialClaimBlocks())));
+        final Component accruedBlockText = MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_BLOCK_ACCRUED, 
+                ImmutableMap.of(
+                    "amount", String.valueOf(playerData.getAccruedClaimBlocks()),
+                    "block_amount", String.valueOf(playerData.getBlocksAccruedPerHour())));
+        final Component maxAccruedBlockText = MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_BLOCK_MAX_ACCRUED, 
+                ImmutableMap.of("amount", String.valueOf(playerData.getMaxAccruedClaimBlocks())));
+        final Component bonusBlockText = MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_BLOCK_BONUS, 
+                ImmutableMap.of("amount", String.valueOf(playerData.getBonusClaimBlocks())));
+        final Component remainingBlockText = MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_BLOCK_REMAINING, 
+                ImmutableMap.of("amount", String.valueOf(playerData.getRemainingClaimBlocks())));
+        final Component minMaxLevelText = MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_CLAIM_LEVEL, 
+                ImmutableMap.of("level", String.valueOf(playerData.getMinClaimLevel() + "-" + playerData.getMaxClaimLevel())));
+        final Component abandonRatioText = MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_ABANDON_RETURN_RATIO, 
+                ImmutableMap.of("ratio", String.valueOf(playerData.getAbandonedReturnRatio(ClaimTypes.BASIC))));
+        final Component totalTaxText = MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_TAX_TOTAL, 
+                ImmutableMap.of("amount", String.valueOf(playerData.getInitialClaimBlocks())));
+        final Component totalBlockText = MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_BLOCK_TOTAL, 
+                ImmutableMap.of("amount", String.valueOf(playerData.getInitialClaimBlocks())));
+        final Component totalClaimableChunkText = MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_CHUNK_TOTAL, 
+                ImmutableMap.of("amount", String.valueOf(Math.round(claimableChunks * 100.0)/100.0)));
+        final Component totalClaimText = MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_CLAIM_TOTAL, 
+                ImmutableMap.of("amount", String.valueOf(claimList.size())));
 
         List<Component> claimsTextList = Lists.newArrayList();
         claimsTextList.add(uuidText);
@@ -260,24 +225,15 @@ public class CommandPlayerInfo extends BaseCommand {
                     final GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAt(player.getLocation());
                     if (claim != null && !claim.isWilderness()) {
                         final double playerTaxRate = GDPermissionManager.getInstance().getInternalOptionValue(user, Options.TAX_RATE, claim, playerData);
-                        currentTaxRateText = TextComponent.builder("")
-                                .append("Current Claim Tax Rate", TextColor.YELLOW)
-                                .append(" : ")
-                                .append(String.valueOf(playerTaxRate), TextColor.GREEN)
-                                .build();
+                        currentTaxRateText = MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_TAX_CURRENT_RATE, 
+                                        ImmutableMap.of("rate", String.valueOf(playerTaxRate)));
                     }
                 }
             }
-            final Component globalTownTaxText = TextComponent.builder("")
-                    .append("Global Town Tax Rate", TextColor.YELLOW)
-                    .append(WHITE_SEMI_COLON)
-                    .append(townTaxRate)
-                    .build();
-            final Component globalClaimTaxText = TextComponent.builder("")
-                    .append("Global Claim Tax Rate", TextColor.YELLOW)
-                    .append(WHITE_SEMI_COLON)
-                    .append(claimTaxRate)
-                    .build();
+            final Component globalTownTaxText = MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_TAX_GLOBAL_TOWN_RATE, 
+                    ImmutableMap.of("rate", townTaxRate));
+            final Component globalClaimTaxText = MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_TAX_GLOBAL_CLAIM_RATE, 
+                    ImmutableMap.of("rate", claimTaxRate));
             claimsTextList.add(currentTaxRateText);
             claimsTextList.add(globalTownTaxText);
             claimsTextList.add(globalClaimTaxText);
@@ -295,16 +251,13 @@ public class CommandPlayerInfo extends BaseCommand {
                 // ignore
             }
             if (lastActive != null) {
-                claimsTextList.add(TextComponent.builder("")
-                        .append("Last Active", TextColor.YELLOW)
-                        .append(" : ")
-                        .append(lastActive.toString(), TextColor.GRAY)
-                        .build());
+                claimsTextList.add(MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_LAST_ACTIVE, 
+                        ImmutableMap.of("date", lastActive)));
             }
         }
 
         PaginationList.Builder paginationBuilder = PaginationList.builder()
-                .title(TextComponent.of("Player Info", TextColor.AQUA)).padding(TextComponent.of(" ").decoration(TextDecoration.STRIKETHROUGH, true)).contents(claimsTextList);
+                .title(MessageCache.getInstance().PLAYERINFO_UI_TITLE).padding(TextComponent.of(" ").decoration(TextDecoration.STRIKETHROUGH, true)).contents(claimsTextList);
         paginationBuilder.sendTo(src);
     }
 }

@@ -26,13 +26,16 @@ package com.griefdefender.command;
 
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.CommandAlias;
+import co.aikar.commands.annotation.CommandCompletion;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Optional;
 import co.aikar.commands.annotation.Subcommand;
 import co.aikar.commands.annotation.Syntax;
 
+import com.google.common.collect.ImmutableMap;
 import com.griefdefender.GriefDefenderPlugin;
+import com.griefdefender.cache.MessageCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.internal.util.NMSUtil;
@@ -55,6 +58,7 @@ import java.util.UUID;
 @CommandPermission(GDPermissions.COMMAND_CLAIM_CLEAR)
 public class CommandClaimClear extends BaseCommand {
 
+    @CommandCompletion("@gdentityids @gddummy")
     @CommandAlias("claimclear")
     @Description("Allows clearing of entities within one or more claims.")
     @Syntax("<entity_id> [claim_uuid]")
@@ -62,7 +66,7 @@ public class CommandClaimClear extends BaseCommand {
     public void execute(Player player, String target, @Optional String claimId) {
         World world = player.getWorld();
         if (!GriefDefenderPlugin.getInstance().claimsEnabledForWorld(world.getUID())) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_DISABLED_WORLD));
+            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().CLAIM_DISABLED_WORLD);
             return;
         }
 
@@ -78,7 +82,7 @@ public class CommandClaimClear extends BaseCommand {
             claimUniqueId = targetClaim.getUniqueId();
         } else {
             if (!player.hasPermission(GDPermissions.COMMAND_DELETE_CLAIMS)) {
-                GriefDefenderPlugin.sendMessage(player, TextComponent.of("Only administrators may clear claims by UUID.", TextColor.RED));
+                GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().COMMAND_CLAIMCLEAR_UUID_DENY);
                 return;
             }
             try {
@@ -89,7 +93,8 @@ public class CommandClaimClear extends BaseCommand {
         }
 
         if (targetClaim.isWilderness()) {
-            GriefDefenderPlugin.sendMessage(player, TextComponent.of("This action is not available in the wilderness.", TextColor.RED));
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_ACTION_NOT_AVAILABLE, 
+                    ImmutableMap.of("type", TextComponent.of("the wilderness"))));
             return;
         }
 
@@ -124,17 +129,13 @@ public class CommandClaimClear extends BaseCommand {
         }
 
         if (count == 0) {
-            GriefDefenderPlugin.sendMessage(player, TextComponent.builder("")
-                    .append("Could not locate any entities of type ")
-                    .append(target, TextColor.GREEN)
-                    .append(".").build());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.COMMAND_CLAIMCLEAR_NO_ENTITIES,
+                    ImmutableMap.of("type", TextComponent.of(target, TextColor.GREEN))));
         } else {
-            GriefDefenderPlugin.sendMessage(player, TextComponent.builder("")
-                    .append("Killed ", TextColor.RED)
-                    .append(String.valueOf(count), TextColor.AQUA)
-                    .append(" entities of type ")
-                    .append(target, TextColor.GREEN)
-                    .append(".").build());
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.COMMAND_CLAIMCLEAR_NO_ENTITIES,
+                    ImmutableMap.of(
+                        "amount", count,
+                        "type", TextComponent.of(target, TextColor.GREEN))));
         }
     }
 }

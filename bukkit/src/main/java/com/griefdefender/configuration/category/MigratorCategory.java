@@ -34,4 +34,10 @@ public class MigratorCategory extends ConfigCategory {
             "\nNote: Migrates GP bukkit classic claim data to current format." +
             "\nNote: It is recommended to backup data before using.")
     public boolean classicMigrator = false;
+
+    @Setting(value = "worldguard", comment = 
+            "Set to true to enable WorldGuard data migrator." +
+            "\nNote: Only cuboid regions are supported." +
+            "\nNote: It is recommended to backup data before using.")
+    public boolean worldGuardMigrator = false;
 }

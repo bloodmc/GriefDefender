@@ -33,6 +33,7 @@ import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.Tristate;
 import com.griefdefender.api.claim.Claim;
 import com.griefdefender.api.claim.ClaimContexts;
+import com.griefdefender.api.claim.ClaimResult;
 import com.griefdefender.api.claim.TrustType;
 import com.griefdefender.api.claim.TrustTypes;
 import com.griefdefender.api.economy.BankTransactionType;
@@ -42,10 +43,12 @@ import com.griefdefender.api.permission.ResultTypes;
 import com.griefdefender.api.permission.flag.Flag;
 import com.griefdefender.api.permission.flag.Flags;
 import com.griefdefender.api.permission.option.Options;
+import com.griefdefender.cache.MessageCache;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.command.ClaimFlagBase.FlagType;
 import com.griefdefender.configuration.GriefDefenderConfig;
+import com.griefdefender.configuration.MessageDataConfig;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.economy.GDBankTransaction;
 import com.griefdefender.internal.pagination.PaginationList;
@@ -96,6 +99,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -103,6 +107,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class CommandHelper {
+
+    private final static MessageDataConfig MESSAGE_DATA = GriefDefenderPlugin.getInstance().messageData;
 
     public static Comparator<Component> PLAIN_COMPARATOR = (text1, text2) -> PlainComponentSerializer.INSTANCE.serialize(text1).compareTo(PlainComponentSerializer.INSTANCE.serialize(text2));
 
@@ -277,7 +283,7 @@ public class CommandHelper {
             }
 
             if (result != Tristate.TRUE) {
-                GriefDefenderPlugin.sendMessage(src, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_FLAG_USE));
+                GriefDefenderPlugin.sendMessage(src, MessageCache.getInstance().PERMISSION_FLAG_USE);
                 return new GDPermissionResult(ResultTypes.NO_PERMISSION);
             }
         }
@@ -349,38 +355,36 @@ public class CommandHelper {
 
         if (holder == GriefDefenderPlugin.DEFAULT_HOLDER) {
             PermissionUtil.getInstance().setPermissionValue((GDClaim) claim, GriefDefenderPlugin.DEFAULT_HOLDER, flagPermission, value, contexts);
-            if (!clicked) {
+            if (!clicked && src instanceof Player) {
                 TextAdapter.sendComponent(src, TextComponent.builder("")
-                    .append(TextComponent.builder("\n[").append("Return to flags", TextColor.AQUA).append("]\n")
+                    .append(TextComponent.builder("\n[").append(MessageCache.getInstance().FLAG_UI_RETURN_FLAGS.color(TextColor.AQUA)).append("]\n")
                     .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createCommandConsumer(src, "claimflag", "")))).build())
-                        .append("Set ")
-                        .append(flagTypeText)
-                        .append(" permission ", TextColor.GREEN)
-                        .append(flagPermission.replace(GDPermissions.FLAG_BASE + ".", "") + "\n", TextColor.AQUA)
-                        .append("with contexts")
-                        .append(getFriendlyContextString(claim, contexts), TextColor.GRAY)
-                        .append("\n to ", TextColor.GREEN)
-                        .append(getClickableText(src, (GDClaim) claim, GriefDefenderPlugin.DEFAULT_HOLDER, subjectName, contexts, flagPermission, value, flagType).color(TextColor.LIGHT_PURPLE))
-                        .append(" on ", TextColor.GREEN)
-                        .append("ALL", TextColor.GOLD).build());
+                        .append(MESSAGE_DATA.getMessage(MessageStorage.FLAG_SET_PERMISSION_TARGET,
+                                ImmutableMap.of(
+                                    "type", flagTypeText,
+                                    "permission", flagPermission.replace(GDPermissions.FLAG_BASE + ".", ""),
+                                    "contexts", getFriendlyContextString(claim, contexts),
+                                    "value", getClickableText(src, (GDClaim) claim, GriefDefenderPlugin.DEFAULT_HOLDER, subjectName, contexts, flagPermission, value, flagType).color(TextColor.LIGHT_PURPLE),
+                                    "target", "ALL")))
+                        .build());
             }
         } else {
             PermissionUtil.getInstance().setPermissionValue((GDClaim) claim, holder, flagPermission, value, contexts);
-            if (!clicked) {
+            if (!clicked && src instanceof Player) {
                 TextAdapter.sendComponent(src, TextComponent.builder("")
                         .append(TextComponent.builder("")
                                 .append("\n[")
-                                .append("Return to flags", TextColor.AQUA)
+                                .append(MessageCache.getInstance().FLAG_UI_RETURN_FLAGS.color(TextColor.AQUA))
                                 .append("]\n", TextColor.WHITE)
                                 .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createCommandConsumer(src, holder instanceof GDPermissionUser ? "claimflagplayer" : "claimflaggroup", subjectName)))).build())
-                        .append("Set ", TextColor.GREEN)
-                        .append(flagTypeText)
-                        .append(" permission ")
-                        .append(flagPermission.replace(GDPermissions.FLAG_BASE + ".", ""), TextColor.AQUA)
-                        .append("\n to ", TextColor.GREEN)
-                        .append(getClickableText(src, (GDClaim) claim, holder, subjectName, contexts, flagPermission, value, flagType).color(TextColor.LIGHT_PURPLE))
-                        .append(" on ", TextColor.GREEN)
-                        .append(subjectName, TextColor.GOLD).build());
+                        .append(MESSAGE_DATA.getMessage(MessageStorage.FLAG_SET_PERMISSION_TARGET,
+                                ImmutableMap.of(
+                                        "type", flagTypeText,
+                                        "permission", flagPermission.replace(GDPermissions.FLAG_BASE + ".", ""),
+                                        "contexts", getFriendlyContextString(claim, contexts),
+                                        "value", getClickableText(src, (GDClaim) claim, holder, subjectName, contexts, flagPermission, value, flagType).color(TextColor.LIGHT_PURPLE),
+                                        "target", subjectName)))
+                        .build());
             }
         }
 
@@ -451,7 +455,10 @@ public class CommandHelper {
     public static Consumer<CommandSender> createCommandConsumer(CommandSender src, String command, String arguments, Consumer<CommandSender> postConsumerTask) {
         return consumer -> {
             if (!NMSUtil.getInstance().getBukkitCommandMap().dispatch(src, command + " " + arguments)) {
-                TextAdapter.sendComponent(src, TextComponent.of("Failed to execute command " + command + " " + arguments, TextColor.RED));
+                TextAdapter.sendComponent(src, MESSAGE_DATA.getMessage(MessageStorage.COMMAND_EXECUTE_FAILED,
+                        ImmutableMap.of(
+                            "command", command,
+                            "args", arguments)));
             }
             if (postConsumerTask != null) {
                 postConsumerTask.accept(src);
@@ -461,7 +468,10 @@ public class CommandHelper {
 
     public static void executeCommand(CommandSender src, String command, String arguments) {
         if (!NMSUtil.getInstance().getBukkitCommandMap().dispatch(src, command + " " + arguments)) {
-            TextAdapter.sendComponent(src, TextComponent.of("Failed to execute command " + command + " " + arguments, TextColor.RED));
+            TextAdapter.sendComponent(src, MESSAGE_DATA.getMessage(MessageStorage.COMMAND_EXECUTE_FAILED,
+                        ImmutableMap.of(
+                            "command", command,
+                            "args", arguments)));
         }
     }
 
@@ -508,7 +518,7 @@ public class CommandHelper {
         //PaginationList.Builder paginationBuilder = paginationService.builder()
         //        .title(Text.of(TextColors.RED,"Claim list")).padding(Text.of(TextStyles.STRIKETHROUGH, "-")).contents(claimsTextList);
         //paginationBuilder.sendTo(src);
-        PaginationList.Builder builder = PaginationList.builder().title(TextComponent.of("Claim list", TextColor.RED)).padding(TextComponent.builder(" ").decoration(TextDecoration.STRIKETHROUGH, true).build()).contents(claimsTextList);
+        PaginationList.Builder builder = PaginationList.builder().title(MessageCache.getInstance().CLAIMLIST_UI_TITLE.color(TextColor.RED)).padding(TextComponent.builder(" ").decoration(TextDecoration.STRIKETHROUGH, true).build()).contents(claimsTextList);
         builder.sendTo(src);
     }
 
@@ -554,7 +564,8 @@ public class CommandHelper {
                 //Location<World> southWest = claim.lesserBoundaryCorner.setPosition(new Vector3d(claim.lesserBoundaryCorner.getPosition().getX(), teleportHeight, claim.greaterBoundaryCorner.getPosition().getZ()));
                 Component claimName = claim.getData().getName().orElse(TextComponent.empty());
                 Component teleportName = claim.getData().getName().orElse(claim.getFriendlyNameType());
-                Component ownerLine = TextComponent.builder("Owner").color(TextColor.YELLOW)
+                Component ownerLine = TextComponent.builder()
+                        .append(MessageCache.getInstance().LABEL_OWNER.color(TextColor.YELLOW))
                         .append(" : ", TextColor.WHITE)
                         .append(claim.getOwnerName().color(TextColor.GOLD))
                         .append("\n").build();
@@ -563,10 +574,12 @@ public class CommandHelper {
                         .append(claim.getFriendlyNameType())
                         .append(" ")
                         .append(claim.isCuboid() ? "3D " : "2D ", TextColor.GRAY)
-                        .append(" (Area: ", TextColor.WHITE)
+                        .append(" (")
+                        .append(MessageCache.getInstance().LABEL_AREA)
+                        .append(": ", TextColor.WHITE)
                         .append(String.valueOf(claim.getClaimBlocks()), TextColor.GRAY)
                         .append(" blocks)\n", TextColor.WHITE).build();
-                Component clickInfo = TextComponent.of("Click to check more info.");
+                Component clickInfo = MessageCache.getInstance().CLAIMLIST_UI_CLICK_INFO;
                 Component basicInfo = TextComponent.builder("")
                         .append(ownerLine)
                         .append(claimTypeInfo)
@@ -582,14 +595,12 @@ public class CommandHelper {
                         .append("TP", TextColor.LIGHT_PURPLE)
                         .append("]")
                         .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(CommandHelper.createTeleportConsumer(src, VecHelper.toLocation(claim.getWorld(), southWest), claim))))
-                        .hoverEvent(HoverEvent.showText(TextComponent.builder("")
-                                .append("Click here to teleport to ")
-                                .append(teleportName)
-                                .append(" ")
-                                .append(southWest.toString())
-                                .append(" in ")
-                                .append(claim.getWorld().getName(), TextColor.LIGHT_PURPLE)
-                                .append(".").build())).build();
+                        .hoverEvent(HoverEvent.showText(MESSAGE_DATA.getMessage(MessageStorage.CLAIMLIST_UI_CLICK_TELEPORT_TARGET,
+                                ImmutableMap.of(
+                                    "name", teleportName,
+                                    "target", southWest.toString(),
+                                    "world", claim.getWorld().getName()))))
+                        .build();
 
                 Component claimSpawn = null;
                 if (claim.getData().getSpawnPos().isPresent()) {
@@ -600,14 +611,11 @@ public class CommandHelper {
                             .append("TP", TextColor.LIGHT_PURPLE)
                             .append("]")
                             .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(CommandHelper.createTeleportConsumer(src, spawnLoc, claim))))
-                            .hoverEvent(HoverEvent.showText(TextComponent.builder("")
-                                    .append("Click here to teleport to ")
-                                    .append(teleportName)
-                                    .append("'s spawn @ ")
-                                    .append(spawnPos.toString())
-                                    .append(" in ")
-                                    .append(claim.getWorld().getName(), TextColor.LIGHT_PURPLE)
-                                    .append(".").build()))
+                            .hoverEvent(HoverEvent.showText(MESSAGE_DATA.getMessage(MessageStorage.CLAIMLIST_UI_CLICK_TELEPORT_TARGET,
+                                    ImmutableMap.of(
+                                            "name", teleportName,
+                                            "target", "'s spawn @ " + spawnPos.toString(),
+                                            "world", claim.getWorld().getName()))))
                             .build();
                 } else {
                     claimSpawn = claimCoordsTPClick;
@@ -620,21 +628,23 @@ public class CommandHelper {
                 final Player player = src instanceof Player ? (Player) src : null;
                 Component buyClaim = TextComponent.empty();
                 if (player != null && claim.getEconomyData().isForSale() && claim.getEconomyData().getSalePrice() > -1) {
-                    Component buyInfo = TextComponent.builder("Price ").color(TextColor.AQUA)
-                            .append(": ", TextColor.WHITE)
+                    Component buyInfo = TextComponent.builder()
+                            .append(MessageCache.getInstance().LABEL_PRICE.color(TextColor.AQUA))
+                            .append(" : ", TextColor.WHITE)
                             .append(String.valueOf(claim.getEconomyData().getSalePrice()), TextColor.GOLD)
-                            .append("\nClick here to purchase claim.").build();
+                            .append("\n")
+                            .append(MessageCache.getInstance().CLAIMLIST_UI_CLICK_PURCHASE).build();
                     buyClaim = TextComponent.builder()
-                        .append(claim.getEconomyData().isForSale() ? TextComponent.builder(" [").append("Buy", TextColor.GREEN).append("]", TextColor.WHITE).build() : TextComponent.empty())
+                        .append(claim.getEconomyData().isForSale() ? TextComponent.builder(" [").append(MessageCache.getInstance().LABEL_BUY.color(TextColor.GREEN)).append("]", TextColor.WHITE).build() : TextComponent.empty())
                         .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(buyClaimConsumerConfirmation(src, claim))))
-                        .hoverEvent(HoverEvent.showText(player.getUniqueId().equals(claim.getOwnerUniqueId()) ? TextComponent.of("You already own this claim.") : buyInfo)).build();
+                        .hoverEvent(HoverEvent.showText(player.getUniqueId().equals(claim.getOwnerUniqueId()) ? MessageCache.getInstance().CLAIM_OWNER_ALREADY : buyInfo)).build();
                 }
                 if (!childrenTextList.isEmpty()) {
                     Component children = TextComponent.builder("[")
-                            .append("children", TextColor.AQUA)
+                            .append(MessageCache.getInstance().LABEL_CHILDREN.color(TextColor.AQUA))
                             .append("]", TextColor.WHITE)
                             .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(showChildrenList(childrenTextList, src, returnCommand, claim))))
-                            .hoverEvent(HoverEvent.showText(TextComponent.of("Click here to view child claim list."))).build();
+                            .hoverEvent(HoverEvent.showText(MessageCache.getInstance().CLAIMLIST_UI_CLICK_VIEW_CHILDREN)).build();
                     claimsTextList.add(TextComponent.builder("")
                             .append(claimSpawn)
                             .append(" ")
@@ -642,9 +652,9 @@ public class CommandHelper {
                             .append(" : ", TextColor.WHITE)
                             .append(claim.getOwnerName().color(TextColor.GOLD))
                             .append(" ")
-                            .append(children)
-                            .append(" ")
                             .append(claimName == TextComponent.empty() ? TextComponent.of("") : claimName)
+                            .append(" ")
+                            .append(children)
                             .append(" ")
                             .append(buyClaim)
                             .build());
@@ -662,7 +672,7 @@ public class CommandHelper {
                 }
             }
             if (claimsTextList.size() == 0) {
-                claimsTextList.add(TextComponent.of("No claims found in world.", TextColor.RED));
+                claimsTextList.add(MessageCache.getInstance().CLAIMLIST_UI_NO_CLAIMS_FOUND.color(TextColor.RED));
             }
         }
         return claimsTextList;
@@ -674,77 +684,79 @@ public class CommandHelper {
             if (player.getUniqueId().equals(claim.getOwnerUniqueId())) {
                 return;
             }
-            /*Account playerAccount = GriefDefenderPlugin.getInstance().economyService.get().getOrCreateAccount(player.getUniqueId()).orElse(null);
-            if (playerAccount == null) {
-                Map<String, ?> params = ImmutableMap.of(
-                        "user", player.getName());
-                GriefDefenderPlugin.sendMessage(player, MessageStorage.ECONOMY_USER_NOT_FOUND, GriefDefenderPlugin.getInstance().messageData.economyUserNotFound, params);
+
+            final Economy economy = GriefDefenderPlugin.getInstance().getVaultProvider().getApi();
+            if (!economy.hasAccount(player)) {
+                final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_PLAYER_NOT_FOUND, ImmutableMap.of(
+                        "player", player.getName()));
+                GriefDefenderPlugin.sendMessage(player, message);
                 return;
             }
 
-            final double balance = playerAccount.getBalance(GriefDefenderPlugin.getInstance().economyService.get().getDefaultCurrency()).doubleValue();
+            final double balance = economy.getBalance(player);
             if (balance < claim.getEconomyData().getSalePrice()) {
-                Map<String, ?> params = ImmutableMap.of(
-                        "sale_price", claim.getEconomyData().getSalePrice(),
+                Map<String, Object> params = ImmutableMap.of(
+                        "amount", claim.getEconomyData().getSalePrice(),
                         "balance", balance,
-                        "amount_needed", claim.getEconomyData().getSalePrice() -  balance);
-                GriefDefenderPlugin.sendMessage(player, "economy-claim-buy-not-enough-funds", GriefDefenderPlugin.getInstance().messageData.economyClaimBuyNotEnoughFunds, params);
+                        "amount_required", claim.getEconomyData().getSalePrice() -  balance);
+                GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_CLAIM_BUY_NOT_ENOUGH_FUNDS, params));
                 return;
             }
-            final Component message = GriefDefenderPlugin.getInstance().messageData.economyClaimBuyConfirmation
-                    .apply(ImmutableMap.of(
-                    "sale_price", claim.getEconomyData().getSalePrice())).build();
+            final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_CLAIM_BUY_CONFIRMATION,
+                    ImmutableMap.of("amount", claim.getEconomyData().getSalePrice()));
             GriefDefenderPlugin.sendMessage(src, message);
             final Component buyConfirmationText = TextComponent.builder("")
                     .append("\n[")
-                    .append("Confirm", TextColor.GREEN)
+                    .append(MessageCache.getInstance().LABEL_CONFIRM.color(TextColor.GREEN))
                     .append("]\n")
-                    .clickEvent(ClickEvent.runCommand(GPCallbackHolder.getInstance().createCallbackRunCommand(createBuyConsumerConfirmed(src, claim)))).build();
-            GriefDefenderPlugin.sendMessage(player, buyConfirmationText);*/
+                    .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createBuyConsumerConfirmed(src, claim)))).build();
+            GriefDefenderPlugin.sendMessage(player, buyConfirmationText);
         };
     }
 
     private static Consumer<CommandSender> createBuyConsumerConfirmed(CommandSender src, Claim claim) {
         return confirm -> {
             final Player player = (Player) src;
-            final Player ownerPlayer = Bukkit.getPlayer(claim.getOwnerUniqueId());
-            /*final Account ownerAccount = GriefDefenderPlugin.getInstance().economyService.get().getOrCreateAccount(claim.getOwnerUniqueId()).orElse(null);
-            if (ownerAccount == null) {
-                TextAdapter.sendComponent(src, TextComponent.of("Buy cancelled! Could not locate an economy account for owner.", TextColor.RED));
+            final GDPermissionUser owner = PermissionHolderCache.getInstance().getOrCreateUser(claim.getOwnerUniqueId());
+
+            final Economy economy = GriefDefenderPlugin.getInstance().getVaultProvider().getApi();
+            if (!economy.hasAccount(owner.getOfflinePlayer())) {
+                final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_PLAYER_NOT_FOUND, ImmutableMap.of(
+                        "player", owner.getName()));
+                GriefDefenderPlugin.sendMessage(player, message);
                 return;
             }
 
             final ClaimResult result = claim.transferOwner(player.getUniqueId());
             if (!result.successful()) {
-                final Component defaultMessage = TextComponent.builder("")
-                        .append("Buy cancelled! Could not transfer owner. Result was ", TextColor.RED)
-                        .append(result.getResultType().name(), TextColor.GREEN).build();
+                final Component defaultMessage = MESSAGE_DATA.getMessage(MessageStorage.ECONOMY_CLAIM_BUY_TRANSFER_CANCELLED,
+                        ImmutableMap.of(
+                            "owner", owner.getName(),
+                            "player", player.getName()));
                 TextAdapter.sendComponent(src, result.getMessage().orElse(defaultMessage));
                 return;
             }
 
-            final Currency defaultCurrency = GriefDefenderPlugin.getInstance().economyService.get().getDefaultCurrency();
             final double salePrice = claim.getEconomyData().getSalePrice();
-            Sponge.getCauseStackManager().pushCause(src);
-            final TransactionResult ownerResult = ownerAccount.deposit(defaultCurrency, BigDecimal.valueOf(salePrice), Sponge.getCauseStackManager().getCurrentCause());
-            Account playerAccount = GriefDefenderPlugin.getInstance().economyService.get().getOrCreateAccount(player.getUniqueId()).orElse(null);
-            final TransactionResult
-                transactionResult =
-                playerAccount.withdraw(defaultCurrency, BigDecimal.valueOf(salePrice), Sponge.getCauseStackManager().getCurrentCause());
-            final Component message = GriefDefenderPlugin.getInstance().messageData.economyClaimBuyConfirmed
-                .apply(ImmutableMap.of(
-                    "sale_price", salePrice)).build();
-            final Component saleMessage = GriefDefenderPlugin.getInstance().messageData.economyClaimSold
-                .apply(ImmutableMap.of(
-                    "amount", salePrice,
-                    "balance", ownerAccount.getBalance(defaultCurrency))).build();
-            if (ownerPlayer != null) {
-                TextAdapter.sendComponent(ownerPlayer, saleMessage);
+            final EconomyResponse response = economy.depositPlayer(owner.getOfflinePlayer(), salePrice);
+            if (response.transactionSuccess()) {
+                final EconomyResponse withdrawResponse = economy.withdrawPlayer(player, salePrice);
+                economy.withdrawPlayer(owner.getOfflinePlayer(), salePrice);
+                final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_CLAIM_BUY_CONFIRMED,
+                    ImmutableMap.of(
+                        "amount", salePrice));
+                final Component saleMessage = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_CLAIM_SOLD,
+                    ImmutableMap.of(
+                        "amount", salePrice,
+                        "balance", economy.getBalance(owner.getOfflinePlayer())));
+                if (owner.getOnlinePlayer() != null) {
+                    TextAdapter.sendComponent(owner.getOnlinePlayer(), saleMessage);
+                }
+                claim.getEconomyData().setForSale(false);
+                claim.getEconomyData().setSalePrice(0);
+                claim.getData().save();
+                GriefDefenderPlugin.sendMessage(src, message);
             }
-            claim.getEconomyData().setForSale(false);
-            claim.getEconomyData().setSalePrice(0);
-            claim.getData().save();
-            GriefDefenderPlugin.sendMessage(src, message);*/
         };
     }
 
@@ -752,7 +764,7 @@ public class CommandHelper {
         return consumer -> {
             Component claimListReturnCommand = TextComponent.builder("")
                     .append("\n[")
-                    .append("Return to claimslist", TextColor.AQUA)
+                    .append(MessageCache.getInstance().CLAIMLIST_UI_RETURN_CLAIMSLIST.color(TextColor.AQUA))
                     .append("]\n", TextColor.WHITE)
                 .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(returnCommand))).build();
     
@@ -761,7 +773,7 @@ public class CommandHelper {
             textList.addAll(childrenTextList);
             PaginationList.Builder builder = PaginationList.builder()
                     .title(parent.getName().orElse(parent.getFriendlyNameType())
-                            .append(TextComponent.of(" Child Claims"))).padding(TextComponent.builder(" ").decoration(TextDecoration.STRIKETHROUGH, true).build()).contents(textList);
+                            .append(TextComponent.of(" ").append(MessageCache.getInstance().CLAIMLIST_UI_TITLE_CHILD_CLAIMS))).padding(TextComponent.builder(" ").decoration(TextDecoration.STRIKETHROUGH, true).build()).contents(textList);
             builder.sendTo(src);
         };
     }
@@ -770,7 +782,7 @@ public class CommandHelper {
         return consumer -> {
             Component claimListReturnCommand = TextComponent.builder("")
                     .append("\n[")
-                    .append("Return to claimslist", TextColor.AQUA)
+                    .append(MessageCache.getInstance().CLAIMLIST_UI_RETURN_CLAIMSLIST.color(TextColor.AQUA))
                     .append("]\n", TextColor.WHITE)
                 .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(returnCommand))).build();
             TextAdapter.sendComponent(src, claimListReturnCommand);
@@ -781,7 +793,7 @@ public class CommandHelper {
         return consumer -> {
             Component claimListReturnCommand = TextComponent.builder("")
                     .append("\n[")
-                    .append("Return to claimslist", TextColor.AQUA)
+                    .append(MessageCache.getInstance().CLAIMLIST_UI_RETURN_CLAIMSLIST.color(TextColor.AQUA))
                     .append("]\n", TextColor.WHITE)
                 .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(CommandHelper.createCommandConsumer(src, "/claimslist", arguments)))).build();
             TextAdapter.sendComponent(src, claimListReturnCommand);
@@ -806,10 +818,10 @@ public class CommandHelper {
     }
 
     public static Component getClickableText(CommandSender src, GDClaim claim, GDPermissionHolder holder, String subjectName, Set<Context> contexts, String flagPermission, Tristate flagValue, FlagType type) {
-        String onClickText = "Click here to toggle " + type.name().toLowerCase() + " value.";
         TextComponent.Builder textBuilder = TextComponent.builder(flagValue.toString().toLowerCase())
                 .hoverEvent(HoverEvent.showText(TextComponent.builder("")
-                        .append(onClickText)
+                        .append(MESSAGE_DATA.getMessage(MessageStorage.CLAIMLIST_UI_CLICK_TOGGLE_VALUE,
+                                ImmutableMap.of("type", type.name().toLowerCase())))
                         .append("\n")
                         .append(getFlagTypeHoverText(type)).build()))
                 .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createFlagConsumer(src, claim, holder, subjectName, contexts, flagPermission, flagValue, type))));
@@ -817,15 +829,12 @@ public class CommandHelper {
     }
 
     public static Component getClickableText(CommandSender src, GDPermissionHolder subject, String subjectName, Set<Context> contexts, GDClaim claim, String flagPermission, Tristate flagValue, String source, FlagType type) {
-        Component onClickText = TextComponent.of("Click here to toggle flag value.");
+        Component onClickText = MESSAGE_DATA.getMessage(MessageStorage.CLAIMLIST_UI_CLICK_TOGGLE_VALUE,
+                ImmutableMap.of("type", "flag"));
         boolean hasPermission = true;
         if (type == FlagType.INHERIT) {
-            onClickText = TextComponent.builder("")
-                    .append("This flag is inherited from parent claim ")
-                    .append(claim.getName().orElse(claim.getFriendlyNameType()))
-                    .append(" and ")
-                    .append(TextComponent.of("cannot").decoration(TextDecoration.UNDERLINED, true))
-                    .append(TextComponent.of(" be changed.")).build();
+            onClickText = MESSAGE_DATA.getMessage(MessageStorage.FLAG_UI_INHERIT_PARENT,
+                    ImmutableMap.of("name", claim.getFriendlyNameType()));
             hasPermission = false;
         } else if (src instanceof Player) {
             Component denyReason = claim.allowEdit((Player) src);
@@ -854,8 +863,7 @@ public class CommandHelper {
         if (argsIndex != -1) {
             if (argsIndex == 0) {
                 // invalid
-                TextAdapter.sendComponent(src, TextComponent.of(
-                        "No valid command entered.", TextColor.RED));
+                TextAdapter.sendComponent(src, MessageCache.getInstance().COMMAND_INVALID);
                 return null;
             }
             command = target.substring(0, argsIndex);
@@ -882,9 +890,10 @@ public class CommandHelper {
             Matcher m = p.matcher(args);
             if (!m.find()) {
                 // invalid
-                TextAdapter.sendComponent(src, TextComponent.builder("Invalid arguments '").color(TextColor.RED)
-                        .append(args, TextColor.AQUA)
-                        .append("' entered. Check syntax matches  'command[arg1:arg2:etc]'", TextColor.RED).build());
+                TextAdapter.sendComponent(src, MESSAGE_DATA.getMessage(MessageStorage.COMMAND_EXECUTE_FAILED,
+                        ImmutableMap.of(
+                                "command", command,
+                                "args", args)));
                 return null;
             }
             args = m.group(1);
@@ -911,11 +920,10 @@ public class CommandHelper {
     private static boolean validateCommandMapping(CommandSender src, String command, String pluginId) {
         Command commandMapping = NMSUtil.getInstance().getBukkitCommandMap().getCommand(command);
         if (commandMapping == null) {
-            TextAdapter.sendComponent(src, TextComponent.builder("Could not locate the command '").color(TextColor.RED)
-                    .append(command, TextColor.GREEN)
-                    .append("' for mod id '", TextColor.RED)
-                    .append(pluginId, TextColor.AQUA)
-                    .append("'.", TextColor.RED).build());
+            TextAdapter.sendComponent(src, MESSAGE_DATA.getMessage(MessageStorage.PLUGIN_COMMAND_NOT_FOUND,
+                    ImmutableMap.of(
+                        "command", command,
+                        "id", pluginId)));
             return false;
         }
         return true;
@@ -946,11 +954,11 @@ public class CommandHelper {
                 // if not owner of claim, validate perms
                 if (!player.getUniqueId().equals(claim.getOwnerUniqueId())) {
                     if (!player.hasPermission(GDPermissions.COMMAND_CLAIM_INFO_TELEPORT_OTHERS) && !gpClaim.isUserTrusted(player, TrustTypes.ACCESSOR)) {
-                        TextAdapter.sendComponent(player, TextComponent.of("You do not have permission to use the teleport feature in this claim.", TextColor.RED)); 
+                        TextAdapter.sendComponent(player, MessageCache.getInstance().CLAIMINFO_UI_TELEPORT_FEATURE.color(TextColor.RED)); 
                         return;
                     }
                 } else if (!player.hasPermission(GDPermissions.COMMAND_CLAIM_INFO_TELEPORT_BASE)) {
-                    TextAdapter.sendComponent(player, TextComponent.of("You do not have permission to use the teleport feature in your claim.", TextColor.RED)); 
+                    TextAdapter.sendComponent(player, MessageCache.getInstance().CLAIMINFO_UI_TELEPORT_FEATURE.color(TextColor.RED)); 
                     return;
                 }
             }
@@ -967,7 +975,7 @@ public class CommandHelper {
 
     public static void handleBankTransaction(CommandSender src, String[] args, GDClaim claim) {
         if (GriefDefenderPlugin.getInstance().getVaultProvider() == null) {
-            GriefDefenderPlugin.sendMessage(src, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_NOT_INSTALLED));
+            GriefDefenderPlugin.sendMessage(src, MessageCache.getInstance().ECONOMY_NOT_INSTALLED);
             return;
         }
 
@@ -976,7 +984,7 @@ public class CommandHelper {
         }
 
         if (!claim.getEconomyAccountId().isPresent()) {
-            GriefDefenderPlugin.sendMessage(src, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_VIRTUAL_NOT_SUPPORTED));
+            GriefDefenderPlugin.sendMessage(src, MessageCache.getInstance().ECONOMY_VIRTUAL_NOT_SUPPORTED);
             return;
         }
 
@@ -989,7 +997,7 @@ public class CommandHelper {
         if (playerData.canIgnoreClaim(claim) || claim.getOwnerUniqueId().equals(playerSource) || claim.getUserTrusts(TrustTypes.MANAGER).contains(playerData.playerID)) {
             final UUID bankAccount = claim.getEconomyAccountId().orElse(null);
             if (bankAccount == null) {
-                GriefDefenderPlugin.sendMessage(src, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_VIRTUAL_NOT_SUPPORTED));
+                GriefDefenderPlugin.sendMessage(src, MessageCache.getInstance().ECONOMY_VIRTUAL_NOT_SUPPORTED);
                 return;
             }
             if (command.equalsIgnoreCase("withdraw")) {
@@ -1068,12 +1076,12 @@ public class CommandHelper {
 
     public static void displayClaimBankInfo(CommandSender player, GDClaim claim, boolean checkTown, boolean returnToClaimInfo) {
         if (GriefDefenderPlugin.getInstance().getVaultProvider() == null) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_NOT_INSTALLED));
+            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().ECONOMY_NOT_INSTALLED);
             return;
         }
 
         if (checkTown && !claim.isInTown()) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.TOWN_NOT_IN));
+            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().TOWN_NOT_IN);
             return;
         }
 
@@ -1084,7 +1092,7 @@ public class CommandHelper {
         final GDClaim town = claim.getTownClaim();
         final UUID bankAccount = checkTown ? town.getEconomyAccountId().orElse(null) : claim.getEconomyAccountId().orElse(null);
         if (bankAccount == null) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_VIRTUAL_NOT_SUPPORTED));
+            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().ECONOMY_VIRTUAL_NOT_SUPPORTED);
             return;
         }
 
@@ -1120,15 +1128,15 @@ public class CommandHelper {
                 "time-remaining", timeLeft,
                 "tax-balance", claim.getData().getEconomyData().getTaxBalance()));
         Component transactions = TextComponent.builder("")
-                .append("Bank Transactions", TextColor.AQUA, TextDecoration.ITALIC)
+                .append(MessageCache.getInstance().BANK_TITLE_TRANSACTIONS.color(TextColor.AQUA).decoration(TextDecoration.ITALIC, true))
                 .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createBankTransactionsConsumer(player, claim, checkTown, returnToClaimInfo))))
-                .hoverEvent(HoverEvent.showText(TextComponent.of("Click here to view bank transactions")))
+                .hoverEvent(HoverEvent.showText(MessageCache.getInstance().BANK_CLICK_VIEW_TRANSACTIONS))
                 .build();
         List<Component> textList = new ArrayList<>();
         if (returnToClaimInfo) {
             textList.add(TextComponent.builder("")
                     .append("\n[")
-                    .append("Return to claim info", TextColor.AQUA)
+                    .append(MessageCache.getInstance().CLAIMINFO_UI_RETURN_CLAIMINFO.color(TextColor.AQUA))
                     .append("]\n")
                     .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(CommandHelper.createCommandConsumer(player, "claiminfo", "")))).build());
         }
@@ -1141,13 +1149,12 @@ public class CommandHelper {
 
     public static Consumer<CommandSender> createBankTransactionsConsumer(CommandSender src, GDClaim claim, boolean checkTown, boolean returnToClaimInfo) {
         return settings -> {
-            final String name = "Bank Transactions";
             List<String> bankTransactions = new ArrayList<>(claim.getData().getEconomyData().getBankTransactionLog());
             Collections.reverse(bankTransactions);
             List<Component> textList = new ArrayList<>();
             textList.add(TextComponent.builder("")
                     .append("\n[")
-                    .append("Return to bank info", TextColor.AQUA)
+                    .append(MessageCache.getInstance().CLAIMINFO_UI_RETURN_BANKINFO.color(TextColor.AQUA))
                     .append("]\n")
                     .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(consumer -> { displayClaimBankInfo(src, claim, checkTown, returnToClaimInfo); }))).build());
             Gson gson = new Gson();
@@ -1171,11 +1178,11 @@ public class CommandHelper {
             }
             textList.add(TextComponent.builder("")
                     .append("\n[")
-                    .append("Return to bank info", TextColor.AQUA)
+                    .append(MessageCache.getInstance().CLAIMINFO_UI_RETURN_BANKINFO.color(TextColor.AQUA))
                     .append("]\n")
                     .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(CommandHelper.createCommandConsumer(src, "claimbank", "")))).build());
             PaginationList.Builder builder = PaginationList.builder()
-                    .title(TextComponent.of(name, TextColor.AQUA)).padding(TextComponent.builder(" ").decoration(TextDecoration.STRIKETHROUGH, true).build()).contents(textList);
+                    .title(MessageCache.getInstance().BANK_TITLE_TRANSACTIONS.color(TextColor.AQUA)).padding(TextComponent.builder(" ").decoration(TextDecoration.STRIKETHROUGH, true).build()).contents(textList);
             builder.sendTo(src);
         };
     }
@@ -1216,23 +1223,27 @@ public class CommandHelper {
         Component hoverText = TextComponent.empty();
         if (type == FlagType.DEFAULT) {
             hoverText = TextComponent.builder("")
-                    .append("DEFAULT ", TextColor.LIGHT_PURPLE)
-                    .append(" : Default is last to be checked. Both claim and override take priority over this.")
+                    .append(MessageCache.getInstance().TITLE_DEFAULT.color(TextColor.LIGHT_PURPLE))
+                    .append(" : ")
+                    .append(MessageCache.getInstance().FLAG_UI_INFO_DEFAULT)
                     .build();
         } else if (type == FlagType.CLAIM) {
             hoverText = TextComponent.builder("")
-                    .append("CLAIM", TextColor.GOLD)
-                    .append(" : Claim is checked before default values. Allows claim owners to specify flag settings in claim only.")
+                    .append(MessageCache.getInstance().TITLE_CLAIM.color(TextColor.GOLD))
+                    .append(" : ")
+                    .append(MessageCache.getInstance().FLAG_UI_INFO_CLAIM)
                     .build();
         } else if (type == FlagType.OVERRIDE) {
             hoverText = TextComponent.builder("")
-                    .append("OVERRIDE", TextColor.RED)
-                    .append(" : Override has highest priority and is checked above both default and claim values. Allows admins to override all basic and admin claims.")
+                    .append(MessageCache.getInstance().TITLE_OVERRIDE.color(TextColor.RED))
+                    .append(" : ")
+                    .append(MessageCache.getInstance().FLAG_UI_INFO_OVERRIDE)
                     .build();
         } else if (type == FlagType.INHERIT) {
             hoverText = TextComponent.builder("")
-                    .append("INHERIT", TextColor.AQUA)
-                    .append(" : Inherit is an enforced flag set by a parent claim that cannot changed.")
+                    .append(MessageCache.getInstance().TITLE_INHERIT.color(TextColor.AQUA))
+                    .append(" : ")
+                    .append(MessageCache.getInstance().FLAG_UI_INFO_INHERIT)
                     .build();
         }
         return hoverText;
@@ -1247,7 +1258,8 @@ public class CommandHelper {
 
         final Flag flag = FlagRegistryModule.getInstance().getById(baseFlag).orElse(null);
         if (flag == null) {
-            return TextComponent.of("Not defined.");
+            return MESSAGE_DATA.getMessage(MessageStorage.FLAG_NOT_FOUND, ImmutableMap.of(
+                    "flag", baseFlag));
         }
 
         return flag.getDescription();

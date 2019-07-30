@@ -29,12 +29,17 @@ import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Subcommand;
+
+import com.google.common.collect.ImmutableMap;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.claim.TrustType;
 import com.griefdefender.api.claim.TrustTypes;
+import com.griefdefender.cache.MessageCache;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
+import com.griefdefender.configuration.MessageDataConfig;
+import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.internal.pagination.PaginationList;
 import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.permission.GDPermissions;
@@ -69,27 +74,15 @@ public class CommandTrustList extends BaseCommand {
     public static void showTrustList(CommandSender src, GDClaim claim, Player player, TrustType type) {
         final Component whiteOpenBracket = TextComponent.of("[", TextColor.AQUA);
         final Component whiteCloseBracket = TextComponent.of("]", TextColor.AQUA);
-        final Component showAllText = TextComponent.of("Click here to show all trusted users for claim.");
-        final Component showAccessorText = TextComponent.builder("")
-                .append("Click here to filter by ")
-                .append("ACCESSOR ", TextColor.YELLOW)
-                .append("permissions.")
-                .build();
-        final Component showContainerText = TextComponent.builder("")
-                .append("Click here to filter by ")
-                .append("CONTAINER ", TextColor.LIGHT_PURPLE)
-                .append("permissions.")
-                .build();
-        final Component showBuilderText = TextComponent.builder("")
-                .append("Click here to filter by ")
-                .append("BUILDER ", TextColor.GREEN)
-                .append("permissions.")
-                .build();
-        final Component showManagerText = TextComponent.builder("")
-                .append("Click here to filter by ")
-                .append("MANAGER ", TextColor.GOLD)
-                .append("permissions.")
-                .build();
+        final Component showAllText = MessageCache.getInstance().TRUST_CLICK_SHOW_LIST;
+        final Component showAccessorText = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.UI_CLICK_FILTER_TYPE,
+                ImmutableMap.of("type", MessageCache.getInstance().TITLE_ACCESSOR.color(TextColor.YELLOW)));
+        final Component showContainerText = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.UI_CLICK_FILTER_TYPE,
+                ImmutableMap.of("type", MessageCache.getInstance().TITLE_CONTAINER.color(TextColor.LIGHT_PURPLE)));
+        final Component showBuilderText = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.UI_CLICK_FILTER_TYPE,
+                ImmutableMap.of("type", MessageCache.getInstance().TITLE_BUILDER.color(TextColor.GREEN)));
+        final Component showManagerText = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.UI_CLICK_FILTER_TYPE,
+                ImmutableMap.of("type", MessageCache.getInstance().TITLE_MANAGER.color(TextColor.GOLD)));
         final Component allTypeText = TextComponent.builder("")
                 .append(type == TrustTypes.NONE ? TextComponent.builder("")
                         .append(whiteOpenBracket)
@@ -103,25 +96,25 @@ public class CommandTrustList extends BaseCommand {
         final Component accessorTrustText = TextComponent.builder("")
                 .append(type == TrustTypes.ACCESSOR ? TextComponent.builder("")
                         .append(whiteOpenBracket)
-                        .append("ACCESSOR", TextColor.YELLOW)
+                        .append(MessageCache.getInstance().TITLE_ACCESSOR.color(TextColor.YELLOW))
                         .append(whiteCloseBracket)
-                        .build() : TextComponent.of("ACCESSOR", TextColor.GRAY))
+                        .build() : MessageCache.getInstance().TITLE_ACCESSOR.color(TextColor.GRAY))
                 .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createTrustConsumer(src, claim, player, TrustTypes.ACCESSOR))))
                 .hoverEvent(HoverEvent.showText(showAccessorText)).build();
         final Component builderTrustText = TextComponent.builder("")
                 .append(type == TrustTypes.BUILDER ? TextComponent.builder("")
                         .append(whiteOpenBracket)
-                        .append("BUILDER", TextColor.GREEN)
+                        .append(MessageCache.getInstance().TITLE_BUILDER.color(TextColor.GREEN))
                         .append(whiteCloseBracket)
-                        .build() : TextComponent.of("BUILDER", TextColor.GRAY))
+                        .build() : MessageCache.getInstance().TITLE_BUILDER.color(TextColor.GRAY))
                 .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createTrustConsumer(src, claim, player, TrustTypes.BUILDER))))
                 .hoverEvent(HoverEvent.showText(showBuilderText)).build();
         final Component containerTrustText = TextComponent.builder("")
                 .append(type == TrustTypes.CONTAINER ? TextComponent.builder("")
                         .append(whiteOpenBracket)
-                        .append("CONTAINER", TextColor.LIGHT_PURPLE)
+                        .append(MessageCache.getInstance().TITLE_CONTAINER.color(TextColor.LIGHT_PURPLE))
                         .append(whiteCloseBracket)
-                        .build() : TextComponent.of("CONTAINER", TextColor.GRAY))
+                        .build() : MessageCache.getInstance().TITLE_CONTAINER.color(TextColor.GRAY))
                 .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createTrustConsumer(src, claim, player, TrustTypes.CONTAINER))))
                 .hoverEvent(HoverEvent.showText(showContainerText)).build();
         final Component managerTrustText = TextComponent.builder("")
@@ -129,11 +122,13 @@ public class CommandTrustList extends BaseCommand {
                         .append(whiteOpenBracket)
                         .append("MANAGER", TextColor.GOLD)
                         .append(whiteCloseBracket)
-                        .build() : TextComponent.of("MANAGER", TextColor.GRAY))
+                        .build() : MessageCache.getInstance().TITLE_MANAGER.color(TextColor.GRAY))
                 .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createTrustConsumer(src, claim, player, TrustTypes.MANAGER))))
                 .hoverEvent(HoverEvent.showText(showManagerText)).build();
-        final Component claimTrustHead = TextComponent.builder("")
-                .append(" Displaying : ", TextColor.AQUA)
+        final Component claimTrustHead = TextComponent.builder()
+                .append(" ")
+                .append(MessageCache.getInstance().LABEL_DISPLAYING.color(TextColor.AQUA))
+                .append(" ")
                 .append(allTypeText)
                 .append("  ")
                 .append(accessorTrustText)

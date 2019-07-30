@@ -41,6 +41,7 @@ import com.griefdefender.api.claim.ClaimType;
 import com.griefdefender.api.claim.TrustType;
 import com.griefdefender.api.permission.flag.Flag;
 import com.griefdefender.api.permission.option.Option;
+import com.griefdefender.cache.MessageCache;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.claim.GDClaimManager;
@@ -178,7 +179,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -670,6 +670,13 @@ public class GriefDefenderPlugin {
             }
             return ImmutableList.copyOf(tabList);
         });
+        manager.getCommandCompletions().registerCompletion("gdentityids", c -> {
+            List<String> tabList = new ArrayList<>();
+            for (GDEntityType type : EntityTypeRegistryModule.getInstance().getAll()) {
+                tabList.add(type.getName());
+            }
+            return ImmutableList.copyOf(tabList);
+        });
         manager.getCommandCompletions().registerCompletion("gdmcids", c -> {
             List<String> tabList = new ArrayList<>();
             for (GDItemType type : ItemTypeRegistryModule.getInstance().getAll()) {
@@ -776,6 +783,7 @@ public class GriefDefenderPlugin {
                 // refresh default permissions
                 this.dataStore.setDefaultGlobalPermissions();
             }
+            MessageCache.getInstance().loadCache();
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -31,6 +31,7 @@ import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Subcommand;
 import com.google.common.collect.ImmutableMap;
 import com.griefdefender.GriefDefenderPlugin;
+import com.griefdefender.cache.MessageCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.internal.util.BlockUtil;
@@ -61,7 +62,7 @@ public class CommandRestoreClaim extends BaseCommand {
         final GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAt(player.getLocation());
 
         if (claim.isWilderness()) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_NOT_FOUND));
+            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().CLAIM_NOT_FOUND);
             return;
         }
 
@@ -91,7 +92,7 @@ public class CommandRestoreClaim extends BaseCommand {
     private static Consumer<CommandSender> createConfirmationConsumer(CommandSender src, GDClaim claim) {
         return confirm -> {
             BlockUtil.getInstance().restoreClaim(claim);
-            final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_RESTORE_SUCCESS);
+            final Component message = MessageCache.getInstance().CLAIM_RESTORE_SUCCESS;
             GriefDefenderPlugin.sendMessage(src, message);
         };
     }

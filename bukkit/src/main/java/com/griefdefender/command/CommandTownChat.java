@@ -31,8 +31,8 @@ import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Subcommand;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
+import com.griefdefender.cache.MessageCache;
 import com.griefdefender.claim.GDClaim;
-import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.permission.GDPermissions;
 import org.bukkit.entity.Player;
 
@@ -47,7 +47,7 @@ public class CommandTownChat extends BaseCommand {
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
         final GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAt(player.getLocation());
         if (!claim.isInTown()) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.TOWN_NOT_IN));
+            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().TOWN_NOT_IN);
             return;
         }
 
@@ -55,9 +55,9 @@ public class CommandTownChat extends BaseCommand {
 
         // toggle ignore claims mode on or off
         if (!playerData.townChat) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.TOWN_CHAT_DISABLED));
+            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().TOWN_CHAT_DISABLED);
         } else {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.TOWN_CHAT_ENABLED));
+            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().TOWN_CHAT_ENABLED);
         }
     }
 }

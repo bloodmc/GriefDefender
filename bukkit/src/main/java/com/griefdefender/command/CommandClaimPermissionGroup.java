@@ -36,11 +36,11 @@ import co.aikar.commands.annotation.Syntax;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.google.inject.spi.Message;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.Tristate;
 import com.griefdefender.api.permission.Context;
+import com.griefdefender.cache.MessageCache;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.configuration.MessageStorage;
@@ -78,7 +78,7 @@ public class CommandClaimPermissionGroup extends BaseCommand {
             }
             permission = args[0];
             if (permission != null && !player.hasPermission(permission)) {
-                GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_ASSIGN_WITHOUT_HAVING));
+                GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().PERMISSION_ASSIGN_WITHOUT_HAVING);
                 return;
             }
     

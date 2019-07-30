@@ -73,7 +73,7 @@ public class CommandClaimDeleteAll extends BaseCommand {
         }
 
         GriefDefenderPlugin.getInstance().dataStore.deleteClaimsForPlayer(otherPlayer.getUniqueId());
-        final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.DELETE_ALL_SUCCESS, ImmutableMap.of(
+        final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.DELETE_ALL_PLAYER_SUCCESS, ImmutableMap.of(
                 "player", otherPlayer.getName()));
         GriefDefenderPlugin.sendMessage(player, message);
         if (player != null) {

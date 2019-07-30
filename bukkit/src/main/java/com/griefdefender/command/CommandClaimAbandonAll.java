@@ -36,6 +36,7 @@ import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.GriefDefender;
 import com.griefdefender.api.claim.Claim;
 import com.griefdefender.api.permission.option.Options;
+import com.griefdefender.cache.MessageCache;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.event.GDCauseStackManager;
 import com.griefdefender.event.GDDeleteClaimEvent;
@@ -63,7 +64,7 @@ public class CommandClaimAbandonAll extends BaseCommand {
 
         if (originalClaimCount == 0) {
             try {
-                throw new CommandException(GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_NO_CLAIMS));
+                throw new CommandException(MessageCache.getInstance().CLAIM_NO_CLAIMS);
             } catch (CommandException e) {
                 TextAdapter.sendComponent(player, e.getText());
                 return;

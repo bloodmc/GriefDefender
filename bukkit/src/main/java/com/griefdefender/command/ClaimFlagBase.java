@@ -28,6 +28,7 @@ import co.aikar.commands.BaseCommand;
 import co.aikar.commands.InvalidCommandArgument;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
@@ -40,7 +41,9 @@ import com.griefdefender.api.claim.ClaimTypes;
 import com.griefdefender.api.permission.Context;
 import com.griefdefender.api.permission.PermissionResult;
 import com.griefdefender.api.permission.flag.Flag;
+import com.griefdefender.cache.MessageCache;
 import com.griefdefender.claim.GDClaim;
+import com.griefdefender.configuration.MessageDataConfig;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.event.GDCauseStackManager;
 import com.griefdefender.event.GDFlagClaimEvent;
@@ -79,6 +82,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 public abstract class ClaimFlagBase extends BaseCommand {
+
+    private MessageDataConfig MESSAGE_DATA = GriefDefenderPlugin.getInstance().messageData;
 
     public enum FlagType {
         DEFAULT,
@@ -121,12 +126,13 @@ public abstract class ClaimFlagBase extends BaseCommand {
         }
         final Flag flag = FlagRegistryModule.getInstance().getById(commandFlag).orElse(null);
         if (commandFlag != null && flag == null) {
-            TextAdapter.sendComponent(player, TextComponent.of("Flag not found.", TextColor.RED));
+            TextAdapter.sendComponent(player, MESSAGE_DATA.getMessage(MessageStorage.FLAG_NOT_FOUND, ImmutableMap.of(
+                    "flag", commandFlag)));
             return;
         }
 
         if (flag != null && !player.hasPermission(GDPermissions.USER_CLAIM_FLAGS + flag.getPermission().replace(GDPermissions.FLAG_BASE, ""))) {
-            TextAdapter.sendComponent(player, TextComponent.of("You do not have permission to change this flag.", TextColor.RED));
+            TextAdapter.sendComponent(player, MessageCache.getInstance().PERMISSION_FLAG_USE);
             return;
         }
 
@@ -166,10 +172,8 @@ public abstract class ClaimFlagBase extends BaseCommand {
                 GDCauseStackManager.getInstance().popCause();
                 return;
             }
-
-            GriefDefenderPlugin.sendMessage(player, TextComponent.of("Usage: /cf [<flag> <target> <value> [subject|context]]"));
         } else {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_NOT_FOUND));
+            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().CLAIM_NOT_FOUND);
         }
     }
 
@@ -187,22 +191,14 @@ public abstract class ClaimFlagBase extends BaseCommand {
         }
         final Component whiteOpenBracket = TextComponent.of("[", TextColor.AQUA);
         final Component whiteCloseBracket = TextComponent.of("]", TextColor.AQUA);
-        final Component showOverrideText = TextComponent.builder("")
-                .append("Click here to filter by ")
-                .append("OVERRIDE ", TextColor.RED)
-                .append("permissions.").build();
-        final Component showDefaultText = TextComponent.builder("")
-                .append("Click here to filter by ")
-                .append("DEFAULT ", TextColor.LIGHT_PURPLE)
-                .append("permissions.").build();
-        final Component showClaimText = TextComponent.builder("")
-                .append("Click here to filter by ")
-                .append("CLAIM ", TextColor.GOLD)
-                .append("permissions.").build();
-        final Component showInheritText = TextComponent.builder("")
-                .append("Click here to filter by ")
-                .append("INHERIT ", TextColor.AQUA)
-                .append("permissions.").build();
+        final Component showOverrideText = MESSAGE_DATA.getMessage(MessageStorage.UI_CLICK_FILTER_TYPE, 
+                ImmutableMap.of("type", TextComponent.of("OVERRIDE", TextColor.RED)));
+        final Component showDefaultText = MESSAGE_DATA.getMessage(MessageStorage.UI_CLICK_FILTER_TYPE, 
+                ImmutableMap.of("type", TextComponent.of("DEFAULT", TextColor.LIGHT_PURPLE)));
+        final Component showClaimText = MESSAGE_DATA.getMessage(MessageStorage.UI_CLICK_FILTER_TYPE, 
+                ImmutableMap.of("type", TextComponent.of("CLAIM", TextColor.GOLD)));
+        final Component showInheritText = MESSAGE_DATA.getMessage(MessageStorage.UI_CLICK_FILTER_TYPE, 
+                ImmutableMap.of("type", TextComponent.of("INHERIT", TextColor.AQUA)));
         Component defaultFlagText = TextComponent.empty();
         if (isAdmin) {
             defaultFlagText = TextComponent.builder("")
@@ -371,11 +367,8 @@ public abstract class ClaimFlagBase extends BaseCommand {
                                 if (hasPermission) {
                                     undefinedText = TextComponent.builder("")
                                             .append("undefined", TextColor.GRAY)
-                                            .hoverEvent(HoverEvent.showText(TextComponent.builder("")
-                                                    .append(baseFlagPerm)
-                                                    .append(" is currently being ")
-                                                    .append("overridden", TextColor.RED)
-                                                    .append(" by an administrator.\nClick here to remove this flag.").build()))
+                                            .hoverEvent(HoverEvent.showText(MESSAGE_DATA.getMessage(MessageStorage.FLAG_UI_OVERRIDE_PERMISSION,
+                                                    ImmutableMap.of("flag", baseFlagPerm))))
                                             .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createFlagConsumer(src, claim, overrideContextSet, flagPermission, Tristate.UNDEFINED, flagType, FlagType.CLAIM, false)))).build();
                                 } else {
                                     undefinedText = TextComponent.builder("")
@@ -388,10 +381,7 @@ public abstract class ClaimFlagBase extends BaseCommand {
                                         .append("[", TextColor.AQUA)
                                         .append(String.valueOf(overridePermissionEntry.getValue()), TextColor.RED)
                                         .append("]", TextColor.AQUA)
-                                        .hoverEvent(HoverEvent.showText(TextComponent.builder("")
-                                                .append("This flag has been overridden by an administrator and can ")
-                                                .append(TextComponent.of("NOT").color(TextColor.RED).decoration(TextDecoration.UNDERLINED, true))
-                                                .append(" be changed.").build()))
+                                        .hoverEvent(HoverEvent.showText(MessageCache.getInstance().FLAG_UI_OVERRIDE_NO_PERMISSION))
                                         .build();
                                 break;
                             }
@@ -424,11 +414,10 @@ public abstract class ClaimFlagBase extends BaseCommand {
                                             .append("undefined", TextColor.GRAY)
                                             .append(TextComponent.empty())
                                             .build())
-                                .hoverEvent(HoverEvent.showText(TextComponent.builder("")
-                                        .append(baseFlagPerm)
-                                        .append(" is currently not set.\nThe default claim value of ")
-                                        .append(String.valueOf(flagValue), TextColor.LIGHT_PURPLE)
-                                        .append(" will be active until set.").build()))
+                                .hoverEvent(HoverEvent.showText(MESSAGE_DATA.getMessage(MessageStorage.FLAG_NOT_SET,
+                                        ImmutableMap.of(
+                                            "flag", baseFlagPerm,
+                                            "value", TextComponent.of(flagValue, TextColor.LIGHT_PURPLE)))))
                                 .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createFlagConsumer(src, claim, claimContexts, flagPermission, Tristate.UNDEFINED, flagType, FlagType.CLAIM, false)))).build();
                         } else {
                             undefinedText = TextComponent.builder("").append(
@@ -501,11 +490,8 @@ public abstract class ClaimFlagBase extends BaseCommand {
                                 if (hasPermission) {
                                     undefinedText = TextComponent.builder("")
                                         .append("undefined", TextColor.GRAY)
-                                        .hoverEvent(HoverEvent.showText(TextComponent.builder("")
-                                                .append(baseFlag, TextColor.GREEN)
-                                                .append(" is currently being ")
-                                                .append("overridden", TextColor.RED)
-                                                .append(" by an administrator.\nClick here to remove this flag.").build()))
+                                        .hoverEvent(HoverEvent.showText(MESSAGE_DATA.getMessage(MessageStorage.FLAG_UI_OVERRIDE_PERMISSION,
+                                                ImmutableMap.of("flag", TextComponent.of(baseFlag, TextColor.GREEN)))))
                                         .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createFlagConsumer(src, claim, overrideContextSet, flagPermission, Tristate.UNDEFINED, flagType, FlagType.CLAIM, false)))).build();
                                 } else {
                                     undefinedText = TextComponent.builder("")
@@ -518,10 +504,7 @@ public abstract class ClaimFlagBase extends BaseCommand {
                                         .append("[", TextColor.AQUA)
                                         .append(String.valueOf(overridePermissionEntry.getValue()), TextColor.RED)
                                         .append("]", TextColor.AQUA)
-                                        .hoverEvent(HoverEvent.showText(TextComponent.builder("")
-                                                .append("This flag has been overridden by an administrator and can ")
-                                                .append(TextComponent.of("NOT").color(TextColor.RED).decoration(TextDecoration.UNDERLINED, true))
-                                                .append(" be changed.").build()))
+                                        .hoverEvent(HoverEvent.showText(MessageCache.getInstance().FLAG_UI_OVERRIDE_NO_PERMISSION))
                                         .build();
                                 break;
                             }
@@ -641,11 +624,8 @@ public abstract class ClaimFlagBase extends BaseCommand {
                                 hasOverride = true;
                                 final Component undefinedText = TextComponent.builder("")
                                         .append("undefined", TextColor.GRAY)
-                                        .hoverEvent(HoverEvent.showText(TextComponent.builder("")
-                                                .append(baseFlagPerm, TextColor.GREEN)
-                                                .append(" is currently being ")
-                                                .append("overridden", TextColor.RED)
-                                                .append(" by an administrator.\nClick here to remove this flag.").build()))
+                                        .hoverEvent(HoverEvent.showText(MESSAGE_DATA.getMessage(MessageStorage.FLAG_UI_OVERRIDE_PERMISSION,
+                                                ImmutableMap.of("flag", TextComponent.of(baseFlag.toString().toLowerCase(), TextColor.GREEN)))))
                                         .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createFlagConsumer(src, claim, overrideContextSet, flagPermission, Tristate.UNDEFINED, flagType, FlagType.CLAIM, false)))).build();
                                 flagText = TextComponent.builder("")
                                         .append(undefinedText)
@@ -653,10 +633,7 @@ public abstract class ClaimFlagBase extends BaseCommand {
                                         .append("[", TextColor.AQUA)
                                         .append(String.valueOf(overridePermissionEntry.getValue()))
                                         .append("]", TextColor.AQUA)
-                                        .hoverEvent(HoverEvent.showText(TextComponent.builder("")
-                                                .append("This flag has been overridden by an administrator and can ")
-                                                .append(TextComponent.of("NOT").color(TextColor.RED).decoration(TextDecoration.UNDERLINED, true))
-                                                .append(" be changed.").build()))
+                                        .hoverEvent(HoverEvent.showText(MessageCache.getInstance().FLAG_UI_OVERRIDE_NO_PERMISSION))
                                         .build();
                                 break;
                             }
@@ -895,14 +872,15 @@ public abstract class ClaimFlagBase extends BaseCommand {
     }
 
     private Component getClickableText(CommandSender src, GDClaim claim, Set<Context> contexts, String flagPermission, Tristate currentValue, Tristate flagValue, FlagType displayType, FlagType flagType, boolean toggleType) {
-        Component hoverEventText = TextComponent.of("Click here to toggle " + flagType.name().toLowerCase() + " value.");
+        Component hoverEventText = MESSAGE_DATA.getMessage(MessageStorage.FLAG_UI_CLICK_TOGGLE, 
+                ImmutableMap.of( "flag", flagType.name().toLowerCase()));
         if (!toggleType) {
             if (flagValue == Tristate.TRUE) {
-                hoverEventText = TextComponent.of("Click here to allow this flag.");
+                hoverEventText = MessageCache.getInstance().FLAG_UI_CLICK_ALLOW;
             } else if (flagValue == Tristate.FALSE) {
-                hoverEventText = TextComponent.of("Click here to deny this flag.");
+                hoverEventText = MessageCache.getInstance().FLAG_UI_CLICK_DENY;
             } else {
-                hoverEventText = TextComponent.of("Click here to remove this flag.");
+                hoverEventText = MessageCache.getInstance().FLAG_UI_CLICK_REMOVE;
             }
         }
         TextColor flagColor = TextColor.GOLD;
@@ -910,22 +888,19 @@ public abstract class ClaimFlagBase extends BaseCommand {
         if (flagType == FlagType.DEFAULT) {
             flagColor = TextColor.LIGHT_PURPLE;
             if (!src.hasPermission(GDPermissions.MANAGE_FLAG_DEFAULTS)) {
-                hoverEventText = TextComponent.of("You do not have permission to change flag defaults.").color(TextColor.RED);
+                hoverEventText = MessageCache.getInstance().PERMISSION_FLAG_DEFAULTS;
                 hasPermission = false;
             }
         } else if (flagType == FlagType.OVERRIDE) {
             flagColor = TextColor.RED;
             if (!src.hasPermission(GDPermissions.MANAGE_FLAG_OVERRIDES)) {
-                hoverEventText = TextComponent.of("This flag has been forced by an admin and cannot be changed.").color(TextColor.RED);
+                hoverEventText = MessageCache.getInstance().PERMISSION_FLAG_OVERRIDES;
                 hasPermission = false;
             }
         } else if (flagType == FlagType.INHERIT) {
             flagColor = TextColor.AQUA;
-            hoverEventText = TextComponent.builder("This flag is inherited from parent claim ")
-                    .append(claim.getName().orElse(claim.getFriendlyNameType()))
-                    .append(" and ")
-                    .append(TextComponent.of("cannot").decoration(TextDecoration.UNDERLINED, true))
-                    .append(" be changed.").build();
+            hoverEventText = MESSAGE_DATA.getMessage(MessageStorage.FLAG_UI_INHERIT_PARENT,
+                    ImmutableMap.of("name", claim.getFriendlyNameType()));
             hasPermission = false;
         } else if (src instanceof Player) {
             Component denyReason = claim.allowEdit((Player) src);
@@ -935,7 +910,7 @@ public abstract class ClaimFlagBase extends BaseCommand {
             } else {
                 // check flag perm
                 if (!src.hasPermission(GDPermissions.USER_CLAIM_FLAGS + flagPermission.replace(GDPermissions.FLAG_BASE, ""))) {
-                    hoverEventText = TextComponent.of("You do not have permission to change this flag.").color(TextColor.RED);
+                    hoverEventText = MessageCache.getInstance().PERMISSION_FLAG_USE;
                     hasPermission = false;
                 }
             }

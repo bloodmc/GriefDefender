@@ -37,6 +37,7 @@ import com.griefdefender.api.claim.ClaimTypes;
 import com.griefdefender.api.claim.TrustTypes;
 import com.griefdefender.api.permission.flag.Flags;
 import com.griefdefender.api.permission.option.Options;
+import com.griefdefender.cache.MessageCache;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.claim.GDClaimManager;
@@ -56,7 +57,6 @@ import com.griefdefender.storage.BaseStorage;
 import com.griefdefender.util.Direction;
 import com.griefdefender.visual.ClaimVisualType;
 import net.kyori.text.Component;
-import net.kyori.text.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -592,8 +592,8 @@ public class BlockEventHandler implements Listener {
                 return;
             }
 
-            final int minClaimLevel = GDPermissionManager.getInstance().getGlobalInternalOptionValue(player, Options.MIN_LEVEL, playerData).intValue();
-            final int maxClaimLevel = GDPermissionManager.getInstance().getGlobalInternalOptionValue(player, Options.MAX_LEVEL, playerData).intValue();
+            final int minClaimLevel = GDPermissionManager.getInstance().getInternalOptionValue(player, Options.MIN_LEVEL, playerData).intValue();
+            final int maxClaimLevel = GDPermissionManager.getInstance().getInternalOptionValue(player, Options.MAX_LEVEL, playerData).intValue();
             if (blockPos.getY() < minClaimLevel || blockPos.getY() > maxClaimLevel) {
                 final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_CHEST_OUTSIDE_LEVEL,
                         ImmutableMap.of(
@@ -620,7 +620,7 @@ public class BlockEventHandler implements Listener {
                         final Claim claim = result.getClaim().get();
                         final GDClaimManager claimManager = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(world.getUID());
                         claimManager.addClaim(claim, true);
-                        GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_CHEST_CONFIRMATION));
+                        GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().CLAIM_CHEST_CONFIRMATION);
                         GDTimings.BLOCK_PLACE_EVENT.stopTiming();
                         return;
                     }
@@ -646,7 +646,7 @@ public class BlockEventHandler implements Listener {
                             radius--;
                         } else {
                             // notify and explain to player
-                            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_AUTOMATIC_NOTIFICATION));
+                            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().CLAIM_AUTOMATIC_NOTIFICATION);
 
                             // show the player the protected area
                             GDClaim newClaim = this.storage.getClaimAt(block.getLocation());

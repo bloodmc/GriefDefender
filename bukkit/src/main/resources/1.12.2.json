@@ -46,12 +46,6 @@
             "url": "https://repo.glaremasters.me/repository/public/co/aikar/acf-paper/0.5.0-SNAPSHOT/acf-paper-0.5.0-20190607.112622-147.jar"
         },
         {
-            "name": "co.aikar:acf-jda:0.5.0-SNAPSHOT",
-            "sha1": "08490f017eec96db1e84ebf74e5dee803462782f",
-            "path": "co/aikar/acf-jda/0.5.0-SNAPSHOT/acf-jda-0.5.0-20190617.211140-70.jar",
-            "url": "https://repo.glaremasters.me/repository/public/co/aikar/acf-jda/0.5.0-SNAPSHOT/acf-jda-0.5.0-20190617.211140-70.jar"
-        },
-        {
             "name": "co.aikar:locales:1.0-SNAPSHOT",
             "sha1": "09c89ff1a611600186edf8482d1059544875582b",
             "path": "co/aikar/locales/1.0-SNAPSHOT/locales-1.0-20181221.115311-17.jar",
@@ -217,11 +211,11 @@
             "url": "https://repo1.maven.org/maven2/net/kyori/event-method-asm/3.0.0/event-method-asm-3.0.0.jar"
         },
         {
-            "name": "net.kyori:text-adapter-bukkit:3.0.2",
-            "sha1": "756bc77013e70a256652a9a399d18d6bffd21300",
-            "path": "net/kyori/text-adapter-bukkit/3.0.2/text-adapter-bukkit-3.0.2.jar",
+            "name": "net.kyori:text-adapter-bukkit:3.0.3",
+            "sha1": "37033ab1173d73a62a087cbd5c8d356774f4cee3",
+            "path": "net/kyori/text-adapter-bukkit/3.0.3/text-adapter-bukkit-3.0.3.jar",
             "relocate": "net.kyori:kyori",
-            "url": "https://repo1.maven.org/maven2/net/kyori/text-adapter-bukkit/3.0.2/text-adapter-bukkit-3.0.2.jar"
+            "url": "https://repo1.maven.org/maven2/net/kyori/text-adapter-bukkit/3.0.3/text-adapter-bukkit-3.0.3.jar"
         },
         {
             "name": "net.kyori:text-adapter-bungeecord:3.0.2",
@@ -238,32 +232,32 @@
             "url": "https://repo1.maven.org/maven2/net/kyori/text-adapter-spongeapi/3.0.2/text-adapter-spongeapi-3.0.2.jar"
         },
         {
-            "name": "net.kyori:text-api:3.0.1",
-            "sha1": "664de5e3f01adad302adb0bd1d7933203463caba",
-            "path": "net/kyori/text-api/3.0.1/text-api-3.0.1.jar",
+            "name": "net.kyori:text-api:3.0.2",
+            "sha1": "608cdb44a74bbd68745941760df730ed55e4b47c",
+            "path": "net/kyori/text-api/3.0.2/text-api-3.0.2.jar",
             "relocate": "net.kyori:kyori",
-            "url": "https://repo1.maven.org/maven2/net/kyori/text-api/3.0.1/text-api-3.0.1.jar"
+            "url": "https://repo1.maven.org/maven2/net/kyori/text-api/3.0.2/text-api-3.0.2.jar"
         },
         {
-            "name": "net.kyori:text-serializer-gson:3.0.1",
-            "sha1": "e3c395e7ed613b48f6d4963c5127307b3e3666bb",
-            "path": "net/kyori/text-serializer-gson/3.0.1/text-serializer-gson-3.0.1.jar",
+            "name": "net.kyori:text-serializer-gson:3.0.2",
+            "sha1": "9ac22f04f3504c52ff1618c5a8d9a6145d8d9c9e",
+            "path": "net/kyori/text-serializer-gson/3.0.2/text-serializer-gson-3.0.2.jar",
             "relocate": "net.kyori:kyori",
-            "url": "https://repo1.maven.org/maven2/net/kyori/text-serializer-gson/3.0.1/text-serializer-gson-3.0.1.jar"
+            "url": "https://repo1.maven.org/maven2/net/kyori/text-serializer-gson/3.0.2/text-serializer-gson-3.0.2.jar"
         },
         {
-            "name": "net.kyori:text-serializer-legacy:3.0.1",
-            "sha1": "6fdbf35ca215180bd65a9a8805374a4c35b86cff",
-            "path": "net/kyori/text-serializer-legacy/3.0.1/text-serializer-legacy-3.0.1.jar",
+            "name": "net.kyori:text-serializer-legacy:3.0.2",
+            "sha1": "8acbfb36356259273a8e3a15782e4f2980375bc5",
+            "path": "net/kyori/text-serializer-legacy/3.0.2/text-serializer-legacy-3.0.2.jar",
             "relocate": "net.kyori:kyori",
-            "url": "https://repo1.maven.org/maven2/net/kyori/text-serializer-legacy/3.0.1/text-serializer-legacy-3.0.1.jar"
+            "url": "https://repo1.maven.org/maven2/net/kyori/text-serializer-legacy/3.0.2/text-serializer-legacy-3.0.2.jar"
         },
         {
-            "name": "net.kyori:text-serializer-plain:3.0.1",
-            "sha1": "3b7624310a8377e0ce38279244a256ebdb52b68e",
-            "path": "net/kyori/text-serializer-plain/3.0.1/text-serializer-plain-3.0.1.jar",
+            "name": "net.kyori:text-serializer-plain:3.0.2",
+            "sha1": "8d60703f579019f7c26959d2e46501c3d389b48d",
+            "path": "net/kyori/text-serializer-plain/3.0.2/text-serializer-plain-3.0.2.jar",
             "relocate": "net.kyori:kyori",
-            "url": "https://repo1.maven.org/maven2/net/kyori/text-serializer-plain/3.0.1/text-serializer-plain-3.0.1.jar"
+            "url": "https://repo1.maven.org/maven2/net/kyori/text-serializer-plain/3.0.2/text-serializer-plain-3.0.2.jar"
         }
     ]
 }

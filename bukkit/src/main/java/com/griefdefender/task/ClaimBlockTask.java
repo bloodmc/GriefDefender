@@ -54,7 +54,7 @@ public class ClaimBlockTask extends BukkitRunnable {
                 final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
                 final GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAtPlayer(playerData, player.getLocation());
                 final GDPermissionUser holder = PermissionHolderCache.getInstance().getOrCreateUser(player);
-                final int accrualPerHour = GDPermissionManager.getInstance().getGlobalInternalOptionValue(holder, Options.BLOCKS_ACCRUED_PER_HOUR, claim, playerData).intValue();
+                final int accrualPerHour = GDPermissionManager.getInstance().getInternalOptionValue(holder, Options.BLOCKS_ACCRUED_PER_HOUR, claim, playerData).intValue();
                 if (accrualPerHour > 0) {
                     Location lastLocation = playerData.lastAfkCheckLocation;
                     // if he's not in a vehicle and has moved at least three blocks since the last check and he's not being pushed around by fluids

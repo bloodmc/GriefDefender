@@ -33,15 +33,16 @@ import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Subcommand;
 import co.aikar.commands.annotation.Syntax;
 
+import com.google.common.collect.ImmutableMap;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
+import com.griefdefender.cache.MessageCache;
 import com.griefdefender.cache.PermissionHolderCache;
+import com.griefdefender.configuration.MessageDataConfig;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.permission.GDPermissions;
-import net.kyori.text.TextComponent;
 import net.kyori.text.adapter.bukkit.TextAdapter;
-import net.kyori.text.format.TextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
@@ -50,6 +51,8 @@ import org.bukkit.command.CommandSender;
 @CommandPermission(GDPermissions.COMMAND_SET_ACCRUED_CLAIM_BLOCKS)
 public class CommandSetAccruedClaimBlocks extends BaseCommand {
 
+    private MessageDataConfig MESSAGE_DATA = GriefDefenderPlugin.getInstance().messageData;
+
     @CommandCompletion("@gdplayers @gddummy")
     @CommandAlias("setaccruedblocks")
     @Description("Updates a player's accrued claim block total.")
@@ -57,7 +60,7 @@ public class CommandSetAccruedClaimBlocks extends BaseCommand {
     @Subcommand("player setaccruedblocks")
     public void execute(CommandSender src, String[] args) throws InvalidCommandArgument {
         if (GriefDefenderPlugin.getGlobalConfig().getConfig().economy.economyMode) {
-            TextAdapter.sendComponent(src, TextComponent.of("This command is not available while server is in economy mode.", TextColor.RED));
+            TextAdapter.sendComponent(src, MessageCache.getInstance().COMMAND_NOT_AVAILABLE_ECONOMY);
             return;
         }
 
@@ -69,27 +72,32 @@ public class CommandSetAccruedClaimBlocks extends BaseCommand {
         int newAmount = Integer.parseInt(args[1]);
         World world = null;
         if (user == null) {
-            TextAdapter.sendComponent(src, TextComponent.of("User ' " + args[0] + "' could not be found.", TextColor.RED));
-            throw new InvalidCommandArgument();
+            TextAdapter.sendComponent(src, MESSAGE_DATA.getMessage(MessageStorage.COMMAND_PLAYER_NOT_FOUND,
+                    ImmutableMap.of("player", args[0])));
+            return;
         }
         if (args.length > 2) {
             world = Bukkit.getServer().getWorld(args[2]);
             if (world == null) {
-                TextAdapter.sendComponent(src, TextComponent.of("World ' " + args[1] + "' could not be found.", TextColor.RED));
-                throw new InvalidCommandArgument();
+                TextAdapter.sendComponent(src, MESSAGE_DATA.getMessage(MessageStorage.COMMAND_WORLD_NOT_FOUND,
+                        ImmutableMap.of("world", args[2])));
+                return;
             }
         }
 
         if (!GriefDefenderPlugin.getInstance().claimsEnabledForWorld(world.getUID())) {
-            GriefDefenderPlugin.sendMessage(src, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_DISABLED_WORLD));
+            GriefDefenderPlugin.sendMessage(src, MessageCache.getInstance().CLAIM_DISABLED_WORLD);
             return;
         }
 
         // set player's blocks
         GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(world.getUID(), user.getUniqueId());
         if (!playerData.setAccruedClaimBlocks(newAmount)) {
-            TextAdapter.sendComponent(src, TextComponent.of("User " + user.getName() + " has a total of " + playerData.getAccruedClaimBlocks() + " and will exceed the maximum allowed accrued claim blocks if granted an additional " + newAmount + " blocks. " +
-                    "Either lower the amount or have an admin grant the user with an override.", TextColor.RED));
+            TextAdapter.sendComponent(src, MESSAGE_DATA.getMessage(MessageStorage.PLAYER_ACCRUED_BLOCKS_EXCEEDED,
+                    ImmutableMap.of(
+                        "player", user.getName(),
+                        "total", playerData.getAccruedClaimBlocks(),
+                        "amount", newAmount)));
             return;
         }
 

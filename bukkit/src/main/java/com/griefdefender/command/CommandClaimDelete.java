@@ -33,6 +33,7 @@ import com.google.common.collect.ImmutableMap;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.claim.ClaimResult;
+import com.griefdefender.cache.MessageCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.event.GDCauseStackManager;
@@ -57,7 +58,7 @@ public class CommandClaimDelete extends BaseCommand {
         final GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAt(player.getLocation());
         final boolean isTown = claim.isTown();
         if (claim.isWilderness()) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_NOT_FOUND));
+            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().CLAIM_NOT_FOUND);
             return;
         }
 
@@ -75,7 +76,7 @@ public class CommandClaimDelete extends BaseCommand {
         }
 
         if (!this.deleteTopLevelClaim && !claim.isTown() && claim.children.size() > 0 /*&& !playerData.warnedAboutMajorDeletion*/) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_CHILDREN_WARNING));
+            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().CLAIM_CHILDREN_WARNING);
             return;
         }
 
@@ -88,7 +89,7 @@ public class CommandClaimDelete extends BaseCommand {
         }
 
         PermissionUtil.getInstance().clearPermissions(GriefDefenderPlugin.DEFAULT_HOLDER, claim.getContext());
-        GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.DELETE_CLAIM));
+        GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().DELETE_CLAIM);
 
         playerData.revertActiveVisual(player);
 

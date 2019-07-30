@@ -44,6 +44,7 @@ import com.griefdefender.api.claim.TrustType;
 import com.griefdefender.api.claim.TrustTypes;
 import com.griefdefender.api.permission.flag.Flags;
 import com.griefdefender.api.permission.option.Options;
+import com.griefdefender.cache.MessageCache;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.claim.GDClaimManager;
@@ -219,7 +220,7 @@ public class PlayerEventHandler implements Listener {
             // always reset to basic claims mode
             if (playerData.shovelMode != ShovelTypes.BASIC) {
                 playerData.shovelMode = ShovelTypes.BASIC;
-                GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.MODE_BASIC));
+                GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().MODE_BASIC);
             }
 
             // tell him how many claim blocks he has available
@@ -891,11 +892,11 @@ public class PlayerEventHandler implements Listener {
                 final Component cancelMessage = gpEvent.getMessage().orElse(null);
                 if (exitCancelled) {
                     if (cancelMessage != null) {
-                        GriefDefenderPlugin.sendClaimDenyMessage(fromClaim, player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_CLAIM_EXIT));
+                        GriefDefenderPlugin.sendClaimDenyMessage(fromClaim, player, MessageCache.getInstance().PERMISSION_CLAIM_EXIT);
                     }
                 } else if (enterCancelled) {
                     if (cancelMessage != null) {
-                        GriefDefenderPlugin.sendClaimDenyMessage(toClaim, player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_CLAIM_ENTER));
+                        GriefDefenderPlugin.sendClaimDenyMessage(toClaim, player, MessageCache.getInstance().PERMISSION_CLAIM_ENTER);
                     }
                 }
 
@@ -991,7 +992,7 @@ public class PlayerEventHandler implements Listener {
         playerData = this.dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
         if (playerData.shovelMode == ShovelTypes.RESTORE) {
             if (true) {
-                GriefDefenderPlugin.sendMessage(player, TextComponent.of("This mode is currently being worked on and will be available in a future build.", TextColor.RED));
+                GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().FEATURE_NOT_AVAILABLE);
                 GDTimings.PLAYER_HANDLE_SHOVEL_ACTION.stopTiming();
                 return;
             }
@@ -1046,7 +1047,7 @@ public class PlayerEventHandler implements Listener {
             } else if ((playerData.shovelMode == ShovelTypes.SUBDIVISION 
                     || ((claim.isTown() || claim.isAdminClaim()) && (playerData.lastShovelLocation == null || playerData.claimSubdividing != null)) && playerData.shovelMode != ShovelTypes.TOWN)) {
                 if (claim.getTownClaim() != null && playerData.shovelMode == ShovelTypes.TOWN) {
-                    GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CREATE_OVERLAP_SHORT));
+                    GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().CREATE_OVERLAP_SHORT);
                     Set<Claim> claims = new HashSet<>();
                     claims.add(claim);
                     CommandHelper.showClaims(player, claims, location.getBlockY(), true);
@@ -1056,7 +1057,7 @@ public class PlayerEventHandler implements Listener {
                     createSubdivisionFinish(event, player, location, playerData, claim);
                 }
             } else {
-                GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CREATE_OVERLAP));
+                GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().CREATE_OVERLAP);
                 Set<Claim> claims = new HashSet<>();
                 claims.add(claim);
                 CommandHelper.showClaims(player, claims, location.getBlockY(), true);
@@ -1064,7 +1065,7 @@ public class PlayerEventHandler implements Listener {
             GDTimings.PLAYER_HANDLE_SHOVEL_ACTION.stopTiming();
             return;
         } else if (playerData.shovelMode == ShovelTypes.SUBDIVISION && playerData.lastShovelLocation != null) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CREATE_SUBDIVISION_FAIL));
+            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().CREATE_SUBDIVISION_FAIL);
             playerData.lastShovelLocation = null;
             GDTimings.PLAYER_HANDLE_SHOVEL_ACTION.stopTiming();
             return;
@@ -1126,7 +1127,7 @@ public class PlayerEventHandler implements Listener {
         }
 
         if (playerData.shovelMode == ShovelTypes.SUBDIVISION && claim.isWilderness()) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CREATE_SUBDIVISION_FAIL));
+            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().CREATE_SUBDIVISION_FAIL);
             return;
         }
 
@@ -1156,7 +1157,7 @@ public class PlayerEventHandler implements Listener {
         final GDClaim clickedClaim = GriefDefenderPlugin.getInstance().dataStore.getClaimAtPlayer(location, playerData, true);
         if (!firstClaim.equals(clickedClaim)) {
             final GDClaim overlapClaim = firstClaim.isWilderness() ? clickedClaim : firstClaim;
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CREATE_OVERLAP_SHORT));
+            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().CREATE_OVERLAP_SHORT);
             Set<Claim> claims = new HashSet<>();
             claims.add(overlapClaim);
             CommandHelper.showClaims(player, claims, location.getBlockY(), true);
@@ -1193,12 +1194,12 @@ public class PlayerEventHandler implements Listener {
         if (!result.successful()) {
             if (result.getResultType() == ClaimResultType.OVERLAPPING_CLAIM) {
                 GDClaim overlapClaim = (GDClaim) result.getClaim().get();
-                GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CREATE_OVERLAP_SHORT));
+                GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().CREATE_OVERLAP_SHORT);
                 Set<Claim> claims = new HashSet<>();
                 claims.add(overlapClaim);
                 CommandHelper.showOverlapClaims(player, claims, location.getBlockY());
             } else if (result.getResultType() == ClaimResultType.CLAIM_EVENT_CANCELLED) {
-                GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CREATE_CANCEL));
+                GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().CREATE_CANCEL);
             }
             return;
         } else {
@@ -1235,7 +1236,7 @@ public class PlayerEventHandler implements Listener {
         }
 
         if (claim.isSubdivision()) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.RESIZE_OVERLAP_SUBDIVISION));
+            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().RESIZE_OVERLAP_SUBDIVISION);
         } else {
             final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_START,
                     ImmutableMap.of(
@@ -1253,7 +1254,7 @@ public class PlayerEventHandler implements Listener {
         final GDClaim clickedClaim = GriefDefenderPlugin.getInstance().dataStore.getClaimAt(location);
         if (clickedClaim == null || !playerData.claimSubdividing.getUniqueId().equals(clickedClaim.getUniqueId())) {
             if (clickedClaim != null) {
-                GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CREATE_OVERLAP_SHORT));
+                GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().CREATE_OVERLAP_SHORT);
                 final GDClaim overlapClaim = playerData.claimSubdividing;
                 Set<Claim> claims = new HashSet<>();
                 claims.add(overlapClaim);
@@ -1277,7 +1278,7 @@ public class PlayerEventHandler implements Listener {
         GDClaim gdClaim = (GDClaim) result.getClaim().orElse(null);
         if (!result.successful()) {
             if (result.getResultType() == ClaimResultType.OVERLAPPING_CLAIM) {
-                GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CREATE_OVERLAP_SHORT));
+                GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().CREATE_OVERLAP_SHORT);
                 Set<Claim> claims = new HashSet<>();
                 claims.add(gdClaim);
                 CommandHelper.showOverlapClaims(player, claims, location.getBlockY());
@@ -1336,7 +1337,7 @@ public class PlayerEventHandler implements Listener {
         }
 
         if (!claim.getInternalClaimData().isResizable() || !playerCanResize) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_CLAIM_RESIZE));
+            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().PERMISSION_CLAIM_RESIZE);
             return;
         }
 
@@ -1349,7 +1350,7 @@ public class PlayerEventHandler implements Listener {
             final int z = playerData.lastShovelLocation.getBlockZ() == claim.lesserBoundaryCorner.getZ() ? claim.greaterBoundaryCorner.getZ() : claim.lesserBoundaryCorner.getZ();
             this.worldEditProvider.visualizeClaim(claim, new Vector3i(x, y, z), VecHelper.toVector3i(playerData.lastShovelLocation), player, playerData, false);
         }
-        GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.RESIZE_START));
+        GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().RESIZE_START);
     }
 
     private void handleResizeFinish(PlayerInteractEvent event, Player player, Location location, GDPlayerData playerData) {
@@ -1443,13 +1444,13 @@ public class PlayerEventHandler implements Listener {
         } else {
             if (claimResult.getResultType() == ClaimResultType.OVERLAPPING_CLAIM) {
                 GDClaim overlapClaim = (GDClaim) claimResult.getClaim().get();
-                GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.RESIZE_OVERLAP));
+                GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().RESIZE_OVERLAP);
                 Set<Claim> claims = new HashSet<>();
                 claims.add(overlapClaim);
                 CommandHelper.showOverlapClaims(player, claims, location.getBlockY());
             } else {
                 if (!claimResult.getMessage().isPresent()) {
-                    GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_NOT_YOURS));
+                    GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().CLAIM_NOT_YOURS);
                 }
             }
 
@@ -1479,7 +1480,7 @@ public class PlayerEventHandler implements Listener {
             claim = this.findNearbyClaim(player);
             if (player.isSneaking()) {
                 if (!playerData.canIgnoreClaim(claim) && !player.hasPermission(GDPermissions.VISUALIZE_CLAIMS_NEARBY)) {
-                    GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_VISUAL_CLAIMS_NEARBY));
+                    GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().PERMISSION_VISUAL_CLAIMS_NEARBY);
                     GDTimings.PLAYER_INVESTIGATE_CLAIM.stopTiming();
                     return false;
                 }
@@ -1570,7 +1571,7 @@ public class PlayerEventHandler implements Listener {
         }
 
         if (count == maxDistance) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_TOO_FAR));
+            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().CLAIM_TOO_FAR);
         } else if (claim != null && claim.isWilderness()){
             GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.BLOCK_NOT_CLAIMED));
         }

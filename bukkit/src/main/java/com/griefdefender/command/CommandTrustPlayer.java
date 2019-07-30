@@ -32,11 +32,11 @@ import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Optional;
 import co.aikar.commands.annotation.Subcommand;
 import co.aikar.commands.annotation.Syntax;
+
+import com.griefdefender.configuration.MessageDataConfig;
 import com.griefdefender.configuration.MessageStorage;
 import net.kyori.text.Component;
-import net.kyori.text.TextComponent;
 import net.kyori.text.adapter.bukkit.TextAdapter;
-import net.kyori.text.format.TextColor;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -45,6 +45,7 @@ import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.GriefDefender;
 import com.griefdefender.api.claim.TrustType;
 import com.griefdefender.api.claim.TrustTypes;
+import com.griefdefender.cache.MessageCache;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.event.GDCauseStackManager;
@@ -60,6 +61,8 @@ import org.bukkit.entity.Player;
 @CommandAlias("%griefdefender")
 @CommandPermission(GDPermissions.COMMAND_TRUST_PLAYER)
 public class CommandTrustPlayer extends BaseCommand {
+
+    private MessageDataConfig MESSAGE_DATA = GriefDefenderPlugin.getInstance().messageData;
 
     @CommandCompletion("@gdplayers @gdtrusttypes @gddummy")
     @CommandAlias("trust")
@@ -77,7 +80,7 @@ public class CommandTrustPlayer extends BaseCommand {
         } else {
             trustType = CommandHelper.getTrustType(type);
             if (trustType == null) {
-                GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.TRUST_INVALID));
+                GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().TRUST_INVALID);
                 return;
             }
         }
@@ -90,13 +93,13 @@ public class CommandTrustPlayer extends BaseCommand {
         }
 
         if (user == null) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.COMMAND_INVALID_PLAYER,
+            GriefDefenderPlugin.sendMessage(player, MESSAGE_DATA.getMessage(MessageStorage.COMMAND_INVALID_PLAYER,
                     ImmutableMap.of(
                     "player", target)));
             return;
         }
         if (!GriefDefenderPlugin.getInstance().claimsEnabledForWorld(player.getWorld().getUID())) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_DISABLED_WORLD));
+            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().CLAIM_DISABLED_WORLD);
             return;
         }
 
@@ -104,22 +107,22 @@ public class CommandTrustPlayer extends BaseCommand {
         GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
         GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAtPlayer(playerData, player.getLocation());
         if (!claim.getOwnerUniqueId().equals(player.getUniqueId()) && !playerData.canIgnoreClaim(claim) && claim.allowEdit(player) != null) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_COMMAND_TRUST));
+            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().PERMISSION_COMMAND_TRUST);
             return;
         }
 
         if (user.getUniqueId().equals(player.getUniqueId()) && !playerData.canIgnoreClaim(claim)) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.TRUST_SELF));
+            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().TRUST_SELF);
             return;
         }
 
         if (user != null && claim.getOwnerUniqueId().equals(user.getUniqueId())) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_OWNER_ALREADY));
+            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().CLAIM_OWNER_ALREADY);
             return;
         } else {
             //check permission here
             if(claim.allowGrantPermission(player) != null) {
-                final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_TRUST,
+                final Component message = MESSAGE_DATA.getMessage(MessageStorage.PERMISSION_TRUST,
                         ImmutableMap.of(
                         "player", claim.getOwnerName()));
                 GriefDefenderPlugin.sendMessage(player, message);
@@ -129,7 +132,7 @@ public class CommandTrustPlayer extends BaseCommand {
             if(trustType == TrustTypes.MANAGER) {
                 Component denyReason = claim.allowEdit(player);
                 if(denyReason != null) {
-                    GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_GRANT));
+                    GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().PERMISSION_GRANT);
                     return;
                 }
             }
@@ -142,13 +145,14 @@ public class CommandTrustPlayer extends BaseCommand {
         GriefDefender.getEventManager().post(event);
         GDCauseStackManager.getInstance().popCause();
         if (event.cancelled()) {
-            TextAdapter.sendComponent(player, event.getMessage().orElse(TextComponent.of("Could not trust user '" + user.getName() + "'. A plugin has denied it.").color(TextColor.RED)));
+            TextAdapter.sendComponent(player, event.getMessage().orElse(event.getMessage().orElse(MESSAGE_DATA.getMessage(MessageStorage.TRUST_PLUGIN_CANCEL,
+                    ImmutableMap.of("target", user.getName())))));
             return;
         }
 
         final List<UUID> trustList = claim.getUserTrustList(trustType);
         if (trustList.contains(user.getUniqueId())) {
-            final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.TRUST_ALREADY_HAS,
+            final Component message = MESSAGE_DATA.getMessage(MessageStorage.TRUST_ALREADY_HAS,
                 ImmutableMap.of(
                     "target", user.getName(),
                     "type", trustType.getName()));
@@ -160,7 +164,7 @@ public class CommandTrustPlayer extends BaseCommand {
         claim.getInternalClaimData().setRequiresSave(true);
         claim.getInternalClaimData().save();
 
-        final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.TRUST_GRANT, ImmutableMap.of(
+        final Component message = MESSAGE_DATA.getMessage(MessageStorage.TRUST_GRANT, ImmutableMap.of(
                 "target", user.getName(),
                 "type", trustType.getName()));
         GriefDefenderPlugin.sendMessage(player, message);

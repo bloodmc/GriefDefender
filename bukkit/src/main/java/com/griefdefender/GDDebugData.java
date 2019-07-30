@@ -24,15 +24,19 @@
  */
 package com.griefdefender;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.griefdefender.api.Tristate;
+import com.griefdefender.cache.MessageCache;
+import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.util.HttpClient;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.adapter.bukkit.TextAdapter;
 import net.kyori.text.event.ClickEvent;
 import net.kyori.text.format.TextColor;
+import net.kyori.text.serializer.plain.PlainComponentSerializer;
 import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -94,8 +98,8 @@ public class GDDebugData {
                 this.header.add("| LuckPerms Version | " + version);
             }
         }
-        this.header.add("| User | " + (this.target == null ? "ALL" : this.target.getName()) + "|");
-        this.header.add("| Record start | " + DATE_FORMAT.format(new Date(this.startTime)) + "|");
+        this.header.add("| " + MessageCache.getInstance().LABEL_USER + " | " + (this.target == null ? "ALL" : this.target.getName()) + "|");
+        this.header.add("| " + MessageCache.getInstance().DEBUG_RECORD_START + " | " + DATE_FORMAT.format(new Date(this.startTime)) + "|");
     }
 
     public void addRecord(String flag, String trust, String source, String target, String location, String user, String permission, Tristate result) {
@@ -133,18 +137,29 @@ public class GDDebugData {
 
     public void pasteRecords() {
         if (this.records.isEmpty()) {
-            TextAdapter.sendComponent(this.source, TextComponent.of("No debug records to paste!", TextColor.RED));
+            TextAdapter.sendComponent(this.source, MessageCache.getInstance().DEBUG_NO_RECORDS);
             return;
         }
 
         final long endTime = System.currentTimeMillis();
         List<String> debugOutput = new ArrayList<>(this.header);
-        debugOutput.add("| Record end | " + DATE_FORMAT.format(new Date(endTime)) + "|");
+        final String RECORD_END = PlainComponentSerializer.INSTANCE.serialize(MessageCache.getInstance().DEBUG_RECORD_END);
+        final String TIME_ELAPSED = PlainComponentSerializer.INSTANCE.serialize(MessageCache.getInstance().DEBUG_TIME_ELAPSED);
+        final String OUTPUT = PlainComponentSerializer.INSTANCE.serialize(MessageCache.getInstance().LABEL_OUTPUT);
+        final String FLAG = PlainComponentSerializer.INSTANCE.serialize(MessageCache.getInstance().LABEL_FLAG);
+        final String TRUST = PlainComponentSerializer.INSTANCE.serialize(MessageCache.getInstance().LABEL_TRUST);
+        final String LOCATION = PlainComponentSerializer.INSTANCE.serialize(MessageCache.getInstance().LABEL_LOCATION);
+        final String SOURCE = PlainComponentSerializer.INSTANCE.serialize(MessageCache.getInstance().LABEL_SOURCE);
+        final String TARGET = PlainComponentSerializer.INSTANCE.serialize(MessageCache.getInstance().LABEL_TARGET);
+        final String USER = PlainComponentSerializer.INSTANCE.serialize(MessageCache.getInstance().LABEL_USER);
+        final String PERMISSION = PlainComponentSerializer.INSTANCE.serialize(MessageCache.getInstance().LABEL_PERMISSION);
+        final String RESULT = PlainComponentSerializer.INSTANCE.serialize(MessageCache.getInstance().LABEL_RESULT);
+        debugOutput.add("| " + RECORD_END + " | " + DATE_FORMAT.format(new Date(endTime)) + "|");
         long elapsed = (endTime - startTime) / 1000L; 
-        debugOutput.add("| Time elapsed | " + elapsed + " seconds" + "|");
+        debugOutput.add("| " + TIME_ELAPSED + " | " + elapsed + " seconds" + "|");
         debugOutput.add("");
-        debugOutput.add("### Output") ;
-        debugOutput.add("| Flag | Trust | Source | Target | Location | User | Permission | Result |");
+        debugOutput.add("### " + OUTPUT) ;
+        debugOutput.add("| " + FLAG + " | " + TRUST + " | " + SOURCE + " | " + TARGET + " | " + LOCATION + " | " + USER + " | " + PERMISSION + " | " + RESULT + " |");
         debugOutput.add("|------|-------|--------|--------|----------|------|------------|--------|");
 
         debugOutput.addAll(this.records);
@@ -155,7 +170,8 @@ public class GDDebugData {
         try {
             pasteId = postContent(content);
         } catch (Exception e) {
-            TextAdapter.sendComponent(this.source, TextComponent.builder("").append("Error uploading content : ", TextColor.RED).append(e.getMessage(), TextColor.WHITE).build());
+            TextAdapter.sendComponent(this.source, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.DEBUG_ERROR_UPLOAD,
+                    ImmutableMap.of("content", TextComponent.of(e.getMessage(), TextColor.WHITE))));
             return;
         }
 
@@ -168,7 +184,9 @@ public class GDDebugData {
             throw new RuntimeException(e);
         }
 
-        TextAdapter.sendComponent(this.source, TextComponent.builder("").append("Paste success! : " + url, TextColor.GREEN)
+        TextAdapter.sendComponent(this.source, TextComponent.builder()
+                .append(MessageCache.getInstance().DEBUG_PASTE_SUCCESS)
+                .append(" : " + url, TextColor.GREEN)
                 .clickEvent(ClickEvent.openUrl(jUrl.toString())).build());
     }
 

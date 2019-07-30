@@ -26,6 +26,7 @@ package com.griefdefender.storage;
 
 import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
@@ -42,6 +43,7 @@ import com.griefdefender.claim.GDClaimManager;
 import com.griefdefender.claim.GDClaimResult;
 import com.griefdefender.configuration.ClaimTemplateStorage;
 import com.griefdefender.configuration.GriefDefenderConfig;
+import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.configuration.type.ConfigBase;
 import com.griefdefender.configuration.type.GlobalConfig;
 import com.griefdefender.event.GDCauseStackManager;
@@ -53,6 +55,8 @@ import com.griefdefender.util.PermissionUtil;
 import me.lucko.luckperms.api.Node;
 import me.lucko.luckperms.api.context.MutableContextSet;
 import net.kyori.text.TextComponent;
+import net.kyori.text.format.TextColor;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -170,7 +174,8 @@ public abstract class BaseStorage {
         GDCauseStackManager.getInstance().popCause();
         if (event.cancelled()) {
             return new GDClaimResult(ClaimResultType.CLAIM_EVENT_CANCELLED,
-                event.getMessage().orElse(TextComponent.of("Could not delete all admin claims. A plugin has denied it.")));
+                event.getMessage().orElse(GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.DELETE_ALL_TYPE_DENY,
+                        ImmutableMap.of("type", TextComponent.of("ADMIN").color(TextColor.RED)))));
         }
 
         for (Claim claim : claimsToDelete) {

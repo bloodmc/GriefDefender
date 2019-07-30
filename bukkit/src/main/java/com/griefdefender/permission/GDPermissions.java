@@ -83,7 +83,7 @@ public class GDPermissions {
     public static final String CLAIM_SHOW_TUTORIAL = "griefdefender.user.claim.show-tutorial";
     public static final String LIST_OTHER_CLAIMS = "griefdefender.user.claim.list.other";
     public static final String SIEGE_IMMUNE = "griefdefender.user.claim.siege.immune";
-    public static final String VISUALIZE_CLAIMS = "griefdefender.user.claim.visualize";
+    public static final String VISUALIZE_CLAIMS = "griefdefender.user.claim.visualize.base";
     public static final String VISUALIZE_CLAIMS_NEARBY = "griefdefender.user.claim.visualize.nearby";
     public static final String COMMAND_PLAYER_INFO_BASE = "griefdefender.user.command.info.base";
     public static final String COMMAND_PLAYER_INFO_OTHERS = "griefdefender.user.command.info.others";

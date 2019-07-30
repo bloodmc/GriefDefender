@@ -31,6 +31,7 @@ import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Subcommand;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
+import com.griefdefender.cache.MessageCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.permission.GDPermissions;
@@ -56,20 +57,16 @@ public class CommandClaimInherit extends BaseCommand {
         }
 
         if (claim.parent == null) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.COMMAND_INHERIT));
+            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().COMMAND_INHERIT_ONLY_CHILD);
             return;
         }
         claim.getData().setInheritParent(!claim.getData().doesInheritParent());
         claim.getInternalClaimData().setRequiresSave(true);
 
         if (!claim.getData().doesInheritParent()) {
-            GriefDefenderPlugin.sendMessage(player, TextComponent.builder("")
-                    .append("Parent claim inheritance ")
-                    .append("OFF", TextColor.RED).build());
+            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().COMMAND_CLAIMINHERIT_DISABLED);
         } else {
-            GriefDefenderPlugin.sendMessage(player, TextComponent.builder("")
-                    .append("Parent claim inheritance ")
-                    .append("ON", TextColor.GREEN).build());
+            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().COMMAND_CLAIMINHERIT_ENABLED);
         }
     }
 }

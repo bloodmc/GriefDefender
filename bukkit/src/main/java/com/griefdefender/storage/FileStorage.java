@@ -40,6 +40,8 @@ import com.griefdefender.configuration.TownStorageData;
 import com.griefdefender.configuration.type.ConfigBase;
 import com.griefdefender.event.GDLoadClaimEvent;
 import com.griefdefender.migrator.GriefPreventionMigrator;
+import com.griefdefender.migrator.WorldGuardMigrator;
+
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.World.Environment;
@@ -128,6 +130,24 @@ public class FileStorage extends BaseStorage {
                     if (path.toFile().exists()) {
                         GriefPreventionMigrator.migrate(world, path);
                         Files.createFile(dimPath.resolve(worldName).resolve("_bukkitMigrated"));
+                    }
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                } catch (ClassNotFoundException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        if (GriefDefenderPlugin.getGlobalConfig().getConfig().migrator.worldGuardMigrator) {
+            final File migrateFile = dimPath.resolve(worldName).resolve("_wgMigrated").toFile();
+            if (!migrateFile.exists()) {
+                try {
+                    final Path path = Paths.get("plugins", "WorldGuard", "worlds", world.getName());
+                    if (path.toFile().exists()) {
+                        WorldGuardMigrator.migrate(world);
+                        Files.createFile(dimPath.resolve(worldName).resolve("_wgMigrated"));
                     }
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();

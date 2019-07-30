@@ -41,17 +41,17 @@ import com.griefdefender.api.GriefDefender;
 import com.griefdefender.api.claim.Claim;
 import com.griefdefender.api.claim.TrustType;
 import com.griefdefender.api.claim.TrustTypes;
+import com.griefdefender.cache.MessageCache;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
+import com.griefdefender.configuration.MessageDataConfig;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.event.GDCauseStackManager;
 import com.griefdefender.event.GDUserTrustClaimEvent;
 import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.permission.GDPermissions;
 import net.kyori.text.Component;
-import net.kyori.text.TextComponent;
 import net.kyori.text.adapter.bukkit.TextAdapter;
-import net.kyori.text.format.TextColor;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
@@ -62,6 +62,8 @@ import java.util.UUID;
 @CommandAlias("%griefdefender")
 @CommandPermission(GDPermissions.COMMAND_TRUSTALL_PLAYER)
 public class CommandTrustPlayerAll extends BaseCommand {
+
+    private MessageDataConfig MESSAGE_DATA = GriefDefenderPlugin.getInstance().messageData;
 
     @CommandCompletion("@gdplayers @gdtrusttypes @gddummy")
     @CommandAlias("trustall")
@@ -79,7 +81,7 @@ public class CommandTrustPlayerAll extends BaseCommand {
         } else {
             trustType = CommandHelper.getTrustType(type);
             if (trustType == null) {
-                GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.TRUST_INVALID));
+                GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().TRUST_INVALID);
                 return;
             }
         }
@@ -93,14 +95,14 @@ public class CommandTrustPlayerAll extends BaseCommand {
 
         // validate player argument
         if (user == null) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.COMMAND_INVALID_PLAYER,
+            GriefDefenderPlugin.sendMessage(player, MESSAGE_DATA.getMessage(MessageStorage.COMMAND_INVALID_PLAYER,
                     ImmutableMap.of(
                     "player", target)));
             return;
         }
 
         if (user.getUniqueId().equals(player.getUniqueId())) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.TRUST_SELF));
+            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().TRUST_SELF);
             return;
         }
 
@@ -111,7 +113,7 @@ public class CommandTrustPlayerAll extends BaseCommand {
         }
 
         if (playerData == null || claimList == null || claimList.size() == 0) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.TRUST_NO_CLAIMS));
+            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().TRUST_NO_CLAIMS);
             return;
         }
 
@@ -121,7 +123,8 @@ public class CommandTrustPlayerAll extends BaseCommand {
         GriefDefender.getEventManager().post(event);
         GDCauseStackManager.getInstance().popCause();
         if (event.cancelled()) {
-            TextAdapter.sendComponent(player, event.getMessage().orElse(TextComponent.of("Could not add trust for user '" + user.getName() + "'. A plugin has denied it.").color(TextColor.RED)));
+            TextAdapter.sendComponent(player, event.getMessage().orElse(MESSAGE_DATA.getMessage(MessageStorage.TRUST_PLUGIN_CANCEL,
+                    ImmutableMap.of("target", user.getName()))));
             return;
         }
 
@@ -129,7 +132,7 @@ public class CommandTrustPlayerAll extends BaseCommand {
             this.addAllUserTrust(claim, user, trustType);
         }
 
-        final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.TRUST_INDIVIDUAL_ALL_CLAIMS,
+        final Component message = MESSAGE_DATA.getMessage(MessageStorage.TRUST_INDIVIDUAL_ALL_CLAIMS,
                 ImmutableMap.of(
                 "player", user.getName()));
         GriefDefenderPlugin.sendMessage(player, message);

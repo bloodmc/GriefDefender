@@ -32,7 +32,7 @@ import co.aikar.commands.annotation.Subcommand;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.claim.ShovelTypes;
-import com.griefdefender.configuration.MessageStorage;
+import com.griefdefender.cache.MessageCache;
 import com.griefdefender.permission.GDPermissions;
 import org.bukkit.entity.Player;
 
@@ -48,6 +48,6 @@ public class CommandClaimSubdivision extends BaseCommand {
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
         playerData.shovelMode = ShovelTypes.SUBDIVISION;
         playerData.claimSubdividing = null;
-        GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.MODE_SUBDIVISION));
+        GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().MODE_SUBDIVISION);
     }
 }

@@ -32,13 +32,13 @@ import co.aikar.commands.annotation.Subcommand;
 import com.google.common.collect.ImmutableMap;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.claim.Claim;
+import com.griefdefender.cache.MessageCache;
 import com.griefdefender.claim.GDClaimManager;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.internal.pagination.PaginationList;
 import com.griefdefender.permission.GDPermissions;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
-import net.kyori.text.format.TextColor;
 import net.kyori.text.format.TextDecoration;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.entity.Player;
@@ -57,7 +57,7 @@ public class CommandClaimBuy extends BaseCommand {
     @Subcommand("buy claim")
     public void execute(Player player) {
         if (GriefDefenderPlugin.getInstance().getVaultProvider() == null) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_NOT_INSTALLED));
+            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().ECONOMY_NOT_INSTALLED);
             return;
         }
 
@@ -90,7 +90,7 @@ public class CommandClaimBuy extends BaseCommand {
 
         List<Component> claimsTextList = CommandHelper.generateClaimTextList(new ArrayList<Component>(), claimsForSale, player.getWorld().getName(), null, player, CommandHelper.createCommandConsumer(player, "claimbuy", ""), true, false);
         PaginationList.Builder paginationBuilder = PaginationList.builder()
-                .title(TextComponent.of("Claims for sale", TextColor.AQUA)).padding(TextComponent.of(" ").decoration(TextDecoration.STRIKETHROUGH, true)).contents(claimsTextList);
+                .title(MessageCache.getInstance().COMMAND_CLAIMBUY_TITLE).padding(TextComponent.of(" ").decoration(TextDecoration.STRIKETHROUGH, true)).contents(claimsTextList);
         paginationBuilder.sendTo(player);
         return;
     }

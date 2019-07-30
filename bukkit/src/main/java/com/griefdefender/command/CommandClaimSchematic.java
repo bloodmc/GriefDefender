@@ -38,6 +38,7 @@ import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.claim.Claim;
 import com.griefdefender.api.claim.ClaimSchematic;
+import com.griefdefender.cache.MessageCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.internal.pagination.PaginationList;
@@ -69,7 +70,7 @@ public class CommandClaimSchematic extends BaseCommand {
     @Subcommand("schematic")
     public void execute(Player player, @Optional String[] args) throws CommandException, InvalidCommandArgument {
         if (GriefDefenderPlugin.getInstance().getWorldEditProvider() == null) {
-            TextAdapter.sendComponent(player, TextComponent.of("This command requires WorldEdit to be running on server.", TextColor.RED));
+            TextAdapter.sendComponent(player, MessageCache.getInstance().COMMAND_WORLDEDIT_MISSING);
             return;
         }
 
@@ -93,7 +94,7 @@ public class CommandClaimSchematic extends BaseCommand {
 
         if (action == null) {
             if (claim.schematics.isEmpty()) {
-                TextAdapter.sendComponent(player, TextComponent.of("There are no schematic backups for this claim.", TextColor.RED));
+                TextAdapter.sendComponent(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.SCHEMATIC_NONE));
                 return;
             }
 
@@ -105,16 +106,10 @@ public class CommandClaimSchematic extends BaseCommand {
                         TextComponent.builder("")
                         .append(schematicName, TextColor.GREEN)
                         .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(displayConfirmationConsumer(player, claim, schematic))))
-                        .hoverEvent(HoverEvent.showText(
-                                TextComponent.builder("")
-                                .append("Click here to restore claim schematic.\n")
-                                .append("Name", TextColor.YELLOW)
-                                .append(": ")
-                                .append(schematicName, TextColor.GREEN)
-                                .append("\n")
-                                .append("Created", TextColor.YELLOW)
-                                .append(": ")
-                                .append(Date.from(schematicDate).toString(), TextColor.AQUA).build()))
+                        .hoverEvent(HoverEvent.showText(GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.SCHEMATIC_RESTORE_CLICK, 
+                        ImmutableMap.of(
+                            "name", TextComponent.of(schematicName, TextColor.GREEN),
+                            "date", TextComponent.of(Date.from(schematicDate).toString(), TextColor.AQUA)))))
                         .build());
             }
 
@@ -131,7 +126,8 @@ public class CommandClaimSchematic extends BaseCommand {
             }
         } else if (action.equalsIgnoreCase("delete")) {
             claim.deleteSchematic(name);
-            TextAdapter.sendComponent(player, TextComponent.of("Schematic '" + name + "' has been deleted.", TextColor.GREEN));
+            TextAdapter.sendComponent(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.SCHEMATIC_DELETED, 
+                ImmutableMap.of("name", name)));
         }
     }
 
@@ -142,7 +138,7 @@ public class CommandClaimSchematic extends BaseCommand {
                     .append("Confirm", TextColor.GREEN)
                     .append("]\n")
                     .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createConfirmationConsumer(src, claim, schematic))))
-                    .hoverEvent(HoverEvent.showText(TextComponent.of("Clicking confirm will restore ALL claim data with schematic. Use cautiously!"))).build();
+                    .hoverEvent(HoverEvent.showText(GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.SCHEMATIC_RESTORE_CONFIRMATION))).build();
             TextAdapter.sendComponent(src, schematicConfirmationText);
         };
     }
@@ -150,8 +146,8 @@ public class CommandClaimSchematic extends BaseCommand {
     private static Consumer<CommandSender> createConfirmationConsumer(CommandSender src, Claim claim, ClaimSchematic schematic) {
         return confirm -> {
             schematic.apply();
-            final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.SCHEMATIC_RESTORE_CONFIRMED, ImmutableMap.of(
-                    "name", schematic.getName()));
+            final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.SCHEMATIC_RESTORE_CONFIRMED, 
+                ImmutableMap.of("name", schematic.getName()));
             GriefDefenderPlugin.sendMessage(src, message);
         };
     }

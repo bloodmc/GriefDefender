@@ -32,6 +32,7 @@ import com.griefdefender.api.claim.ShovelType;
 import com.griefdefender.api.claim.ShovelTypes;
 import com.griefdefender.api.data.PlayerData;
 import com.griefdefender.api.permission.option.Options;
+import com.griefdefender.cache.MessageCache;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.configuration.GriefDefenderConfig;
@@ -207,12 +208,12 @@ public class GDPlayerData implements PlayerData {
 
     @Override
     public int getBlocksAccruedPerHour() {
-        return GDPermissionManager.getInstance().getGlobalInternalOptionValue(this.getSubject(), Options.BLOCKS_ACCRUED_PER_HOUR, this).intValue();
+        return GDPermissionManager.getInstance().getInternalOptionValue(this.getSubject(), Options.BLOCKS_ACCRUED_PER_HOUR, this).intValue();
     }
 
     @Override
     public int getChestClaimExpiration() {
-        return GDPermissionManager.getInstance().getGlobalInternalOptionValue(this.getSubject(), Options.CHEST_EXPIRATION, this).intValue();
+        return GDPermissionManager.getInstance().getInternalOptionValue(this.getSubject(), Options.CHEST_EXPIRATION, this).intValue();
     }
 
     @Override
@@ -222,12 +223,12 @@ public class GDPlayerData implements PlayerData {
 
     @Override
     public int getInitialClaimBlocks() {
-        return GDPermissionManager.getInstance().getGlobalInternalOptionValue(this.getSubject(), Options.INITIAL_BLOCKS, this).intValue();
+        return GDPermissionManager.getInstance().getInternalOptionValue(this.getSubject(), Options.INITIAL_BLOCKS, this).intValue();
     }
 
     @Override
     public int getRemainingClaimBlocks() {
-        final int initialClaimBlocks = GDPermissionManager.getInstance().getGlobalInternalOptionValue(this.getSubject(), Options.INITIAL_BLOCKS, this).intValue();
+        final int initialClaimBlocks = GDPermissionManager.getInstance().getInternalOptionValue(this.getSubject(), Options.INITIAL_BLOCKS, this).intValue();
         int remainingBlocks = initialClaimBlocks + this.getAccruedClaimBlocks() + this.getBonusClaimBlocks();
         if (GriefDefenderPlugin.getGlobalConfig().getConfig().economy.economyMode) {
             if (!this.vaultProvider.getApi().hasAccount(this.getSubject().getOfflinePlayer())) {
@@ -235,7 +236,7 @@ public class GDPlayerData implements PlayerData {
             }
 
             final double currentFunds = this.vaultProvider.getApi().getBalance(this.getSubject().getOfflinePlayer());
-            final Double economyBlockCost = GDPermissionManager.getInstance().getGlobalInternalOptionValue(this.getSubject(), Options.ECONOMY_BLOCK_COST, this);
+            final Double economyBlockCost = GDPermissionManager.getInstance().getInternalOptionValue(this.getSubject(), Options.ECONOMY_BLOCK_COST, this);
             remainingBlocks =  (int) Math.round((currentFunds / economyBlockCost));
         } else {
             for (Claim claim : this.claimList) {
@@ -308,7 +309,7 @@ public class GDPlayerData implements PlayerData {
 
     public int getClaimCreateMode() {
         if (this.optionClaimCreateMode == null) {
-            int mode = GDPermissionManager.getInstance().getGlobalInternalOptionValue(this.getSubject(), Options.CREATE_MODE, this).intValue();
+            int mode = GDPermissionManager.getInstance().getInternalOptionValue(this.getSubject(), Options.CREATE_MODE, this).intValue();
             // default to 0 if invalid
             if (mode != 0 && mode != 1) {
                 mode = 0;
@@ -336,27 +337,27 @@ public class GDPlayerData implements PlayerData {
         if (this.shovelMode == ShovelTypes.BASIC) {
             if (createMode == 0 && !player.hasPermission(GDPermissions.CLAIM_CREATE_BASIC)) {
                 if (sendMessage) {
-                    GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_CLAIM_CREATE));
+                    GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().PERMISSION_CLAIM_CREATE);
                 }
                 return false;
             }
             if (createMode == 1 && !player.hasPermission(GDPermissions.CLAIM_CUBOID_BASIC)) {
                 if (sendMessage) {
-                    GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_CUBOID));
-                    GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.COMMAND_CUBOID_DISABLED));
+                    GriefDefenderPlugin.sendMessage(player,MessageCache.getInstance().PERMISSION_CUBOID);
+                    GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().COMMAND_CUBOID_DISABLED);
                 }
                 return false;
             }
         } else if (this.shovelMode == ShovelTypes.SUBDIVISION) {
             if (createMode == 0 && !player.hasPermission(GDPermissions.CLAIM_CREATE_SUBDIVISION)) {
                 if (sendMessage) {
-                    GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_CLAIM_CREATE));
+                    GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().PERMISSION_CLAIM_CREATE);
                 }
                 return false;
             } else if (!player.hasPermission(GDPermissions.CLAIM_CUBOID_SUBDIVISION)) {
                 if (sendMessage) {
-                    GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_CUBOID));
-                    GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.COMMAND_CUBOID_DISABLED));
+                    GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().PERMISSION_CUBOID);
+                    GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().COMMAND_CUBOID_DISABLED);
                 }
                 return false;
             }
@@ -485,12 +486,12 @@ public class GDPlayerData implements PlayerData {
 
     @Override
     public int getMaxAccruedClaimBlocks() {
-        return GDPermissionManager.getInstance().getGlobalInternalOptionValue(this.getSubject(), Options.MAX_ACCRUED_BLOCKS, this).intValue();
+        return GDPermissionManager.getInstance().getInternalOptionValue(this.getSubject(), Options.MAX_ACCRUED_BLOCKS, this).intValue();
     }
 
     @Override
     public double getAbandonedReturnRatio(ClaimType type) {
-        return GDPermissionManager.getInstance().getGlobalInternalOptionValue(this.getSubject(), Options.ABANDON_RETURN_RATIO, this);
+        return GDPermissionManager.getInstance().getInternalOptionValue(this.getSubject(), Options.ABANDON_RETURN_RATIO, this);
     }
 
     @Override
@@ -525,7 +526,7 @@ public class GDPlayerData implements PlayerData {
 
     @Override
     public int getMaxClaimLevel() {
-        int maxClaimLevel = GDPermissionManager.getInstance().getGlobalInternalOptionValue(this.getSubject(), Options.MAX_LEVEL, this).intValue();
+        int maxClaimLevel = GDPermissionManager.getInstance().getInternalOptionValue(this.getSubject(), Options.MAX_LEVEL, this).intValue();
         if (!this.checkedDimensionHeight) {
             final World world = Bukkit.getServer().getWorld(this.worldUniqueId);
             if (world != null) {
@@ -541,17 +542,17 @@ public class GDPlayerData implements PlayerData {
 
     @Override
     public int getMinClaimLevel() {
-        return GDPermissionManager.getInstance().getGlobalInternalOptionValue(this.getSubject(), Options.MIN_LEVEL, this).intValue();
+        return GDPermissionManager.getInstance().getInternalOptionValue(this.getSubject(), Options.MIN_LEVEL, this).intValue();
     }
 
     @Override
     public double getEconomyClaimBlockCost() {
-        return GDPermissionManager.getInstance().getGlobalInternalOptionValue(this.getSubject(), Options.ECONOMY_BLOCK_COST, this);
+        return GDPermissionManager.getInstance().getInternalOptionValue(this.getSubject(), Options.ECONOMY_BLOCK_COST, this);
     }
 
     @Override
     public double getEconomyClaimBlockReturn() {
-        return GDPermissionManager.getInstance().getGlobalInternalOptionValue(this.getSubject(), Options.ECONOMY_BLOCK_SELL_RETURN, this);
+        return GDPermissionManager.getInstance().getInternalOptionValue(this.getSubject(), Options.ECONOMY_BLOCK_SELL_RETURN, this);
     }
 
     @Override

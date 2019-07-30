@@ -36,6 +36,7 @@ import com.griefdefender.api.GriefDefender;
 import com.griefdefender.api.claim.Claim;
 import com.griefdefender.api.claim.TrustTypes;
 import com.griefdefender.api.permission.option.Options;
+import com.griefdefender.cache.MessageCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.claim.GDClaimManager;
 import com.griefdefender.configuration.MessageStorage;
@@ -45,9 +46,7 @@ import com.griefdefender.permission.GDPermissionManager;
 import com.griefdefender.permission.GDPermissions;
 import com.griefdefender.util.PermissionUtil;
 import net.kyori.text.Component;
-import net.kyori.text.TextComponent;
 import net.kyori.text.adapter.bukkit.TextAdapter;
-import net.kyori.text.format.TextColor;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.entity.Player;
@@ -73,21 +72,21 @@ public class CommandClaimAbandon extends BaseCommand {
         final boolean isAdmin = playerData.canIgnoreClaim(claim);
         final boolean isTown = claim.isTown();
         if (claim.isWilderness()) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ABANDON_CLAIM_MISSING));
+            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().ABANDON_CLAIM_MISSING);
             return;
         } else if (!isAdmin && !player.getUniqueId().equals(ownerId) && claim.isUserTrusted(player, TrustTypes.MANAGER)) {
             if (claim.parent == null) {
                 // Managers can only abandon child claims
-                GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_NOT_YOURS));
+                GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().CLAIM_NOT_YOURS);
                 return;
             }
         } else if (!isAdmin && (claim.allowEdit(player) != null || (!claim.isAdminClaim() && !player.getUniqueId().equals(ownerId)))) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_NOT_YOURS));
+            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().CLAIM_NOT_YOURS);
             return;
         }
 
         if (!claim.isTown() && !claim.isAdminClaim() && claim.children.size() > 0 && !this.abandonTopClaim) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ABANDON_TOP_LEVEL));
+            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().ABANDON_TOP_LEVEL);
             return;
         } else {
             if (this.abandonTopClaim && (claim.isTown() || claim.isAdminClaim()) && claim.children.size() > 0) {
@@ -100,7 +99,7 @@ public class CommandClaimAbandon extends BaseCommand {
                 }
 
                 if (!invalidClaims.isEmpty()) {
-                    GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ABANDON_TOWN_CHILDREN));
+                    GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().ABANDON_TOWN_CHILDREN);
                     CommandHelper.showClaims(player, invalidClaims, 0, true);
                     return;
                 }
@@ -111,7 +110,7 @@ public class CommandClaimAbandon extends BaseCommand {
             GriefDefender.getEventManager().post(event);
             GDCauseStackManager.getInstance().popCause();
             if (event.cancelled()) {
-                TextAdapter.sendComponent(player, event.getMessage().orElse(GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PLUGIN_EVENT_CANCEL)));
+                TextAdapter.sendComponent(player, event.getMessage().orElse(MessageCache.getInstance().PLUGIN_EVENT_CANCEL));
                 return;
             }
 

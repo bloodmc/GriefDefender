@@ -34,6 +34,7 @@ import co.aikar.commands.annotation.Syntax;
 import com.google.common.collect.ImmutableMap;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
+import com.griefdefender.cache.MessageCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.permission.GDPermissions;
@@ -69,7 +70,7 @@ public class CommandClaimGreeting extends BaseCommand {
         claim.getInternalClaimData().setRequiresSave(true);
         Component resultMessage = null;
         if (!claim.getInternalClaimData().getGreeting().isPresent()) {
-            resultMessage = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_GREETING_CLEAR);
+            resultMessage = MessageCache.getInstance().CLAIM_GREETING_CLEAR;
         } else {
             resultMessage = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_GREETING,
                     ImmutableMap.of(

@@ -31,13 +31,12 @@ import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Subcommand;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
+import com.griefdefender.cache.MessageCache;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.permission.GDPermissions;
 import net.kyori.text.Component;
-import net.kyori.text.TextComponent;
-import net.kyori.text.format.TextColor;
 import org.bukkit.entity.Player;
 
 @CommandAlias("%griefdefender")
@@ -60,13 +59,9 @@ public class CommandClaimFlagDebug extends BaseCommand {
         playerData.debugClaimPermissions = !playerData.debugClaimPermissions;
 
         if (!playerData.debugClaimPermissions) {
-            GriefDefenderPlugin.sendMessage(player, TextComponent.builder("")
-                    .append("Claim flags debug ")
-                    .append("OFF", TextColor.RED).build());
+            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().COMMAND_CLAIMFLAGDEBUG_DISABLED);
         } else {
-            GriefDefenderPlugin.sendMessage(player, TextComponent.builder("")
-                    .append("Claim flags debug ")
-                    .append("ON", TextColor.GREEN).build());
+            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().COMMAND_CLAIMFLAGDEBUG_ENABLED);
         }
     }
 }

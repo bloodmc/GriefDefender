@@ -52,9 +52,9 @@ public class GDFlags {
     public static boolean INTERACT_BLOCK_SECONDARY;
     public static boolean INTERACT_ENTITY_PRIMARY;
     public static boolean INTERACT_ENTITY_SECONDARY;
-    public static boolean INTERACT_INVENTORY;
     public static boolean INTERACT_ITEM_PRIMARY;
     public static boolean INTERACT_ITEM_SECONDARY;
+    public static boolean INTERACT_INVENTORY;
     public static boolean INTERACT_INVENTORY_CLICK;
     public static boolean ITEM_DROP;
     public static boolean ITEM_PICKUP;

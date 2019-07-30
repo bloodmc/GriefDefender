@@ -630,7 +630,7 @@ public class GDClaimManager implements ClaimManager {
             if (newAccruedBlocks < 0) {
                 newAccruedBlocks = 0;
             }
-            final int maxAccruedBlocks = GDPermissionManager.getInstance().getGlobalInternalOptionValue(playerData.getSubject(), Options.MAX_ACCRUED_BLOCKS, playerData).intValue();
+            final int maxAccruedBlocks = GDPermissionManager.getInstance().getInternalOptionValue(playerData.getSubject(), Options.MAX_ACCRUED_BLOCKS, playerData).intValue();
             if (newAccruedBlocks > maxAccruedBlocks) {
                 newAccruedBlocks = maxAccruedBlocks;
             }

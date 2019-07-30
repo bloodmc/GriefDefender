@@ -33,7 +33,7 @@ import java.util.List;
 public class GDOption implements Option {
 
     private static final List<String> GLOBAL_OPTIONS = Arrays.asList(
-            "blocks-accrued-per-hour", "chest-expiration",
+            "abandon-return-ratio", "blocks-accrued-per-hour", "chest-expiration",
             "create-mode", "economy-block-cost",
             "economy-block-sell", "initial-blocks",
             "max-accrued-blocks", "max-level", "min-level",

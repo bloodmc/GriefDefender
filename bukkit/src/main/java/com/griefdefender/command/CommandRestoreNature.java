@@ -29,9 +29,12 @@ import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Subcommand;
+
+import com.google.common.collect.ImmutableMap;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.claim.ShovelTypes;
+import com.griefdefender.cache.MessageCache;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.internal.util.NMSUtil;
 import com.griefdefender.permission.GDPermissions;
@@ -49,20 +52,18 @@ public class CommandRestoreNature extends BaseCommand {
     @Subcommand("mode nature")
     public void execute(Player player) {
         if (true) {
-            GriefDefenderPlugin.sendMessage(player, TextComponent.of("This mode is currently being worked on and will be available in a future build.", TextColor.RED));
+            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().FEATURE_NOT_AVAILABLE);
             return;
         }
 
         if (!NMSUtil.getInstance().hasItemInOneHand(player, GriefDefenderPlugin.getInstance().modificationTool)) {
-            TextAdapter.sendComponent(player, TextComponent.builder("")
-                    .append("You do not have ", TextColor.RED)
-                    .append(GriefDefenderPlugin.getInstance().modificationTool.getName().toLowerCase(), TextColor.GREEN)
-                    .append(" equipped.", TextColor.RED).build());
+            TextAdapter.sendComponent(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.TOOL_NOT_EQUIPPED,
+                    ImmutableMap.of("tool", TextComponent.of(GriefDefenderPlugin.getInstance().modificationTool.getName().toLowerCase(), TextColor.GREEN))));
             return;
         }
 
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
         playerData.shovelMode = ShovelTypes.RESTORE;
-        GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_RESTORE_NATURE_ACTIVATE));
+        GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().MODE_NATURE);
     }
 }

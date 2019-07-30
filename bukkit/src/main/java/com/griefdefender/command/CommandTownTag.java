@@ -32,6 +32,7 @@ import co.aikar.commands.annotation.Subcommand;
 import com.google.common.collect.ImmutableMap;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
+import com.griefdefender.cache.MessageCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.permission.GDPermissions;
@@ -52,7 +53,7 @@ public class CommandTownTag extends BaseCommand {
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
         final GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAtPlayer(playerData, player.getLocation());
         if (claim == null || !claim.isInTown()) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.TOWN_NOT_IN));
+            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().TOWN_NOT_IN);
             return;
         }
 
@@ -73,7 +74,7 @@ public class CommandTownTag extends BaseCommand {
         town.getInternalClaimData().setRequiresSave(true);
         Component resultMessage = null;
         if (!claim.getTownData().getTownTag().isPresent()) {
-            resultMessage = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.TOWN_TAG_CLEAR);
+            resultMessage = MessageCache.getInstance().TOWN_TAG_CLEAR;
         } else {
             resultMessage = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.TOWN_TAG,
                     ImmutableMap.of(

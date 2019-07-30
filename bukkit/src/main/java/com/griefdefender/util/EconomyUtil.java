@@ -33,6 +33,7 @@ import com.griefdefender.api.claim.ClaimResult;
 import com.griefdefender.api.claim.ClaimResultType;
 import com.griefdefender.api.claim.ClaimType;
 import com.griefdefender.api.permission.option.Options;
+import com.griefdefender.cache.MessageCache;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.command.CommandHelper;
@@ -71,7 +72,7 @@ public class EconomyUtil {
         claim.parent = (GDClaim) parent;
         final GDPermissionUser user = PermissionHolderCache.getInstance().getOrCreateUser(player);
         final int claimCost = BlockUtil.getInstance().getClaimBlockCost(player.getWorld(), claim.lesserBoundaryCorner, claim.greaterBoundaryCorner, claim.cuboid);
-        final Double economyBlockCost = GDPermissionManager.getInstance().getGlobalInternalOptionValue(user, Options.ECONOMY_BLOCK_COST, claim, playerData);
+        final Double economyBlockCost = GDPermissionManager.getInstance().getInternalOptionValue(user, Options.ECONOMY_BLOCK_COST, claim, playerData);
         final double requiredFunds = claimCost * economyBlockCost;
         final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_CLAIM_BUY_CONFIRMED, ImmutableMap.of(
                 "amount", requiredFunds));
@@ -101,7 +102,7 @@ public class EconomyUtil {
             if (!result.successful()) {
                 if (result.getResultType() == ClaimResultType.OVERLAPPING_CLAIM) {
                     GDClaim overlapClaim = (GDClaim) result.getClaim().get();
-                    GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CREATE_OVERLAP_SHORT));
+                    GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().CREATE_OVERLAP_SHORT);
                     Set<Claim> claims = new HashSet<>();
                     claims.add(overlapClaim);
                     CommandHelper.showClaims(player, claims, height, true);

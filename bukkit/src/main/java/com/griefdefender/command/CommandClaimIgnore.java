@@ -32,6 +32,7 @@ import co.aikar.commands.annotation.Subcommand;
 import com.google.common.collect.ImmutableMap;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
+import com.griefdefender.cache.MessageCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.permission.GDPermissions;
@@ -58,9 +59,9 @@ public class CommandClaimIgnore extends BaseCommand {
         playerData.ignoreClaims = !playerData.ignoreClaims;
 
         if (!playerData.ignoreClaims) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_RESPECTING));
+            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().CLAIM_RESPECTING);
         } else {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_IGNORE));
+            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().CLAIM_IGNORE);
         }
     }
 }

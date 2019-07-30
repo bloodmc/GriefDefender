@@ -31,6 +31,7 @@ import co.aikar.commands.annotation.Subcommand;
 import co.aikar.commands.annotation.Syntax;
 
 import com.flowpowered.math.vector.Vector3i;
+import com.google.common.collect.ImmutableMap;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.Tristate;
@@ -39,8 +40,10 @@ import com.griefdefender.api.claim.ClaimResult;
 import com.griefdefender.api.claim.ClaimType;
 import com.griefdefender.api.claim.ClaimTypes;
 import com.griefdefender.api.claim.TrustTypes;
+import com.griefdefender.cache.MessageCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.claim.GDClaimManager;
+import com.griefdefender.configuration.MessageDataConfig;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.internal.pagination.PaginationList;
 import com.griefdefender.internal.util.VecHelper;
@@ -74,17 +77,18 @@ import java.util.function.Consumer;
 @CommandPermission(GDPermissions.COMMAND_CLAIM_INFO_BASE)
 public class CommandClaimInfo extends BaseCommand {
 
-    private static final Component NONE = TextComponent.of("none", TextColor.GRAY);
-    private static final String ADMIN_SETTINGS = "Admin Settings";
-    private static final String CLAIM_EXPIRATION = "ClaimExpiration";
-    private static final String DENY_MESSAGES = "DenyMessages";
-    private static final String FLAG_OVERRIDES = "FlagOverrides";
-    private static final String INHERIT_PARENT = "InheritParent";
-    private static final String PVP_OVERRIDE = "PvPOverride";
-    private static final String RESIZABLE = "Resizable";
-    private static final String REQUIRES_CLAIM_BLOCKS = "RequiresClaimBlocks";
-    private static final String SIZE_RESTRICTIONS = "SizeRestrictions";
-    private static final String FOR_SALE = "ForSale";
+    private MessageDataConfig MESSAGE_DATA = GriefDefenderPlugin.getInstance().messageData;
+    private final Component NONE = TextComponent.of("none", TextColor.GRAY);
+    private final int ADMIN_SETTINGS = 0;
+    private final int CLAIM_EXPIRATION = 1;
+    private final int DENY_MESSAGES = 2;
+    private final int FLAG_OVERRIDES = 3;
+    private final int INHERIT_PARENT = 4;
+    private final int PVP_OVERRIDE = 5;
+    private final int RESIZABLE = 6;
+    private final int REQUIRES_CLAIM_BLOCKS = 7;
+    private final int SIZE_RESTRICTIONS = 8;
+    private final int FOR_SALE = 9;
     private boolean useTownInfo = false;
 
     public CommandClaimInfo() {
@@ -108,13 +112,13 @@ public class CommandClaimInfo extends BaseCommand {
         if (src instanceof Player) {
             player = (Player) src;
             if (!GriefDefenderPlugin.getInstance().claimsEnabledForWorld(player.getWorld().getUID())) {
-                GriefDefenderPlugin.sendMessage(src, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_DISABLED_WORLD));
+                GriefDefenderPlugin.sendMessage(src, MessageCache.getInstance().CLAIM_DISABLED_WORLD);
                 return;
             }
         }
 
         if (player == null && claimIdentifier == null) {
-            TextAdapter.sendComponent(src, TextComponent.of("No valid player or claim UUID found.", TextColor.RED));
+            TextAdapter.sendComponent(src, MessageCache.getInstance().COMMAND_CLAIMINFO_NOT_FOUND);
             return;
         }
 
@@ -125,7 +129,7 @@ public class CommandClaimInfo extends BaseCommand {
             if (player != null) {
                 claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAt(player.getLocation());
             } else {
-                TextAdapter.sendComponent(src, TextComponent.of("Claim UUID is required if executing from non-player source.", TextColor.RED));
+                TextAdapter.sendComponent(src, MessageCache.getInstance().COMMAND_CLAIMINFO_UUID_REQUIRED);
                 return;
             }
         } else {
@@ -155,13 +159,13 @@ public class CommandClaimInfo extends BaseCommand {
         }
 
         if (claim == null) {
-            GriefDefenderPlugin.sendMessage(src, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_NOT_FOUND));
+            GriefDefenderPlugin.sendMessage(src, MessageCache.getInstance().CLAIM_NOT_FOUND);
             return;
         }
 
         if (this.useTownInfo) {
             if (!claim.isInTown()) {
-                GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.TOWN_NOT_IN));
+                GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().TOWN_NOT_IN);
                 return;
             }
             claim = claim.getTown().get();
@@ -179,7 +183,7 @@ public class CommandClaimInfo extends BaseCommand {
                     && !gpClaim.getInternalClaimData().getBuilders().contains(player.getUniqueId())
                     && !gpClaim.getInternalClaimData().getManagers().contains(player.getUniqueId())
                     && !player.hasPermission(GDPermissions.COMMAND_CLAIM_INFO_OTHERS)) {
-                TextAdapter.sendComponent(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_NOT_YOURS));
+                TextAdapter.sendComponent(player, MessageCache.getInstance().CLAIM_NOT_YOURS);
                 return;
             }
         }
@@ -231,25 +235,28 @@ public class CommandClaimInfo extends BaseCommand {
         Component claimSize = TextComponent.empty();
         if (claim.isCuboid()) {
             claimSize = TextComponent.builder(" ")
-                    .append("Area: ", TextColor.YELLOW)
+                    .append(MessageCache.getInstance().LABEL_AREA.color(TextColor.YELLOW))
+                    .append(": ", TextColor.YELLOW)
                     .append(sizeX + "x" + sizeY + "x" + sizeZ, TextColor.GRAY).build();
         } else {
             claimSize = TextComponent.builder(" ")
-                    .append("Area: ", TextColor.YELLOW)
+                    .append(MessageCache.getInstance().LABEL_AREA.color(TextColor.YELLOW))
+                    .append(": ", TextColor.YELLOW)
                     .append(sizeX + "x" + sizeZ, TextColor.GRAY).build();
         }
         final Component claimCost = TextComponent.builder("  ")
-                .append("Blocks: ", TextColor.YELLOW)
+                .append(MessageCache.getInstance().LABEL_BLOCKS.color(TextColor.YELLOW))
+                .append(": ", TextColor.YELLOW)
                 .append(String.valueOf(claim.getClaimBlocks()), TextColor.GRAY).build();
         if (claim.isWilderness() && name == null) {
             name = TextComponent.of("Wilderness", TextColor.GREEN);
         }
-        Component claimName = TextComponent.builder("")
-                .append("Name", TextColor.YELLOW)
-                .append(" : ")
+        Component claimName = TextComponent.builder()
+                .append(MessageCache.getInstance().LABEL_NAME.color(TextColor.YELLOW))
+                .append(" : ", TextColor.YELLOW)
                 .append(name == null ? NONE : name).build();
         if (!claim.isWilderness() && !claim.isAdminClaim()) {
-            claimName = TextComponent.builder("")
+            claimName = TextComponent.builder()
                     .append(claimName)
                     .append(claimSize)
                     .append(claimCost).build();
@@ -318,10 +325,10 @@ public class CommandClaimInfo extends BaseCommand {
         }*/
 
         if (isAdmin) {
-            Component adminSettings = TextComponent.builder("")
-                    .append(TextComponent.of(ADMIN_SETTINGS, TextColor.RED).decoration(TextDecoration.ITALIC, true))
+            Component adminSettings = TextComponent.builder()
+                    .append(MessageCache.getInstance().CLAIMINFO_UI_ADMIN_SETTINGS).decoration(TextDecoration.ITALIC, true).color(TextColor.RED)
                     .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createSettingsConsumer(src, claim, generateAdminSettings(src, gpClaim), ClaimTypes.ADMIN))))
-                    .hoverEvent(HoverEvent.showText(TextComponent.of("Click here to view admin settings")))
+                    .hoverEvent(HoverEvent.showText(MessageCache.getInstance().CLAIMINFO_UI_CLICK_ADMIN))
                     .build();
             textList.add(adminSettings);
         }
@@ -330,36 +337,36 @@ public class CommandClaimInfo extends BaseCommand {
         Component forSaleText = null;
         if (GriefDefenderPlugin.getInstance().getVaultProvider() != null) {
              if (GriefDefenderPlugin.getActiveConfig(gpClaim.getWorld().getUID()).getConfig().claim.bankTaxSystem) {
-                 bankInfo = TextComponent.builder("")
-                         .append("Bank Info", TextColor.GOLD, TextDecoration.ITALIC)
-                         .hoverEvent(HoverEvent.showText(TextComponent.of("Click to check bank information")))
+                 bankInfo = TextComponent.builder()
+                         .append(MessageCache.getInstance().CLAIMINFO_UI_BANK_INFO.color(TextColor.GOLD).decoration(TextDecoration.ITALIC, true))
+                         .hoverEvent(HoverEvent.showText(MessageCache.getInstance().CLAIMINFO_UI_BANK_INFO))
                          .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(Consumer -> { CommandHelper.displayClaimBankInfo(src, gpClaim, gpClaim.isTown() ? true : false, true); })))
                          .build();
              }
-             forSaleText = TextComponent.builder("")
-                     .append("ForSale", TextColor.YELLOW)
+             forSaleText = TextComponent.builder()
+                     .append(MessageCache.getInstance().CLAIMINFO_UI_FOR_SALE.color(TextColor.YELLOW))
                      .append(" : ")
-                     .append(getClickableInfoText(src, claim, FOR_SALE, claim.getEconomyData().isForSale() ? TextComponent.of("YES", TextColor.GREEN) : TextComponent.of("NO", TextColor.GRAY))).build();
+                     .append(getClickableInfoText(src, claim, FOR_SALE, claim.getEconomyData().isForSale() ? MessageCache.getInstance().LABEL_YES.color(TextColor.GREEN) : MessageCache.getInstance().LABEL_NO.color(TextColor.GRAY))).build();
              if (claim.getEconomyData().isForSale()) {
-                 forSaleText = TextComponent.builder("")
+                 forSaleText = TextComponent.builder()
                          .append(forSaleText)
                          .append("  ")
-                         .append("Price", TextColor.YELLOW)
+                         .append(MessageCache.getInstance().LABEL_PRICE.color(TextColor.YELLOW))
                          .append(" : ")
                          .append(String.valueOf(claim.getEconomyData().getSalePrice()), TextColor.GOLD)
                          .build();
              }
         }
 
-        Component claimId = TextComponent.builder("")
+        Component claimId = TextComponent.builder()
                 .append("UUID", TextColor.YELLOW)
                 .append(" : ")
-                .append(TextComponent.builder("")
+                .append(TextComponent.builder()
                         .append(claim.getUniqueId().toString(), TextColor.GRAY)
                         .insertion(claim.getUniqueId().toString()).build()).build();
         final String ownerName = PlayerUtil.getInstance().getUserName(ownerUniqueId);
-        Component ownerLine = TextComponent.builder("")
-                .append("Owner", TextColor.YELLOW)
+        Component ownerLine = TextComponent.builder()
+                .append(MessageCache.getInstance().LABEL_OWNER.color(TextColor.YELLOW))
                 .append(" : ")
                 .append(ownerName != null && !claim.isAdminClaim() && !claim.isWilderness() ? ownerName : "administrator", TextColor.GOLD).build();
         Component adminShowText = TextComponent.empty();
@@ -369,7 +376,7 @@ public class CommandClaimInfo extends BaseCommand {
         Component claimType = TextComponent.empty();
         final Component whiteOpenBracket = TextComponent.of("[");
         final Component whiteCloseBracket = TextComponent.of("]");
-        Component defaultTypeText = TextComponent.builder("")
+        Component defaultTypeText = TextComponent.builder()
                 .append(whiteOpenBracket)
                 .append(gpClaim.getFriendlyNameType(true))
                 .append(whiteCloseBracket).build();
@@ -378,23 +385,23 @@ public class CommandClaimInfo extends BaseCommand {
             basicShowText = allowEdit;
             subdivisionShowText = allowEdit;
             townShowText = allowEdit;
-            Component adminTypeText = TextComponent.builder("")
+            Component adminTypeText = TextComponent.builder()
                     .append(claim.getType() == ClaimTypes.ADMIN ? 
                             defaultTypeText : TextComponent.of("ADMIN", TextColor.GRAY))
                     .hoverEvent(HoverEvent.showText(adminShowText)).build();
-            Component basicTypeText = TextComponent.builder("")
+            Component basicTypeText = TextComponent.builder()
                     .append(claim.getType() == ClaimTypes.BASIC ? 
                             defaultTypeText : TextComponent.of("BASIC", TextColor.GRAY))
                     .hoverEvent(HoverEvent.showText(basicShowText)).build();
-            Component subTypeText = TextComponent.builder("")
+            Component subTypeText = TextComponent.builder()
                     .append(claim.getType() == ClaimTypes.SUBDIVISION ? 
                             defaultTypeText : TextComponent.of("SUBDIVISION", TextColor.GRAY))
                     .hoverEvent(HoverEvent.showText(subdivisionShowText)).build();
-            Component townTypeText = TextComponent.builder("")
+            Component townTypeText = TextComponent.builder()
                     .append(claim.getType() == ClaimTypes.TOWN ? 
                             defaultTypeText : TextComponent.of("TOWN", TextColor.GRAY))
                     .hoverEvent(HoverEvent.showText(townShowText)).build();
-            claimType = TextComponent.builder("")
+            claimType = TextComponent.builder()
                     .append(claim.isCuboid() ? "3D " : "2D ", TextColor.GREEN)
                     .append(adminTypeText)
                     .append(" ")
@@ -411,19 +418,17 @@ public class CommandClaimInfo extends BaseCommand {
             Component townTypeText = defaultTypeText;
             if (!claim.isAdminClaim()) {
                 final Component message = ((GDClaim) claim).validateClaimType(ClaimTypes.ADMIN, ownerUniqueId, playerData).getMessage().orElse(null);
-                adminShowText = message != null ? message : TextComponent.builder("")
-                        .append("Click here to change claim to ")
-                        .append("ADMIN ", TextColor.RED)
-                        .append("type.").build();
+                adminShowText = message != null ? message : MESSAGE_DATA.getMessage(MessageStorage.CLAIMINFO_UI_CLICK_CHANGE_CLAIM,
+                        ImmutableMap.of("type", TextComponent.of("ADMIN ", TextColor.RED)));
 
                 if (message == null) {
-                    adminTypeText = TextComponent.builder("")
+                    adminTypeText = TextComponent.builder()
                         .append(claim.getType() == ClaimTypes.ADMIN ? 
                                 defaultTypeText : TextComponent.of("ADMIN", TextColor.GRAY))
                         .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createClaimTypeConsumer(src, claim, ClaimTypes.ADMIN, isAdmin))))
                         .hoverEvent(HoverEvent.showText(adminShowText)).build();
                 } else {
-                    adminTypeText = TextComponent.builder("")
+                    adminTypeText = TextComponent.builder()
                         .append(claim.getType() == ClaimTypes.ADMIN ? 
                                 defaultTypeText : TextComponent.of("ADMIN", TextColor.GRAY))
                         .hoverEvent(HoverEvent.showText(adminShowText)).build();
@@ -431,60 +436,54 @@ public class CommandClaimInfo extends BaseCommand {
             }
             if (!claim.isBasicClaim()) {
                 final Component message = ((GDClaim) claim).validateClaimType(ClaimTypes.BASIC, ownerUniqueId, playerData).getMessage().orElse(null);
-                basicShowText = message != null ? message : TextComponent.builder("")
-                        .append("Click here to change claim to ")
-                        .append("BASIC ", TextColor.YELLOW)
-                        .append("type.").build();
+                basicShowText = message != null ? message : MESSAGE_DATA.getMessage(MessageStorage.CLAIMINFO_UI_CLICK_CHANGE_CLAIM,
+                        ImmutableMap.of("type", TextComponent.of("BASIC ", TextColor.YELLOW)));
 
                 if (message == null) {
-                    basicTypeText = TextComponent.builder("")
+                    basicTypeText = TextComponent.builder()
                             .append(claim.getType() == ClaimTypes.BASIC ? defaultTypeText : TextComponent.of("BASIC", TextColor.GRAY))
                             .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createClaimTypeConsumer(src, claim, ClaimTypes.BASIC, isAdmin))))
                             .hoverEvent(HoverEvent.showText(basicShowText)).build();
                 } else {
-                    basicTypeText = TextComponent.builder("")
+                    basicTypeText = TextComponent.builder()
                             .append(claim.getType() == ClaimTypes.BASIC ? defaultTypeText : TextComponent.of("BASIC", TextColor.GRAY))
                             .hoverEvent(HoverEvent.showText(basicShowText)).build();
                 }
             }
             if (!claim.isSubdivision()) {
                 final Component message = ((GDClaim) claim).validateClaimType(ClaimTypes.SUBDIVISION, ownerUniqueId, playerData).getMessage().orElse(null);
-                subdivisionShowText = message != null ? message : TextComponent.builder("")
-                        .append("Click here to change claim to ")
-                        .append("SUBDIVISION ", TextColor.AQUA)
-                        .append("type.").build();
+                subdivisionShowText = message != null ? message : MESSAGE_DATA.getMessage(MessageStorage.CLAIMINFO_UI_CLICK_CHANGE_CLAIM,
+                        ImmutableMap.of("type", TextComponent.of("SUBDIVISION ", TextColor.AQUA)));
 
                 if (message == null) {
-                    subTypeText = TextComponent.builder("")
+                    subTypeText = TextComponent.builder()
                             .append(claim.getType() == ClaimTypes.SUBDIVISION ? defaultTypeText : TextComponent.of("SUBDIVISION", TextColor.GRAY))
                             .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createClaimTypeConsumer(src, claim, ClaimTypes.SUBDIVISION, isAdmin))))
                             .hoverEvent(HoverEvent.showText(subdivisionShowText)).build();
                 } else {
-                    subTypeText = TextComponent.builder("")
+                    subTypeText = TextComponent.builder()
                             .append(claim.getType() == ClaimTypes.SUBDIVISION ? defaultTypeText : TextComponent.of("SUBDIVISION", TextColor.GRAY))
                             .hoverEvent(HoverEvent.showText(subdivisionShowText)).build();
                 }
             }
             if (!claim.isTown()) {
                 final Component message = ((GDClaim) claim).validateClaimType(ClaimTypes.TOWN, ownerUniqueId, playerData).getMessage().orElse(null);
-                townShowText = message != null ? message : TextComponent.builder("")
-                        .append("Click here to change claim to ")
-                        .append("TOWN ", TextColor.GREEN)
-                        .append("type.").build();
+                townShowText = message != null ? message : MESSAGE_DATA.getMessage(MessageStorage.CLAIMINFO_UI_CLICK_CHANGE_CLAIM,
+                        ImmutableMap.of("type", TextComponent.of("TOWN ", TextColor.GREEN)));
 
                 if (message == null) {
-                    townTypeText = TextComponent.builder("")
+                    townTypeText = TextComponent.builder()
                             .append(claim.getType() == ClaimTypes.TOWN ? defaultTypeText : TextComponent.of("TOWN", TextColor.GRAY))
                             .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createClaimTypeConsumer(src, claim, ClaimTypes.TOWN, isAdmin))))
                             .hoverEvent(HoverEvent.showText(townShowText)).build();
                 } else {
-                    townTypeText = TextComponent.builder("")
+                    townTypeText = TextComponent.builder()
                             .append(claim.getType() == ClaimTypes.TOWN ? defaultTypeText : TextComponent.of("TOWN", TextColor.GRAY))
                             .hoverEvent(HoverEvent.showText(townShowText)).build();
                 }
             }
 
-            claimType = TextComponent.builder("")
+            claimType = TextComponent.builder()
                     .append(claim.isCuboid() ? "3D " : "2D ", TextColor.GREEN)
                     .append(adminTypeText)
                     .append(" ")
@@ -496,114 +495,118 @@ public class CommandClaimInfo extends BaseCommand {
                     .build();
         }
 
-        Component claimTypeInfo = TextComponent.builder("")
-                .append("Type", TextColor.YELLOW)
+        Component claimTypeInfo = TextComponent.builder()
+                .append(MessageCache.getInstance().LABEL_TYPE.color(TextColor.YELLOW))
                 .append(" : ")
                 .append(claimType).build();
-        Component claimInherit = TextComponent.builder("")
-                .append(INHERIT_PARENT, TextColor.YELLOW)
+        Component claimInherit = TextComponent.builder()
+                .append(MessageCache.getInstance().CLAIMINFO_UI_INHERIT_PARENT.color(TextColor.YELLOW))
                 .append(" : ")
                 .append(getClickableInfoText(src, claim, INHERIT_PARENT, claim.getData().doesInheritParent() ? TextComponent.of("ON", TextColor.GREEN) : TextComponent.of("OFF", TextColor.RED))).build();
-        Component claimExpired = TextComponent.builder("")
-                .append("Expired", TextColor.YELLOW)
+        Component claimExpired = TextComponent.builder()
+                .append(MessageCache.getInstance().LABEL_EXPIRED.color(TextColor.YELLOW))
                 .append(" : ")
                 .append(claim.getData().isExpired() ? TextComponent.of("YES", TextColor.RED) : TextComponent.of("NO", TextColor.GRAY)).build();
-        Component claimFarewell = TextComponent.builder("")
-                .append("Farewell", TextColor.YELLOW)
+        Component claimFarewell = TextComponent.builder()
+                .append(MessageCache.getInstance().LABEL_FAREWELL.color(TextColor.YELLOW))
                 .append(" : ")
                 .append(farewell == null ? NONE : farewell).build();
-        Component claimGreeting = TextComponent.builder("")
-                .append("Greeting", TextColor.YELLOW)
+        Component claimGreeting = TextComponent.builder()
+                .append(MessageCache.getInstance().LABEL_GREETING.color(TextColor.YELLOW))
                 .append(" : ")
                 .append(greeting == null ? NONE : greeting).build();
         Component claimSpawn = null;
         if (claim.getData().getSpawnPos().isPresent()) {
             Vector3i spawnPos = claim.getData().getSpawnPos().get();
             Location spawnLoc = new Location(gpClaim.getWorld(), spawnPos.getX(), spawnPos.getY(), spawnPos.getZ());
-            claimSpawn = TextComponent.builder("")
-                    .append("Spawn", TextColor.GREEN)
+            claimSpawn = TextComponent.builder()
+                    .append(MessageCache.getInstance().LABEL_SPAWN.color(TextColor.GREEN))
                     .append(" : ")
                     .append(spawnPos.toString(), TextColor.GRAY)
                     .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(CommandHelper.createTeleportConsumer(player, spawnLoc, claim))))
-                    .hoverEvent(HoverEvent.showText(TextComponent.of("Click here to teleport to claim spawn.")))
+                    .hoverEvent(HoverEvent.showText(MessageCache.getInstance().CLAIMINFO_UI_TELEPORT_SPAWN))
                     .build();
         }
-        Component southWestCorner = TextComponent.builder("")
+        Component southWestCorner = TextComponent.builder()
                 .append("SW", TextColor.LIGHT_PURPLE)
                 .append(" : ")
                 .append(VecHelper.toVector3i(southWest).toString(), TextColor.GRAY)
                 .append(" ")
                 .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(CommandHelper.createTeleportConsumer(player, southWest, claim))))
-                .hoverEvent(HoverEvent.showText(TextComponent.of("Click here to teleport to SW corner of claim.")))
+                .hoverEvent(HoverEvent.showText(MESSAGE_DATA.getMessage(MessageStorage.CLAIMINFO_UI_TELEPORT_DIRECTION, 
+                        ImmutableMap.of("direction", TextComponent.of("SW").color(TextColor.AQUA)))))
                 .build();
-        Component southEastCorner = TextComponent.builder("")
+        Component southEastCorner = TextComponent.builder()
                 .append("SE", TextColor.LIGHT_PURPLE)
                 .append(" : ")
                 .append(VecHelper.toVector3i(southEast).toString(), TextColor.GRAY)
                 .append(" ")
                 .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(CommandHelper.createTeleportConsumer(player, southEast, claim))))
-                .hoverEvent(HoverEvent.showText(TextComponent.of("Click here to teleport to SE corner of claim.")))
+                .hoverEvent(HoverEvent.showText(MESSAGE_DATA.getMessage(MessageStorage.CLAIMINFO_UI_TELEPORT_DIRECTION, 
+                        ImmutableMap.of("direction", TextComponent.of("SE").color(TextColor.AQUA)))))
                 .build();
-        Component southCorners = TextComponent.builder("")
+        Component southCorners = TextComponent.builder()
                 .append("SouthCorners", TextColor.YELLOW)
                 .append(" : ")
                 .append(southWestCorner)
                 .append(southEastCorner).build();
-        Component northWestCorner = TextComponent.builder("")
+        Component northWestCorner = TextComponent.builder()
                 .append("NW", TextColor.LIGHT_PURPLE)
                 .append(" : ")
                 .append(VecHelper.toVector3i(northWest).toString(), TextColor.GRAY)
                 .append(" ")
                 .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(CommandHelper.createTeleportConsumer(player, northWest, claim))))
-                .hoverEvent(HoverEvent.showText(TextComponent.of("Click here to teleport to NW corner of claim.")))
+                .hoverEvent(HoverEvent.showText(MESSAGE_DATA.getMessage(MessageStorage.CLAIMINFO_UI_TELEPORT_DIRECTION, 
+                        ImmutableMap.of("direction", TextComponent.of("NW").color(TextColor.AQUA)))))
                 .build();
-        Component northEastCorner = TextComponent.builder("")
+        Component northEastCorner = TextComponent.builder()
                 .append("NE", TextColor.LIGHT_PURPLE)
                 .append(" : ")
                 .append(VecHelper.toVector3i(northEast).toString(), TextColor.GRAY)
                 .append(" ")
                 .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(CommandHelper.createTeleportConsumer(player, northEast, claim))))
-                .hoverEvent(HoverEvent.showText(TextComponent.of("Click here to teleport to NE corner of claim.")))
+                .hoverEvent(HoverEvent.showText(MESSAGE_DATA.getMessage(MessageStorage.CLAIMINFO_UI_TELEPORT_DIRECTION, 
+                        ImmutableMap.of("direction", TextComponent.of("NE").color(TextColor.AQUA)))))
                 .build();
-        Component northCorners = TextComponent.builder("")
-                .append("NorthCorners", TextColor.YELLOW)
+        Component northCorners = TextComponent.builder()
+                .append(MessageCache.getInstance().CLAIMINFO_UI_NORTH_CORNERS.color(TextColor.YELLOW))
                 .append(" : ")
                 .append(northWestCorner)
                 .append(northEastCorner).build();
-        Component claimAccessors = TextComponent.builder("")
-                .append("Accessors", TextColor.YELLOW)
+        Component claimAccessors = TextComponent.builder()
+                .append(MessageCache.getInstance().LABEL_ACCESSORS.color(TextColor.YELLOW))
                 .append(" : ")
                 .append(accessors.equals("") ? NONE : TextComponent.of(accessors, TextColor.BLUE))
                 .append(" ")
                 .append(accessorGroups, TextColor.LIGHT_PURPLE).build();
-        Component claimBuilders = TextComponent.builder("")
-                .append("Builders", TextColor.YELLOW)
+        Component claimBuilders = TextComponent.builder()
+                .append(MessageCache.getInstance().LABEL_BUILDERS.color(TextColor.YELLOW))
                 .append(" : ")
                 .append(builders.equals("") ? NONE : TextComponent.of(builders, TextColor.BLUE))
                 .append(" ")
                 .append(builderGroups, TextColor.LIGHT_PURPLE).build();
-        Component claimContainers = TextComponent.builder("")
-                .append("Containers", TextColor.YELLOW)
+        Component claimContainers = TextComponent.builder()
+                .append(MessageCache.getInstance().LABEL_CONTAINERS.color(TextColor.YELLOW))
                 .append(" : ")
                 .append(containers.equals("") ? NONE : TextComponent.of(containers, TextColor.BLUE))
                 .append(" ")
                 .append(containerGroups, TextColor.LIGHT_PURPLE).build();
-        Component claimCoowners = TextComponent.builder("")
-                .append("Managers", TextColor.YELLOW)
+        Component claimCoowners = TextComponent.builder()
+                .append(MessageCache.getInstance().LABEL_MANAGERS.color(TextColor.YELLOW))
                 .append(" : ")
                 .append(managers.equals("") ? NONE : TextComponent.of(managers, TextColor.BLUE))
                 .append(" ")
                 .append(managerGroups, TextColor.LIGHT_PURPLE).build();
-        Component dateCreated = TextComponent.builder("")
-                .append("Created", TextColor.YELLOW)
+        Component dateCreated = TextComponent.builder()
+                .append(MessageCache.getInstance().LABEL_CREATED.color(TextColor.YELLOW))
                 .append(" : ")
                 .append(created != null ? created.toString() : "Unknown", TextColor.GRAY).build();
-        Component dateLastActive = TextComponent.builder("")
-                .append("LastActive", TextColor.YELLOW)
+        Component dateLastActive = TextComponent.builder()
+                .append(MessageCache.getInstance().CLAIMINFO_UI_LAST_ACTIVE.color(TextColor.YELLOW))
                 .append(" : ")
-                .append(lastActive != null ? lastActive.toString() : "Unknown", TextColor.GRAY).build();
-        Component worldName = TextComponent.builder("")
-                .append("World", TextColor.YELLOW)
+                .append(lastActive != null ? TextComponent.of(lastActive.toString(), TextColor.GRAY) : MessageCache.getInstance().LABEL_UNKNOWN.color(TextColor.GRAY)).build();
+        Component worldName = TextComponent.builder()
+                .append(MessageCache.getInstance().LABEL_WORLD.color(TextColor.YELLOW))
                 .append(" : ")
                 .append(gpClaim.getWorld().getName(), TextColor.GRAY).build();
 
@@ -617,7 +620,7 @@ public class CommandClaimInfo extends BaseCommand {
         textList.add(ownerLine);
         textList.add(claimTypeInfo);
         if (!claim.isAdminClaim() && !claim.isWilderness()) {
-            textList.add(TextComponent.builder("")
+            textList.add(TextComponent.builder()
                     .append(claimInherit)
                     .append("   ")
                     .append(claimExpired).build());
@@ -654,51 +657,51 @@ public class CommandClaimInfo extends BaseCommand {
         }
 
         PaginationList.Builder paginationBuilder = PaginationList.builder()
-                .title(TextComponent.of("Claim Info", TextColor.AQUA)).padding(TextComponent.of(" ").decoration(TextDecoration.STRIKETHROUGH, true)).contents(textList);
+                .title(MessageCache.getInstance().CLAIMINFO_UI_TITLE_CLAIMINFO.color(TextColor.AQUA)).padding(TextComponent.of(" ").decoration(TextDecoration.STRIKETHROUGH, true)).contents(textList);
         paginationBuilder.sendTo(src);
     }
 
     public static Consumer<CommandSender> createSettingsConsumer(CommandSender src, Claim claim, List<Component> textList, ClaimType type) {
         return settings -> {
-            String name = type == ClaimTypes.TOWN ? "Town Settings" : "Admin Settings";
+            Component name = type == ClaimTypes.TOWN ? MessageCache.getInstance().CLAIMINFO_UI_TOWN_SETTINGS : MessageCache.getInstance().CLAIMINFO_UI_ADMIN_SETTINGS;
             PaginationList.Builder paginationBuilder = PaginationList.builder()
-                    .title(TextComponent.of(name, TextColor.AQUA)).padding(TextComponent.of(" ").decoration(TextDecoration.STRIKETHROUGH, true)).contents(textList);
+                    .title(name.color(TextColor.AQUA)).padding(TextComponent.of(" ").decoration(TextDecoration.STRIKETHROUGH, true)).contents(textList);
             paginationBuilder.sendTo(src);
         };
     }
 
-    private static List<Component> generateAdminSettings(CommandSender src, GDClaim claim) {
+    private List<Component> generateAdminSettings(CommandSender src, GDClaim claim) {
         List<Component> textList = new ArrayList<>();
-        Component returnToClaimInfo = TextComponent.builder("")
+        Component returnToClaimInfo = TextComponent.builder()
                 .append("\n[")
-                .append("Return to standard settings", TextColor.AQUA)
+                .append(MessageCache.getInstance().CLAIMINFO_UI_RETURN_SETTINGS.color(TextColor.AQUA))
                 .append("]\n")
             .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(CommandHelper.createCommandConsumer(src, "claiminfo", claim.getUniqueId().toString())))).build();
-        Component claimDenyMessages = TextComponent.builder("")
-                .append(DENY_MESSAGES, TextColor.YELLOW)
+        Component claimDenyMessages = TextComponent.builder()
+                .append(MessageCache.getInstance().CLAIMINFO_UI_DENY_MESSAGES.color(TextColor.YELLOW))
                 .append(" : ")
                 .append(getClickableInfoText(src, claim, DENY_MESSAGES, claim.getInternalClaimData().allowDenyMessages() ? TextComponent.of("ON", TextColor.GREEN) : TextComponent.of("OFF", TextColor.RED))).build();
-        Component claimResizable = TextComponent.builder("")
-                .append(RESIZABLE, TextColor.YELLOW)
+        Component claimResizable = TextComponent.builder()
+                .append(MessageCache.getInstance().LABEL_RESIZABLE.color(TextColor.YELLOW))
                 .append(" : ")
                 .append(getClickableInfoText(src, claim, RESIZABLE, claim.getInternalClaimData().isResizable() ? TextComponent.of("ON", TextColor.GREEN) : TextComponent.of("OFF", TextColor.RED))).build();
-        Component claimRequiresClaimBlocks = TextComponent.builder("")
-                .append(REQUIRES_CLAIM_BLOCKS, TextColor.YELLOW)
+        Component claimRequiresClaimBlocks = TextComponent.builder()
+                .append(MessageCache.getInstance().CLAIMINFO_UI_REQUIRES_CLAIM_BLOCKS.color(TextColor.YELLOW))
                 .append(" : ")
                 .append(getClickableInfoText(src, claim, REQUIRES_CLAIM_BLOCKS, claim.getInternalClaimData().requiresClaimBlocks() ? TextComponent.of("ON", TextColor.GREEN) : TextComponent.of("OFF", TextColor.RED))).build();
-        Component claimSizeRestrictions = TextComponent.builder("")
-                .append(SIZE_RESTRICTIONS, TextColor.YELLOW)
+        Component claimSizeRestrictions = TextComponent.builder()
+                .append(MessageCache.getInstance().CLAIMINFO_UI_SIZE_RESTRICTIONS.color(TextColor.YELLOW))
                 .append(" : ")
                 .append(getClickableInfoText(src, claim, SIZE_RESTRICTIONS, claim.getInternalClaimData().hasSizeRestrictions() ? TextComponent.of("ON", TextColor.GREEN) : TextComponent.of("OFF", TextColor.RED))).build();
-        Component claimExpiration = TextComponent.builder("")
-                .append(CLAIM_EXPIRATION, TextColor.YELLOW)
+        Component claimExpiration = TextComponent.builder()
+                .append(MessageCache.getInstance().CLAIMINFO_UI_CLAIM_EXPIRATION.color(TextColor.YELLOW))
                 .append(" : ")
                 .append(getClickableInfoText(src, claim, CLAIM_EXPIRATION, claim.getInternalClaimData().allowExpiration() ? TextComponent.of("ON", TextColor.GREEN) : TextComponent.of("OFF", TextColor.RED))).build();
-        Component claimFlagOverrides = TextComponent.builder("")
-                .append(FLAG_OVERRIDES, TextColor.YELLOW)
+        Component claimFlagOverrides = TextComponent.builder()
+                .append(MessageCache.getInstance().CLAIMINFO_UI_FLAG_OVERRIDES.color(TextColor.YELLOW))
                 .append(" : ")
                 .append(getClickableInfoText(src, claim, FLAG_OVERRIDES, claim.getInternalClaimData().allowFlagOverrides() ? TextComponent.of("ON", TextColor.GREEN) : TextComponent.of("OFF", TextColor.RED))).build();
-        Component pvp = TextComponent.builder("")
+        Component pvp = TextComponent.builder()
                 .append("PvP", TextColor.YELLOW)
                 .append(" : ")
                 .append(getClickableInfoText(src, claim, PVP_OVERRIDE, claim.getInternalClaimData().getPvpOverride() == Tristate.TRUE ? TextComponent.of("ON", TextColor.GREEN) : TextComponent.of(claim.getInternalClaimData().getPvpOverride().name(), TextColor.RED))).build();
@@ -719,14 +722,14 @@ public class CommandClaimInfo extends BaseCommand {
         return textList;
     }
 
-    private static void executeAdminSettings(CommandSender src, GDClaim claim) {
+    private void executeAdminSettings(CommandSender src, GDClaim claim) {
         PaginationList.Builder paginationBuilder = PaginationList.builder()
-                .title(TextComponent.of("Admin Settings", TextColor.AQUA)).padding(TextComponent.of(" ").decoration(TextDecoration.STRIKETHROUGH, true)).contents(generateAdminSettings(src, claim));
+                .title(MessageCache.getInstance().CLAIMINFO_UI_ADMIN_SETTINGS).padding(TextComponent.of(" ").decoration(TextDecoration.STRIKETHROUGH, true)).contents(generateAdminSettings(src, claim));
         paginationBuilder.sendTo(src);
     }
 
-    public static Component getClickableInfoText(CommandSender src, Claim claim, String title, Component infoText) {
-        Component onClickText = TextComponent.of("Click here to toggle value.");
+    public Component getClickableInfoText(CommandSender src, Claim claim, int titleId, Component infoText) {
+        Component onClickText = MessageCache.getInstance().CLAIMINFO_UI_CLICK_TOGGLE;
         boolean hasPermission = true;
         if (src instanceof Player) {
             Component denyReason = ((GDClaim) claim).allowEdit((Player) src);
@@ -736,19 +739,19 @@ public class CommandClaimInfo extends BaseCommand {
             }
         }
 
-        TextComponent.Builder textBuilder = TextComponent.builder("")
+        TextComponent.Builder textBuilder = TextComponent.builder()
                 .append(infoText)
                 .hoverEvent(HoverEvent.showText(onClickText));
         if (hasPermission) {
-            textBuilder.clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createClaimInfoConsumer(src, claim, title))));
+            textBuilder.clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createClaimInfoConsumer(src, claim, titleId))));
         }
         return textBuilder.build();
     }
 
-    private static Consumer<CommandSender> createClaimInfoConsumer(CommandSender src, Claim claim, String title) {
+    private Consumer<CommandSender> createClaimInfoConsumer(CommandSender src, Claim claim, int titleId) {
         GDClaim gpClaim = (GDClaim) claim;
         return info -> {
-            switch (title) {
+            switch (titleId) {
                 case INHERIT_PARENT : 
                     if (!src.hasPermission(GDPermissions.COMMAND_CLAIM_INHERIT)) {
                         return;
@@ -827,7 +830,7 @@ public class CommandClaimInfo extends BaseCommand {
 
             final Player player = (Player) src;
             if (!isAdmin && ((GDClaim) gpClaim).allowEdit(player) != null) {
-                TextAdapter.sendComponent(src, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_NOT_YOURS));
+                TextAdapter.sendComponent(src, MessageCache.getInstance().CLAIM_NOT_YOURS);
                 return;
             }
             final ClaimResult result = claim.changeType(clicked, Optional.of(player.getUniqueId()), src);

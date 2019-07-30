@@ -33,6 +33,7 @@ import com.google.common.collect.ImmutableMap;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.permission.Context;
+import com.griefdefender.cache.MessageCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.permission.GDPermissions;
@@ -66,7 +67,7 @@ public class CommandClaimFlagReset extends BaseCommand {
                 return;
             }
         } else if (!player.hasPermission(GDPermissions.COMMAND_ADMIN_CLAIMS) && (claim.isBasicClaim() || claim.isSubdivision()) && !player.getUniqueId().equals(claim.getOwnerUniqueId())) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_CLAIM_RESET_FLAGS_SELF));
+            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().PERMISSION_CLAIM_RESET_FLAGS_SELF);
             return;
         }
 
@@ -77,6 +78,6 @@ public class CommandClaimFlagReset extends BaseCommand {
             }
         }
 
-        GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.FLAG_RESET_SUCCESS));
+        GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().FLAG_RESET_SUCCESS);
     }
 }
