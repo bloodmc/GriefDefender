@@ -49,13 +49,14 @@ import com.griefdefender.internal.util.BlockUtil;
 import com.griefdefender.internal.util.NMSUtil;
 import com.griefdefender.internal.util.VecHelper;
 import com.griefdefender.internal.visual.ClaimVisual;
+import com.griefdefender.internal.visual.GDClaimVisualType;
 import com.griefdefender.permission.GDFlags;
 import com.griefdefender.permission.GDPermissionManager;
 import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.permission.GDPermissions;
 import com.griefdefender.storage.BaseStorage;
 import com.griefdefender.util.Direction;
-import com.griefdefender.visual.ClaimVisualType;
+
 import net.kyori.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -650,7 +651,7 @@ public class BlockEventHandler implements Listener {
 
                             // show the player the protected area
                             GDClaim newClaim = this.storage.getClaimAt(block.getLocation());
-                            ClaimVisual visualization = new ClaimVisual(newClaim, ClaimVisualType.CLAIM);
+                            ClaimVisual visualization = new ClaimVisual(newClaim, ClaimVisual.BASIC);
                             visualization.createClaimBlockVisuals(blockPos.getY(), player.getLocation(), playerData);
                             visualization.apply(player);
 

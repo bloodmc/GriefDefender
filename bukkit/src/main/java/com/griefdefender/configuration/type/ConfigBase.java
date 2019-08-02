@@ -29,6 +29,8 @@ import com.griefdefender.configuration.category.ClaimCategory;
 import com.griefdefender.configuration.category.GeneralCategory;
 import com.griefdefender.configuration.category.OptionCategory;
 import com.griefdefender.configuration.category.TownCategory;
+import com.griefdefender.configuration.category.VisualCategory;
+
 import ninja.leaping.configurate.objectmapping.Setting;
 
 public class ConfigBase {
@@ -51,4 +53,7 @@ public class ConfigBase {
 
     @Setting
     public TownCategory town = new TownCategory();
+
+    @Setting
+    public VisualCategory visual = new VisualCategory();
 }

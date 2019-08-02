@@ -117,6 +117,7 @@ import com.griefdefender.internal.provider.WorldEditProvider;
 import com.griefdefender.internal.provider.WorldGuardProvider;
 import com.griefdefender.internal.registry.BlockTypeRegistryModule;
 import com.griefdefender.internal.registry.EntityTypeRegistryModule;
+import com.griefdefender.internal.registry.GDBlockType;
 import com.griefdefender.internal.registry.GDEntityType;
 import com.griefdefender.internal.registry.GDItemType;
 import com.griefdefender.internal.registry.ItemTypeRegistryModule;
@@ -232,6 +233,7 @@ public class GriefDefenderPlugin {
 
     private boolean isEconomyModeEnabled = false;
 
+    public GDBlockType createVisualBlock;
     public GDItemType modificationTool;
     public GDItemType investigationTool;
     public int maxInspectionDistance = 100;
@@ -741,6 +743,8 @@ public class GriefDefenderPlugin {
             PermissionHolderCache.getInstance().getOrCreatePermissionCache(GriefDefenderPlugin.DEFAULT_HOLDER).invalidateAll();
             CLAIM_BLOCK_SYSTEM = BaseStorage.globalConfig.getConfig().playerdata.claimBlockSystem;
             final GDItemType defaultModTool = ItemTypeRegistryModule.getInstance().getById("minecraft:golden_shovel").orElse(null);
+            final GDBlockType defaultCreateVisualBlock = BlockTypeRegistryModule.getInstance().getById("minecraft:diamond_block").orElse(null);
+            this.createVisualBlock = BlockTypeRegistryModule.getInstance().getById(BaseStorage.globalConfig.getConfig().visual.claimCreateStartBlock).orElse(defaultCreateVisualBlock);
             this.modificationTool  = ItemTypeRegistryModule.getInstance().getById(BaseStorage.globalConfig.getConfig().claim.modificationTool).orElse(defaultModTool);
             this.investigationTool = ItemTypeRegistryModule.getInstance().getById(BaseStorage.globalConfig.getConfig().claim.investigationTool).orElse(ItemTypeRegistryModule.getInstance().getById("minecraft:stick").get());
             this.maxInspectionDistance = BaseStorage.globalConfig.getConfig().general.maxClaimInspectionDistance;

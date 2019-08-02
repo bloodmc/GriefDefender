@@ -33,9 +33,14 @@ import com.griefdefender.api.claim.ShovelTypes;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.configuration.MessageStorage;
+import com.griefdefender.internal.visual.ClaimVisual;
+import com.griefdefender.internal.visual.GDClaimVisualType;
 import com.griefdefender.permission.GDPermissionUser;
-import com.griefdefender.visual.ClaimVisualType;
+
 import net.kyori.text.Component;
+import net.kyori.text.TextComponent;
+import net.kyori.text.format.TextColor;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -72,17 +77,48 @@ public class PlayerUtil {
         return ClaimTypes.BASIC;
     }
 
-    public ClaimVisualType getVisualTypeFromShovel(ShovelType shovelMode) {
+    public Component getClaimTypeComponentFromShovel(ShovelType shovelMode) {
+        return getClaimTypeComponentFromShovel(shovelMode, true);
+    }
+
+    public Component getClaimTypeComponentFromShovel(ShovelType shovelMode, boolean upper) {
         if (shovelMode == ShovelTypes.ADMIN) {
-            return ClaimVisualType.ADMINCLAIM;
+            if (upper) {
+                return TextComponent.of(ClaimTypes.ADMIN.getName().toUpperCase(), TextColor.RED);
+            }
+            return TextComponent.of("Admin", TextColor.RED);
+        }
+
+        if (shovelMode == ShovelTypes.TOWN) {
+            if (upper) {
+                return TextComponent.of(ClaimTypes.TOWN.getName().toUpperCase(), TextColor.GREEN);
+            }
+            return TextComponent.of("Town", TextColor.GREEN);
+        }
+
+        if (shovelMode == ShovelTypes.SUBDIVISION) {
+            if (upper) {
+                return TextComponent.of(ClaimTypes.SUBDIVISION.getName().toUpperCase(), TextColor.AQUA);
+            }
+            return TextComponent.of("Subdivision", TextColor.AQUA);
+        }
+        if (upper) {
+            return TextComponent.of(ClaimTypes.BASIC.getName().toUpperCase(), TextColor.YELLOW);
+        }
+        return TextComponent.of("Basic", TextColor.YELLOW);
+    }
+
+    public GDClaimVisualType getVisualTypeFromShovel(ShovelType shovelMode) {
+        if (shovelMode == ShovelTypes.ADMIN) {
+            return ClaimVisual.ADMIN;
         }
         if (shovelMode == ShovelTypes.SUBDIVISION) {
-            return ClaimVisualType.SUBDIVISION;
+            return ClaimVisual.SUBDIVISION;
         }
         if (shovelMode == ShovelTypes.TOWN) {
-            return ClaimVisualType.TOWN;
+            return ClaimVisual.TOWN;
         }
-        return ClaimVisualType.CLAIM;
+        return ClaimVisual.BASIC;
     }
 
     public String lookupPlayerName(String uuid) {

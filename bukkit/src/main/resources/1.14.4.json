@@ -3,9 +3,9 @@
     "libraries": [
         {
             "name": "com.griefdefender:adapter:1.14.4",
-            "sha1": "158df31d5f92819a2e8e8d6bddc7b9a2daab15cd",
-            "path": "com/griefdefender/adapter/1.14.4-SNAPSHOT/adapter-1.14.4-20190728.132446-5.jar",
-            "url": "https://repo.glaremasters.me/repository/bloodshot/com/griefdefender/adapter/1.14.4-SNAPSHOT/adapter-1.14.4-20190728.132446-5.jar"
+            "sha1": "e82a7efc930209a55fd950f16049e93e5d611e86",
+            "path": "com/griefdefender/adapter/1.14.4-SNAPSHOT/adapter-1.14.4-20190731.044400-7.jar",
+            "url": "https://repo.glaremasters.me/repository/bloodshot/com/griefdefender/adapter/1.14.4-SNAPSHOT/adapter-1.14.4-20190731.044400-7.jar"
         },
         {
             "name": "com.griefdefender:api:1.0.0",

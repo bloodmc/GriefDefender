@@ -60,6 +60,7 @@ import com.griefdefender.internal.util.BlockUtil;
 import com.griefdefender.internal.util.NMSUtil;
 import com.griefdefender.internal.util.VecHelper;
 import com.griefdefender.internal.visual.ClaimVisual;
+import com.griefdefender.internal.visual.GDClaimVisualType;
 import com.griefdefender.permission.GDFlags;
 import com.griefdefender.permission.GDPermissionManager;
 import com.griefdefender.permission.GDPermissionUser;
@@ -69,7 +70,7 @@ import com.griefdefender.util.BlockRay;
 import com.griefdefender.util.BlockRayHit;
 import com.griefdefender.util.PaginationUtil;
 import com.griefdefender.util.PlayerUtil;
-import com.griefdefender.visual.ClaimVisualType;
+
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.adapter.bukkit.TextAdapter;
@@ -227,13 +228,13 @@ public class PlayerEventHandler implements Listener {
             if (GriefDefenderPlugin.CLAIM_BLOCK_SYSTEM == ClaimBlockSystem.VOLUME) {
                 final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PLAYER_REMAINING_BLOCKS_3D,
                         ImmutableMap.of(
-                        "block-amount", playerData.getRemainingClaimBlocks()));
+                        "block-amount", playerData.getRemainingClaimBlocks(),
+                        "chunk-amount", playerData.getRemainingChunks()));
                 GriefDefenderPlugin.sendMessage(player, message);
             } else {
                 final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PLAYER_REMAINING_BLOCKS_2D,
                        ImmutableMap.of(
-                        "block-amount", playerData.getRemainingClaimBlocks(),
-                        "chunk-amount", playerData.getRemainingChunks()));
+                        "block-amount", playerData.getRemainingClaimBlocks()));
                 GriefDefenderPlugin.sendMessage(player, message);
             }
         } else {
@@ -1003,7 +1004,7 @@ public class PlayerEventHandler implements Listener {
                         ImmutableMap.of(
                         "player", claim.getOwnerName()));
                 GriefDefenderPlugin.sendMessage(player, message);
-                ClaimVisual claimVisual = new ClaimVisual(claim, ClaimVisualType.ERROR);
+                ClaimVisual claimVisual = new ClaimVisual(claim, ClaimVisual.ERROR);
                 claimVisual.createClaimBlockVisuals(location.getBlockY(), player.getLocation(), playerData);
                 claimVisual.apply(player);
                 GDTimings.PLAYER_HANDLE_SHOVEL_ACTION.stopTiming();
@@ -1036,13 +1037,13 @@ public class PlayerEventHandler implements Listener {
                         ImmutableMap.of(
                         "player", claim.getOwnerName()));
                 GriefDefenderPlugin.sendMessage(player, message);
-                ClaimVisual visualization = new ClaimVisual(claim, ClaimVisualType.ERROR);
+                ClaimVisual visualization = new ClaimVisual(claim, ClaimVisual.ERROR);
                 visualization.createClaimBlockVisuals(location.getBlockY(), player.getLocation(), playerData);
                 visualization.apply(player);
                 Set<Claim> claims = new HashSet<>();
                 claims.add(claim);
                 CommandHelper.showClaims(player, claims, location.getBlockY(), true);
-            } else if (BlockUtil.getInstance().clickedClaimCorner(claim, VecHelper.toVector3i(location))) {
+            } else if (playerData.lastShovelLocation == null && BlockUtil.getInstance().clickedClaimCorner(claim, VecHelper.toVector3i(location))) {
                 handleResizeStart(event, player, location, playerData, claim);
             } else if ((playerData.shovelMode == ShovelTypes.SUBDIVISION 
                     || ((claim.isTown() || claim.isAdminClaim()) && (playerData.lastShovelLocation == null || playerData.claimSubdividing != null)) && playerData.shovelMode != ShovelTypes.TOWN)) {
@@ -1135,7 +1136,7 @@ public class PlayerEventHandler implements Listener {
         playerData.lastShovelLocation = location;
         final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_START,
                 ImmutableMap.of(
-                "type", playerData.shovelMode.getName()));
+                "type", PlayerUtil.getInstance().getClaimTypeComponentFromShovel(playerData.shovelMode)));
         GriefDefenderPlugin.sendMessage(player, message);
         ClaimVisual visual = ClaimVisual.fromClick(location, location.getBlockY(), PlayerUtil.getInstance().getVisualTypeFromShovel(playerData.shovelMode), player, playerData);
         visual.apply(player, false);
@@ -1341,7 +1342,6 @@ public class PlayerEventHandler implements Listener {
             return;
         }
 
-        playerData.revertActiveVisual(player);
         playerData.claimResizing = claim;
         playerData.lastShovelLocation = location;
         if (this.worldEditProvider != null) {
@@ -1350,6 +1350,9 @@ public class PlayerEventHandler implements Listener {
             final int z = playerData.lastShovelLocation.getBlockZ() == claim.lesserBoundaryCorner.getZ() ? claim.greaterBoundaryCorner.getZ() : claim.lesserBoundaryCorner.getZ();
             this.worldEditProvider.visualizeClaim(claim, new Vector3i(x, y, z), VecHelper.toVector3i(playerData.lastShovelLocation), player, playerData, false);
         }
+        // Show visual block for resize corner click
+        ClaimVisual visual = ClaimVisual.fromClick(location, location.getBlockY(), PlayerUtil.getInstance().getVisualTypeFromShovel(playerData.shovelMode), player, playerData);
+        visual.apply(player, false);
         GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().RESIZE_START);
     }
 
@@ -1426,12 +1429,12 @@ public class PlayerEventHandler implements Listener {
             if (GriefDefenderPlugin.CLAIM_BLOCK_SYSTEM == ClaimBlockSystem.VOLUME) {
                 final double claimableChunks = claimBlocksRemaining / 65536.0;
                 final Map<String, Object> params = ImmutableMap.of(
-                        "remaining-chunks", Math.round(claimableChunks * 100.0)/100.0, 
-                        "remaining-blocks", claimBlocksRemaining);
+                        "chunk-amount", Math.round(claimableChunks * 100.0)/100.0, 
+                        "block-amount", claimBlocksRemaining);
                 GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.RESIZE_SUCCESS_3D, params));
             } else {
                 final Map<String, Object> params = ImmutableMap.of(
-                        "remaining-blocks", claimBlocksRemaining);
+                        "block-amount", claimBlocksRemaining);
                 GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.RESIZE_SUCCESS_2D, params));
             }
             playerData.revertActiveVisual(player);
@@ -1491,7 +1494,7 @@ public class PlayerEventHandler implements Listener {
 
                 boolean hideBorders = this.worldEditProvider != null &&
                                       this.worldEditProvider.hasCUISupport(player) &&
-                                      GriefDefenderPlugin.getActiveConfig(player.getWorld().getUID()).getConfig().claim.hideBorders;
+                                      GriefDefenderPlugin.getActiveConfig(player.getWorld().getUID()).getConfig().visual.hideBorders;
                 if (!hideBorders) {
                     ClaimVisual visualization = ClaimVisual.fromClaims(claims, playerData.getClaimCreateMode() == 1 ? height : PlayerUtil.getInstance().getEyeHeight(player), player.getLocation(), playerData, null);
                     visualization.apply(player);

@@ -498,6 +498,7 @@ public class MessageCache {
         PLAYERINFO_UI_TITLE = MESSAGE_DATA.getMessage("playerinfo-ui-title");
         PLUGIN_EVENT_CANCEL = MESSAGE_DATA.getMessage("plugin-event-cancel");
         PLUGIN_RELOAD = MESSAGE_DATA.getMessage("plugin-reload");
+        RESIZE_OVERLAP = MESSAGE_DATA.getMessage("resize-overlap");
         RESIZE_OVERLAP_SUBDIVISION = MESSAGE_DATA.getMessage("resize-overlap-subdivision");
         RESIZE_SAME_LOCATION = MESSAGE_DATA.getMessage("resize-same-location");
         RESIZE_START = MESSAGE_DATA.getMessage("resize-start");

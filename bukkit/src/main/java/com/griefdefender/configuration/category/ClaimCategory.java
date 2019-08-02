@@ -54,8 +54,6 @@ public class ClaimCategory extends ConfigCategory {
     public int taxApplyHour = 12;
     @Setting(value = "bank-transaction-log-limit")
     public int bankTransactionLogLimit = 60;
-    @Setting(value = "hide-borders-when-using-wecui", comment = "Whether to hide the glowstone/gold block borders when using WECUI.")
-    public boolean hideBorders = false;
 
     public ClaimCategory() {
 

@@ -72,6 +72,7 @@ import com.griefdefender.internal.provider.WorldGuardProvider;
 import com.griefdefender.internal.util.BlockUtil;
 import com.griefdefender.internal.util.VecHelper;
 import com.griefdefender.internal.visual.ClaimVisual;
+import com.griefdefender.internal.visual.GDClaimVisualType;
 import com.griefdefender.permission.GDPermissionHolder;
 import com.griefdefender.permission.GDPermissionManager;
 import com.griefdefender.permission.GDPermissionUser;
@@ -80,7 +81,7 @@ import com.griefdefender.provider.VaultProvider;
 import com.griefdefender.registry.TrustTypeRegistryModule;
 import com.griefdefender.storage.BaseStorage;
 import com.griefdefender.util.PermissionUtil;
-import com.griefdefender.visual.ClaimVisualType;
+
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextColor;
@@ -872,7 +873,7 @@ public class GDClaim implements Claim {
         if (this.isAdminClaim()) {
             // convert to basic
             this.type = ClaimTypes.BASIC;
-            this.getVisualizer().setType(ClaimVisualType.CLAIM);
+            this.getVisualizer().setType(ClaimVisual.BASIC);
             this.claimData.setType(ClaimTypes.BASIC);
         }
 
