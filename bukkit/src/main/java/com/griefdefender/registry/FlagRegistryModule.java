@@ -30,7 +30,7 @@ import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.permission.flag.Flag;
 import com.griefdefender.api.permission.flag.Flags;
 import com.griefdefender.api.registry.CatalogRegistryModule;
-import com.griefdefender.permission.GDFlag;
+import com.griefdefender.permission.flag.GDFlag;
 import com.griefdefender.util.RegistryHelper;
 
 import java.util.Collection;
@@ -47,7 +47,7 @@ public class FlagRegistryModule implements CatalogRegistryModule<Flag> {
         return instance;
     }
 
-    private final Map<String, Flag> flagMap = new HashMap<>();
+    private final Map<String, Flag> registryMap = new HashMap<>();
 
     @Override
     public Optional<Flag> getById(String id) {
@@ -56,32 +56,32 @@ public class FlagRegistryModule implements CatalogRegistryModule<Flag> {
         }
 
         id = id.replace("griefdefender.flag.", "");
-        String[] parts = id.split("\\.");
-        if (parts.length > 0) {
-            id = parts[0];
+        if (!id.contains(":")) {
+            id = "griefdefender:" + id;
         }
 
-        return Optional.ofNullable(this.flagMap.get(checkNotNull(id)));
+        return Optional.ofNullable(this.registryMap.get(checkNotNull(id)));
     }
 
     @Override
     public Collection<Flag> getAll() {
-        return this.flagMap.values();
+        return this.registryMap.values();
     }
 
     @Override
     public void registerDefaults() {
         RegistryHelper.mapFields(Flags.class, input -> {
-            final String field = input.toLowerCase().replace("_", "-");
-            final Flag flag = new GDFlag("griefdefender:" + field, field);
-            this.flagMap.put(field.toLowerCase(Locale.ENGLISH), flag);
+            final String name = input.toLowerCase().replace("_", "-");
+            final String id = "griefdefender:" + name;
+            final Flag flag = new GDFlag(id, name);
+            this.registryMap.put(id, flag);
             return flag;
         });
     }
 
     @Override
     public void registerCustomType(Flag type) {
-        this.flagMap.put(type.getName().toLowerCase(Locale.ENGLISH), type);
+        this.registryMap.put(type.getId().toLowerCase(Locale.ENGLISH), type);
         GriefDefenderPlugin.getGlobalConfig().getConfig().permissionCategory.refreshFlags();
         GriefDefenderPlugin.getInstance().dataStore.setDefaultGlobalPermissions();
     }

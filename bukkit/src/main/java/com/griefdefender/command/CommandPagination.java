@@ -4,6 +4,7 @@ import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.Description;
 import net.kyori.text.TextComponent;
+import net.kyori.text.adapter.bukkit.TextAdapter;
 import net.kyori.text.format.TextColor;
 import org.bukkit.command.CommandSender;
 
@@ -19,7 +20,8 @@ public class CommandPagination extends BaseCommand {
 
         final ActivePagination activePagination = GDPaginationHolder.getInstance().getActivePagination(src, id);
         if (activePagination == null) {
-            throw new CommandException(TextComponent.of("Source " + src.getName() + " has no paginations!", TextColor.RED));
+            TextAdapter.sendComponent(src, TextComponent.of("Source " + src.getName() + " has no paginations!", TextColor.RED));
+            return;
         }
 
         String action = args[1];

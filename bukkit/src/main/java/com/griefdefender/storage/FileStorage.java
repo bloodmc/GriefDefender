@@ -30,9 +30,13 @@ import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.GriefDefender;
 import com.griefdefender.api.claim.Claim;
 import com.griefdefender.api.claim.ClaimBlockSystem;
+import com.griefdefender.api.claim.ClaimResult;
+import com.griefdefender.api.claim.ClaimResultType;
+import com.griefdefender.api.claim.ClaimSchematic;
 import com.griefdefender.api.claim.ClaimType;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.claim.GDClaimManager;
+import com.griefdefender.claim.GDClaimResult;
 import com.griefdefender.configuration.ClaimStorageData;
 import com.griefdefender.configuration.ClaimTemplateStorage;
 import com.griefdefender.configuration.GriefDefenderConfig;
@@ -42,6 +46,7 @@ import com.griefdefender.event.GDLoadClaimEvent;
 import com.griefdefender.migrator.GriefPreventionMigrator;
 import com.griefdefender.migrator.WorldGuardMigrator;
 
+import org.apache.commons.io.FileUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.World.Environment;
@@ -320,7 +325,13 @@ public class FileStorage extends BaseStorage {
                 UUID playerUUID;
 
                 try {
-                    playerUUID = UUID.fromString(files[i].getName());
+                    final String fileName = files[i].getName();
+                    // UUID's should always be 36 in length
+                    if (fileName.length() != 36) {
+                        return;
+                    }
+
+                    playerUUID = UUID.fromString(fileName);
                 } catch (Exception e) {
                     GriefDefenderPlugin.getInstance().getLogger().severe("Could not read player file " + files[i].getAbsolutePath());
                     continue;
@@ -425,25 +436,48 @@ public class FileStorage extends BaseStorage {
     }
 
     @Override
-    public void writeClaimToStorage(GDClaim claim) {
+    public ClaimResult writeClaimToStorage(GDClaim claim) {
         try {
             ClaimStorageData claimStorage = claim.getClaimStorage();
             claim.updateClaimStorageData();
             claimStorage.save();
+            return new GDClaimResult(claim, ClaimResultType.SUCCESS);
         } catch (Exception e) {
             GriefDefenderPlugin.getInstance().getLogger().severe(claim.getUniqueId() + " could not save properly.");
             e.printStackTrace();
         }
+
+        return new GDClaimResult(claim, ClaimResultType.FAILURE);
     }
 
     @Override
-    public void deleteClaimFromStorage(GDClaim claim) {
+    public ClaimResult deleteClaimFromStorage(GDClaim claim) {
+        final GDPlayerData ownerData = claim.getOwnerPlayerData();
         try {
             Files.delete(claim.getClaimStorage().filePath);
+            if (GriefDefenderPlugin.getInstance().getWorldEditProvider() != null) {
+                final Path schematicPath = GriefDefenderPlugin.getInstance().getWorldEditProvider().getSchematicWorldMap().get(claim.getWorldUniqueId());
+                if (schematicPath != null && Files.exists(schematicPath.resolve(claim.getUniqueId().toString()))) {
+                    if (ownerData != null && ownerData.restoreAbandonClaim) {
+                        final ConfigBase activeConfig = GriefDefenderPlugin.getActiveConfig(claim.getWorldUniqueId()).getConfig();
+                        if (GriefDefenderPlugin.getInstance().getWorldEditProvider() != null && activeConfig.claim.claimAutoSchematicRestore) {
+                            final ClaimSchematic schematic = claim.getSchematics().get("__restore__");
+                            if (schematic != null) {
+                                schematic.apply();
+                            }
+                        }
+                    }
+                    FileUtils.deleteDirectory(schematicPath.resolve(claim.getUniqueId().toString()).toFile());
+                }
+            }
+
+            return new GDClaimResult(claim, ClaimResultType.SUCCESS);
         } catch (IOException e) {
             e.printStackTrace();
             GriefDefenderPlugin.getInstance().getLogger().severe("Error: Unable to delete claim file \"" + claim.getClaimStorage().filePath + "\".");
         }
+
+        return new GDClaimResult(claim, ClaimResultType.FAILURE);
     }
 
     @Override

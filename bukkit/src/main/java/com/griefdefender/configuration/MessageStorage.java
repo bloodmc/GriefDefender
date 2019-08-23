@@ -45,6 +45,7 @@ public class MessageStorage {
     private CommentedConfigurationNode root = SimpleCommentedConfigurationNode.root(ConfigurationOptions.defaults());
     private ObjectMapper<MessageDataConfig>.BoundInstance configMapper;
     private MessageDataConfig configBase;
+    public static MessageDataConfig MESSAGE_DATA;
 
     // descriptions
     public static String DESCRIPTION_ABANDON_ALL = "abandon-all";
@@ -89,6 +90,7 @@ public class MessageStorage {
     public static String DESCRIPTION_PLAYER_INFO = "player-info";
 
     // messages with parameters
+    public static final String ABANDON_FAILED = "abandon-failed";
     public static final String ABANDON_OTHER_SUCCESS = "abandon-other-success";
     public static final String ABANDON_SUCCESS = "abandon-success";
     public static final String ADJUST_ACCRUED_BLOCKS_SUCCESS = "adjust-accrued-blocks-success";
@@ -129,15 +131,29 @@ public class MessageStorage {
     public static final String CLAIMLIST_UI_CLICK_TELEPORT_TARGET = "claimlist-ui-click-teleport-target";
     public static final String CLAIMLIST_UI_CLICK_TOGGLE_VALUE = "claimlist-ui-click-toggle-value";
     public static final String COMMAND_BLOCKED = "command-blocked";
+    public static final String COMMAND_CLAIMBAN_SUCCESS_BLOCK = "command-claimban-success-block";
+    public static final String COMMAND_CLAIMBAN_SUCCESS_ENTITY = "command-claimban-success-entity";
+    public static final String COMMAND_CLAIMBAN_SUCCESS_ITEM = "command-claimban-success-item";
     public static final String COMMAND_CLAIMCLEAR_NO_ENTITIES = "command-claimclear-no-entities";
+    public static final String COMMAND_CLAIMUNBAN_SUCCESS_BLOCK = "command-claimunban-success-block";
+    public static final String COMMAND_CLAIMUNBAN_SUCCESS_ENTITY = "command-claimunban-success-entity";
+    public static final String COMMAND_CLAIMUNBAN_SUCCESS_ITEM = "command-claimunban-success-item";
     public static final String COMMAND_EXECUTE_FAILED = "command-execute-failed";
+    public static final String COMMAND_GIVEBLOCKS_CONFIRMATION = "command-giveblocks-confirmation";
+    public static final String COMMAND_GIVEBLOCKS_CONFIRMED = "command-giveblocks-confirmed";
+    public static final String COMMAND_GIVEBLOCKS_NOT_ENOUGH = "command-giveblocks-not-enough";
+    public static final String COMMAND_GIVEBLOCKS_RECEIVED = "command-giveblocks-received";
+    public static final String COMMAND_INVALID_AMOUNT = "command-invalid-amount";
     public static final String COMMAND_INVALID_CLAIM = "command-invalid-claim";
     public static final String COMMAND_INVALID_GROUP = "command-invalid-group";
     public static final String COMMAND_INVALID_PLAYER = "command-invalid-player";
+    public static final String COMMAND_INVALID_TYPE = "command-invalid-type";
     public static final String COMMAND_OPTION_EXCEEDS_ADMIN = "command-option-exceeds-admin";
+    public static final String COMMAND_PET_INVALID = "command-pet-invalid";
     public static final String COMMAND_PLAYER_NOT_FOUND = "command-player-not-found";
     public static final String COMMAND_WORLD_NOT_FOUND = "command-world-not-found";
     public static final String CREATE_FAILED_CLAIM_LIMIT = "create-failed-claim-limit";
+    public static final String CREATE_FAILED_RESULT = "create-failed-result";
     public static final String CREATE_INSUFFICIENT_BLOCKS_2D = "create-insufficient-blocks-2d";
     public static final String CREATE_INSUFFICIENT_BLOCKS_3D = "create-insufficient-blocks-3d";
     public static final String CREATE_OVERLAP_PLAYER = "create-overlap-player";
@@ -148,6 +164,10 @@ public class MessageStorage {
     public static final String DELETE_ALL_TYPE_WARNING = "delete-all-type-warning";
     public static final String DELETE_ALL_PLAYER_SUCCESS = "delete-all-player-success";
     public static final String DELETE_ALL_PLAYER_WARNING = "delete-all-player-warning";
+    public static final String DELETE_CLAIM_SUCCESS = "delete-claim-success";
+    public static final String DELETE_CLAIM_WARNING = "delete-claim-warning";
+    public static final String ECONOMY_BLOCK_AVAILABLE_PURCHASE_2D = "economy-block-available-purchase-2d";
+    public static final String ECONOMY_BLOCK_AVAILABLE_PURCHASE_3D = "economy-block-available-purchase-3d";
     public static final String ECONOMY_BLOCK_PURCHASE_CONFIRMATION = "economy-block-purchase-confirmation";
     public static final String ECONOMY_BLOCK_PURCHASE_COST = "economy-block-purchase-cost";
     public static final String ECONOMY_BLOCK_PURCHASE_LIMIT = "economy-block-purchase-limit";
@@ -163,6 +183,9 @@ public class MessageStorage {
     public static final String ECONOMY_CLAIM_SALE_CONFIRMED = "economy-claim-sale-confirmed";
     public static final String ECONOMY_CLAIM_SALE_INVALID_PRICE = "economy-claim-sale-invalid-price";
     public static final String ECONOMY_CLAIM_SOLD = "economy-claim-sold";
+    public static final String ECONOMY_MODE_BLOCK_SALE_CONFIRMATION = "economy-mode-block-sale-confirmation";
+    public static final String ECONOMY_MODE_RESIZE_SUCCESS_2D = "economy-mode-resize-success-2d";
+    public static final String ECONOMY_MODE_RESIZE_SUCCESS_3D = "economy-mode-resize-success-3d";
     public static final String ECONOMY_NOT_ENOUGH_FUNDS = "economy-not-enough-funds";
     public static final String ECONOMY_PLAYER_NOT_FOUND = "economy-player-not-found";
     public static final String ECONOMY_WITHDRAW_ERROR = "economy-withdraw-error";
@@ -177,7 +200,21 @@ public class MessageStorage {
     public static final String FLAG_UI_CLICK_TOGGLE = "flag-ui-click-toggle";
     public static final String FLAG_UI_INHERIT_PARENT = "flag-ui-inherit-parent";
     public static final String FLAG_UI_OVERRIDE_PERMISSION = "flag-ui-override-permission";
+    public static final String OPTION_INVALID_CONTEXT = "option-invalid-context";
+    public static final String OPTION_INVALID_TARGET = "option-invalid-target";
+    public static final String OPTION_INVALID_VALUE = "option-invalid-value";
+    public static final String OPTION_NOT_FOUND = "option-not-found";
+    public static final String OPTION_NOT_SET = "option-not-set";
+    public static final String OPTION_OVERRIDE_NOT_SUPPORTED = "option-override-not-supported";
+    public static final String OPTION_RESET_SUCCESS = "option-reset-success";
+    public static final String OPTION_SET_TARGET = "option-set-target";
+    public static final String OPTION_UI_CLICK_TOGGLE = "option-ui-click-toggle";
+    public static final String OPTION_UI_INHERIT_PARENT = "option-ui-inherit-parent";
+    public static final String OPTION_UI_OVERRIDDEN = "option-ui-overridden";
     public static final String PERMISSION_ACCESS = "permission-access";
+    public static final String PERMISSION_BAN_BLOCK = "permission-ban-block";
+    public static final String PERMISSION_BAN_ENTITY = "permission-ban-entity";
+    public static final String PERMISSION_BAN_ITEM = "permission-ban-item";
     public static final String PERMISSION_BUILD = "permission-build";
     public static final String PERMISSION_BUILD_NEAR_CLAIM = "permission-build-near-claim";
     public static final String PERMISSION_CLAIM_DELETE = "permission-claim-delete";
@@ -210,6 +247,9 @@ public class MessageStorage {
     public static final String PLAYERINFO_UI_BLOCK_TOTAL = "playerinfo-ui-block-total";
     public static final String PLAYERINFO_UI_CHUNK_TOTAL = "playerinfo-ui-chunk-total";
     public static final String PLAYERINFO_UI_CLAIM_TOTAL = "playerinfo-ui-claim-total";
+    public static final String PLAYERINFO_UI_ECONOMY_BLOCK_AVAILABLE_PURCHASE = "playerinfo-ui-economy-block-available-purchase";
+    public static final String PLAYERINFO_UI_ECONOMY_BLOCK_COST = "playerinfo-ui-economy-block-cost";
+    public static final String PLAYERINFO_UI_ECONOMY_BLOCK_SELL_RETURN = "playerinfo-ui-economy-block-sell-return";
     public static final String PLAYERINFO_UI_LAST_ACTIVE = "playerinfo-ui-last-active";
     public static final String PLAYERINFO_UI_TAX_CURRENT_RATE = "playerinfo-ui-tax-current-rate";
     public static final String PLAYERINFO_UI_TAX_GLOBAL_CLAIM_RATE = "playerinfo-ui-tax-global-claim-rate";
@@ -218,6 +258,10 @@ public class MessageStorage {
     public static final String PLAYERINFO_UI_UUID = "playerinfo-ui-uuid";
     public static final String PLAYERINFO_UI_WORLD = "playerinfo-ui-world";
     public static final String PLUGIN_COMMAND_NOT_FOUND = "plugin-command-not-found";
+    public static final String PLUGIN_NOT_FOUND = "plugin-not-found";
+    public static final String REGISTRY_BLOCK_NOT_FOUND = "registry-type-not-found";
+    public static final String REGISTRY_ENTITY_NOT_FOUND = "registry-entity-not-found";
+    public static final String REGISTRY_ITEM_NOT_FOUND = "registry-item-not-found";
     public static final String RESIZE_SUCCESS_2D = "resize-success-2d";
     public static final String RESIZE_SUCCESS_3D = "resize-success-3d";
     public static final String RESULT_TYPE_CHANGE_DENY = "result-type-change-deny";
@@ -292,6 +336,7 @@ public class MessageStorage {
         try {
             this.root = this.loader.load(ConfigurationOptions.defaults());
             this.configBase = this.configMapper.populate(this.root.getNode(GriefDefenderPlugin.MOD_ID));
+            MESSAGE_DATA = this.configBase;
         } catch (Exception e) {
             GriefDefenderPlugin.getInstance().getLogger().log(Level.SEVERE, "Failed to load configuration", e);
         }

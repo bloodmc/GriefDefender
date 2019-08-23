@@ -22,31 +22,48 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.griefdefender.event;
+package com.griefdefender.permission.option;
 
-import com.griefdefender.api.claim.Claim;
-import com.griefdefender.api.event.DeleteClaimEvent;
+import com.griefdefender.api.permission.option.Option;
+import com.griefdefender.api.permission.option.Option.Builder;
+import com.griefdefender.registry.OptionRegistryModule;
 
-import java.util.List;
+public final class OptionBuilder<T> implements Option.Builder<T> {
 
-public class GDDeleteClaimEvent extends GDClaimEvent implements DeleteClaimEvent {
+    Class<T> typeClass;
+    String id;
+    String name;
 
-    public GDDeleteClaimEvent(Claim claim) {
-        super(claim);
+    @Override
+    public Builder<T> type(Class<T> tClass) {
+        this.typeClass = tClass;
+        return this;
     }
 
-    public GDDeleteClaimEvent(List<Claim> claims) {
-        super(claims);
+    @Override
+    public Builder<T> id(String id) {
+        this.id = id;
+        return this;
     }
 
-    public static class Abandon extends GDDeleteClaimEvent implements DeleteClaimEvent.Abandon {
+    @Override
+    public Builder<T> name(String name) {
+        this.name = name;
+        return this;
+    }
 
-        public Abandon(Claim claim) {
-            super(claim);
-        }
+    @Override
+    public Option<T> build() {
+        final GDOption<T> key = new GDOption<>(this);
+        OptionRegistryModule.getInstance().registerCustomType(key);
+        return key;
+    }
 
-        public Abandon(List<Claim> claims) {
-            super(claims);
-        }
+    @Override
+    public Builder<T> reset() {
+        this.typeClass = null;
+        this.id = null;
+        this.name = null;
+        return this;
     }
 }

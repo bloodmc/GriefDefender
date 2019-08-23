@@ -42,7 +42,7 @@ public class LuckPermsEventHandler {
     }
 
     public void onGroupDataRecalculate(GroupDataRecalculateEvent event) {
-        final GDPermissionHolder holder = PermissionHolderCache.getInstance().getOrCreateGroup(event.getGroup());
+        final GDPermissionHolder holder = PermissionHolderCache.getInstance().getOrCreateGroup(event.getGroup().getName());
         PermissionHolderCache.getInstance().getOrCreatePermissionCache(holder).invalidateAll();
     }
 

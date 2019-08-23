@@ -26,13 +26,14 @@ package com.griefdefender.cache;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.Tristate;
 import com.griefdefender.permission.GDPermissionGroup;
 import com.griefdefender.permission.GDPermissionHolder;
 import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.util.PermissionUtil;
-import me.lucko.luckperms.api.Group;
-import me.lucko.luckperms.api.User;
+
+import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 
 import java.util.UUID;
@@ -42,76 +43,92 @@ import java.util.concurrent.TimeUnit;
 public class PermissionHolderCache {
 
     private static PermissionHolderCache instance;
-    private final Cache<String, GDPermissionHolder> holderCache = Caffeine.newBuilder().expireAfterAccess(10, TimeUnit.MINUTES)
+    private final Cache<UUID, GDPermissionUser> userCache = Caffeine.newBuilder().expireAfterAccess(30, TimeUnit.MINUTES)
+            .build();
+    private final Cache<String, GDPermissionGroup> groupCache = Caffeine.newBuilder().expireAfterAccess(30, TimeUnit.MINUTES)
             .build();
     private final ConcurrentHashMap<GDPermissionHolder, Cache<Integer, Tristate>> permissionCache = new ConcurrentHashMap<>();
 
-    public GDPermissionUser getOrCreateUser(OfflinePlayer player) {
-        if (player == null) {
+    public GDPermissionUser getOrCreateUser(OfflinePlayer user) {
+        if (user == null) {
             return null;
         }
 
-        return getOrCreateUser(player.getUniqueId());
-    }
-
-    public GDPermissionUser getOrCreateUser(UUID uuid) {
-        GDPermissionUser user = null;
-        GDPermissionHolder holder = this.holderCache.getIfPresent(uuid.toString());
-        if (holder != null) {
-            return (GDPermissionUser) holder;
-        }
-
-        user = new GDPermissionUser(uuid);
-        this.holderCache.put(user.getIdentifier(), user);
-        return user;
-    }
-
-    public GDPermissionUser getOrCreateUser(String username) {
-        final User luckPermsUser = PermissionUtil.getInstance().getUserSubject(username);
-        if (luckPermsUser != null) {
-            return this.getOrCreateUser(luckPermsUser.getUuid());
-        }
-        return null;
-    }
-
-    public GDPermissionGroup getOrCreateGroup(String groupName) {
-        GDPermissionGroup group = null;
-        GDPermissionHolder holder = this.holderCache.getIfPresent(groupName);
-        if (holder != null) {
-            return (GDPermissionGroup) holder;
-        }
-
-        final Group luckPermsGroup = PermissionUtil.getInstance().getGroupSubject(groupName);
-        if (luckPermsGroup == null) {
-            return null;
-        }
-
-        group = new GDPermissionGroup(luckPermsGroup);
-        this.holderCache.put(groupName, group);
-        return group;
-    }
-
-    public GDPermissionGroup getOrCreateGroup(Group group) {
-        GDPermissionGroup permissionHolder = null;
-        GDPermissionHolder holder = this.holderCache.getIfPresent(group.getName());
-        if (holder != null) {
-            return (GDPermissionGroup) holder;
-        }
-
-        permissionHolder = new GDPermissionGroup(group);
-        this.holderCache.put(group.getName(), permissionHolder);
-        return permissionHolder;
-    }
-
-    public GDPermissionHolder getOrCreateHolder(String identifier) {
-        GDPermissionHolder holder = this.holderCache.getIfPresent(identifier);
+        GDPermissionUser holder = this.userCache.getIfPresent(user.getUniqueId());
         if (holder != null) {
             return holder;
         }
 
-        holder = new GDPermissionHolder(identifier);
-        this.holderCache.put(identifier, holder);
+        holder = new GDPermissionUser(user);
+        this.userCache.put(user.getUniqueId(), holder);
         return holder;
+    }
+
+    public GDPermissionUser getOrCreateUser(UUID uuid) {
+        if (uuid == null) {
+            return null;
+        }
+        if (uuid.equals(GriefDefenderPlugin.PUBLIC_UUID)) {
+            return GriefDefenderPlugin.PUBLIC_USER;
+        }
+        if (uuid.equals(GriefDefenderPlugin.WORLD_USER_UUID)) {
+            return GriefDefenderPlugin.WORLD_USER;
+        }
+
+        GDPermissionUser holder = this.userCache.getIfPresent(uuid);
+        if (holder != null) {
+            return holder;
+        }
+
+        holder = new GDPermissionUser(uuid);
+        this.userCache.put(uuid, holder);
+        return holder;
+    }
+
+    public GDPermissionUser getOrCreateUser(String username) {
+        if (username == null) {
+            return null;
+        }
+
+        final UUID uuid = PermissionUtil.getInstance().lookupUserUniqueId(username);
+        if (uuid != null) {
+            return this.getOrCreateUser(uuid);
+        }
+        // check Bukkit
+        final OfflinePlayer player = Bukkit.getOfflinePlayer(username);
+        if (player != null) {
+            return this.getOrCreateUser(player);
+        }
+
+        return null;
+    }
+
+    public GDPermissionGroup getOrCreateGroup(String groupName) {
+        if (groupName == null) {
+            return null;
+        }
+        GDPermissionGroup holder = this.groupCache.getIfPresent(groupName);
+        if (holder != null) {
+            return holder;
+        }
+
+        holder = new GDPermissionGroup(groupName);
+        this.groupCache.put(groupName, holder);
+        return holder;
+    }
+
+    public GDPermissionHolder getOrCreateHolder(String identifier) {
+        if (identifier == null) {
+            return null;
+        }
+        UUID uuid = null;
+        try {
+            uuid = UUID.fromString(identifier);
+        } catch (IllegalArgumentException e) {
+            return this.getOrCreateGroup(identifier);
+        }
+
+        return this.getOrCreateUser(uuid);
     }
 
     public Cache<Integer, Tristate> getOrCreatePermissionCache(GDPermissionHolder holder) {

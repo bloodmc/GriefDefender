@@ -24,10 +24,10 @@
  */
 package com.griefdefender.command;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import net.kyori.text.Component;
 import net.kyori.text.serializer.plain.PlainComponentSerializer;
-
-import javax.annotation.Nullable;
 
 /**
  * A subclass of Exception that contains a rich message that is an instance of

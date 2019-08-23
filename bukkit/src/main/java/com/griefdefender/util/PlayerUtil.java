@@ -25,11 +25,13 @@
 package com.griefdefender.util;
 
 import com.google.common.collect.ImmutableMap;
+import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.claim.ClaimType;
 import com.griefdefender.api.claim.ClaimTypes;
 import com.griefdefender.api.claim.ShovelType;
 import com.griefdefender.api.claim.ShovelTypes;
+import com.griefdefender.api.permission.option.type.CreateModeTypes;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.configuration.MessageStorage;
@@ -50,7 +52,7 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.UUID;
 
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class PlayerUtil {
 
@@ -121,18 +123,6 @@ public class PlayerUtil {
         return ClaimVisual.BASIC;
     }
 
-    public String lookupPlayerName(String uuid) {
-        if (uuid.equals(GriefDefenderPlugin.WORLD_USER_UUID.toString())) {
-            return "administrator";
-        }
-        final GDPermissionUser user = PermissionHolderCache.getInstance().getOrCreateUser(uuid);
-        if (user == null) {
-            return "unknown";
-        }
-
-        return user.getName();
-    }
-
     @Nullable
     public String getUserName(UUID uuid) {
         if (uuid.equals(GriefDefenderPlugin.PUBLIC_UUID)) {
@@ -144,7 +134,7 @@ public class PlayerUtil {
 
         final GDPermissionUser user = PermissionHolderCache.getInstance().getOrCreateUser(uuid);
         if (user == null) {
-            return null;
+            return "unknown";
         }
         if (user.getName() != null) {
             return user.getName();
@@ -152,13 +142,26 @@ public class PlayerUtil {
         // check offline player
         final OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
         if (offlinePlayer == null) {
-            return null;
+            return "unknown";
         }
         return offlinePlayer.getName();
     }
 
     public int getEyeHeight(Player player) {
+        if (player == null) {
+            return 0;
+        }
         return (int) (player.getLocation().getBlockY() + player.getEyeHeight());
+    }
+
+    public int getVisualClaimHeight(GDPlayerData playerData, int height) {
+        if (playerData.getClaimCreateMode() == CreateModeTypes.VOLUME) {
+            return height;
+        }
+        if (playerData.getMaxClaimLevel() < 255) {
+            return playerData.getMaxClaimLevel();
+        }
+        return 0;
     }
 
     public void sendInteractEntityDenyMessage(GDClaim claim, Player player, ItemStack playerItem, Entity entity) {

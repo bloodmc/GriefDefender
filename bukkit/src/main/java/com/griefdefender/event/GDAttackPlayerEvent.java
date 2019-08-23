@@ -24,22 +24,22 @@
  */
 package com.griefdefender.event;
 
+import com.griefdefender.api.User;
 import com.griefdefender.api.claim.Claim;
 import com.griefdefender.api.event.AttackPlayerEvent;
-import org.bukkit.entity.Player;
 
 import java.util.UUID;
 
 public class GDAttackPlayerEvent extends GDClaimEvent implements AttackPlayerEvent {
 
-    private Player targetPlayer;
+    private User user;
 
-    public GDAttackPlayerEvent(Claim claim, Player targetPlayer) {
+    public GDAttackPlayerEvent(Claim claim, User user) {
         super(claim);
     }
 
     @Override
-    public UUID getPlayerId() {
-        return this.targetPlayer.getUniqueId();
+    public User getUser() {
+        return this.user;
     }
 }

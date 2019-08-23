@@ -24,24 +24,25 @@
  */
 package com.griefdefender.registry;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
+import com.google.common.base.Supplier;
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Singleton;
 import com.griefdefender.api.CatalogType;
 import com.griefdefender.api.Registry;
-import com.griefdefender.api.claim.Claim;
-import com.griefdefender.api.claim.ClaimSchematic;
 import com.griefdefender.api.claim.ClaimType;
 import com.griefdefender.api.claim.ShovelType;
 import com.griefdefender.api.claim.TrustType;
-import com.griefdefender.api.economy.BankTransaction;
 import com.griefdefender.api.permission.ResultType;
 import com.griefdefender.api.permission.flag.Flag;
 import com.griefdefender.api.permission.option.Option;
 import com.griefdefender.api.registry.CatalogRegistryModule;
-import com.griefdefender.claim.GDClaim;
-import com.griefdefender.economy.GDBankTransaction;
-import com.griefdefender.internal.schematic.GDClaimSchematic;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.IdentityHashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
@@ -49,30 +50,62 @@ import java.util.Optional;
 public class GDRegistry implements Registry {
 
     protected final static Map<Class<? extends CatalogType>, CatalogRegistryModule<?>> catalogRegistryMap = new IdentityHashMap<>();
+    private static final Map<Class<?>, Supplier<?>> BUILDER_SUPPLIERS = new IdentityHashMap<>();
 
     static {
         catalogRegistryMap.put(ClaimType.class, (CatalogRegistryModule<ClaimType>) ClaimTypeRegistryModule.getInstance());
         catalogRegistryMap.put(Flag.class, (CatalogRegistryModule<Flag>) FlagRegistryModule.getInstance());
-        catalogRegistryMap.put(Option.class, (CatalogRegistryModule<Option>) OptionRegistryModule.getInstance());
         catalogRegistryMap.put(ResultType.class, (CatalogRegistryModule<ResultType>) ResultTypeRegistryModule.getInstance());
-        // TODO
-        //catalogRegistryMap.put(ShovelType.class, (CatalogRegistryModule<ShovelType>)ShovelTypeRegistryModule.getInstance());
-        //catalogRegistryMap.put(TrustType.class, (CatalogRegistryModule<TrustType>)TrustTypeRegistryModule.getInstance());
+        catalogRegistryMap.put(Option.class, (CatalogRegistryModule<Option>) OptionRegistryModule.getInstance());
+        catalogRegistryMap.put(ShovelType.class, (CatalogRegistryModule<ShovelType>)ShovelTypeRegistryModule.getInstance());
+        catalogRegistryMap.put(TrustType.class, (CatalogRegistryModule<TrustType>)TrustTypeRegistryModule.getInstance());
     }
 
     @Override
-    public Claim.Builder createClaimBuilder() {
-        return new GDClaim.ClaimBuilder();
+    public <T> Registry registerBuilderSupplier(Class<T> builderClass, Supplier<? extends T> supplier) {
+        checkArgument(!BUILDER_SUPPLIERS.containsKey(builderClass), "Already registered a builder supplier!");
+        BUILDER_SUPPLIERS.put(builderClass, supplier);
+        return this;
     }
 
     @Override
-    public ClaimSchematic.Builder createClaimSchematicBuilder() {
-        return new GDClaimSchematic.ClaimSchematicBuilder();
+    public <T> T createBuilder(Class<T> builderClass) throws IllegalArgumentException {
+        final Supplier<?> supplier = BUILDER_SUPPLIERS.get(builderClass);
+        checkArgument(supplier != null, "Could not find a Supplier for the provided builder class: " + builderClass.getCanonicalName());
+        return (T) supplier.get();
     }
 
     @Override
-    public BankTransaction.Builder createBankTransactionBuilder() {
-        return new GDBankTransaction.BankTransactionBuilder();
+    public <T extends CatalogType> Optional<T> getType(Class<T> typeClass, String id) {
+        CatalogRegistryModule<T> registryModule = getRegistryModuleFor(typeClass).orElse(null);
+        if (registryModule == null) {
+            return Optional.empty();
+        }
+        return registryModule.getById(id.toLowerCase(Locale.ENGLISH));
+    }
+
+    @Override
+    public <T extends CatalogType> Collection<T> getAllOf(Class<T> typeClass) {
+        CatalogRegistryModule<T> registryModule = getRegistryModuleFor(typeClass).orElse(null);
+        if (registryModule == null) {
+            return Collections.emptyList();
+        }
+        return registryModule.getAll();
+    }
+
+    @Override
+    public <T extends CatalogType> Collection<T> getAllFor(String pluginId, Class<T> typeClass) {
+        final CatalogRegistryModule<T> registryModule = getRegistryModuleFor(typeClass).orElse(null);
+        if (registryModule == null) {
+            return Collections.emptyList();
+        }
+        ImmutableList.Builder<T> builder = ImmutableList.builder();
+        registryModule.getAll()
+                .stream()
+                .filter(type -> pluginId.equals(type.getId().split(":")[0]))
+                .forEach(builder::add);
+
+        return builder.build();
     }
 
     @SuppressWarnings("unchecked")

@@ -31,6 +31,7 @@ import com.google.common.collect.ImmutableSet;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.GriefDefender;
+import com.griefdefender.api.Tristate;
 import com.griefdefender.api.claim.Claim;
 import com.griefdefender.api.claim.ClaimContexts;
 import com.griefdefender.api.claim.ClaimResult;
@@ -38,6 +39,8 @@ import com.griefdefender.api.claim.ClaimResultType;
 import com.griefdefender.api.claim.ClaimType;
 import com.griefdefender.api.claim.ClaimTypes;
 import com.griefdefender.api.permission.Context;
+import com.griefdefender.api.permission.flag.Flag;
+import com.griefdefender.api.permission.option.Option;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.claim.GDClaimManager;
 import com.griefdefender.claim.GDClaimResult;
@@ -47,13 +50,14 @@ import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.configuration.type.ConfigBase;
 import com.griefdefender.configuration.type.GlobalConfig;
 import com.griefdefender.event.GDCauseStackManager;
-import com.griefdefender.event.GDDeleteClaimEvent;
+import com.griefdefender.event.GDRemoveClaimEvent;
 import com.griefdefender.internal.util.VecHelper;
 import com.griefdefender.permission.GDPermissions;
+import com.griefdefender.permission.option.GDOption;
+import com.griefdefender.registry.FlagRegistryModule;
+import com.griefdefender.registry.OptionRegistryModule;
 import com.griefdefender.util.PermissionUtil;
 
-import me.lucko.luckperms.api.Node;
-import me.lucko.luckperms.api.context.MutableContextSet;
 import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextColor;
 
@@ -107,9 +111,9 @@ public abstract class BaseStorage {
         this.getClaimWorldManager(worldUniqueId).removePlayer(playerUniqueId);
     }
 
-    public abstract void writeClaimToStorage(GDClaim claim);
+    public abstract ClaimResult writeClaimToStorage(GDClaim claim);
 
-    public abstract void deleteClaimFromStorage(GDClaim claim);
+    public abstract ClaimResult deleteClaimFromStorage(GDClaim claim);
 
     public Claim getClaim(UUID worldUniqueId, UUID id) {
         return this.getClaimWorldManager(worldUniqueId).getClaimByUUID(id).orElse(null);
@@ -169,7 +173,7 @@ public abstract class BaseStorage {
         }
 
         GDCauseStackManager.getInstance().pushCause(src);
-        GDDeleteClaimEvent event = new GDDeleteClaimEvent(ImmutableList.copyOf(claimsToDelete));
+        GDRemoveClaimEvent event = new GDRemoveClaimEvent(ImmutableList.copyOf(claimsToDelete));
         GriefDefender.getEventManager().post(event);
         GDCauseStackManager.getInstance().popCause();
         if (event.cancelled()) {
@@ -179,7 +183,7 @@ public abstract class BaseStorage {
         }
 
         for (Claim claim : claimsToDelete) {
-            PermissionUtil.getInstance().clearPermissions(GriefDefenderPlugin.DEFAULT_HOLDER, ImmutableSet.of(claim.getContext()));
+            PermissionUtil.getInstance().clearPermissions((GDClaim) claim);
             claimWorldManager.deleteClaimInternal(claim, true);
         }
 
@@ -193,20 +197,20 @@ public abstract class BaseStorage {
 
     public void deleteClaimsForPlayer(UUID playerID) {
         if (BaseStorage.USE_GLOBAL_PLAYER_STORAGE && playerID != null) {
-            List<Claim> claimsToDelete = new ArrayList<>(BaseStorage.GLOBAL_PLAYER_DATA.get(playerID).getInternalClaims());
+            final GDPlayerData playerData = BaseStorage.GLOBAL_PLAYER_DATA.get(playerID);
+            List<Claim> claimsToDelete = new ArrayList<>(playerData.getInternalClaims());
             for (Claim claim : claimsToDelete) {
-                PermissionUtil.getInstance().clearPermissions(GriefDefenderPlugin.DEFAULT_HOLDER, ImmutableSet.of(claim.getContext()));
+                PermissionUtil.getInstance().clearPermissions((GDClaim) claim);
                 GDClaimManager claimWorldManager = this.claimWorldManagers.get(claim.getWorldUniqueId());
                 claimWorldManager.deleteClaimInternal(claim, true);
             }
+
+            playerData.getInternalClaims().clear();
             return;
         }
 
         for (GDClaimManager claimWorldManager : this.claimWorldManagers.values()) {
             Set<Claim> claims = claimWorldManager.getInternalPlayerClaims(playerID);
-            if (playerID == null) {
-                claims = claimWorldManager.getWorldClaims();
-            }
             if (claims == null) {
                 continue;
             }
@@ -221,6 +225,7 @@ public abstract class BaseStorage {
             for (Claim claim : claimsToDelete) {
                 PermissionUtil.getInstance().clearPermissions(GriefDefenderPlugin.DEFAULT_HOLDER, ImmutableSet.of(claim.getContext()));
                 claimWorldManager.deleteClaimInternal(claim, true);
+                claims.remove(claim);
             }
         }
     }
@@ -259,6 +264,11 @@ public abstract class BaseStorage {
         GDClaimManager claimWorldManager = this.getClaimWorldManager(worldUniqueId);
         playerData = claimWorldManager.getPlayerDataMap().get(playerUniqueId);
         return playerData;
+    }
+
+    public GDPlayerData getOrCreateGlobalPlayerData(UUID playerUniqueId) {
+        GDClaimManager claimWorldManager = this.getClaimWorldManager(null);
+        return claimWorldManager.getOrCreatePlayerData(playerUniqueId);
     }
 
     public GDPlayerData getOrCreatePlayerData(World world, UUID playerUniqueId) {
@@ -363,28 +373,37 @@ public abstract class BaseStorage {
         final Map<String, String> globalDefaultOptions = activeConfig.getConfig().permissionCategory.getUserOptionDefaults();
         CLAIM_OPTION_DEFAULTS.put(ClaimContexts.GLOBAL_DEFAULT_CONTEXT.getName(), globalDefaultOptions);
         this.setDefaultOptions(ClaimContexts.GLOBAL_DEFAULT_CONTEXT.getName(), contexts, new HashMap<>(globalDefaultOptions));
+        GriefDefenderPlugin.getInstance().getPermissionProvider().setTransientPermission(GriefDefenderPlugin.DEFAULT_HOLDER, "griefdefender", false, new HashSet<>());
         activeConfig.save();
     }
 
     private void setDefaultFlags(Set<Context> contexts, Map<String, Boolean> defaultFlags) {
         GriefDefenderPlugin.getInstance().executor.execute(() -> {
-            MutableContextSet contextSet = MutableContextSet.fromEntries(contexts);
             for (Map.Entry<String, Boolean> mapEntry : defaultFlags.entrySet()) {
-                final Node node = GriefDefenderPlugin.getInstance().getLuckPermsProvider().getApi().getNodeFactory().newBuilder(GDPermissions.FLAG_BASE + "." + mapEntry.getKey() + ".*").setValue(mapEntry.getValue()).withExtraContext(contextSet).build();
-                GriefDefenderPlugin.DEFAULT_HOLDER.getLuckPermsHolder().setTransientPermission(node);
+                final Flag flag = FlagRegistryModule.getInstance().getById(mapEntry.getKey()).orElse(null);
+                if (flag == null) {
+                    continue;
+                }
+                PermissionUtil.getInstance().setTransientPermission(GriefDefenderPlugin.DEFAULT_HOLDER, GDPermissions.FLAG_BASE + "." + mapEntry.getKey(), mapEntry.getValue(), contexts);
             }
-            GriefDefenderPlugin.DEFAULT_HOLDER.getLuckPermsHolder().refreshCachedData();
+            PermissionUtil.getInstance().refreshCachedData(GriefDefenderPlugin.DEFAULT_HOLDER);
         });
     }
 
     private void setDefaultOptions(String type, Set<Context> contexts, Map<String, String> defaultOptions) {
         GriefDefenderPlugin.getInstance().executor.execute(() -> {
-            MutableContextSet contextSet = MutableContextSet.fromEntries(contexts);
             for (Map.Entry<String, String> optionEntry : defaultOptions.entrySet()) {
-                final Node node = GriefDefenderPlugin.getInstance().getLuckPermsProvider().getApi().getNodeFactory().makeMetaNode("griefdefender." + optionEntry.getKey(), optionEntry.getValue()).withExtraContext(contextSet).build();
-                GriefDefenderPlugin.DEFAULT_HOLDER.getLuckPermsHolder().setTransientPermission(node);
+                final Option option = OptionRegistryModule.getInstance().getById(optionEntry.getKey()).orElse(null);
+                if (option == null) {
+                    continue;
+                }
+
+                if (!((GDOption) option).validateStringValue(optionEntry.getValue(), true)) {
+                    continue;
+                }
+                PermissionUtil.getInstance().setTransientOption(GriefDefenderPlugin.DEFAULT_HOLDER, option.getPermission(), optionEntry.getValue(), contexts);
             }
-            GriefDefenderPlugin.DEFAULT_HOLDER.getLuckPermsHolder().refreshCachedData();
+            PermissionUtil.getInstance().refreshCachedData(GriefDefenderPlugin.DEFAULT_HOLDER);
         });
     }
 

@@ -24,11 +24,7 @@
  */
 package com.griefdefender.configuration.category;
 
-import com.google.common.collect.Maps;
-import com.griefdefender.api.claim.ClaimType;
 import com.griefdefender.api.permission.flag.Flag;
-import com.griefdefender.api.permission.flag.Flags;
-import com.griefdefender.registry.ClaimTypeRegistryModule;
 import com.griefdefender.registry.FlagRegistryModule;
 import ninja.leaping.configurate.objectmapping.Setting;
 import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
@@ -38,7 +34,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 @ConfigSerializable
 public class BlacklistCategory extends ConfigCategory {

@@ -27,6 +27,7 @@ package com.griefdefender.command;
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.CommandPermission;
+import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Subcommand;
 import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.ImmutableMap;
@@ -45,8 +46,9 @@ import org.bukkit.entity.Player;
 public class CommandClaimSetSpawn extends BaseCommand {
 
     @CommandAlias("claimsetspawn")
+    @Description("Sets the spawn of claim.")
     @Subcommand("claim setspawn")
-    public void execute(Player player, String[] args) {
+    public void execute(Player player) {
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
         final GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAtPlayer(playerData, player.getLocation());
         final Component result = claim.allowEdit(player);

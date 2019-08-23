@@ -34,7 +34,6 @@ import com.griefdefender.util.RegistryHelper;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
@@ -46,23 +45,36 @@ public class TrustTypeRegistryModule implements CatalogRegistryModule<TrustType>
         return instance;
     }
 
-    private final Map<String, TrustType> trustTypeMap = new HashMap<>();
+    private final Map<String, TrustType> registryMap = new HashMap<>();
 
     @Override
     public Optional<TrustType> getById(String id) {
-        return Optional.ofNullable(this.trustTypeMap.get(checkNotNull(id)));
+        if (id == null) {
+            return Optional.empty();
+        }
+
+        if (id.contains("griefdefender.")) {
+            id = id.replace("griefdefender.", "griefdefender:");
+        }
+        if (!id.contains(":")) {
+            id = "griefdefender:" + id;
+        }
+
+        return Optional.ofNullable(this.registryMap.get(checkNotNull(id)));
     }
 
     @Override
     public Collection<TrustType> getAll() {
-        return this.trustTypeMap.values();
+        return this.registryMap.values();
     }
 
     @Override
     public void registerDefaults() {
         RegistryHelper.mapFields(TrustTypes.class, input -> {
-            final TrustType type = new GDTrustType("griefdefender:" + input, input);
-            this.trustTypeMap.put(input.toLowerCase(Locale.ENGLISH), type);
+            final String name = input.toLowerCase().replace("_", "-");
+            final String id = "griefdefender:" + name;
+            final TrustType type = new GDTrustType(id, name);
+            this.registryMap.put(id, type);
             return type;
         });
     }

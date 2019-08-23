@@ -29,17 +29,27 @@ import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Subcommand;
+
 import com.google.common.collect.ImmutableMap;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.claim.ClaimResult;
 import com.griefdefender.api.claim.ClaimTypes;
+import com.griefdefender.cache.MessageCache;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.permission.GDPermissions;
+import com.griefdefender.text.action.GDCallbackHolder;
+
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
+import net.kyori.text.adapter.bukkit.TextAdapter;
+import net.kyori.text.event.ClickEvent;
+import net.kyori.text.event.HoverEvent;
 import net.kyori.text.format.TextColor;
 
+import java.util.function.Consumer;
+
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 @CommandAlias("%griefdefender")
@@ -50,19 +60,34 @@ public class CommandClaimDeleteAllAdmin extends BaseCommand {
     @Description("Deletes all administrative claims.")
     @Subcommand("delete alladmin")
     public void execute(Player player) {
-        ClaimResult claimResult = GriefDefenderPlugin.getInstance().dataStore.deleteAllAdminClaims(player, player.getWorld());
-        if (!claimResult.successful()) {
-            final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_TYPE_NOT_FOUND,
-                    ImmutableMap.of(
-                    "type", ClaimTypes.ADMIN.getName().toLowerCase()));
-            GriefDefenderPlugin.sendMessage(player, claimResult.getMessage().orElse(message));
-            return;
-        }
+        final Component confirmationText = TextComponent.builder("")
+                .append(GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.DELETE_ALL_TYPE_WARNING, 
+                        ImmutableMap.of("type", TextComponent.of("ADMIN").color(TextColor.RED))))
+                .append(TextComponent.builder()
+                    .append("\n[")
+                    .append("Confirm", TextColor.GREEN)
+                    .append("]\n")
+                    .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createConfirmationConsumer(player))))
+                    .hoverEvent(HoverEvent.showText(MessageCache.getInstance().UI_CLICK_CONFIRM)).build())
+                .build();
+        TextAdapter.sendComponent(player, confirmationText);
+    }
 
-        GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.DELETE_ALL_TYPE_SUCCESS,
-                ImmutableMap.of("type", TextComponent.of("ADMIN").color(TextColor.RED))));
-        GriefDefenderPlugin.getInstance().getLogger().info(player.getName() + " deleted all administrative claims.");
-        GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
-        playerData.revertActiveVisual(player);
+    private static Consumer<CommandSender> createConfirmationConsumer(Player player) {
+        return confirm -> {
+            ClaimResult claimResult = GriefDefenderPlugin.getInstance().dataStore.deleteAllAdminClaims(player, player.getWorld());
+            if (!claimResult.successful()) {
+                final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_TYPE_NOT_FOUND,
+                        ImmutableMap.of(
+                        "type", ClaimTypes.ADMIN.getName().toLowerCase()));
+                GriefDefenderPlugin.sendMessage(player, claimResult.getMessage().orElse(message));
+                return;
+            }
+
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.DELETE_ALL_TYPE_SUCCESS,
+                    ImmutableMap.of("type", TextComponent.of("ADMIN").color(TextColor.RED))));
+            GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
+            playerData.revertActiveVisual(player);
+        };
     }
 }

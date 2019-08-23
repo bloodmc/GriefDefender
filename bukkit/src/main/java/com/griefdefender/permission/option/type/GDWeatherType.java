@@ -1,7 +1,7 @@
 /*
  * This file is part of GriefDefender, licensed under the MIT License (MIT).
  *
- * Copyright (c) bloodmc
+ * Copyright (c) SpongePowered <https://www.spongepowered.org>
  * Copyright (c) contributors
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -22,16 +22,31 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.griefdefender.util;
+package com.griefdefender.permission.option.type;
 
-import com.griefdefender.claim.GDClaim;
+import com.griefdefender.api.permission.option.type.WeatherType;
 
-public class ClaimClickData {
-    public final GDClaim claim;
-    public final Object value;
+public class GDWeatherType implements WeatherType {
 
-    public ClaimClickData(GDClaim claim, Object value) {
-        this.claim = claim;
-        this.value = value;
+    private final String id;
+    private final String name;
+
+    public GDWeatherType(String id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+
+    @Override
+    public String getId() {
+        return this.id;
+    }
+
+    @Override
+    public String getName() {
+        return this.name;
+    }
+
+    public String toString() {
+        return this.name;
     }
 }

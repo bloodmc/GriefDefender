@@ -26,6 +26,7 @@ package com.griefdefender.command;
 
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.CommandAlias;
+import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Subcommand;
 import com.flowpowered.math.vector.Vector3i;
@@ -41,7 +42,8 @@ import net.kyori.text.Component;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
-@CommandAlias("gd|griefdefender")
+@CommandAlias("%griefdefender")
+@CommandPermission(GDPermissions.COMMAND_CLAIM_SPAWN)
 public class CommandClaimSpawn extends BaseCommand {
 
     @CommandAlias("claimspawn")
@@ -51,7 +53,8 @@ public class CommandClaimSpawn extends BaseCommand {
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
         final GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAtPlayer(playerData, player.getLocation());
         if (!playerData.canIgnoreClaim(claim) && !claim.isUserTrusted(player, TrustTypes.ACCESSOR) && !player.hasPermission(GDPermissions.COMMAND_DELETE_CLAIMS)) {
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_ACCESS));
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_ACCESS,
+                    ImmutableMap.of("player", claim.getOwnerName())));
             return;
         }
 

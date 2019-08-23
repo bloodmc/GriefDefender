@@ -40,9 +40,7 @@ import com.griefdefender.cache.MessageCache;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.permission.GDPermissions;
 import net.kyori.text.Component;
-import net.kyori.text.TextComponent;
 import net.kyori.text.adapter.bukkit.TextAdapter;
-import net.kyori.text.format.TextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
@@ -59,11 +57,6 @@ public class CommandAdjustBonusClaimBlocks extends BaseCommand {
     @Syntax("<player> <amount>")
     @Subcommand("player adjustbonusblocks")
     public void execute(CommandSender src, OfflinePlayer user, int amount, @Optional String worldName) {
-        if (GriefDefenderPlugin.getInstance().isEconomyModeEnabled()) {
-            TextAdapter.sendComponent(src, TextComponent.of("This command is not available while server is in economy mode.", TextColor.RED));
-            return;
-        }
-
         World world = worldName == null ? null : Bukkit.getServer().getWorld(worldName);
         if (world == null) {
             if (src instanceof Player) {

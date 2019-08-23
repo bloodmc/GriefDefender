@@ -34,6 +34,7 @@ import com.griefdefender.api.claim.ClaimType;
 import com.griefdefender.api.claim.ClaimTypes;
 import com.griefdefender.api.claim.TrustTypes;
 import com.griefdefender.api.permission.Context;
+import com.griefdefender.api.permission.ContextKeys;
 import com.griefdefender.api.permission.flag.Flags;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
@@ -41,6 +42,7 @@ import com.griefdefender.configuration.ClaimDataConfig;
 import com.griefdefender.internal.util.BlockUtil;
 import com.griefdefender.permission.GDPermissionManager;
 import com.griefdefender.permission.GDPermissionUser;
+import com.griefdefender.permission.flag.FlagContexts;
 
 import net.kyori.text.TextComponent;
 import net.kyori.text.serializer.legacy.LegacyComponentSerializer;
@@ -160,7 +162,6 @@ public class WorldGuardMigrator {
                                     // instead create admin claim
                                     break;
                                 }
-                                System.out.println("FOUND PARENT " + parent.getUniqueId() + ", type = " + parent.getType() + ", name = " + parent.getName().orElse(TextComponent.of("unknown")));
                                 if (parent.isBasicClaim() || parent.isAdminClaim()) {
                                     parentClaim = parent;
                                     if (type == ClaimTypes.BASIC) {
@@ -243,65 +244,52 @@ public class WorldGuardMigrator {
                         claimDataConfig.getManagers().add(managerUser.getUniqueId());
                     }
                 }
-                final Set<Context> contexts = new HashSet<>();
-                contexts.add(newClaim.getContext());
-                final Context sourcePlayer = new Context("source", "player");
-                final Context sourceTnt = new Context("source", "tnt");
-                final Context sourceCreeper = new Context("source", "creeper");
-                final Context sourceEnderDragon = new Context("source", "enderdragon");
-                final Context sourceGhast = new Context("source", "ghast");
-                final Context sourceEnderman = new Context("source", "enderman");
-                final Context sourceSnowman = new Context("source", "snowman");
-                final Context sourceMonster = new Context("source", "monster");
-                final Context sourceWither = new Context("source", "wither");
-                final Context sourceLava = new Context("source", "flowing_lava");
-                final Context sourceWater = new Context("source", "flowing_water");
-                final Context sourceLightningBolt = new Context("source", "lightning_bolt");
-                final Context sourceFall = new Context("source", "fall");
-                final Context sourceFireworks = new Context("source", "fireworks");
+                final Set<Context> claimContextSet = new HashSet<>();
+                claimContextSet.add(newClaim.getContext());
+
                 // migrate flags
                 for (Entry<Object, ? extends ConfigurationNode> mapEntry : flagsMap.entrySet()) {
                     if (!(mapEntry.getKey() instanceof String)) {
                         continue;
                     }
                     final String flag = (String) mapEntry.getKey();
+                    final Set<Context> contexts = new HashSet<>(claimContextSet);
                     ConfigurationNode valueNode = mapEntry.getValue();
-                    System.out.println("Found flag " + flag + " with val " + valueNode.getString());
                     switch (flag) {
                         case "build":
                             if (valueNode.getString().equals("deny")) {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.BLOCK_BREAK, Tristate.FALSE, contexts);
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.BLOCK_PLACE, Tristate.FALSE, contexts);
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.INTERACT_BLOCK_PRIMARY, Tristate.FALSE, contexts);
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.INTERACT_BLOCK_SECONDARY, Tristate.FALSE, contexts);
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.INTERACT_ENTITY_PRIMARY, Tristate.FALSE, contexts);
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.INTERACT_ENTITY_SECONDARY, Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_BREAK, Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_PLACE, Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.INTERACT_BLOCK_PRIMARY, Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.INTERACT_BLOCK_SECONDARY, Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.INTERACT_ENTITY_PRIMARY, Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.INTERACT_ENTITY_SECONDARY, Tristate.FALSE, contexts);
                             } else {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.BLOCK_PLACE, Tristate.TRUE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_PLACE, Tristate.TRUE, contexts);
                             }
                             break;
                         case "interact":
                             if (valueNode.getString().equals("deny")) {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.INTERACT_BLOCK_PRIMARY, Tristate.FALSE, contexts);
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.INTERACT_BLOCK_SECONDARY, Tristate.FALSE, contexts);
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.INTERACT_ENTITY_PRIMARY, Tristate.FALSE, contexts);
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.INTERACT_ENTITY_SECONDARY, Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.INTERACT_BLOCK_PRIMARY, Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.INTERACT_BLOCK_SECONDARY, Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.INTERACT_ENTITY_PRIMARY, Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.INTERACT_ENTITY_SECONDARY, Tristate.FALSE, contexts);
                             } else {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.BLOCK_PLACE, Tristate.TRUE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_PLACE, Tristate.TRUE, contexts);
                             }
                             break;
                         case "block-break":
                             if (valueNode.getString().equals("deny")) {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.BLOCK_BREAK, Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_BREAK, Tristate.FALSE, contexts);
                             } else {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.BLOCK_BREAK, Tristate.TRUE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_BREAK, Tristate.TRUE, contexts);
                             }
                             break;
                         case "block-place":
                             if (valueNode.getString().equals("deny")) {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.BLOCK_PLACE, Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_PLACE, Tristate.FALSE, contexts);
                             } else {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.BLOCK_PLACE, Tristate.TRUE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_PLACE, Tristate.TRUE, contexts);
                             }
                             break;
                         case "use":
@@ -310,291 +298,332 @@ public class WorldGuardMigrator {
                             }
                             break;
                         case "damage-animals":
+                            contexts.add(FlagContexts.TARGET_TYPE_ANIMAL);
                             if (valueNode.getString().equals("deny")) {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.ENTITY_DAMAGE, "animal", Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.ENTITY_DAMAGE, Tristate.FALSE, contexts);
                             } else {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.ENTITY_DAMAGE, "animal", Tristate.TRUE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.ENTITY_DAMAGE, Tristate.TRUE, contexts);
                             }
                             break;
                         case "chest-access":
+                            contexts.add(FlagContexts.TARGET_CHEST);
                             if (valueNode.getString().equals("deny")) {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.INTERACT_BLOCK_SECONDARY, "chest", Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.INTERACT_BLOCK_SECONDARY, Tristate.FALSE, contexts);
                             } else {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.INTERACT_BLOCK_SECONDARY, "chest", Tristate.TRUE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.INTERACT_BLOCK_SECONDARY, Tristate.TRUE, contexts);
                             }
                             break;
                         case "ride":
                             if (valueNode.getString().equals("deny")) {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.ENTITY_RIDING, Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.ENTITY_RIDING, Tristate.FALSE, contexts);
                             } else {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.ENTITY_RIDING, Tristate.TRUE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.ENTITY_RIDING, Tristate.TRUE, contexts);
                             }
                             break;
                         case "pvp":
-                            contexts.add(sourcePlayer);
+                            contexts.add(FlagContexts.SOURCE_PLAYER);
+                            contexts.add(FlagContexts.TARGET_PLAYER);
                             if (valueNode.getString().equals("deny")) {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.ENTITY_DAMAGE, "player", Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.ENTITY_DAMAGE, Tristate.FALSE, contexts);
                             } else {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.ENTITY_DAMAGE, "player", Tristate.TRUE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.ENTITY_DAMAGE, Tristate.TRUE, contexts);
                             }
-                            contexts.remove(sourcePlayer);
                             break;
                         case "sleep":
+                            contexts.add(FlagContexts.TARGET_BED);
                             if (valueNode.getString().equals("deny")) {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.INTERACT_BLOCK_SECONDARY, "bed", Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.INTERACT_BLOCK_SECONDARY, Tristate.FALSE, contexts);
                             } else {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.INTERACT_BLOCK_SECONDARY, "bed", Tristate.TRUE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.INTERACT_BLOCK_SECONDARY, Tristate.TRUE, contexts);
                             }
                             break;
                         case "tnt":
-                            contexts.add(sourceTnt);
+                            contexts.add(FlagContexts.SOURCE_TNT);
                             if (valueNode.getString().equals("deny")) {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.EXPLOSION_BLOCK, Tristate.FALSE, contexts);
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.EXPLOSION_ENTITY, Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.EXPLOSION_BLOCK, Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.EXPLOSION_ENTITY, Tristate.FALSE, contexts);
                             } else {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.EXPLOSION_BLOCK, Tristate.TRUE, contexts);
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.EXPLOSION_ENTITY, Tristate.TRUE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.EXPLOSION_BLOCK, Tristate.TRUE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.EXPLOSION_ENTITY, Tristate.TRUE, contexts);
                             }
-                            contexts.remove(sourceTnt);
                             break;
                         case "vehicle-place":
+                            contexts.add(FlagContexts.TARGET_TYPE_VEHICLE);
                             if (valueNode.getString().equals("deny")) {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.INTERACT_BLOCK_SECONDARY, "boat", Tristate.FALSE, contexts);
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.INTERACT_BLOCK_SECONDARY, "minecart", Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.INTERACT_BLOCK_SECONDARY, Tristate.FALSE, contexts);
                             } else {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.INTERACT_BLOCK_SECONDARY, "boat", Tristate.TRUE, contexts);
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.INTERACT_BLOCK_SECONDARY, "minecart", Tristate.TRUE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.INTERACT_BLOCK_SECONDARY, Tristate.TRUE, contexts);
                             }
                             break;
                         case "lighter":
+                            contexts.add(FlagContexts.TARGET_FLINTANDSTEEL);
                             if (valueNode.getString().equals("deny")) {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.INTERACT_ITEM_SECONDARY, "flint_and_steel", Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.INTERACT_ITEM_SECONDARY, Tristate.FALSE, contexts);
                             } else {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.INTERACT_ITEM_SECONDARY, "flint_and_steel", Tristate.TRUE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.INTERACT_ITEM_SECONDARY, Tristate.TRUE, contexts);
                             }
                             break;
                         case "block-trampling":
+                            contexts.add(FlagContexts.TARGET_FARMLAND);
+                            contexts.add(FlagContexts.TARGET_TURTLE_EGG);
                             if (valueNode.getString().equals("deny")) {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.COLLIDE_BLOCK, "farmland", Tristate.FALSE, contexts);
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.COLLIDE_BLOCK, "turtle_egg", Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.COLLIDE_BLOCK, Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.COLLIDE_BLOCK, Tristate.FALSE, contexts);
                             } else {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.COLLIDE_BLOCK, "farmland", Tristate.TRUE, contexts);
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.COLLIDE_BLOCK, "turtle_egg", Tristate.TRUE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.COLLIDE_BLOCK, Tristate.TRUE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.COLLIDE_BLOCK, Tristate.TRUE, contexts);
                             }
                             break;
                         case "frosted-ice-form":
                             break;
                         case "creeper-explosion":
-                            contexts.add(sourceCreeper);
+                            contexts.add(FlagContexts.SOURCE_CREEPER);
                             if (valueNode.getString().equals("deny")) {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.EXPLOSION_BLOCK, Tristate.FALSE, contexts);
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.EXPLOSION_ENTITY, Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.EXPLOSION_BLOCK, Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.EXPLOSION_ENTITY, Tristate.FALSE, contexts);
                             } else {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.EXPLOSION_BLOCK, Tristate.TRUE, contexts);
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.EXPLOSION_ENTITY, Tristate.TRUE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.EXPLOSION_BLOCK, Tristate.TRUE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.EXPLOSION_ENTITY, Tristate.TRUE, contexts);
                             }
-                            contexts.remove(sourceCreeper);
                             break;
                         case "enderdragon-block-damage":
-                            contexts.add(sourceEnderDragon);
+                            contexts.add(FlagContexts.SOURCE_ENDERDRAGON);
                             if (valueNode.getString().equals("deny")) {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.BLOCK_BREAK, Tristate.FALSE, contexts);
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.BLOCK_MODIFY, Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_BREAK, Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_MODIFY, Tristate.FALSE, contexts);
                             } else {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.BLOCK_BREAK, Tristate.TRUE, contexts);
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.BLOCK_MODIFY, Tristate.TRUE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_BREAK, Tristate.TRUE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_MODIFY, Tristate.TRUE, contexts);
                             }
-                            contexts.remove(sourceEnderDragon);
                             break;
                         case "ghast-fireball":
-                            contexts.add(sourceGhast);
+                            contexts.add(FlagContexts.SOURCE_GHAST);
                             if (valueNode.getString().equals("deny")) {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.BLOCK_BREAK, Tristate.FALSE, contexts);
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.BLOCK_MODIFY, Tristate.FALSE, contexts);
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.ENTITY_DAMAGE, Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_BREAK, Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_MODIFY, Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.ENTITY_DAMAGE, Tristate.FALSE, contexts);
                             } else {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.BLOCK_BREAK, Tristate.TRUE, contexts);
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.BLOCK_MODIFY, Tristate.TRUE, contexts);
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.ENTITY_DAMAGE, Tristate.TRUE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_BREAK, Tristate.TRUE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_MODIFY, Tristate.TRUE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.ENTITY_DAMAGE, Tristate.TRUE, contexts);
                             }
-                            contexts.remove(sourceGhast);
                             break;
                         case "other-explosion":
                             if (valueNode.getString().equals("deny")) {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.EXPLOSION_BLOCK, Tristate.FALSE, contexts);
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.EXPLOSION_ENTITY, Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.EXPLOSION_BLOCK, Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.EXPLOSION_ENTITY, Tristate.FALSE, contexts);
                             } else {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.EXPLOSION_BLOCK, Tristate.TRUE, contexts);
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.EXPLOSION_ENTITY, Tristate.TRUE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.EXPLOSION_BLOCK, Tristate.TRUE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.EXPLOSION_ENTITY, Tristate.TRUE, contexts);
                             }
                             break;
                         case "fire-spread":
+                            contexts.add(new Context(ContextKeys.SOURCE, "fire"));
                             if (valueNode.getString().equals("deny")) {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.FIRE_SPREAD, Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_SPREAD, Tristate.FALSE, contexts);
                             } else {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.FIRE_SPREAD, Tristate.TRUE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_SPREAD, Tristate.TRUE, contexts);
                             }
                             break;
                         case "enderman-grief":
-                            contexts.add(sourceEnderman);
+                            contexts.add(FlagContexts.SOURCE_ENDERMAN);
                             if (valueNode.getString().equals("deny")) {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.BLOCK_BREAK, Tristate.FALSE, contexts);
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.BLOCK_MODIFY, Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_BREAK, Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_MODIFY, Tristate.FALSE, contexts);
                             } else {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.BLOCK_BREAK, Tristate.TRUE, contexts);
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.BLOCK_MODIFY, Tristate.TRUE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_BREAK, Tristate.TRUE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_MODIFY, Tristate.TRUE, contexts);
                             }
-                            contexts.remove(sourceEnderman);
                             break;
                         case "snowman-trail":
-                            contexts.add(sourceSnowman);
+                            contexts.add(FlagContexts.SOURCE_SNOWMAN);
                             if (valueNode.getString().equals("deny")) {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.BLOCK_MODIFY, Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_MODIFY, Tristate.FALSE, contexts);
                             } else {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.BLOCK_MODIFY, Tristate.TRUE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_MODIFY, Tristate.TRUE, contexts);
                             }
-                            contexts.remove(sourceSnowman);
                             break;
                         case "mob-damage": 
+                            contexts.add(FlagContexts.TARGET_TYPE_MONSTER);
                             if (valueNode.getString().equals("deny")) {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.ENTITY_DAMAGE, "monster", Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.ENTITY_DAMAGE, Tristate.FALSE, contexts);
                             } else {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.ENTITY_DAMAGE, "monster", Tristate.TRUE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.ENTITY_DAMAGE, Tristate.TRUE, contexts);
                             }
                             break;
                         case "mob-spawning": 
                             if (valueNode.getString().equals("deny")) {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.ENTITY_SPAWN, Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.ENTITY_SPAWN, Tristate.FALSE, contexts);
                             } else {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.ENTITY_SPAWN, Tristate.TRUE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.ENTITY_SPAWN, Tristate.TRUE, contexts);
                             }
                             break;
                         case "deny-spawn": 
-                            List<String> entityTypes = valueNode.getList(TypeToken.of(String.class));
-                            for (String entityType : entityTypes) {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.ENTITY_SPAWN, entityType, Tristate.FALSE, contexts);
-                            }
+                            PERMISSION_MANAGER.setFlagPermission(Flags.ENTITY_SPAWN, Tristate.FALSE, contexts);
                             break;
                         case "entity-painting-destroy": 
+                            contexts.add(FlagContexts.TARGET_PAINTING);
                             if (valueNode.getString().equals("deny")) {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.ENTITY_DAMAGE, "painting", Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.ENTITY_DAMAGE, Tristate.FALSE, contexts);
                             } else {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.ENTITY_DAMAGE, "painting", Tristate.TRUE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.ENTITY_DAMAGE, Tristate.TRUE, contexts);
                             }
                             break;
                         case "entity-item-frame-destroy": 
+                            contexts.add(FlagContexts.TARGET_ITEM_FRAME);
                             if (valueNode.getString().equals("deny")) {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.ENTITY_DAMAGE, "item_frame", Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.ENTITY_DAMAGE, Tristate.FALSE, contexts);
                             } else {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.ENTITY_DAMAGE, "item_frame", Tristate.TRUE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.ENTITY_DAMAGE, Tristate.TRUE, contexts);
                             }
                             break;
                         case "wither-damage":
-                            contexts.add(sourceWither);
+                            contexts.add(FlagContexts.SOURCE_WITHER);
                             if (valueNode.getString().equals("deny")) {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.BLOCK_BREAK, Tristate.FALSE, contexts);
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.BLOCK_MODIFY, Tristate.FALSE, contexts);
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.ENTITY_DAMAGE, Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_BREAK, Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_MODIFY, Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.ENTITY_DAMAGE, Tristate.FALSE, contexts);
                             } else {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.BLOCK_BREAK, Tristate.TRUE, contexts);
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.BLOCK_MODIFY, Tristate.TRUE, contexts);
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.ENTITY_DAMAGE, Tristate.TRUE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_BREAK, Tristate.TRUE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_MODIFY, Tristate.TRUE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.ENTITY_DAMAGE, Tristate.TRUE, contexts);
                             }
-                            contexts.remove(sourceWither);
                             break;
                         case "lava-fire": 
-                            contexts.add(sourceLava);
+                            contexts.add(FlagContexts.SOURCE_LAVA);
                             if (valueNode.getString().equals("deny")) {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.FIRE_SPREAD, Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_SPREAD, Tristate.FALSE, contexts);
                             } else {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.FIRE_SPREAD, Tristate.TRUE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_SPREAD, Tristate.TRUE, contexts);
                             }
-                            contexts.remove(sourceLava);
                             break;
                         case "lightning": 
-                            contexts.add(sourceLightningBolt);
+                            contexts.add(FlagContexts.SOURCE_LIGHTNING_BOLT);
                             if (valueNode.getString().equals("deny")) {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.ENTITY_DAMAGE, Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.ENTITY_DAMAGE, Tristate.FALSE, contexts);
                             } else {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.ENTITY_DAMAGE, Tristate.TRUE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.ENTITY_DAMAGE, Tristate.TRUE, contexts);
                             }
-                            contexts.remove(sourceLightningBolt);
                             break;
                         case "water-flow": 
-                            contexts.add(sourceWater);
+                            contexts.add(FlagContexts.SOURCE_WATER);
                             if (valueNode.getString().equals("deny")) {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.LIQUID_FLOW, Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.LIQUID_FLOW, Tristate.FALSE, contexts);
                             } else {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.LIQUID_FLOW, Tristate.TRUE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.LIQUID_FLOW, Tristate.TRUE, contexts);
                             }
-                            contexts.remove(sourceWater);
                             break;
                         case "lava-flow": 
-                            contexts.add(sourceLava);
+                            contexts.add(FlagContexts.SOURCE_LAVA);
                             if (valueNode.getString().equals("deny")) {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.LIQUID_FLOW, Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.LIQUID_FLOW, Tristate.FALSE, contexts);
                             } else {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.LIQUID_FLOW, Tristate.TRUE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.LIQUID_FLOW, Tristate.TRUE, contexts);
                             }
-                            contexts.remove(sourceLava);
                             break;
                         case "snow-fall": 
+                            contexts.add(FlagContexts.TARGET_SNOW_LAYER);
+                            if (valueNode.getString().equals("deny")) {
+                                PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_PLACE, Tristate.FALSE, contexts);
+                            } else {
+                                PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_PLACE, Tristate.TRUE, contexts);
+                            }
+                            break;
                         case "snow-melt": 
+                            contexts.add(FlagContexts.TARGET_SNOW_LAYER);
+                            if (valueNode.getString().equals("deny")) {
+                                PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_BREAK, Tristate.FALSE, contexts);
+                            } else {
+                                PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_BREAK, Tristate.TRUE, contexts);
+                            }
+                            break;
                         case "ice-form": 
+                            contexts.add(FlagContexts.TARGET_ICE_FORM);
+                            if (valueNode.getString().equals("deny")) {
+                                PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_MODIFY, Tristate.FALSE, contexts);
+                            } else {
+                                PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_MODIFY, Tristate.TRUE, contexts);
+                            }
+                            break;
                         case "ice-melt": 
+                            contexts.add(FlagContexts.TARGET_ICE_MELT);
+                            if (valueNode.getString().equals("deny")) {
+                                PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_MODIFY, Tristate.FALSE, contexts);
+                            } else {
+                                PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_MODIFY, Tristate.TRUE, contexts);
+                            }
+                            break;
                         case "frosted-ice-melt":
                             break;
                         case "mushroom-growth":
+                            contexts.add(FlagContexts.TARGET_TYPE_MUSHROOM);
                             if (valueNode.getString().equals("deny")) {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.BLOCK_GROW, "mushroom", Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_GROW, Tristate.FALSE, contexts);
                             } else {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.BLOCK_GROW, "mushroom", Tristate.TRUE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_GROW, Tristate.TRUE, contexts);
                             }
                             break;
                         case "leaf-decay":
                             if (valueNode.getString().equals("deny")) {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.LEAF_DECAY, Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.LEAF_DECAY, Tristate.FALSE, contexts);
                             } else {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.LEAF_DECAY, Tristate.TRUE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.LEAF_DECAY, Tristate.TRUE, contexts);
                             }
                             break;
                         case "grass-growth":
+                            contexts.add(FlagContexts.TARGET_GRASS);
                             if (valueNode.getString().equals("deny")) {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.BLOCK_GROW, "grass", Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_GROW, Tristate.FALSE, contexts);
                             } else {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.BLOCK_GROW, "grass", Tristate.TRUE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_GROW, Tristate.TRUE, contexts);
                             }
                             break;
                         case "mycelium-spread":
+                            contexts.add(FlagContexts.TARGET_MYCELIUM);
+                            if (valueNode.getString().equals("deny")) {
+                                PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_SPREAD, Tristate.FALSE, contexts);
+                            } else {
+                                PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_SPREAD, Tristate.TRUE, contexts);
+                            }
                             break;
                         case "vine-growth":
+                            contexts.add(FlagContexts.TARGET_VINE);
                             if (valueNode.getString().equals("deny")) {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.BLOCK_GROW, "vine", Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_GROW, Tristate.FALSE, contexts);
                             } else {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.BLOCK_GROW, "vine", Tristate.TRUE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_GROW, Tristate.TRUE, contexts);
                             }
                             break;
                         case "crop-growth":
+                            contexts.add(FlagContexts.TARGET_TYPE_CROP);
                             if (valueNode.getString().equals("deny")) {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.BLOCK_GROW, Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_GROW, Tristate.FALSE, contexts);
                             } else {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.BLOCK_GROW, Tristate.TRUE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_GROW, Tristate.TRUE, contexts);
                             }
                             break;
                         case "soil-dry":
+                            contexts.add(FlagContexts.STATE_FARMLAND_DRY);
+                            if (valueNode.getString().equals("deny")) {
+                                PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_MODIFY, Tristate.FALSE, contexts);
+                            } else {
+                                PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_MODIFY, Tristate.TRUE, contexts);
+                            }
                             break;
                         case "entry":
+                            contexts.add(FlagContexts.TARGET_PLAYER);
                             if (valueNode.getString().equals("deny")) {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.ENTER_CLAIM, "player", Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.ENTER_CLAIM, Tristate.FALSE, contexts);
                             } else {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.ENTER_CLAIM, "player", Tristate.TRUE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.ENTER_CLAIM, Tristate.TRUE, contexts);
                             }
                             break;
                         case "exit":
+                            contexts.add(FlagContexts.TARGET_PLAYER);
                             if (valueNode.getString().equals("deny")) {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.EXIT_CLAIM, "player", Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.EXIT_CLAIM, Tristate.FALSE, contexts);
                             } else {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.EXIT_CLAIM, "player", Tristate.TRUE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.EXIT_CLAIM, Tristate.TRUE, contexts);
                             }
                             break;
                         // These can be handled via GD API
@@ -616,17 +645,19 @@ public class WorldGuardMigrator {
                                 claimDataConfig.setFarewell(LegacyComponentSerializer.legacy().deserialize(farewell, '&'));
                             }
                         case "enderpearl":
+                            contexts.add(FlagContexts.TARGET_ENDERPEARL);
                             if (valueNode.getString().equals("deny")) {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.INTERACT_ITEM_SECONDARY, "enderpearl", Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.INTERACT_ITEM_SECONDARY, Tristate.FALSE, contexts);
                             } else {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.INTERACT_ITEM_SECONDARY, "enderpearl", Tristate.TRUE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.INTERACT_ITEM_SECONDARY, Tristate.TRUE, contexts);
                             }
                             break;
                         case "chorus-fruit-teleport":
+                            contexts.add(FlagContexts.TARGET_CHORUS_FRUIT);
                             if (valueNode.getString().equals("deny")) {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.INTERACT_ITEM_SECONDARY, "chorus_fruit", Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.INTERACT_ITEM_SECONDARY, Tristate.FALSE, contexts);
                             } else {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.INTERACT_ITEM_SECONDARY, "chorus_fruit", Tristate.TRUE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.INTERACT_ITEM_SECONDARY, Tristate.TRUE, contexts);
                             }
                             break;
                         case "teleport":
@@ -636,49 +667,49 @@ public class WorldGuardMigrator {
                             break;
                         case "item-pickup":
                             if (valueNode.getString().equals("deny")) {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.ITEM_PICKUP, Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.ITEM_PICKUP, Tristate.FALSE, contexts);
                             } else {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.ITEM_PICKUP, Tristate.TRUE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.ITEM_PICKUP, Tristate.TRUE, contexts);
                             }
                             break;
                         case "item-drop":
                             if (valueNode.getString().equals("deny")) {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.ITEM_DROP, Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.ITEM_DROP, Tristate.FALSE, contexts);
                             } else {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.ITEM_DROP, Tristate.TRUE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.ITEM_DROP, Tristate.TRUE, contexts);
                             }
                             break;
                         case "exp-drop":
+                            contexts.add(FlagContexts.TARGET_XP_ORB);
                             if (valueNode.getString().equals("deny")) {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.ITEM_DROP, "xp_orb", Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.ITEM_DROP, Tristate.FALSE, contexts);
                             } else {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.ITEM_DROP, "xp_orb", Tristate.TRUE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.ITEM_DROP, Tristate.TRUE, contexts);
                             }
                             break;
                         case "deny-message":
                             break;
                         case "invincible":
+                            contexts.add(FlagContexts.TARGET_PLAYER);
                             if (valueNode.getString().equals("allow")) {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.ENTITY_DAMAGE, "player", Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.ENTITY_DAMAGE, Tristate.FALSE, contexts);
                             }
                             break;
                         case "fall-damage":
-                            contexts.add(sourceFall);
+                            contexts.add(FlagContexts.SOURCE_FALL);
                             if (valueNode.getString().equals("deny")) {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.ENTITY_DAMAGE, Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.ENTITY_DAMAGE, Tristate.FALSE, contexts);
                             } else {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.ENTITY_DAMAGE, Tristate.TRUE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.ENTITY_DAMAGE, Tristate.TRUE, contexts);
                             }
-                            contexts.remove(sourceFall);
                             break;
                         case "firework-damage":
-                            contexts.add(sourceFireworks);
+                            contexts.add(FlagContexts.SOURCE_FIREWORKS);
                             if (valueNode.getString().equals("deny")) {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.ENTITY_DAMAGE, Tristate.FALSE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.ENTITY_DAMAGE, Tristate.FALSE, contexts);
                             } else {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.ENTITY_DAMAGE, Tristate.TRUE, contexts);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.ENTITY_DAMAGE, Tristate.TRUE, contexts);
                             }
-                            contexts.remove(sourceFireworks);
                             break;
                         case "game-mode":
                         case "time-lock":
@@ -695,13 +726,19 @@ public class WorldGuardMigrator {
                         case "blocked-cmds":
                             List<String> blocked = valueNode.getList(TypeToken.of(String.class));
                             for (String cmd : blocked) {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.COMMAND_EXECUTE, cmd, Tristate.FALSE, contexts);
+                                final Context context = new Context(ContextKeys.TARGET, cmd);
+                                contexts.add(context);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.COMMAND_EXECUTE, Tristate.FALSE, contexts);
+                                contexts.remove(context);
                             }
                             break;
                         case "allowed-cmds":
                             List<String> allowed = valueNode.getList(TypeToken.of(String.class));
                             for (String cmd : allowed) {
-                                PERMISSION_MANAGER.setPermission(newClaim, Flags.COMMAND_EXECUTE, cmd, Tristate.TRUE, contexts);
+                                final Context context = new Context(ContextKeys.TARGET, cmd);
+                                contexts.add(context);
+                                PERMISSION_MANAGER.setFlagPermission(Flags.COMMAND_EXECUTE, Tristate.TRUE, contexts);
+                                contexts.remove(context);
                             }
                     }
                 }

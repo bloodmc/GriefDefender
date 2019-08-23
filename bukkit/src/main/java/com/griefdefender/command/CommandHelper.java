@@ -24,71 +24,6 @@
  */
 package com.griefdefender.command;
 
-import com.flowpowered.math.vector.Vector3i;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.gson.Gson;
-import com.griefdefender.GDPlayerData;
-import com.griefdefender.GriefDefenderPlugin;
-import com.griefdefender.api.Tristate;
-import com.griefdefender.api.claim.Claim;
-import com.griefdefender.api.claim.ClaimContexts;
-import com.griefdefender.api.claim.ClaimResult;
-import com.griefdefender.api.claim.TrustType;
-import com.griefdefender.api.claim.TrustTypes;
-import com.griefdefender.api.economy.BankTransactionType;
-import com.griefdefender.api.permission.Context;
-import com.griefdefender.api.permission.PermissionResult;
-import com.griefdefender.api.permission.ResultTypes;
-import com.griefdefender.api.permission.flag.Flag;
-import com.griefdefender.api.permission.flag.Flags;
-import com.griefdefender.api.permission.option.Options;
-import com.griefdefender.cache.MessageCache;
-import com.griefdefender.cache.PermissionHolderCache;
-import com.griefdefender.claim.GDClaim;
-import com.griefdefender.command.ClaimFlagBase.FlagType;
-import com.griefdefender.configuration.GriefDefenderConfig;
-import com.griefdefender.configuration.MessageDataConfig;
-import com.griefdefender.configuration.MessageStorage;
-import com.griefdefender.economy.GDBankTransaction;
-import com.griefdefender.internal.pagination.PaginationList;
-import com.griefdefender.internal.registry.BlockTypeRegistryModule;
-import com.griefdefender.internal.registry.EntityTypeRegistryModule;
-import com.griefdefender.internal.registry.ItemTypeRegistryModule;
-import com.griefdefender.internal.util.NMSUtil;
-import com.griefdefender.internal.util.VecHelper;
-import com.griefdefender.internal.visual.ClaimVisual;
-import com.griefdefender.permission.GDFlag;
-import com.griefdefender.permission.GDPermissionHolder;
-import com.griefdefender.permission.GDPermissionManager;
-import com.griefdefender.permission.GDPermissionResult;
-import com.griefdefender.permission.GDPermissionUser;
-import com.griefdefender.permission.GDPermissions;
-import com.griefdefender.registry.FlagRegistryModule;
-import com.griefdefender.text.action.GDCallbackHolder;
-import com.griefdefender.util.PermissionUtil;
-import com.griefdefender.util.TaskUtil;
-
-import net.kyori.text.Component;
-import net.kyori.text.TextComponent;
-import net.kyori.text.adapter.bukkit.TextAdapter;
-import net.kyori.text.event.ClickEvent;
-import net.kyori.text.event.HoverEvent;
-import net.kyori.text.format.TextColor;
-import net.kyori.text.format.TextDecoration;
-import net.kyori.text.serializer.legacy.LegacyComponentSerializer;
-import net.kyori.text.serializer.plain.PlainComponentSerializer;
-import net.milkbowl.vault.economy.Economy;
-import net.milkbowl.vault.economy.EconomyResponse;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.OfflinePlayer;
-import org.bukkit.World.Environment;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
-import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
-
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZonedDateTime;
@@ -106,9 +41,78 @@ import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class CommandHelper {
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.OfflinePlayer;
+import org.bukkit.World.Environment;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
+import org.bukkit.plugin.Plugin;
 
-    private final static MessageDataConfig MESSAGE_DATA = GriefDefenderPlugin.getInstance().messageData;
+import com.flowpowered.math.vector.Vector3i;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.reflect.TypeToken;
+import com.google.gson.Gson;
+import com.griefdefender.GDPlayerData;
+import com.griefdefender.GriefDefenderPlugin;
+import com.griefdefender.api.GriefDefender;
+import com.griefdefender.api.Subject;
+import com.griefdefender.api.Tristate;
+import com.griefdefender.api.claim.Claim;
+import com.griefdefender.api.claim.ClaimContexts;
+import com.griefdefender.api.claim.ClaimResult;
+import com.griefdefender.api.claim.TrustType;
+import com.griefdefender.api.claim.TrustTypes;
+import com.griefdefender.api.economy.BankTransactionType;
+import com.griefdefender.api.permission.Context;
+import com.griefdefender.api.permission.PermissionResult;
+import com.griefdefender.api.permission.ResultTypes;
+import com.griefdefender.api.permission.flag.Flag;
+import com.griefdefender.api.permission.flag.Flags;
+import com.griefdefender.api.permission.option.Option;
+import com.griefdefender.api.permission.option.Options;
+import com.griefdefender.api.permission.option.type.CreateModeTypes;
+import com.griefdefender.cache.MessageCache;
+import com.griefdefender.cache.PermissionHolderCache;
+import com.griefdefender.claim.GDClaim;
+import com.griefdefender.configuration.GriefDefenderConfig;
+import com.griefdefender.configuration.MessageStorage;
+import com.griefdefender.economy.GDBankTransaction;
+import com.griefdefender.event.GDCauseStackManager;
+import com.griefdefender.internal.pagination.PaginationList;
+import com.griefdefender.internal.registry.BlockTypeRegistryModule;
+import com.griefdefender.internal.registry.EntityTypeRegistryModule;
+import com.griefdefender.internal.registry.ItemTypeRegistryModule;
+import com.griefdefender.internal.util.NMSUtil;
+import com.griefdefender.internal.util.VecHelper;
+import com.griefdefender.internal.visual.ClaimVisual;
+import com.griefdefender.permission.GDPermissionHolder;
+import com.griefdefender.permission.GDPermissionManager;
+import com.griefdefender.permission.GDPermissionResult;
+import com.griefdefender.permission.GDPermissionUser;
+import com.griefdefender.permission.GDPermissions;
+import com.griefdefender.permission.flag.GDFlag;
+import com.griefdefender.permission.ui.MenuType;
+import com.griefdefender.permission.ui.UIHelper;
+import com.griefdefender.text.action.GDCallbackHolder;
+import com.griefdefender.util.PermissionUtil;
+import com.griefdefender.util.TaskUtil;
+
+import net.kyori.text.Component;
+import net.kyori.text.TextComponent;
+import net.kyori.text.adapter.bukkit.TextAdapter;
+import net.kyori.text.event.ClickEvent;
+import net.kyori.text.event.HoverEvent;
+import net.kyori.text.format.TextColor;
+import net.kyori.text.format.TextDecoration;
+import net.kyori.text.serializer.legacy.LegacyComponentSerializer;
+import net.kyori.text.serializer.plain.PlainComponentSerializer;
+import net.milkbowl.vault.economy.Economy;
+import net.milkbowl.vault.economy.EconomyResponse;
+
+public class CommandHelper {
 
     public static Comparator<Component> PLAIN_COMPARATOR = (text1, text2) -> PlainComponentSerializer.INSTANCE.serialize(text1).compareTo(PlainComponentSerializer.INSTANCE.serialize(text2));
 
@@ -143,8 +147,12 @@ public class CommandHelper {
 
             return false;
         }
-        if (flag.getName().equals("interact-inventory") || flag.getName().equals("liquid-flow") ||
-                flag.getName().equals("interact-block-primary") || flag.getName().equals("interact-block-secondary")) {
+        if (flag.getName().equals("interact-inventory")) {
+            // Always return true due to custom inventories
+            return true;
+        }
+        if (flag.getName().equals("liquid-flow") || flag.getName().equals("interact-block-primary") 
+                || flag.getName().equals("interact-block-secondary")) {
             return validateBlockTarget(target);
         }
         if (flag.getName().equals("entity-chunk-spawn") || flag.getName().equals("entity-spawn") ||
@@ -172,10 +180,9 @@ public class CommandHelper {
             return true;
         }
         // target could be an item block, so validate blockstate
-        /*Optional<BlockState> blockState = Sponge.getRegistry().getType(BlockState.class, target);
-        if (blockState.isPresent()) {
-            return true;
-        }*/
+        //if (BlockTypeRegistryModule.getInstance().getById(target).isPresent()) {
+        //    return true;
+        //}
 
         return false;
     }
@@ -192,7 +199,7 @@ public class CommandHelper {
         return false;
     }
 
-    public static PermissionResult addFlagPermission(CommandSender src, GDPermissionHolder holder, String subjectName, Claim claim, Flag claimFlag, String target, Tristate value, Set<Context> contexts) {
+    public static PermissionResult addFlagPermission(CommandSender src, GDPermissionHolder subject, Claim claim, Flag claimFlag, String target, Tristate value, Set<Context> contexts) {
         if (src instanceof Player) {
             Component denyReason = ((GDClaim) claim).allowEdit((Player) src);
             if (denyReason != null) {
@@ -204,23 +211,23 @@ public class CommandHelper {
         final String baseFlag = claimFlag.toString().toLowerCase();
         String flagPermission = GDPermissions.FLAG_BASE + "." + baseFlag;
         // special handling for commands
+        target = adjustTargetForTypes(target, claimFlag);
         if (baseFlag.equals(Flags.COMMAND_EXECUTE.getName()) || baseFlag.equals(Flags.COMMAND_EXECUTE_PVP.getName())) {
             target = handleCommandFlag(src, target);
             if (target == null) {
                 // failed
                 return new GDPermissionResult(ResultTypes.TARGET_NOT_VALID);
             }
-            flagPermission = GDPermissions.FLAG_BASE + "." + baseFlag + "." + target;
         } else {
             if (!target.equalsIgnoreCase("any")) {
-                if (!target.contains(":")) {
+                if (!target.startsWith("#") && !target.contains(":")) {
                     // assume vanilla
                     target = "minecraft:" + target;
                 }
     
                 String[] parts = target.split(":");
-                if (parts[1].equalsIgnoreCase("any")) {
-                    target = baseFlag + "." + parts[0] + ".*";
+                if (parts.length > 1 && parts[1].equalsIgnoreCase("any")) {
+                    target = baseFlag + "." + parts[0];
                 } else {
                     // check for meta
                     parts = target.split("\\.");
@@ -236,8 +243,8 @@ public class CommandHelper {
                             return new GDPermissionResult(ResultTypes.TARGET_NOT_VALID);
                         }
                     }
-                    String entitySpawnFlag = NMSUtil.getInstance().getEntitySpawnFlag(claimFlag, targetFlag);
-                    if (entitySpawnFlag == null && !CommandHelper.validateFlagTarget(claimFlag, targetFlag)) {
+                    addFlagContexts(contexts, claimFlag, targetFlag);
+                    if (!targetFlag.startsWith("#") && !CommandHelper.validateFlagTarget(claimFlag, targetFlag)) {
                         //TODO
                         /*final Text message = GriefDefenderPlugin.getInstance().messageData.permissionClaimManage
                                 .apply(ImmutableMap.of(
@@ -246,41 +253,24 @@ public class CommandHelper {
                         GriefDefenderPlugin.sendMessage(src,TextComponent.of("Invalid flag " + targetFlag, TextColor.RED));
                         return new GDPermissionResult(ResultTypes.TARGET_NOT_VALID);
                     }
-        
-                    if (entitySpawnFlag != null) {
-                        target = entitySpawnFlag;
-                    } else {
-                        target = baseFlag + "." + target.replace(":", ".");//.replace("[", ".[");
-                    }
                 }
-
-                flagPermission = GDPermissions.FLAG_BASE + "." + target;
             } else {
-                // Bukkit requires * for any
                 target = "";
-                flagPermission += ".*";
             }
         }
 
-        return applyFlagPermission(src, holder, subjectName, claim, flagPermission, target, value, contexts, null, false);
+        return applyFlagPermission(src, subject, claim, flagPermission, target, value, contexts, null, false);
     }
 
-    public static PermissionResult applyFlagPermission(CommandSender src, GDPermissionHolder holder, String subjectName, Claim claim, String flagPermission, String target, Tristate value, Set<Context> contexts, FlagType flagType) {
-        return applyFlagPermission(src, holder, subjectName, claim, flagPermission, target, value, contexts, flagType, false);
+    public static PermissionResult applyFlagPermission(CommandSender src, GDPermissionHolder subject, Claim claim, String flagPermission, String target, Tristate value, Set<Context> contexts, MenuType flagType) {
+        return applyFlagPermission(src, subject, claim, flagPermission, target, value, contexts, flagType, false);
     }
 
-    public static PermissionResult applyFlagPermission(CommandSender src, GDPermissionHolder holder, String subjectName, Claim claim, String flagPermission, String target, Tristate value, Set<Context> contexts, FlagType flagType, boolean clicked) {
+    public static PermissionResult applyFlagPermission(CommandSender src, GDPermissionHolder subject, Claim claim, String flagPermission, String target, Tristate value, Set<Context> contexts, MenuType flagType, boolean clicked) {
         // Check if player can manage flag
         if (src instanceof Player) {
-            final String basePermission = flagPermission.replace(GDPermissions.FLAG_BASE + ".", "").replace(".*", "");
-            Player player = (Player) src;
-            GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
-            Tristate result = Tristate.UNDEFINED;
-            if (playerData.canManageAdminClaims) {
-                result = Tristate.fromBoolean(src.hasPermission(GDPermissions.ADMIN_CLAIM_FLAGS + "." + basePermission));
-            } else {
-                result = Tristate.fromBoolean(src.hasPermission(GDPermissions.USER_CLAIM_FLAGS + "." + basePermission));
-            }
+            final String basePermission = flagPermission.replace(GDPermissions.FLAG_BASE + ".", "");
+            Tristate result = Tristate.fromBoolean(src.hasPermission(GDPermissions.USER_CLAIM_FLAGS + "." + basePermission));
 
             if (result != Tristate.TRUE) {
                 GriefDefenderPlugin.sendMessage(src, MessageCache.getInstance().PERMISSION_FLAG_USE);
@@ -309,32 +299,27 @@ public class CommandHelper {
                 hasOverrideContext = true;
             }
         }
+        // Add target context
+        if (target != null && !target.isEmpty() && !target.equalsIgnoreCase("any")) {
+            contexts.add(new Context("target", target));
+        }
 
         if (flagType == null) {
             if (hasDefaultContext) {
-                flagType = FlagType.DEFAULT;
+                flagType = MenuType.DEFAULT;
             } else if (hasOverrideContext) {
-                flagType = FlagType.OVERRIDE;
+                flagType = MenuType.OVERRIDE;
             } else {
-                flagType = FlagType.CLAIM;
+                flagType = MenuType.CLAIM;
             }
         }
-        if (hasOverrideContext && contexts.contains(ClaimContexts.WILDERNESS_OVERRIDE_CONTEXT)) {
-            if (reason != null) {
-                if (reason != TextComponent.empty()) {
-                    GriefDefenderPlugin.getGlobalConfig().getConfig().bans.addBanReason(flagPermission, reason);
-                } else {
-                    GriefDefenderPlugin.getGlobalConfig().getConfig().bans.removeBanReason(flagPermission);
-                }
-                GriefDefenderPlugin.getGlobalConfig().save();
-            }
-        }
+
         TextComponent.Builder builder = null;
-        if (flagType == FlagType.OVERRIDE) {
+        if (flagType == MenuType.OVERRIDE) {
             builder = TextComponent.builder("OVERRIDE").color(TextColor.RED);
-        } else if (flagType == FlagType.DEFAULT) {
+        } else if (flagType == MenuType.DEFAULT) {
             builder = TextComponent.builder("DEFAULT").color(TextColor.LIGHT_PURPLE);
-        } else if (flagType == FlagType.CLAIM) {
+        } else if (flagType == MenuType.CLAIM) {
             builder = TextComponent.builder("CLAIM").color(TextColor.GOLD);
             if (contexts instanceof HashSet) {
                 contexts.add(claim.getContext());
@@ -353,37 +338,37 @@ public class CommandHelper {
             }
         }
 
-        if (holder == GriefDefenderPlugin.DEFAULT_HOLDER) {
-            PermissionUtil.getInstance().setPermissionValue((GDClaim) claim, GriefDefenderPlugin.DEFAULT_HOLDER, flagPermission, value, contexts);
+        if (subject == GriefDefenderPlugin.DEFAULT_HOLDER) {
+            PermissionUtil.getInstance().setPermissionValue(GriefDefenderPlugin.DEFAULT_HOLDER, flagPermission, value, contexts);
             if (!clicked && src instanceof Player) {
                 TextAdapter.sendComponent(src, TextComponent.builder("")
                     .append(TextComponent.builder("\n[").append(MessageCache.getInstance().FLAG_UI_RETURN_FLAGS.color(TextColor.AQUA)).append("]\n")
                     .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createCommandConsumer(src, "claimflag", "")))).build())
-                        .append(MESSAGE_DATA.getMessage(MessageStorage.FLAG_SET_PERMISSION_TARGET,
+                        .append(MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.FLAG_SET_PERMISSION_TARGET,
                                 ImmutableMap.of(
                                     "type", flagTypeText,
                                     "permission", flagPermission.replace(GDPermissions.FLAG_BASE + ".", ""),
                                     "contexts", getFriendlyContextString(claim, contexts),
-                                    "value", getClickableText(src, (GDClaim) claim, GriefDefenderPlugin.DEFAULT_HOLDER, subjectName, contexts, flagPermission, value, flagType).color(TextColor.LIGHT_PURPLE),
+                                    "value", getClickableText(src, (GDClaim) claim, subject, contexts, flagPermission, value, flagType).color(TextColor.LIGHT_PURPLE),
                                     "target", "ALL")))
                         .build());
             }
         } else {
-            PermissionUtil.getInstance().setPermissionValue((GDClaim) claim, holder, flagPermission, value, contexts);
+            PermissionUtil.getInstance().setPermissionValue(subject, flagPermission, value, contexts);
             if (!clicked && src instanceof Player) {
                 TextAdapter.sendComponent(src, TextComponent.builder("")
                         .append(TextComponent.builder("")
                                 .append("\n[")
                                 .append(MessageCache.getInstance().FLAG_UI_RETURN_FLAGS.color(TextColor.AQUA))
                                 .append("]\n", TextColor.WHITE)
-                                .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createCommandConsumer(src, holder instanceof GDPermissionUser ? "claimflagplayer" : "claimflaggroup", subjectName)))).build())
-                        .append(MESSAGE_DATA.getMessage(MessageStorage.FLAG_SET_PERMISSION_TARGET,
+                                .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createCommandConsumer(src, subject instanceof GDPermissionUser ? "claimflagplayer" : "claimflaggroup", subject.getFriendlyName())))).build())
+                        .append(MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.FLAG_SET_PERMISSION_TARGET,
                                 ImmutableMap.of(
                                         "type", flagTypeText,
                                         "permission", flagPermission.replace(GDPermissions.FLAG_BASE + ".", ""),
                                         "contexts", getFriendlyContextString(claim, contexts),
-                                        "value", getClickableText(src, (GDClaim) claim, holder, subjectName, contexts, flagPermission, value, flagType).color(TextColor.LIGHT_PURPLE),
-                                        "target", subjectName)))
+                                        "value", getClickableText(src, (GDClaim) claim, subject, contexts, flagPermission, value, flagType).color(TextColor.LIGHT_PURPLE),
+                                        "target", subject.getFriendlyName())))
                         .build());
             }
         }
@@ -391,32 +376,101 @@ public class CommandHelper {
         return new GDPermissionResult(ResultTypes.SUCCESS);
     }
 
-    private static String getFriendlyContextString(Claim claim, Set<Context> contexts) {
-        contexts.remove(claim.getContext());
-        String contextString = "";
+    public static String adjustTargetForTypes(String target, Flag flag) {
+        if (target.equals("player") || target.equals("minecraft:player") || target.equalsIgnoreCase("any")) {
+            return target;
+        }
+
+        if (flag.getName().contains("entity") || flag == Flags.ITEM_SPAWN) {
+            final String contextKey = "target";
+            String[] parts = target.split(":");
+            String targetId = "";
+            if (parts.length == 1) {
+                targetId = parts[0];
+            } else {
+                targetId = parts[1];
+            }
+
+            if (targetId.equalsIgnoreCase("animal")) {
+                return "#animal";
+            } else if (targetId.equalsIgnoreCase("aquatic")) {
+                return "#aquatic";
+            } else if (targetId.equalsIgnoreCase("monster")) {
+                return "#monster";
+            } else if (targetId.equalsIgnoreCase("ambient")) {
+                return "#ambient";
+            }
+            return target;
+        } else {
+            if ((target.equals("food") || target.endsWith(":food")) && !target.startsWith("#")) {
+                target = "#" + target;
+            }
+        }
+        return target;
+    }
+
+    public static void addFlagContexts(Set<Context> contexts, Flag flag, String target) {
+        if (target.equals("player") || target.equals("minecraft:player") || target.equalsIgnoreCase("any")) {
+            return;
+        }
+
+        if (flag.getName().contains("entity") || flag == Flags.ITEM_SPAWN) {
+            final String contextKey = "target";
+            String[] parts = target.split(":");
+            if (parts.length == 1) {
+                contexts.add(new Context(contextKey, target));
+                return;
+            }
+
+            if (parts[1].equalsIgnoreCase("animal")) {
+                contexts.add(new Context(contextKey, "#animal"));
+            } else if (parts[1].equalsIgnoreCase("aquatic")) {
+                contexts.add(new Context(contextKey, "#aquatic"));
+            } else if (parts[1].equalsIgnoreCase("monster")) {
+                contexts.add(new Context(contextKey, "#monster"));
+            } else if (parts[1].equalsIgnoreCase("ambient")) {
+                contexts.add(new Context(contextKey, "#ambient"));
+            } else {
+                contexts.add(new Context(contextKey, target));
+            }
+        }
+    }
+
+    public static Component getFriendlyContextString(Claim claim, Set<Context> contexts) {
+        if (contexts.isEmpty()) {
+            return TextComponent.of("[]", TextColor.WHITE);
+        }
+
+        TextComponent.Builder builder = TextComponent.builder();
         final Iterator<Context> iterator = contexts.iterator();
         while (iterator.hasNext()) {
             final Context context = iterator.next();
-            contextString += "[" + context.getKey() + ":" + context.getValue();
-            if (!iterator.hasNext()) {
-                contextString += "]";
+            builder.append("\n[", TextColor.WHITE)
+                .append(context.getKey(), TextColor.GREEN)
+                .append("=", TextColor.GRAY)
+                .append(context.getValue(), TextColor.WHITE);
+
+            if (iterator.hasNext()) {
+                builder.append("], ");
+            } else {
+                builder.append("]");
             }
         }
-        return contextString;
+        return builder.build();
     }
 
-    public static TextColor getFlagTypeColor(FlagType type) {
+    public static TextColor getPermissionMenuTypeColor(MenuType type) {
         TextColor color = TextColor.LIGHT_PURPLE;
-        if (type == FlagType.CLAIM) {
+        if (type == MenuType.CLAIM) {
             color = TextColor.GOLD;
-        } else if (type == FlagType.OVERRIDE) {
+        } else if (type == MenuType.OVERRIDE) {
             color = TextColor.RED;
         }
 
         return color;
     }
 
-   public static Consumer<CommandSender> createFlagConsumer(CommandSender src, GDClaim claim, GDPermissionHolder holder, String subjectName, Set<Context> contexts, String flagPermission, Tristate flagValue, FlagType flagType) {
+   public static Consumer<CommandSender> createFlagConsumer(CommandSender src, GDClaim claim, Subject subject, Set<Context> contexts, String flagPermission, Tristate flagValue, MenuType flagType) {
         return consumer -> {
             Tristate newValue = Tristate.UNDEFINED;
             if (flagValue == Tristate.TRUE) {
@@ -426,25 +480,25 @@ public class CommandHelper {
             }
 
             Component flagTypeText = TextComponent.empty();
-            if (flagType == FlagType.OVERRIDE) {
+            if (flagType == MenuType.OVERRIDE) {
                 flagTypeText = TextComponent.of("OVERRIDE", TextColor.RED);
-            } else if (flagType == FlagType.DEFAULT) {
+            } else if (flagType == MenuType.DEFAULT) {
                 flagTypeText = TextComponent.of("DEFAULT", TextColor.LIGHT_PURPLE);
-            } else if (flagType == FlagType.CLAIM) {
+            } else if (flagType == MenuType.CLAIM) {
                 flagTypeText = TextComponent.of("CLAIM", TextColor.GOLD);
             }
             String target = flagPermission.replace(GDPermissions.FLAG_BASE + ".",  "");
             Set<Context> newContexts = new HashSet<>(contexts);
-            PermissionUtil.getInstance().setPermissionValue((GDClaim) claim, GriefDefenderPlugin.DEFAULT_HOLDER, flagPermission, newValue, newContexts);
+            PermissionUtil.getInstance().setPermissionValue(GriefDefenderPlugin.DEFAULT_HOLDER, flagPermission, newValue, newContexts);
             TextAdapter.sendComponent(src, TextComponent.builder("")
                     .append("Set ", TextColor.GREEN)
                     .append(flagTypeText)
                     .append(" permission ")
                     .append(target, TextColor.AQUA)
                     .append("\n to ", TextColor.GREEN)
-                    .append(getClickableText(src, (GDClaim) claim, holder, subjectName, newContexts, flagPermission, newValue, flagType).color(TextColor.LIGHT_PURPLE))
+                    .append(getClickableText(src, (GDClaim) claim, subject, newContexts, flagPermission, newValue, flagType).color(TextColor.LIGHT_PURPLE))
                     .append(" for ", TextColor.GREEN)
-                    .append(subjectName, TextColor.GOLD).build());
+                    .append(subject.getFriendlyName(), TextColor.GOLD).build());
         };
     }
 
@@ -455,7 +509,7 @@ public class CommandHelper {
     public static Consumer<CommandSender> createCommandConsumer(CommandSender src, String command, String arguments, Consumer<CommandSender> postConsumerTask) {
         return consumer -> {
             if (!NMSUtil.getInstance().getBukkitCommandMap().dispatch(src, command + " " + arguments)) {
-                TextAdapter.sendComponent(src, MESSAGE_DATA.getMessage(MessageStorage.COMMAND_EXECUTE_FAILED,
+                TextAdapter.sendComponent(src, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.COMMAND_EXECUTE_FAILED,
                         ImmutableMap.of(
                             "command", command,
                             "args", arguments)));
@@ -468,7 +522,7 @@ public class CommandHelper {
 
     public static void executeCommand(CommandSender src, String command, String arguments) {
         if (!NMSUtil.getInstance().getBukkitCommandMap().dispatch(src, command + " " + arguments)) {
-            TextAdapter.sendComponent(src, MESSAGE_DATA.getMessage(MessageStorage.COMMAND_EXECUTE_FAILED,
+            TextAdapter.sendComponent(src, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.COMMAND_EXECUTE_FAILED,
                         ImmutableMap.of(
                             "command", command,
                             "args", arguments)));
@@ -503,7 +557,7 @@ public class CommandHelper {
                 if (height != 0) {
                     height = playerData.lastValidInspectLocation != null ? playerData.lastValidInspectLocation.getBlockY() : player.getEyeLocation().getBlockY();
                 }
-                ClaimVisual visualization = ClaimVisual.fromClaims(claims, playerData.getClaimCreateMode() == 1 ? height : player.getEyeLocation().getBlockY(), player.getLocation(), playerData, null);
+                ClaimVisual visualization = ClaimVisual.fromClaims(claims, playerData.getClaimCreateMode() == CreateModeTypes.VOLUME ? height : player.getEyeLocation().getBlockY(), player.getLocation(), playerData, null);
                 visualization.apply(player);
             } else {
                 for (Claim claim : claims) {
@@ -595,7 +649,7 @@ public class CommandHelper {
                         .append("TP", TextColor.LIGHT_PURPLE)
                         .append("]")
                         .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(CommandHelper.createTeleportConsumer(src, VecHelper.toLocation(claim.getWorld(), southWest), claim))))
-                        .hoverEvent(HoverEvent.showText(MESSAGE_DATA.getMessage(MessageStorage.CLAIMLIST_UI_CLICK_TELEPORT_TARGET,
+                        .hoverEvent(HoverEvent.showText(MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.CLAIMLIST_UI_CLICK_TELEPORT_TARGET,
                                 ImmutableMap.of(
                                     "name", teleportName,
                                     "target", southWest.toString(),
@@ -611,7 +665,7 @@ public class CommandHelper {
                             .append("TP", TextColor.LIGHT_PURPLE)
                             .append("]")
                             .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(CommandHelper.createTeleportConsumer(src, spawnLoc, claim))))
-                            .hoverEvent(HoverEvent.showText(MESSAGE_DATA.getMessage(MessageStorage.CLAIMLIST_UI_CLICK_TELEPORT_TARGET,
+                            .hoverEvent(HoverEvent.showText(MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.CLAIMLIST_UI_CLICK_TELEPORT_TARGET,
                                     ImmutableMap.of(
                                             "name", teleportName,
                                             "target", "'s spawn @ " + spawnPos.toString(),
@@ -703,13 +757,15 @@ public class CommandHelper {
                 return;
             }
             final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_CLAIM_BUY_CONFIRMATION,
-                    ImmutableMap.of("amount", claim.getEconomyData().getSalePrice()));
-            GriefDefenderPlugin.sendMessage(src, message);
-            final Component buyConfirmationText = TextComponent.builder("")
-                    .append("\n[")
-                    .append(MessageCache.getInstance().LABEL_CONFIRM.color(TextColor.GREEN))
-                    .append("]\n")
-                    .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createBuyConsumerConfirmed(src, claim)))).build();
+                    ImmutableMap.of("amount", "$" + claim.getEconomyData().getSalePrice()));
+            final Component buyConfirmationText = TextComponent.builder()
+                    .append(message)
+                    .append(TextComponent.builder()
+                        .append("\n[")
+                        .append(MessageCache.getInstance().LABEL_CONFIRM.color(TextColor.GREEN))
+                        .append("]\n")
+                        .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createBuyConsumerConfirmed(src, claim)))).build())
+                    .build();
             GriefDefenderPlugin.sendMessage(player, buyConfirmationText);
         };
     }
@@ -727,12 +783,14 @@ public class CommandHelper {
                 return;
             }
 
-            final ClaimResult result = claim.transferOwner(player.getUniqueId());
+            GDCauseStackManager.getInstance().pushCause(player);
+            final ClaimResult result = ((GDClaim) claim).transferOwner(player.getUniqueId(), true, false);
             if (!result.successful()) {
-                final Component defaultMessage = MESSAGE_DATA.getMessage(MessageStorage.ECONOMY_CLAIM_BUY_TRANSFER_CANCELLED,
+                final Component defaultMessage = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.ECONOMY_CLAIM_BUY_TRANSFER_CANCELLED,
                         ImmutableMap.of(
                             "owner", owner.getName(),
-                            "player", player.getName()));
+                            "player", player.getName(),
+                            "result", result.getMessage().orElse(TextComponent.of(result.getResultType().toString()))));
                 TextAdapter.sendComponent(src, result.getMessage().orElse(defaultMessage));
                 return;
             }
@@ -741,14 +799,13 @@ public class CommandHelper {
             final EconomyResponse response = economy.depositPlayer(owner.getOfflinePlayer(), salePrice);
             if (response.transactionSuccess()) {
                 final EconomyResponse withdrawResponse = economy.withdrawPlayer(player, salePrice);
-                economy.withdrawPlayer(owner.getOfflinePlayer(), salePrice);
                 final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_CLAIM_BUY_CONFIRMED,
                     ImmutableMap.of(
-                        "amount", salePrice));
+                        "amount", String.valueOf("$" +salePrice)));
                 final Component saleMessage = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_CLAIM_SOLD,
                     ImmutableMap.of(
-                        "amount", salePrice,
-                        "balance", economy.getBalance(owner.getOfflinePlayer())));
+                        "amount", String.valueOf("$" +salePrice),
+                        "balance",String.valueOf("$" + economy.getBalance(owner.getOfflinePlayer()))));
                 if (owner.getOnlinePlayer() != null) {
                     TextAdapter.sendComponent(owner.getOnlinePlayer(), saleMessage);
                 }
@@ -813,27 +870,27 @@ public class CommandHelper {
                 newValue = Tristate.TRUE;
             }
 
-            CommandHelper.applyFlagPermission(src, subject, subjectName, claim, flagPermission, target, newValue, null, FlagType.GROUP);
+            CommandHelper.applyFlagPermission(src, subject, claim, flagPermission, target, newValue, null, MenuType.GROUP);
         };
     }
 
-    public static Component getClickableText(CommandSender src, GDClaim claim, GDPermissionHolder holder, String subjectName, Set<Context> contexts, String flagPermission, Tristate flagValue, FlagType type) {
+    public static Component getClickableText(CommandSender src, GDClaim claim, Subject subject, Set<Context> contexts, String flagPermission, Tristate flagValue, MenuType type) {
         TextComponent.Builder textBuilder = TextComponent.builder(flagValue.toString().toLowerCase())
                 .hoverEvent(HoverEvent.showText(TextComponent.builder("")
-                        .append(MESSAGE_DATA.getMessage(MessageStorage.CLAIMLIST_UI_CLICK_TOGGLE_VALUE,
+                        .append(MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.CLAIMLIST_UI_CLICK_TOGGLE_VALUE,
                                 ImmutableMap.of("type", type.name().toLowerCase())))
                         .append("\n")
-                        .append(getFlagTypeHoverText(type)).build()))
-                .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createFlagConsumer(src, claim, holder, subjectName, contexts, flagPermission, flagValue, type))));
+                        .append(UIHelper.getPermissionMenuTypeHoverText(type)).build()))
+                .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createFlagConsumer(src, claim, subject, contexts, flagPermission, flagValue, type))));
         return textBuilder.build();
     }
 
-    public static Component getClickableText(CommandSender src, GDPermissionHolder subject, String subjectName, Set<Context> contexts, GDClaim claim, String flagPermission, Tristate flagValue, String source, FlagType type) {
-        Component onClickText = MESSAGE_DATA.getMessage(MessageStorage.CLAIMLIST_UI_CLICK_TOGGLE_VALUE,
+    public static Component getClickableText(CommandSender src, GDPermissionHolder subject, String subjectName, Set<Context> contexts, GDClaim claim, String flagPermission, Tristate flagValue, String source, MenuType type) {
+        Component onClickText = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.CLAIMLIST_UI_CLICK_TOGGLE_VALUE,
                 ImmutableMap.of("type", "flag"));
         boolean hasPermission = true;
-        if (type == FlagType.INHERIT) {
-            onClickText = MESSAGE_DATA.getMessage(MessageStorage.FLAG_UI_INHERIT_PARENT,
+        if (type == MenuType.INHERIT) {
+            onClickText = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.FLAG_UI_INHERIT_PARENT,
                     ImmutableMap.of("name", claim.getFriendlyNameType()));
             hasPermission = false;
         } else if (src instanceof Player) {
@@ -848,7 +905,7 @@ public class CommandHelper {
                 .hoverEvent(HoverEvent.showText(TextComponent.builder("")
                         .append(onClickText)
                         .append("\n")
-                        .append(getFlagTypeHoverText(type)).build()));
+                        .append(UIHelper.getPermissionMenuTypeHoverText(type)).build()));
         if (hasPermission) {
             textBuilder.clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createFlagConsumer(src, subject, subjectName, contexts, claim, flagPermission, flagValue, source))));
         }
@@ -875,29 +932,27 @@ public class CommandHelper {
             if (!validateCommandMapping(src, command, pluginId)) {
                 return null;
             }
-            /*if (!pluginId.equals("minecraft")) {
-                Plugin pluginContainer = Sponge.getPluginManager().getPlugin(pluginId).orElse(null);
+            if (!pluginId.equals("minecraft")) {
+                Plugin pluginContainer = Bukkit.getPluginManager().getPlugin(pluginId);
                 if (pluginContainer == null) {
-                    TextAdapter.sendComponent(src, TextComponent.builder("")
-                            .append("Could not locate a plugin with id '", TextColor.RED)
-                            .append(pluginId, TextColor.AQUA)
-                            .append("'.", TextColor.RED).build());
+                    TextAdapter.sendComponent(src, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PLUGIN_NOT_FOUND, 
+                            ImmutableMap.of("id", pluginId)));
                     return null;
                 }
-            }*/
+            }
             args = target.substring(argsIndex, target.length());
             Pattern p = Pattern.compile("\\[([^\\]]+)\\]");
             Matcher m = p.matcher(args);
             if (!m.find()) {
                 // invalid
-                TextAdapter.sendComponent(src, MESSAGE_DATA.getMessage(MessageStorage.COMMAND_EXECUTE_FAILED,
+                TextAdapter.sendComponent(src, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.COMMAND_EXECUTE_FAILED,
                         ImmutableMap.of(
                                 "command", command,
                                 "args", args)));
                 return null;
             }
             args = m.group(1);
-            target = pluginId + "." + command + "." + args.replace(":", ".");
+            target = pluginId + ":" + command + "." + args.replace(":", ".");
         } else {
             String[] parts = target.split(":");
             if (parts.length > 1) {
@@ -906,7 +961,7 @@ public class CommandHelper {
             } else {
                 command = target;
             }
-            target = pluginId + "." + command;
+            target = pluginId + ":" + command;
         }
 
         // validate command
@@ -920,7 +975,7 @@ public class CommandHelper {
     private static boolean validateCommandMapping(CommandSender src, String command, String pluginId) {
         Command commandMapping = NMSUtil.getInstance().getBukkitCommandMap().getCommand(command);
         if (commandMapping == null) {
-            TextAdapter.sendComponent(src, MESSAGE_DATA.getMessage(MessageStorage.PLUGIN_COMMAND_NOT_FOUND,
+            TextAdapter.sendComponent(src, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PLUGIN_COMMAND_NOT_FOUND,
                     ImmutableMap.of(
                         "command", command,
                         "id", pluginId)));
@@ -1006,6 +1061,7 @@ public class CommandHelper {
                     final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.BANK_WITHDRAW,
                         ImmutableMap.of(
                             "amount", amount));
+                    GriefDefenderPlugin.sendMessage(src, message);
                     economy.depositPlayer(((Player) src), amount);
                     claim.getData().getEconomyData().addBankTransaction(
                         new GDBankTransaction(BankTransactionType.WITHDRAW_SUCCESS, playerData.playerID, Instant.now(), amount));
@@ -1100,7 +1156,7 @@ public class CommandHelper {
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getPlayerData(claim.getWorld(), claim.getOwnerUniqueId());
         final double claimBalance = economy.bankBalance(bankAccount.toString()).balance;
         double taxOwed = -1;
-        final double playerTaxRate = GDPermissionManager.getInstance().getInternalOptionValue((Player) player, Options.TAX_RATE, claim, playerData);
+        final double playerTaxRate = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Double.class), (Player) player, Options.TAX_RATE, claim);
         if (checkTown) {
             if (!town.getOwnerUniqueId().equals(playerData.playerID)) {
                 for (Claim playerClaim : playerData.getInternalClaims()) {
@@ -1202,64 +1258,17 @@ public class CommandHelper {
         }
     }
 
-    public static List<Component> stripeText(List<Component> texts) {
-        Collections.sort(texts, PLAIN_COMPARATOR);
-
-        ImmutableList.Builder<Component> finalTexts = ImmutableList.builder();
-        for (int i = 0; i < texts.size(); i++) {
-            Component text = texts.get(i);
-            if (i % 2 == 0) { 
-                text = text.color(TextColor.GREEN);
-            } else {
-                text = text.color(TextColor.AQUA);
-            }
-
-            finalTexts.add(text);
-        }
-        return finalTexts.build();
-    }
-
-    public static Component getFlagTypeHoverText(FlagType type) {
-        Component hoverText = TextComponent.empty();
-        if (type == FlagType.DEFAULT) {
-            hoverText = TextComponent.builder("")
-                    .append(MessageCache.getInstance().TITLE_DEFAULT.color(TextColor.LIGHT_PURPLE))
-                    .append(" : ")
-                    .append(MessageCache.getInstance().FLAG_UI_INFO_DEFAULT)
-                    .build();
-        } else if (type == FlagType.CLAIM) {
-            hoverText = TextComponent.builder("")
-                    .append(MessageCache.getInstance().TITLE_CLAIM.color(TextColor.GOLD))
-                    .append(" : ")
-                    .append(MessageCache.getInstance().FLAG_UI_INFO_CLAIM)
-                    .build();
-        } else if (type == FlagType.OVERRIDE) {
-            hoverText = TextComponent.builder("")
-                    .append(MessageCache.getInstance().TITLE_OVERRIDE.color(TextColor.RED))
-                    .append(" : ")
-                    .append(MessageCache.getInstance().FLAG_UI_INFO_OVERRIDE)
-                    .build();
-        } else if (type == FlagType.INHERIT) {
-            hoverText = TextComponent.builder("")
-                    .append(MessageCache.getInstance().TITLE_INHERIT.color(TextColor.AQUA))
-                    .append(" : ")
-                    .append(MessageCache.getInstance().FLAG_UI_INFO_INHERIT)
-                    .build();
-        }
-        return hoverText;
-    }
-
-    public static Component getBaseFlagOverlayText(String flagPermission) {
-        String baseFlag = flagPermission.replace(GDPermissions.FLAG_BASE + ".", "").replace(".*", "");
+    public static Component getBaseOptionOverlayText(String option) {
+        String baseFlag = option.replace(GDPermissions.OPTION_BASE + ".", "");
         int endIndex = baseFlag.indexOf(".");
         if (endIndex != -1) {
             baseFlag = baseFlag.substring(0, endIndex);
         }
 
-        final Flag flag = FlagRegistryModule.getInstance().getById(baseFlag).orElse(null);
+        final Option flag = GriefDefender.getRegistry().getType(Option.class, baseFlag).orElse(null);
         if (flag == null) {
-            return MESSAGE_DATA.getMessage(MessageStorage.FLAG_NOT_FOUND, ImmutableMap.of(
-                    "flag", baseFlag));
+            return MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.OPTION_NOT_FOUND, ImmutableMap.of(
+                    "option", baseFlag));
         }
 
         return flag.getDescription();

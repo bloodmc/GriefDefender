@@ -24,7 +24,8 @@
  */
 package com.griefdefender.configuration.type;
 
-import com.griefdefender.configuration.category.BanCategory;
+import com.griefdefender.configuration.category.CustomFlagGroupDefinitionCategory;
+import com.griefdefender.configuration.category.CustomFlagGroupCategory;
 import com.griefdefender.configuration.category.DefaultPermissionCategory;
 import com.griefdefender.configuration.category.EconomyCategory;
 import com.griefdefender.configuration.category.MessageCategory;
@@ -37,8 +38,32 @@ import ninja.leaping.configurate.objectmapping.Setting;
 
 public class GlobalConfig extends ConfigBase {
 
-    @Setting
-    public BanCategory bans = new BanCategory();
+    @Setting(value = "custom-flags", comment = "Used to define a group of custom flags for players/admins."
+            + "\nEach group defined will be displayed in the flag GUI for users."
+            + "\nGroups can have the following settings : "
+            + "\n    enabled=<true|false>: Whether the group is enabled."
+            + "\n    admin-group=<true|false>: Whether this group is considered for admin use only."
+            + "\n    hover=<text>: The hover text to be displayed when hovering over group name in GUI."
+            + "\n    title=<text>: The title text to be used for TAB display."
+            + "\n    override=<type>: This is used to force a permission to a specific claim type or global. Accepted values are : 'admin', 'basic', subdivision', 'town', 'global', 'claim UUID'"
+            + "\n    default=<type>: This is used to set a default permission "
+            + "\n    value=<true|false>: This is used to set a default value for the flag definition. It is only used in conjunction with 'override=<type>, default=<type> settings."
+            + "\nEach group will have an associated permission in order to be viewable."
+            + "\nThe 'user' group will use the permission : 'griefdefender.custom.flag.group.user'"
+            + "\nThe 'admin' group will use the permission : 'griefdefender.custom.flag.group.admin'"
+            + "\nWithin each group, you can define flag definitions."
+            + "\nEach flag definition must be defined in the following format:"
+                    + "\nenabled: Controls whether the definition is enabled. Accepts a value of 'true' or 'false'"
+                    + "\ndescription: The flag description to display on hover. Uses the legacy text format."
+                    + "\npermissions: The list of permissions to link to definition. Each permission accepts the following contexts :"
+                    + "\n    flag=<linked-flag>: This context is used to link the permission to a GD specific flag. Ex. 'flag=block-break' would link permission to GD's block-break flag"
+                    + "\n    source=<id>: This context is used to specify a source id such as 'minecraft:creeper'."
+                    + "\n    target=<id>: This context is used to specify a target id such as 'minecraft:chest'."
+                    + "\n    state=<properties>: This context is used to specify a blockstate property such as 'state=lit:true'."
+                    + "\nNote: Required if no source or target context is specified, the permission will default to ALL."
+                    + "\nNote: Available contexts are : flag, source, target, state, used_item, item_name"
+                    + "\nThese contexts may change, See https://github.com/bloodmc/GriefDefender/wiki for latest information.")
+    public CustomFlagGroupDefinitionCategory customFlags = new CustomFlagGroupDefinitionCategory();
     @Setting
     public EconomyCategory economy = new EconomyCategory();
     @Setting

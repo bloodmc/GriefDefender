@@ -34,7 +34,6 @@ import com.griefdefender.util.RegistryHelper;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
@@ -46,23 +45,36 @@ public class ShovelTypeRegistryModule implements CatalogRegistryModule<ShovelTyp
         return instance;
     }
 
-    private final Map<String, ShovelType> shovelTypeMap = new HashMap<>();
+    private final Map<String, ShovelType> registryMap = new HashMap<>();
 
     @Override
     public Optional<ShovelType> getById(String id) {
-        return Optional.ofNullable(this.shovelTypeMap.get(checkNotNull(id)));
+        if (id == null) {
+            return Optional.empty();
+        }
+
+        if (id.contains("griefdefender.")) {
+            id = id.replace("griefdefender.", "griefdefender:");
+        }
+        if (!id.contains(":")) {
+            id = "griefdefender:" + id;
+        }
+
+        return Optional.ofNullable(this.registryMap.get(checkNotNull(id)));
     }
 
     @Override
     public Collection<ShovelType> getAll() {
-        return this.shovelTypeMap.values();
+        return this.registryMap.values();
     }
 
     @Override
     public void registerDefaults() {
         RegistryHelper.mapFields(ShovelTypes.class, input -> {
-            final ShovelType type = new GDShovelType("griefdefender:" + input, input);
-            this.shovelTypeMap.put(input.toLowerCase(Locale.ENGLISH), type);
+            final String name = input.toLowerCase().replace("_", "-");
+            final String id = "griefdefender:" + name;
+            final ShovelType type = new GDShovelType(id, name);
+            this.registryMap.put(id, type);
             return type;
         });
     }

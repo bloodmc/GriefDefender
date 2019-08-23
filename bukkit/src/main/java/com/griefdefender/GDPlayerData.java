@@ -24,14 +24,32 @@
  */
 package com.griefdefender;
 
+import java.lang.ref.WeakReference;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+
+import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
+import org.bukkit.Location;
+import org.bukkit.World;
+import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitTask;
+
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.reflect.TypeToken;
 import com.griefdefender.api.claim.Claim;
 import com.griefdefender.api.claim.ClaimType;
 import com.griefdefender.api.claim.ShovelType;
 import com.griefdefender.api.claim.ShovelTypes;
 import com.griefdefender.api.data.PlayerData;
+import com.griefdefender.api.permission.Context;
 import com.griefdefender.api.permission.option.Options;
+import com.griefdefender.api.permission.option.type.CreateModeType;
+import com.griefdefender.api.permission.option.type.CreateModeTypes;
+import com.griefdefender.cache.EventResultCache;
 import com.griefdefender.cache.MessageCache;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
@@ -46,18 +64,8 @@ import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.permission.GDPermissions;
 import com.griefdefender.provider.VaultProvider;
 import com.griefdefender.util.PermissionUtil;
-import me.lucko.luckperms.api.context.MutableContextSet;
-import net.kyori.text.Component;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.World;
-import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitTask;
 
-import java.lang.ref.WeakReference;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import net.kyori.text.Component;
 
 public class GDPlayerData implements PlayerData {
 
@@ -77,6 +85,7 @@ public class GDPlayerData implements PlayerData {
 
     public List<BlockTransaction> visualBlocks;
     public UUID visualClaimId;
+    public UUID petRecipientUniqueId;
     public BukkitTask visualRevertTask;
     private final VaultProvider vaultProvider = GriefDefenderPlugin.getInstance().getVaultProvider();
 
@@ -92,9 +101,7 @@ public class GDPlayerData implements PlayerData {
     // This prevents protection issues when other plugins call getActiveContext
     public boolean ignoreActiveContexts = true;
 
-    public boolean lastInteractResult = false;
-    public int lastTickCounter = 0;
-    public UUID lastInteractClaim = GriefDefenderPlugin.PUBLIC_UUID;
+    public EventResultCache eventResultCache;
 
     // collide event cache
     public int lastCollideEntityId = 0;
@@ -102,15 +109,23 @@ public class GDPlayerData implements PlayerData {
 
     private String playerName;
 
+    public boolean allowFlight = false;
+    public boolean ignoreFallDamage = false;
+
     // cached global option values
     public int minClaimLevel;
-    private Integer optionClaimCreateMode;
+    private CreateModeType optionClaimCreateMode;
     private Integer optionMaxAccruedBlocks;
 
     // cached permission values
     public boolean canManageAdminClaims = false;
     public boolean canManageWilderness = false;
-    public boolean ignoreBorderCheck = false;
+    public boolean canManageGlobalOptions = false;
+    public boolean canManageAdminOptions = false;
+    public boolean canManageOverrideOptions = false;
+    public boolean canManageFlagDefaults = false;
+    public boolean canManageFlagOverrides = false;
+    public boolean bypassBorderCheck = false;
     public boolean ignoreAdminClaims = false;
     public boolean ignoreBasicClaims = false;
     public boolean ignoreTowns = false;
@@ -118,6 +133,7 @@ public class GDPlayerData implements PlayerData {
 
     public boolean dataInitialized = false;
     public boolean showVisualFillers = true;
+    public boolean restoreAbandonClaim = false;
     private boolean checkedDimensionHeight = false;
 
     public GDPlayerData(UUID worldUniqueId, UUID playerUniqueId, PlayerStorageData playerStorage, GriefDefenderConfig<?> activeConfig, Set<Claim> claims) {
@@ -137,15 +153,21 @@ public class GDPlayerData implements PlayerData {
                 this.playerSubject = new WeakReference<>(subject);
             }
             final GDPermissionUser subject = this.playerSubject.get();
-            final MutableContextSet activeContexts = PermissionUtil.getInstance().getActiveContexts(subject);
+            final Set<Context> activeContexts = new HashSet<>();
+            PermissionUtil.getInstance().addActiveContexts(activeContexts, subject);
             // permissions
-            this.ignoreBorderCheck = PermissionUtil.getInstance().getPermissionValue(subject, GDPermissions.IGNORE_BORDER_CHECK, activeContexts).asBoolean();
+            this.bypassBorderCheck = PermissionUtil.getInstance().getPermissionValue(subject, GDPermissions.BYPASS_BORDER_CHECK, activeContexts).asBoolean();
             this.ignoreAdminClaims = PermissionUtil.getInstance().getPermissionValue(subject, GDPermissions.IGNORE_CLAIMS_ADMIN, activeContexts).asBoolean();
             this.ignoreTowns = PermissionUtil.getInstance().getPermissionValue(subject, GDPermissions.IGNORE_CLAIMS_TOWN, activeContexts).asBoolean();
             this.ignoreWilderness = PermissionUtil.getInstance().getPermissionValue(subject, GDPermissions.IGNORE_CLAIMS_WILDERNESS, activeContexts).asBoolean();
             this.ignoreBasicClaims = PermissionUtil.getInstance().getPermissionValue(subject, GDPermissions.IGNORE_CLAIMS_BASIC, activeContexts).asBoolean();
             this.canManageAdminClaims = PermissionUtil.getInstance().getPermissionValue(subject, GDPermissions.COMMAND_ADMIN_CLAIMS, activeContexts).asBoolean();
             this.canManageWilderness = PermissionUtil.getInstance().getPermissionValue(subject, GDPermissions.MANAGE_WILDERNESS, activeContexts).asBoolean();
+            this.canManageOverrideOptions = PermissionUtil.getInstance().getPermissionValue(subject, GDPermissions.MANAGE_OVERRIDE_OPTIONS, activeContexts).asBoolean();
+            this.canManageGlobalOptions = PermissionUtil.getInstance().getPermissionValue(subject, GDPermissions.MANAGE_GLOBAL_OPTIONS, activeContexts).asBoolean();
+            this.canManageAdminOptions = PermissionUtil.getInstance().getPermissionValue(subject, GDPermissions.MANAGE_ADMIN_OPTIONS, activeContexts).asBoolean();
+            this.canManageFlagDefaults = PermissionUtil.getInstance().getPermissionValue(subject, GDPermissions.MANAGE_FLAG_DEFAULTS, activeContexts).asBoolean();
+            this.canManageFlagOverrides = PermissionUtil.getInstance().getPermissionValue(subject, GDPermissions.MANAGE_FLAG_OVERRIDES, activeContexts).asBoolean();
             this.playerID = subject.getUniqueId();
             /*if (this.optionMaxClaimLevel > 255 || this.optionMaxClaimLevel <= 0 || this.optionMaxClaimLevel < this.optionMinClaimLevel) {
                 this.optionMaxClaimLevel = 255;
@@ -208,36 +230,81 @@ public class GDPlayerData implements PlayerData {
 
     @Override
     public int getBlocksAccruedPerHour() {
-        return GDPermissionManager.getInstance().getInternalOptionValue(this.getSubject(), Options.BLOCKS_ACCRUED_PER_HOUR, this).intValue();
+        final Integer value = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), this.getSubject(), Options.BLOCKS_ACCRUED_PER_HOUR);
+        if (value == null) {
+            return Options.BLOCKS_ACCRUED_PER_HOUR.getDefaultValue();
+        }
+        return value;
     }
 
     @Override
     public int getChestClaimExpiration() {
-        return GDPermissionManager.getInstance().getInternalOptionValue(this.getSubject(), Options.CHEST_EXPIRATION, this).intValue();
+        final Integer value = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), this.getSubject(), Options.CHEST_EXPIRATION);
+        if (value == null) {
+            return Options.CHEST_EXPIRATION.getDefaultValue();
+        }
+        return value;
     }
 
     @Override
     public int getCreateClaimLimit(ClaimType type) {
-        return GDPermissionManager.getInstance().getInternalOptionValue(this.getSubject(), Options.CREATE_LIMIT, type, this).intValue();
+        final Integer value = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), this.getSubject(), Options.CREATE_LIMIT, type);
+        if (value == null) {
+            return Options.CREATE_LIMIT.getDefaultValue();
+        }
+        return value;
+    }
+
+    public CreateModeType getCreateMode() {
+        final CreateModeType value = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(CreateModeType.class), this.getSubject(), Options.CREATE_MODE);
+        if (value == null || value == CreateModeTypes.UNDEFINED) {
+            return CreateModeTypes.AREA;
+        }
+        return value;
     }
 
     @Override
     public int getInitialClaimBlocks() {
-        return GDPermissionManager.getInstance().getInternalOptionValue(this.getSubject(), Options.INITIAL_BLOCKS, this).intValue();
+        final Integer value = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), this.getSubject(), Options.INITIAL_BLOCKS);
+        if (value == null) {
+            return Options.INITIAL_BLOCKS.getDefaultValue();
+        }
+        return value;
+    }
+
+    public double getEconomyBlockCost() {
+        final Double value = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Double.class), this.getSubject(), Options.ECONOMY_BLOCK_COST);
+        if (value == null) {
+            return Options.INITIAL_BLOCKS.getDefaultValue();
+        }
+        return value;
+    }
+
+    public int getInternalRemainingClaimBlocks() {
+        final int initialClaimBlocks = this.getInitialClaimBlocks();
+        int remainingBlocks = initialClaimBlocks + this.getAccruedClaimBlocks() + this.getBonusClaimBlocks();
+
+        for (Claim claim : this.claimList) {
+            if (claim.isSubdivision()) {
+                continue;
+            }
+
+            GDClaim gpClaim = (GDClaim) claim;
+            if ((gpClaim.parent == null || gpClaim.parent.isAdminClaim()) && claim.getData().requiresClaimBlocks()) {
+                remainingBlocks -= claim.getClaimBlocks();
+            }
+        }
+
+        return remainingBlocks;
     }
 
     @Override
     public int getRemainingClaimBlocks() {
-        final int initialClaimBlocks = GDPermissionManager.getInstance().getInternalOptionValue(this.getSubject(), Options.INITIAL_BLOCKS, this).intValue();
+        final int initialClaimBlocks = this.getInitialClaimBlocks();
         int remainingBlocks = initialClaimBlocks + this.getAccruedClaimBlocks() + this.getBonusClaimBlocks();
-        if (GriefDefenderPlugin.getGlobalConfig().getConfig().economy.economyMode) {
-            if (!this.vaultProvider.getApi().hasAccount(this.getSubject().getOfflinePlayer())) {
-                return 0;
-            }
 
-            final double currentFunds = this.vaultProvider.getApi().getBalance(this.getSubject().getOfflinePlayer());
-            final Double economyBlockCost = GDPermissionManager.getInstance().getInternalOptionValue(this.getSubject(), Options.ECONOMY_BLOCK_COST, this);
-            remainingBlocks =  (int) Math.round((currentFunds / economyBlockCost));
+        if (GriefDefenderPlugin.getInstance().isEconomyModeEnabled()) {
+            return this.getInternalEconomyAvailablePurchaseCost();
         } else {
             for (Claim claim : this.claimList) {
                 if (claim.isSubdivision()) {
@@ -252,6 +319,19 @@ public class GDPlayerData implements PlayerData {
         }
 
         return remainingBlocks;
+    }
+
+    public int getInternalEconomyAvailablePurchaseCost() {
+        if (GriefDefenderPlugin.getInstance().isEconomyModeEnabled()) {
+            if (!this.vaultProvider.getApi().hasAccount(this.getSubject().getOfflinePlayer())) {
+                return 0;
+            }
+
+            final double currentFunds = this.vaultProvider.getApi().getBalance(this.getSubject().getOfflinePlayer());
+            final Double economyBlockCost = this.getEconomyBlockCost();
+            return (int) Math.round((currentFunds / economyBlockCost));
+        }
+        return 0;
     }
 
     public int getTotalClaimsCost() {
@@ -307,12 +387,12 @@ public class GDPlayerData implements PlayerData {
         this.playerStorage.getConfig().setBonusClaimBlocks(bonusClaimBlocks);
     }
 
-    public int getClaimCreateMode() {
+    public CreateModeType getClaimCreateMode() {
         if (this.optionClaimCreateMode == null) {
-            int mode = GDPermissionManager.getInstance().getInternalOptionValue(this.getSubject(), Options.CREATE_MODE, this).intValue();
+            CreateModeType mode = this.getCreateMode();
             // default to 0 if invalid
-            if (mode != 0 && mode != 1) {
-                mode = 0;
+            if (mode == null) {
+                mode = CreateModeTypes.AREA;
             }
             this.optionClaimCreateMode = mode;
         }
@@ -320,11 +400,7 @@ public class GDPlayerData implements PlayerData {
         return this.optionClaimCreateMode;
     }
 
-    public void setClaimCreateMode(int mode) {
-        // default to 0 if invalid
-        if (mode != 0 && mode != 1) {
-            mode = 0;
-        }
+    public void setClaimCreateMode(CreateModeType mode) {
         this.optionClaimCreateMode = mode;
     }
 
@@ -333,15 +409,15 @@ public class GDPlayerData implements PlayerData {
     }
 
     public boolean canCreateClaim(Player player, boolean sendMessage) {
-        final int createMode = this.getClaimCreateMode();
+        final CreateModeType createMode = this.getClaimCreateMode();
         if (this.shovelMode == ShovelTypes.BASIC) {
-            if (createMode == 0 && !player.hasPermission(GDPermissions.CLAIM_CREATE_BASIC)) {
+            if (createMode == CreateModeTypes.AREA && !player.hasPermission(GDPermissions.CLAIM_CREATE_BASIC)) {
                 if (sendMessage) {
                     GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().PERMISSION_CLAIM_CREATE);
                 }
                 return false;
             }
-            if (createMode == 1 && !player.hasPermission(GDPermissions.CLAIM_CUBOID_BASIC)) {
+            if (createMode == CreateModeTypes.VOLUME && !player.hasPermission(GDPermissions.CLAIM_CUBOID_BASIC)) {
                 if (sendMessage) {
                     GriefDefenderPlugin.sendMessage(player,MessageCache.getInstance().PERMISSION_CUBOID);
                     GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().COMMAND_CUBOID_DISABLED);
@@ -349,7 +425,7 @@ public class GDPlayerData implements PlayerData {
                 return false;
             }
         } else if (this.shovelMode == ShovelTypes.SUBDIVISION) {
-            if (createMode == 0 && !player.hasPermission(GDPermissions.CLAIM_CREATE_SUBDIVISION)) {
+            if (createMode == CreateModeTypes.AREA && !player.hasPermission(GDPermissions.CLAIM_CREATE_SUBDIVISION)) {
                 if (sendMessage) {
                     GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().PERMISSION_CLAIM_CREATE);
                 }
@@ -362,13 +438,13 @@ public class GDPlayerData implements PlayerData {
                 return false;
             }
         } else if (this.shovelMode == ShovelTypes.ADMIN) {
-            if (createMode == 0 && !player.hasPermission(GDPermissions.COMMAND_ADMIN_CLAIMS)) {
+            if (createMode == CreateModeTypes.AREA && !player.hasPermission(GDPermissions.COMMAND_ADMIN_CLAIMS)) {
                 return false;
             } else if (!player.hasPermission(GDPermissions.CLAIM_CUBOID_ADMIN)) {
                 return false;
             }
         } else if (this.shovelMode == ShovelTypes.TOWN) {
-            if (createMode == 0 && !player.hasPermission(GDPermissions.CLAIM_CREATE_TOWN)) {
+            if (createMode == CreateModeTypes.AREA && !player.hasPermission(GDPermissions.CLAIM_CREATE_TOWN)) {
                 return false;
             } else if (!player.hasPermission(GDPermissions.CLAIM_CUBOID_TOWN)) {
                 return false;
@@ -409,22 +485,6 @@ public class GDPlayerData implements PlayerData {
         this.lastCollideEntityResult = result;
     }
 
-    public void setLastInteractData(GDClaim claim) {
-        this.lastInteractResult = true;
-        this.lastInteractClaim = claim.getUniqueId();
-        this.lastTickCounter = NMSUtil.getInstance().getRunningServerTicks();
-    }
-
-    public boolean checkLastInteraction(GDClaim claim, GDPermissionUser user) {
-        if (this.lastInteractResult && user != null && (NMSUtil.getInstance().getRunningServerTicks() - this.lastTickCounter) <= 2) {
-            if (claim.getUniqueId().equals(this.lastInteractClaim) || claim.isWilderness()) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     public void setIgnoreClaims(boolean flag) {
         this.ignoreClaims = flag;
     }
@@ -454,29 +514,29 @@ public class GDPlayerData implements PlayerData {
             return player.hasPermission(GDPermissions.MANAGE_WILDERNESS);
         }
         if (isGroup) {
-            if (claim.isTown() && player.hasPermission(GDPermissions.COMMAND_OPTIONS_GROUP_TOWN)) {
+            if (claim.isTown() && player.hasPermission(GDPermissions.COMMAND_CLAIM_OPTIONS_GROUP_TOWN)) {
                 return true;
             }
-            if (claim.isAdminClaim() && player.hasPermission(GDPermissions.COMMAND_OPTIONS_GROUP_ADMIN)) {
+            if (claim.isAdminClaim() && player.hasPermission(GDPermissions.COMMAND_CLAIM_OPTIONS_GROUP_ADMIN)) {
                 return true;
             }
-            if (claim.isBasicClaim() && player.hasPermission(GDPermissions.COMMAND_OPTIONS_GROUP_BASIC)) {
+            if (claim.isBasicClaim() && player.hasPermission(GDPermissions.COMMAND_CLAIM_OPTIONS_GROUP_BASIC)) {
                 return true;
             }
-            if (claim.isSubdivision() && player.hasPermission(GDPermissions.COMMAND_OPTIONS_GROUP_SUBDIVISION)) {
+            if (claim.isSubdivision() && player.hasPermission(GDPermissions.COMMAND_CLAIM_OPTIONS_GROUP_SUBDIVISION)) {
                 return true;
             }
         } else {
-            if (claim.isTown() && player.hasPermission(GDPermissions.COMMAND_OPTIONS_PLAYER_TOWN)) {
+            if (claim.isTown() && player.hasPermission(GDPermissions.COMMAND_CLAIM_OPTIONS_PLAYER_TOWN)) {
                 return true;
             }
-            if (claim.isAdminClaim() && player.hasPermission(GDPermissions.COMMAND_OPTIONS_PLAYER_ADMIN)) {
+            if (claim.isAdminClaim() && player.hasPermission(GDPermissions.COMMAND_CLAIM_OPTIONS_PLAYER_ADMIN)) {
                 return true;
             }
-            if (claim.isBasicClaim() && player.hasPermission(GDPermissions.COMMAND_OPTIONS_PLAYER_BASIC)) {
+            if (claim.isBasicClaim() && player.hasPermission(GDPermissions.COMMAND_CLAIM_OPTIONS_PLAYER_BASIC)) {
                 return true;
             }
-            if (claim.isSubdivision() && player.hasPermission(GDPermissions.COMMAND_OPTIONS_PLAYER_SUBDIVISION)) {
+            if (claim.isSubdivision() && player.hasPermission(GDPermissions.COMMAND_CLAIM_OPTIONS_PLAYER_SUBDIVISION)) {
                 return true;
             }
         }
@@ -486,47 +546,47 @@ public class GDPlayerData implements PlayerData {
 
     @Override
     public int getMaxAccruedClaimBlocks() {
-        return GDPermissionManager.getInstance().getInternalOptionValue(this.getSubject(), Options.MAX_ACCRUED_BLOCKS, this).intValue();
+        return GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), this.getSubject(), Options.MAX_ACCRUED_BLOCKS);
     }
 
     @Override
     public double getAbandonedReturnRatio(ClaimType type) {
-        return GDPermissionManager.getInstance().getInternalOptionValue(this.getSubject(), Options.ABANDON_RETURN_RATIO, this);
+        return GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Double.class), this.getSubject(), Options.ABANDON_RETURN_RATIO);
     }
 
     @Override
     public int getMaxClaimX(ClaimType type) {
-        return GDPermissionManager.getInstance().getInternalOptionValue(this.getSubject(), Options.MAX_SIZE_X, type, this).intValue();
+        return GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), this.getSubject(), Options.MAX_SIZE_X, type);
     }
 
     @Override
     public int getMaxClaimY(ClaimType type) {
-        return GDPermissionManager.getInstance().getInternalOptionValue(this.getSubject(), Options.MAX_SIZE_Y, type, this).intValue();
+        return GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), this.getSubject(), Options.MAX_SIZE_Y, type);
     }
 
     @Override
     public int getMaxClaimZ(ClaimType type) {
-        return GDPermissionManager.getInstance().getInternalOptionValue(this.getSubject(), Options.MAX_SIZE_Z, type, this).intValue();
+        return GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), this.getSubject(), Options.MAX_SIZE_Z, type);
     }
 
     @Override
     public int getMinClaimX(ClaimType type) {
-        return GDPermissionManager.getInstance().getInternalOptionValue(this.getSubject(), Options.MIN_SIZE_X, type, this).intValue();
+        return GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), this.getSubject(), Options.MIN_SIZE_X, type);
     }
 
     @Override
     public int getMinClaimY(ClaimType type) {
-        return GDPermissionManager.getInstance().getInternalOptionValue(this.getSubject(), Options.MIN_SIZE_Y, type, this).intValue();
+        return GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), this.getSubject(), Options.MIN_SIZE_Y, type);
     }
 
     @Override
     public int getMinClaimZ(ClaimType type) {
-        return GDPermissionManager.getInstance().getInternalOptionValue(this.getSubject(), Options.MIN_SIZE_Z, type, this).intValue();
+        return GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), this.getSubject(), Options.MIN_SIZE_Z, type);
     }
 
     @Override
     public int getMaxClaimLevel() {
-        int maxClaimLevel = GDPermissionManager.getInstance().getInternalOptionValue(this.getSubject(), Options.MAX_LEVEL, this).intValue();
+        int maxClaimLevel = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), this.getSubject(), Options.MAX_LEVEL);
         if (!this.checkedDimensionHeight) {
             final World world = Bukkit.getServer().getWorld(this.worldUniqueId);
             if (world != null) {
@@ -542,22 +602,22 @@ public class GDPlayerData implements PlayerData {
 
     @Override
     public int getMinClaimLevel() {
-        return GDPermissionManager.getInstance().getInternalOptionValue(this.getSubject(), Options.MIN_LEVEL, this).intValue();
+        return GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), this.getSubject(), Options.MIN_LEVEL);
     }
 
     @Override
     public double getEconomyClaimBlockCost() {
-        return GDPermissionManager.getInstance().getInternalOptionValue(this.getSubject(), Options.ECONOMY_BLOCK_COST, this);
+        return GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Double.class), this.getSubject(), Options.ECONOMY_BLOCK_COST);
     }
 
     @Override
     public double getEconomyClaimBlockReturn() {
-        return GDPermissionManager.getInstance().getInternalOptionValue(this.getSubject(), Options.ECONOMY_BLOCK_SELL_RETURN, this);
+        return GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Double.class), this.getSubject(), Options.ECONOMY_BLOCK_SELL_RETURN);
     }
 
     @Override
     public double getTaxRate(ClaimType type) {
-        return GDPermissionManager.getInstance().getInternalOptionValue(this.getSubject(), Options.TAX_RATE, type, this);
+        return GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Double.class), this.getSubject(), Options.TAX_RATE, type);
     }
 
     @Override
@@ -576,9 +636,9 @@ public class GDPlayerData implements PlayerData {
     }
 
     public void sendTaxExpireMessage(Player player, GDClaim claim) {
-        final double taxRate = GDPermissionManager.getInstance().getInternalOptionValue(player, Options.TAX_RATE, claim, this);
+        final double taxRate = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Double.class), player, Options.TAX_RATE, claim);
         final double taxOwed = claim.getClaimBlocks() * taxRate;
-        final double remainingDays = GDPermissionManager.getInstance().getInternalOptionValue(player, Options.TAX_EXPIRATION_DAYS_KEEP, claim, this).intValue();
+        final double remainingDays = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), player, Options.TAX_EXPIRATION_DAYS_KEEP, claim);
         final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.TAX_CLAIM_EXPIRED, ImmutableMap.of(
                 "days", remainingDays,
                 "amount", taxOwed));
@@ -589,7 +649,7 @@ public class GDPlayerData implements PlayerData {
         double totalTax = 0;
         final GDPermissionUser subject = this.getSubject();
         for (Claim claim : this.getInternalClaims()) {
-            double playerTaxRate = GDPermissionManager.getInstance().getInternalOptionValue(subject, Options.TAX_RATE, claim, this);
+            double playerTaxRate = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Double.class), subject, Options.TAX_RATE, claim);
             totalTax += (claim.getClaimBlocks() / 256) * playerTaxRate;
         }
 
@@ -598,9 +658,10 @@ public class GDPlayerData implements PlayerData {
 
     public void onDisconnect() {
         this.visualBlocks = null;
-        this.lastInteractClaim = null;
+        this.eventResultCache = null;
         this.claimResizing = null;
         this.claimSubdividing = null;
+        this.visualClaimId = null;
         if (this.visualRevertTask != null) {
             this.visualRevertTask.cancel();
             this.visualRevertTask = null;

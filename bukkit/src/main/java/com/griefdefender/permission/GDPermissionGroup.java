@@ -24,26 +24,24 @@
  */
 package com.griefdefender.permission;
 
-import me.lucko.luckperms.api.Group;
+import com.griefdefender.api.Group;
 
-public class GDPermissionGroup extends GDPermissionHolder {
+public class GDPermissionGroup extends GDPermissionHolder implements Group {
 
     private String groupName;
 
-    public GDPermissionGroup(Group group) {
-        super(group);
-        this.groupName = group.getName();
+    public GDPermissionGroup(String groupName) {
+        super(groupName);
+        this.groupName = groupName;
     }
 
+    @Override
     public String getName() {
         return this.groupName;
     }
 
+    @Override
     public String getFriendlyName() {
         return this.groupName;
-    }
-
-    public Group getLuckPermsGroup() {
-        return (Group) this.getLuckPermsHolder();
     }
 }

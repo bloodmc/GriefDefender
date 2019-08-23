@@ -24,6 +24,7 @@
  */
 package com.griefdefender.task;
 
+import com.google.common.reflect.TypeToken;
 import com.griefdefender.GDBootstrap;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
@@ -73,7 +74,7 @@ public class TaxApplyTask extends BukkitRunnable {
     public void run() {
         // don't do anything when there are no claims
         GDClaimManager claimManager = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(this.worldUniqueId);
-        ArrayList<Claim> claimList = (ArrayList<Claim>) claimManager.getWorldClaims();
+        ArrayList<Claim> claimList = (ArrayList<Claim>) new ArrayList<>(claimManager.getWorldClaims());
         if (claimList.size() == 0) {
             return;
         }
@@ -117,7 +118,7 @@ public class TaxApplyTask extends BukkitRunnable {
     private void handleClaimTax(GDClaim claim, GDPlayerData playerData, boolean inTown) {
         final GDPermissionUser user = playerData.getSubject();
         final OfflinePlayer player = user.getOfflinePlayer();
-        double taxRate = GDPermissionManager.getInstance().getInternalOptionValue(user, Options.TAX_RATE, claim, playerData);
+        double taxRate = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Double.class), user, Options.TAX_RATE, claim);
         double taxOwed = claim.getEconomyData().getTaxBalance() + (claim.getClaimBlocks() * taxRate);
         GDCauseStackManager.getInstance().pushCause(player);
         GDTaxClaimEvent event = new GDTaxClaimEvent(claim, taxRate, taxOwed);
@@ -135,7 +136,7 @@ public class TaxApplyTask extends BukkitRunnable {
             if (taxPastDueDate == null) {
                 claim.getEconomyData().setTaxPastDueDate(Instant.now());
             } else {
-                final int taxExpirationDays = GDPermissionManager.getInstance().getInternalOptionValue(user, Options.TAX_EXPIRATION, claim, playerData).intValue();
+                final int taxExpirationDays = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), user, Options.TAX_EXPIRATION, claim).intValue();
                 if (taxExpirationDays > 0) {
                     claim.getInternalClaimData().setExpired(true);
                     if (taxExpirationDays == 0) {

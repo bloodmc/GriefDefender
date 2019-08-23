@@ -22,19 +22,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.griefdefender.permission;
+package com.griefdefender.permission.flag;
 
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.claim.ClaimType;
 import com.griefdefender.api.claim.ClaimTypes;
 import com.griefdefender.api.permission.flag.Flag;
-import com.griefdefender.api.permission.flag.Flags;
-import com.griefdefender.cache.MessageCache;
-
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
-import net.kyori.text.format.TextColor;
-import net.kyori.text.format.TextDecoration;
 
 public class GDFlag implements Flag {
 
@@ -80,6 +75,10 @@ public class GDFlag implements Flag {
         return TextComponent.of("Not defined.");
     }
 
+    public void reloadDescription() {
+        this.description = null;
+    }
+
     @Override
     public boolean getDefaultClaimTypeValue(ClaimType type) {
         if (type == ClaimTypes.ADMIN || type == ClaimTypes.BASIC || type == ClaimTypes.TOWN) {
@@ -96,7 +95,6 @@ public class GDFlag implements Flag {
                 case "interact-block-secondary" :
                 case "interact-entity-primary" :
                 case "interact-inventory" : 
-                case "item-spawn" :
                 case "liquid-flow" : 
                 case "projectile-impact-block" :
                 case "projectile-impact-entity" : 

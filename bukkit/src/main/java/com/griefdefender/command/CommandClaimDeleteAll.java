@@ -35,15 +35,26 @@ import com.google.common.collect.ImmutableMap;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.GriefDefender;
+import com.griefdefender.api.claim.Claim;
+import com.griefdefender.cache.MessageCache;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.event.GDCauseStackManager;
-import com.griefdefender.event.GDDeleteClaimEvent;
+import com.griefdefender.event.GDRemoveClaimEvent;
 import com.griefdefender.permission.GDPermissions;
+import com.griefdefender.text.action.GDCallbackHolder;
+
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.adapter.bukkit.TextAdapter;
+import net.kyori.text.event.ClickEvent;
+import net.kyori.text.event.HoverEvent;
 import net.kyori.text.format.TextColor;
+
+import java.util.Set;
+import java.util.function.Consumer;
+
 import org.bukkit.OfflinePlayer;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 @CommandAlias("%griefdefender")
@@ -54,33 +65,47 @@ public class CommandClaimDeleteAll extends BaseCommand {
     @CommandAlias("deleteall")
     @Description("Delete all of another player's claims.")
     @Subcommand("delete all")
-    public void execute(Player player, OfflinePlayer otherPlayer) {
-        final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
+    public void execute(Player src, OfflinePlayer otherPlayer) {
+        final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(src.getWorld(), otherPlayer.getUniqueId());
         int originalClaimCount = playerData.getInternalClaims().size();
 
         if (originalClaimCount == 0) {
-            TextAdapter.sendComponent(player, TextComponent.of("Player " + otherPlayer.getName() + " has no claims to delete.", TextColor.RED));
+            TextAdapter.sendComponent(src, TextComponent.of("Player " + otherPlayer.getName() + " has no claims to delete.", TextColor.RED));
             return;
         }
 
-        GDCauseStackManager.getInstance().pushCause(player);
-        GDDeleteClaimEvent event = new GDDeleteClaimEvent(ImmutableList.copyOf(playerData.getInternalClaims()));
-        GriefDefender.getEventManager().post(event);
-        GDCauseStackManager.getInstance().popCause();
-        if (event.cancelled()) {
-            GriefDefenderPlugin.sendMessage(player, event.getMessage().orElse(TextComponent.of("Could not delete all claims. A plugin has denied it.").color(TextColor.RED)));
-            return;
-        }
+        final Component confirmationText = TextComponent.builder("")
+                .append(GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.DELETE_ALL_PLAYER_WARNING, 
+                        ImmutableMap.of("player", TextComponent.of(otherPlayer.getName()).color(TextColor.AQUA))))
+                .append(TextComponent.builder()
+                    .append("\n[")
+                    .append("Confirm", TextColor.GREEN)
+                    .append("]\n")
+                    .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createConfirmationConsumer(src, otherPlayer, playerData))))
+                    .hoverEvent(HoverEvent.showText(MessageCache.getInstance().UI_CLICK_CONFIRM)).build())
+                .build();
+        TextAdapter.sendComponent(src, confirmationText);
+    }
 
-        GriefDefenderPlugin.getInstance().dataStore.deleteClaimsForPlayer(otherPlayer.getUniqueId());
-        final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.DELETE_ALL_PLAYER_SUCCESS, ImmutableMap.of(
-                "player", otherPlayer.getName()));
-        GriefDefenderPlugin.sendMessage(player, message);
-        if (player != null) {
-            GriefDefenderPlugin.getInstance().getLogger().info(player.getName() + " deleted all claims belonging to " + otherPlayer.getName() + ".");
+    private static Consumer<CommandSender> createConfirmationConsumer(Player src, OfflinePlayer otherPlayer, GDPlayerData playerData) {
+        return confirm -> {
+            GDCauseStackManager.getInstance().pushCause(src);
+            GDRemoveClaimEvent event = new GDRemoveClaimEvent(ImmutableList.copyOf(playerData.getInternalClaims()));
+            GriefDefender.getEventManager().post(event);
+            GDCauseStackManager.getInstance().popCause();
+            if (event.cancelled()) {
+                GriefDefenderPlugin.sendMessage(src, event.getMessage().orElse(MessageCache.getInstance().PLUGIN_EVENT_CANCEL));
+                return;
+            }
 
-            // revert any current visualization
-            playerData.revertActiveVisual(player);
-        }
+            GriefDefenderPlugin.getInstance().dataStore.deleteClaimsForPlayer(otherPlayer.getUniqueId());
+            if (src != null) {
+                final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.DELETE_ALL_PLAYER_SUCCESS, ImmutableMap.of(
+                        "player", TextComponent.of(otherPlayer.getName()).color(TextColor.AQUA)));
+                GriefDefenderPlugin.sendMessage(src, message);
+                // revert any current visualization
+                playerData.revertActiveVisual(src);
+            }
+        };
     }
 }

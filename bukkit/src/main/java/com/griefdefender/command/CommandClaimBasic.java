@@ -33,7 +33,6 @@ import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.claim.ShovelTypes;
 import com.griefdefender.cache.MessageCache;
-import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.permission.GDPermissions;
 import org.bukkit.entity.Player;
 
@@ -41,7 +40,7 @@ import org.bukkit.entity.Player;
 @CommandPermission(GDPermissions.COMMAND_BASIC_MODE)
 public class CommandClaimBasic extends BaseCommand {
 
-    @CommandAlias("modebasic")
+    @CommandAlias("modebasic|basicclaims|bc")
     @Description("Switches the shovel tool back to basic claims mode")
     @Subcommand("mode basic")
     public void execute(Player player) {

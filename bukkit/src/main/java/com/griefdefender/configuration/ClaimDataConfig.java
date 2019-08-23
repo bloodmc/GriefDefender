@@ -32,7 +32,6 @@ import com.griefdefender.api.data.EconomyData;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.configuration.category.ConfigCategory;
 import com.griefdefender.internal.util.BlockUtil;
-import com.griefdefender.registry.ClaimTypeRegistryModule;
 
 import net.kyori.text.Component;
 import ninja.leaping.configurate.objectmapping.Setting;
@@ -40,9 +39,7 @@ import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 

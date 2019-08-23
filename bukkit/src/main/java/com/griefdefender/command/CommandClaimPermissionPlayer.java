@@ -47,6 +47,7 @@ import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.internal.pagination.PaginationList;
 import com.griefdefender.permission.GDPermissionHolder;
 import com.griefdefender.permission.GDPermissions;
+import com.griefdefender.permission.ui.UIHelper;
 import com.griefdefender.util.PermissionUtil;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
@@ -73,12 +74,13 @@ public class CommandClaimPermissionPlayer extends BaseCommand {
     public void execute(Player player, OfflinePlayer otherPlayer, @Optional String[] args) throws CommandException, InvalidCommandArgument {
         String permission = null;
         String value = null;
+        final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
         if (args.length > 0) {
             if (args.length < 2) {
                 throw new InvalidCommandArgument();
             }
             permission = args[0];
-            if (permission != null && !player.hasPermission(permission)) {
+            if (!playerData.ignoreClaims && permission != null && !player.hasPermission(permission)) {
                 GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().PERMISSION_ASSIGN_WITHOUT_HAVING);
                 return;
             }
@@ -86,7 +88,6 @@ public class CommandClaimPermissionPlayer extends BaseCommand {
             value = args[1];
         }
 
-        final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
         final GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAtPlayer(playerData, player.getLocation());
         final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_CLAIM_MANAGE,
                 ImmutableMap.of(
@@ -115,11 +116,12 @@ public class CommandClaimPermissionPlayer extends BaseCommand {
                 permList.add(permText);
             }
 
-            List<Component> finalTexts = CommandHelper.stripeText(permList);
+            List<Component> finalTexts = UIHelper.stripeText(permList);
 
             PaginationList.Builder paginationBuilder = PaginationList.builder()
                     .title(TextComponent.of(otherPlayer.getName() + " Permissions", TextColor.AQUA)).padding(TextComponent.of(" ").decoration(TextDecoration.STRIKETHROUGH, true)).contents(finalTexts);
             paginationBuilder.sendTo(player);
+            return;
         }
 
         Tristate tristateValue = PermissionUtil.getInstance().getTristateFromString(value);
@@ -128,7 +130,7 @@ public class CommandClaimPermissionPlayer extends BaseCommand {
             return;
         }
 
-        PermissionUtil.getInstance().setPermissionValue((GDClaim) claim, holder, permission, tristateValue, contexts);
+        PermissionUtil.getInstance().setPermissionValue(holder, permission, tristateValue, contexts);
         TextAdapter.sendComponent(player, TextComponent.builder("")
                 .append("Set permission ")
                 .append(permission, TextColor.AQUA)

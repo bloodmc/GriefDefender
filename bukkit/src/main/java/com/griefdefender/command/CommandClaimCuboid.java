@@ -31,6 +31,7 @@ import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Subcommand;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
+import com.griefdefender.api.permission.option.type.CreateModeTypes;
 import com.griefdefender.cache.MessageCache;
 import com.griefdefender.permission.GDPermissions;
 import org.bukkit.entity.Player;
@@ -44,11 +45,11 @@ public class CommandClaimCuboid extends BaseCommand {
     @Subcommand("cuboid")
     public void execute(Player player) {
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
-        if (playerData.getClaimCreateMode() == 0) {
-            playerData.setClaimCreateMode(1);
+        if (playerData.getClaimCreateMode() == CreateModeTypes.AREA) {
+            playerData.setClaimCreateMode(CreateModeTypes.VOLUME);
             GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().COMMAND_CUBOID_ENABLED);
         } else {
-            playerData.setClaimCreateMode(0);
+            playerData.setClaimCreateMode(CreateModeTypes.AREA);
             GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().COMMAND_CUBOID_DISABLED);
         }
     }

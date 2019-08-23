@@ -116,8 +116,6 @@ public class CommandClaimSell extends BaseCommand {
                 .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createSaleConfirmationConsumer(player, claim, salePrice))))
                 .build();
         GriefDefenderPlugin.sendMessage(player, saleConfirmationText);
-
-        return;
     }
 
     private static Consumer<CommandSender> createSaleConfirmationConsumer(CommandSender src, Claim claim, double price) {

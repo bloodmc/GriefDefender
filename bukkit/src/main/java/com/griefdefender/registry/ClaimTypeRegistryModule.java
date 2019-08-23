@@ -46,30 +46,43 @@ public class ClaimTypeRegistryModule implements CatalogRegistryModule<ClaimType>
         return instance;
     }
 
-    private final Map<String, ClaimType> claimTypeMap = new HashMap<>();
+    private final Map<String, ClaimType> registryMap = new HashMap<>();
 
     @Override
     public Optional<ClaimType> getById(String id) {
-        return Optional.ofNullable(this.claimTypeMap.get(checkNotNull(id)));
+        if (id == null) {
+            return Optional.empty();
+        }
+
+        if (id.contains("griefdefender.")) {
+            id = id.replace("griefdefender.", "griefdefender:");
+        }
+        if (!id.contains(":")) {
+            id = "griefdefender:" + id;
+        }
+
+        return Optional.ofNullable(this.registryMap.get(checkNotNull(id)));
     }
 
     @Override
     public Collection<ClaimType> getAll() {
-        return this.claimTypeMap.values();
+        return this.registryMap.values();
     }
 
     @Override
     public void registerDefaults() {
         RegistryHelper.mapFields(ClaimTypes.class, input -> {
-            final ClaimType type = new GDClaimType("griefdefender:" + input.toLowerCase(), input.toLowerCase());
-            this.claimTypeMap.put(input.toLowerCase(Locale.ENGLISH), type);
+            final String name = input.toLowerCase().replace("_", "-");
+            final String id = "griefdefender:" + name;
+            final ClaimType type = new GDClaimType(id, name);
+            this.registryMap.put(id, type);
             return type;
         });
     }
 
     @Override
     public void registerCustomType(ClaimType type) {
-        this.claimTypeMap.put(type.getName().toLowerCase(Locale.ENGLISH), type);
+        this.registryMap.put(type.getId().toLowerCase(Locale.ENGLISH), type);
     }
 
     static {

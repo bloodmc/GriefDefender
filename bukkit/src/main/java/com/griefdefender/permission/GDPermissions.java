@@ -37,6 +37,7 @@ public class GDPermissions {
     public static final String COMMAND_CUBOID_CLAIMS = "griefdefender.user.claim.command.cuboid";
     public static final String COMMAND_CLAIM_LIST = "griefdefender.user.claim.command.list";
     public static final String COMMAND_BASIC_MODE = "griefdefender.user.claim.command.basic-mode";
+    public static final String COMMAND_GIVE_BLOCKS = "griefdefender.user.claim.command.give.blocks";
     public static final String COMMAND_GIVE_BOOK = "griefdefender.user.claim.command.give.book";
     public static final String COMMAND_GIVE_PET = "griefdefender.user.claim.command.give.pet";
     public static final String COMMAND_CLAIM_BANK = "griefdefender.user.claim.command.bank";
@@ -45,6 +46,7 @@ public class GDPermissions {
     public static final String COMMAND_CLAIM_INFO_BASE = "griefdefender.user.claim.command.info.base";
     public static final String COMMAND_CLAIM_INFO_TELEPORT_OTHERS = "griefdefender.user.claim.command.info.teleport.others";
     public static final String COMMAND_CLAIM_INFO_TELEPORT_BASE = "griefdefender.user.claim.command.info.teleport.base";
+    public static final String COMMAND_CLAIM_OPTIONS_BASE = "griefdefender.user.claim.option.base";
     public static final String COMMAND_CLAIM_SELL = "griefdefender.user.claim.command.sell";
     public static final String COMMAND_CLAIM_SPAWN = "griefdefender.user.claim.command.spawn";
     public static final String COMMAND_CLAIM_SET_SPAWN = "griefdefender.user.claim.command.set-spawn";
@@ -68,9 +70,9 @@ public class GDPermissions {
     public static final String COMMAND_BUY_CLAIM_BLOCKS = "griefdefender.user.claim.command.buy-blocks";
     public static final String COMMAND_SELL_CLAIM_BLOCKS = "griefdefender.user.claim.command.sell-blocks";
     public static final String COMMAND_LIST_CLAIM_FLAGS = "griefdefender.user.claim.command.list-flags";
+    public static final String COMMAND_LIST_CLAIM_OPTIONS = "griefdefender.user.claim.command.list-options";
     public static final String COMMAND_BAN_ITEM = "griefdefender.user.claim.command.ban-item";
     public static final String COMMAND_UNBAN_ITEM = "griefdefender.user.claim.command.unban-item";
-    public static final String COMMAND_SIEGE = "griefdefender.user.claim.command.siege";
     public static final String COMMAND_CLAIM_INHERIT = "griefdefender.user.claim.command.inherit";
     public static final String CLAIM_CREATE = "griefdefender.user.claim.create.base";
     public static final String CLAIM_CREATE_BASIC = "griefdefender.user.claim.create.basic";
@@ -79,10 +81,10 @@ public class GDPermissions {
     public static final String CLAIM_CUBOID_BASIC = "griefdefender.user.claim.create.cuboid.basic";
     public static final String CLAIM_CUBOID_SUBDIVISION = "griefdefender.user.claim.create.cuboid.subdivision";
     public static final String CLAIM_CUBOID_TOWN = "griefdefender.user.claim.create.cuboid.town";
+    public static final String CLAIM_PVP_OVERRIDE = "griefdefender.user.claim.pvp-override";
     public static final String CLAIM_RESIZE = "griefdefender.user.claim.resize";
     public static final String CLAIM_SHOW_TUTORIAL = "griefdefender.user.claim.show-tutorial";
     public static final String LIST_OTHER_CLAIMS = "griefdefender.user.claim.list.other";
-    public static final String SIEGE_IMMUNE = "griefdefender.user.claim.siege.immune";
     public static final String VISUALIZE_CLAIMS = "griefdefender.user.claim.visualize.base";
     public static final String VISUALIZE_CLAIMS_NEARBY = "griefdefender.user.claim.visualize.nearby";
     public static final String COMMAND_PLAYER_INFO_BASE = "griefdefender.user.command.info.base";
@@ -97,31 +99,52 @@ public class GDPermissions {
     public static final String COMMAND_FLAGS_GROUP = "griefdefender.user.claim.command.flag.group";
     public static final String COMMAND_FLAGS_RESET = "griefdefender.user.claim.command.flag.reset";
 
-    // options
-    public static final String COMMAND_OPTIONS_BASE = "griefdefender.user.claim.command.option.base";
-    public static final String COMMAND_OPTIONS_GROUP_BASE = "griefdefender.user.claim.command.option.group.base";
-    public static final String COMMAND_OPTIONS_GROUP_ADMIN = "griefdefender.user.claim.command.option.group.admin";
-    public static final String COMMAND_OPTIONS_GROUP_BASIC = "griefdefender.user.claim.command.option.group.basic";
-    public static final String COMMAND_OPTIONS_GROUP_SUBDIVISION = "griefdefender.user.claim.command.option.group.subdivision";
-    public static final String COMMAND_OPTIONS_GROUP_TOWN = "griefdefender.user.claim.command.option.group.town";
+    public static final String FLAG_CUSTOM_ADMIN_BASE = "griefdefender.admin.custom.flag";
+    public static final String FLAG_CUSTOM_USER_BASE = "griefdefender.user.custom.flag";
 
-    public static final String COMMAND_OPTIONS_PLAYER_BASE = "griefdefender.user.claim.command.option.player.base";
-    public static final String COMMAND_OPTIONS_PLAYER_ADMIN = "griefdefender.user.claim.command.option.player.admin";
-    public static final String COMMAND_OPTIONS_PLAYER_BASIC = "griefdefender.user.claim.command.option.player.basic";
-    public static final String COMMAND_OPTIONS_PLAYER_SUBDIVISION = "griefdefender.user.claim.command.option.player.subdivision";
-    public static final String COMMAND_OPTIONS_PLAYER_TOWN = "griefdefender.user.claim.command.option.player.town";
+    // options
+    public static final String USER_CLAIM_OPTIONS = "griefdefender.user.claim.option";
+    public static final String COMMAND_OPTIONS_CLAIM = "griefdefender.user.claim.command.option.base";
+    public static final String COMMAND_OPTIONS_PLAYER = "griefdefender.user.claim.command.option.player";
+    public static final String COMMAND_OPTIONS_GROUP = "griefdefender.user.claim.command.option.group";
+    public static final String USER_OPTION_PERK_OWNER_FLY_BASIC = "griefdefender.user.option.perk.owner-fly.basic";
+    public static final String USER_OPTION_PERK_OWNER_FLY_TOWN = "griefdefender.user.option.perk.owner-fly.town";
+    public static final String OPTION_BASE = "griefdefender";
 
     // Admin
+    public static final String ADVANCED_FLAGS = "griefdefender.admin.advanced-flags";
+    public static final String BYPASS_BAN = "griefdefender.admin.bypass.ban";
+    public static final String BYPASS_BORDER_CHECK = "griefdefender.admin.bypass.border-check";
+    public static final String BYPASS_CLAIM_RESIZE = "griefdefender.admin.bypass.override.resize";
+    public static final String BYPASS_CLAIM_LIMIT = "griefdefender.admin.bypass.override.limit";
+    public static final String BYPASS_OPTION = "griefdefender.admin.bypass.option";
+    public static final String CLAIM_CUBOID_ADMIN = "griefdefender.admin.claim.cuboid";
+    public static final String CLAIM_RESIZE_ALL = "griefdefender.admin.claim.resize";
+    public static final String CLAIM_RESIZE_ADMIN = "griefdefender.admin.claim.resize.admin";
+    public static final String CLAIM_RESIZE_ADMIN_SUBDIVISION = "griefdefender.admin.claim.resize.admin.subdivision";
+    public static final String CLAIM_RESIZE_BASIC = "griefdefender.admin.claim.resize.basic";
+    public static final String CLAIM_RESIZE_BASIC_SUBDIVISION = "griefdefender.admin.claim.resize.basic.subdivision";
+    public static final String CLAIM_RESIZE_TOWN = "griefdefender.admin.claim.resize.town";
     public static final String COMMAND_ADJUST_CLAIM_BLOCKS = "griefdefender.admin.claim.command.adjust-claim-blocks";
     public static final String COMMAND_ADMIN_CLAIMS = "griefdefender.admin.claim.command.admin-mode";
+    public static final String COMMAND_ADMIN_DEBUG = "griefdefender.admin.claim.command.debug";
+    public static final String COMMAND_CLAIM_BAN = "griefdefender.admin.claim.command.ban";
     public static final String COMMAND_CLAIM_CLEAR = "griefdefender.admin.claim.command.clear";
     public static final String COMMAND_CLAIM_PERMISSION_GROUP = "griefdefender.admin.claim.command.permission-group";
     public static final String COMMAND_CLAIM_PERMISSION_PLAYER = "griefdefender.admin.claim.command.permission-player";
     public static final String COMMAND_CLAIM_SCHEMATIC = "griefdefender.admin.claim.command.schematic";
-    public static final String COMMAND_ADMIN_DEBUG = "griefdefender.admin.claim.command.debug";
+    public static final String COMMAND_CLAIM_OPTIONS_GROUP_BASE = "griefdefender.admin.claim.command.option.group.base";
+    public static final String COMMAND_CLAIM_OPTIONS_GROUP_ADMIN = "griefdefender.admin.claim.command.option.group.admin";
+    public static final String COMMAND_CLAIM_OPTIONS_GROUP_BASIC = "griefdefender.admin.claim.command.option.group.basic";
+    public static final String COMMAND_CLAIM_OPTIONS_GROUP_SUBDIVISION = "griefdefender.admin.claim.command.option.group.subdivision";
+    public static final String COMMAND_CLAIM_OPTIONS_GROUP_TOWN = "griefdefender.admin.claim.command.option.group.town";
+    public static final String COMMAND_CLAIM_OPTIONS_PLAYER_BASE = "griefdefender.admin.claim.command.option.player.base";
+    public static final String COMMAND_CLAIM_OPTIONS_PLAYER_ADMIN = "griefdefender.admin.claim.command.option.player.admin";
+    public static final String COMMAND_CLAIM_OPTIONS_PLAYER_BASIC = "griefdefender.admin.claim.command.option.player.basic";
+    public static final String COMMAND_CLAIM_OPTIONS_PLAYER_SUBDIVISION = "griefdefender.admin.claim.command.option.player.subdivision";
+    public static final String COMMAND_CLAIM_OPTIONS_PLAYER_TOWN = "griefdefender.admin.claim.command.option.player.town";
+    public static final String COMMAND_IGNORE_CLAIMS = "griefdefender.admin.claim.command.ignore.base";
     public static final String COMMAND_DELETE_CLAIM_BASE = "griefdefender.admin.claim.command.delete.base";
-    public static final String DELETE_CLAIM_BASIC = "griefdefender.admin.claim.command.delete.basic";
-    public static final String DELETE_CLAIM_ADMIN = "griefdefender.admin.claim.command.delete.admin";
     public static final String COMMAND_DELETE_CLAIMS = "griefdefender.admin.claim.command.delete-claims";
     public static final String COMMAND_DELETE_ADMIN_CLAIMS = "griefdefender.admin.command.delete-admin-claims";
     public static final String COMMAND_SET_ACCRUED_CLAIM_BLOCKS = "griefdefender.admin.command.set-accrued-claim-blocks";
@@ -130,43 +153,21 @@ public class GDPermissions {
     public static final String COMMAND_RESTORE_NATURE_AGGRESSIVE = "griefdefender.admin.command.restore-nature.aggressive";
     public static final String COMMAND_RESTORE_NATURE_FILL = "griefdefender.admin.command.restore-nature.fill";
     public static final String COMMAND_RELOAD = "griefdefender.admin.command.reload";
-    public static final String SET_ADMIN_FLAGS = "griefdefender.admin.claim.set-admin-flags";
-    public static final String LIST_ADMIN_CLAIMS = "griefdefender.admin.claim.list.admin";
-    public static final String ADMIN_CLAIM_FLAGS = "griefdefender.admin.claim.flag";
-    public static final String MANAGE_FLAG_DEFAULTS = "griefdefender.admin.flag-defaults";
-    public static final String MANAGE_FLAG_OVERRIDES = "griefdefender.admin.flag-overrides";
-    public static final String MANAGE_WILDERNESS = "griefdefender.admin.claim.wilderness";
-    public static final String MANAGE_GLOBAL_OPTIONS = "griefdefender.admin.claim.option.global";
-    public static final String COMMAND_IGNORE_CLAIMS = "griefdefender.admin.claim.command.ignore.base";
-    public static final String IGNORE_BORDER_CHECK = "griefdefender.admin.ignore.border-check";
+    public static final String DELETE_CLAIM_BASIC = "griefdefender.admin.claim.command.delete.basic";
+    public static final String DELETE_CLAIM_ADMIN = "griefdefender.admin.claim.command.delete.admin";
+    public static final String EAVES_DROP_SIGNS = "griefdefender.admin.eavesdrop.signs";
     public static final String IGNORE_CLAIMS_BASIC = "griefdefender.admin.claim.command.ignore.basic";
     public static final String IGNORE_CLAIMS_ADMIN = "griefdefender.admin.claim.command.ignore.admin";
     public static final String IGNORE_CLAIMS_TOWN = "griefdefender.admin.claim.command.ignore.town";
     public static final String IGNORE_CLAIMS_WILDERNESS = "griefdefender.admin.claim.command.ignore.wilderness";
-    public static final String CLAIM_CUBOID_ADMIN = "griefdefender.admin.claim.cuboid";
-    public static final String CLAIM_RESIZE_ALL = "griefdefender.admin.claim.resize";
-    public static final String CLAIM_RESIZE_ADMIN = "griefdefender.admin.claim.resize.admin";
-    public static final String CLAIM_RESIZE_ADMIN_SUBDIVISION = "griefdefender.admin.claim.resize.admin.subdivision";
-    public static final String CLAIM_RESIZE_BASIC = "griefdefender.admin.claim.resize.basic";
-    public static final String CLAIM_RESIZE_BASIC_SUBDIVISION = "griefdefender.admin.claim.resize.basic.subdivision";
-    public static final String CLAIM_RESIZE_TOWN = "griefdefender.admin.claim.resize.town";
-    public static final String OVERRIDE_CLAIM_RESIZE = "griefdefender.admin.claim.override.resize";
-    public static final String OVERRIDE_CLAIM_LIMIT = "griefdefender.admin.claim.override.limit";
-    public static final String EAVES_DROP_SIGNS = "griefdefender.admin.eavesdrop.signs";
-    public static final String COMMAND_UNLOCK_DROPS = "griefdefender.admin.command.unlock-drops";
-    public static final String NO_PVP_IMMUNITY = "griefdefender.admin.no-pvp-immunity";
-
-    // Chat
-    public static final String COMMAND_IGNORE_PLAYER = "griefdefender.user.chat.command.ignore";
-    public static final String COMMAND_UNIGNORE_PLAYER = "griefdefender.user.chat.command.unignore";
-    public static final String COMMAND_LIST_IGNORED_PLAYERS = "griefdefender.admin.chat.command.list";
-    public static final String COMMAND_SEPARATE_PLAYERS = "griefdefender.admin.chat.command.separate";
-    public static final String COMMAND_UNSEPARATE_PLAYERS = "griefdefender.admin.chat.command.unseparate";
-    public static final String COMMAND_SOFT_MUTE_PLAYER = "griefdefender.admin.chat.command.softmute";
-    public static final String NOT_IGNORABLE = "griefdefender.admin.chat.not-ignorable";
-    public static final String OVERRIDE_SPAM = "griefdefender.admin.chat.spam-override";
-    public static final String OVERRIDE_PROFANITY = "griefdefender.admin.chat.profanity-override";
-    public static final String EAVES_DROP = "griefdefender.admin.chat.eavesdrop";
+    public static final String LIST_ADMIN_CLAIMS = "griefdefender.admin.claim.list.admin";
+    public static final String MANAGE_FLAG_DEFAULTS = "griefdefender.admin.flag-defaults";
+    public static final String MANAGE_FLAG_OVERRIDES = "griefdefender.admin.flag-overrides";
+    public static final String MANAGE_WILDERNESS = "griefdefender.admin.claim.wilderness";
+    public static final String MANAGE_ADMIN_OPTIONS = "griefdefender.admin.claim.option.admin";
+    public static final String MANAGE_GLOBAL_OPTIONS = "griefdefender.admin.claim.option.global";
+    public static final String MANAGE_OVERRIDE_OPTIONS = "griefdefender.admin.claim.option.override";
+    public static final String SET_ADMIN_FLAGS = "griefdefender.admin.claim.set-admin-flags";
 
     // Misc
     public static final String COMMAND_HELP = "griefdefender.user.command.help";
@@ -196,6 +197,7 @@ public class GDPermissions {
     public static final String BLOCK_GROW = "griefdefender.flag.block-grow";
     public static final String BLOCK_MODIFY = "griefdefender.flag.block-modify";
     public static final String BLOCK_PLACE = "griefdefender.flag.block-place";
+    public static final String BLOCK_SPREAD = "griefdefender.flag.block-spread";
     public static final String COLLIDE_BLOCK = "griefdefender.flag.collide-block";
     public static final String COLLIDE_ENTITY = "griefdefender.flag.collide-entity";
     public static final String COMMAND_EXECUTE = "griefdefender.flag.command-execute";
@@ -210,7 +212,6 @@ public class GDPermissions {
     public static final String EXIT_CLAIM = "griefdefender.flag.exit-claim";
     public static final String EXPLOSION_BLOCK = "griefdefender.flag.explosion-block";
     public static final String EXPLOSION_ENTITY = "griefdefender.flag.explosion-entity";
-    public static final String FIRE_SPREAD = "griefdefender.flag.fire-spread";
     public static final String FLAG_BASE = "griefdefender.flag";
     public static final String INTERACT_BLOCK_PRIMARY = "griefdefender.flag.interact-block-primary";
     public static final String INTERACT_BLOCK_SECONDARY = "griefdefender.flag.interact-block-secondary";

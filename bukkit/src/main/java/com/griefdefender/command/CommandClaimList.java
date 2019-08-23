@@ -27,6 +27,7 @@ package com.griefdefender.command;
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.CommandPermission;
+import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Optional;
 import co.aikar.commands.annotation.Subcommand;
 import co.aikar.commands.annotation.Syntax;
@@ -75,7 +76,6 @@ import java.util.function.Consumer;
 @CommandPermission(GDPermissions.COMMAND_CLAIM_LIST)
 public class CommandClaimList extends BaseCommand {
 
-    private MessageDataConfig MESSAGE_DATA = GriefDefenderPlugin.getInstance().messageData;
     private final ClaimType forcedType;
     private boolean canListOthers;
     private boolean canListAdmin;
@@ -91,23 +91,24 @@ public class CommandClaimList extends BaseCommand {
         this.forcedType = type;
     }
 
-    @CommandAlias("claimlist")
+    @CommandAlias("claimlist|claimslist")
     @Syntax("[<player>|<player> <world>]")
+    @Description("List information about a player's claim blocks and claims.")
     @Subcommand("claim list")
     public void execute(Player src, @Optional String[] args) {
-        OfflinePlayer user = null;
+        GDPermissionUser user = null;
         World world = null;
         if (args.length > 0) {
-            user = Bukkit.getServer().getOfflinePlayer(args[0]);
+            user = PermissionHolderCache.getInstance().getOrCreateUser(args[0]);
             if (user == null) {
-                TextAdapter.sendComponent(src, MESSAGE_DATA.getMessage(MessageStorage.COMMAND_PLAYER_NOT_FOUND,
+                TextAdapter.sendComponent(src, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.COMMAND_PLAYER_NOT_FOUND,
                         ImmutableMap.of("player", args[0])));
                 return;
             }
             if (args.length > 1) {
                 world = Bukkit.getServer().getWorld(args[1]);
                 if (world == null) {
-                    TextAdapter.sendComponent(src, MESSAGE_DATA.getMessage(MessageStorage.COMMAND_WORLD_NOT_FOUND,
+                    TextAdapter.sendComponent(src, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.COMMAND_WORLD_NOT_FOUND,
                             ImmutableMap.of("world", args[1])));
                     return;
                 }
@@ -115,9 +116,9 @@ public class CommandClaimList extends BaseCommand {
         }
 
         if (user == null) {
-            user = (OfflinePlayer) src;
+            user = PermissionHolderCache.getInstance().getOrCreateUser(src);
             if (world == null) {
-                world = ((Player) user).getWorld();
+                world = ((Player) user.getOnlinePlayer()).getWorld();
             }
         }
         if (world == null) {
@@ -126,7 +127,7 @@ public class CommandClaimList extends BaseCommand {
 
         this.canListOthers = src.hasPermission(GDPermissions.LIST_OTHER_CLAIMS);
         this.canListAdmin = src.hasPermission(GDPermissions.LIST_OTHER_CLAIMS);
-        showClaimList(src, PermissionHolderCache.getInstance().getOrCreateUser(user), this.forcedType, world.getUID());
+        showClaimList(src, user, this.forcedType, world.getUID());
     }
 
     private void showClaimList(Player src, GDPermissionUser user, ClaimType type, UUID worldUniqueId) {
@@ -178,13 +179,13 @@ public class CommandClaimList extends BaseCommand {
         final Component whiteOpenBracket = TextComponent.of("[");
         final Component whiteCloseBracket = TextComponent.of("]");
         Component ownedShowText = MessageCache.getInstance().CLAIMLIST_UI_CLICK_VIEW_CLAIMS;
-        Component adminShowText = MESSAGE_DATA.getMessage(MessageStorage.UI_CLICK_FILTER_TYPE,
+        Component adminShowText = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.UI_CLICK_FILTER_TYPE,
                 ImmutableMap.of("type", TextComponent.of("ADMIN", TextColor.RED)));
-        Component basicShowText = MESSAGE_DATA.getMessage(MessageStorage.UI_CLICK_FILTER_TYPE,
+        Component basicShowText = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.UI_CLICK_FILTER_TYPE,
                 ImmutableMap.of("type", TextComponent.of("BASIC", TextColor.YELLOW)));
-        Component subdivisionShowText = MESSAGE_DATA.getMessage(MessageStorage.UI_CLICK_FILTER_TYPE,
+        Component subdivisionShowText = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.UI_CLICK_FILTER_TYPE,
                 ImmutableMap.of("type", TextComponent.of("SUBDIVISION", TextColor.AQUA)));
-        Component townShowText = MESSAGE_DATA.getMessage(MessageStorage.UI_CLICK_FILTER_TYPE,
+        Component townShowText = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.UI_CLICK_FILTER_TYPE,
                 ImmutableMap.of("type", TextComponent.of("TOWN", TextColor.GREEN)));
         Component ownedTypeText = TextComponent.builder("")
                 .append(this.displayOwned && type == null ? 

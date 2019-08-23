@@ -27,13 +27,24 @@ package com.griefdefender.migrator;
 import com.flowpowered.math.vector.Vector3i;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
+import com.griefdefender.api.Tristate;
 import com.griefdefender.api.claim.ClaimType;
 import com.griefdefender.api.claim.ClaimTypes;
+import com.griefdefender.api.permission.Context;
+import com.griefdefender.api.permission.ContextKeys;
+import com.griefdefender.api.permission.flag.Flags;
+import com.griefdefender.api.permission.option.Options;
+import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.configuration.ClaimDataConfig;
 import com.griefdefender.configuration.ClaimStorageData;
 import com.griefdefender.internal.util.BlockUtil;
+import com.griefdefender.permission.GDPermissionHolder;
+import com.griefdefender.permission.GDPermissionUser;
+import com.griefdefender.permission.flag.FlagContexts;
 import com.griefdefender.storage.BaseStorage;
+import com.griefdefender.util.PermissionUtil;
 
+import net.kyori.text.serializer.legacy.LegacyComponentSerializer;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.yaml.YAMLConfigurationLoader;
 import org.bukkit.World;
@@ -46,23 +57,82 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class GriefPreventionMigrator {
 
-    private final static File gpBukkitPlayerDataMigrated = BaseStorage.globalPlayerDataPath.resolve("_bukkitMigrated").toFile();
+    private static final File gpBukkitPlayerDataMigrated = BaseStorage.globalPlayerDataPath.resolve("_bukkitMigrated").toFile();
+    private static final Path gpFlags = Paths.get("plugins", "GPFlags", "flags.yml");
     private static final Map<Integer, UUID> idToUUID = new ConcurrentHashMap<>();
     private static final Map<UUID, ClaimStorageData> claimStorageMap = new ConcurrentHashMap<>();
+    private static final GDPermissionHolder DEFAULT_HOLDER = GriefDefenderPlugin.DEFAULT_HOLDER;
     private static int count;
 
+    private static final String FLAG_CHANGE_BIOME = "changebiome";
+    private static final String FLAG_COMMAND_BLACKLIST = "commandblacklist";
+    private static final String FLAG_COMMAND_WHITELIST = "commandwhitelist";
+    private static final String FLAG_ENTER_COMMAND = "entercommand";
+    private static final String FLAG_ENTER_COMMAND_MEMBERS = "entercommandmembers";
+    private static final String FLAG_ENTER_COMMAND_OWNER = "entercommandowner";
+    private static final String FLAG_ENTER_MESSAGE = "entermessage";
+    private static final String FLAG_ENTER_PLAYER_COMMAND = "enterplayercommand";
+    private static final String FLAG_EXIT_COMMAND = "exitcommand";
+    private static final String FLAG_EXIT_COMMAND_MEMBERS = "exitcommandmembers";
+    private static final String FLAG_EXIT_COMMAND_OWNER = "exitcommandowner";
+    private static final String FLAG_EXIT_MESSAGE = "exitmessage";
+    private static final String FLAG_EXIT_PLAYER_COMMAND = "exitplayercommand";
+    private static final String FLAG_HEALTH_REGEN = "healthregen";
+    private static final String FLAG_INFINITE_ARROWS = "infinitearrows";
+    private static final String FLAG_KEEP_INVENTORY = "keepinventory";
+    private static final String FLAG_KEEP_LEVEL = "keeplevel";
+    private static final String FLAG_NETHER_PORTAL_CONSOLE_COMMAND = "netherportalconsolecommand";
+    private static final String FLAG_NETHER_PORTAL_PLAYER_COMMAND = "netherportalplayercommand";
+    private static final String FLAG_NO_CHORUS_FRUIT = "nochorusfruit";
+    private static final String FLAG_NO_COMBAT_LOOT = "nocombatloot";
+    private static final String FLAG_NO_ENDER_PEARL = "noenderpearl";
+    private static final String FLAG_NO_ENTER = "noenter";
+    private static final String FLAG_NO_ENTER_PLAYER = "noenterplayer";
+    private static final String FLAG_NO_EXPIRATION = "noexpiration";
+    private static final String FLAG_NO_EXPLOSION_DAMAGE = "noexplosiondamage";
+    private static final String FLAG_NO_FALL_DAMAGE = "nofalldamage";
+    private static final String FLAG_NO_FIRE_DAMAGE = "nofiredamage";
+    private static final String FLAG_NO_FIRE_SPREAD = "nofirespread";
+    private static final String FLAG_NO_FLIGHT = "noflight";
+    private static final String FLAG_NO_FLUID_FLOW = "nofluidflow";
+    private static final String FLAG_NO_GROWTH = "nogrowth";
+    private static final String FLAG_NO_HUNGER = "nohunger";
+    private static final String FLAG_NO_ICE_FORM = "noiceform";
+    private static final String FLAG_NO_ITEM_DAMAGE = "noitemdamage";
+    private static final String FLAG_NO_ITEM_DROP = "noitemdrop";
+    private static final String FLAG_NO_ITEM_PICKUP = "noitempickup";
+    private static final String FLAG_NO_LEAF_DECAY = "noleafdecay";
+    private static final String FLAG_NO_LOOT_PROTECTION = "nolootprotection";
+    private static final String FLAG_NO_MOB_DAMAGE = "nomobdamage";
+    private static final String FLAG_NO_MOB_SPAWNS = "nomobspawns";
+    private static final String FLAG_NO_MOB_SPAWNS_TYPE = "nomobspawnstype";
+    private static final String FLAG_NO_OPEN_DOORS = "noopendoors";
+    private static final String FLAG_NO_PET_DAMAGE = "nopetdamage";
+    private static final String FLAG_NO_PLAYER_DAMAGE = "noplayerdamage";
+    private static final String FLAG_NO_SNOW_FORM = "nosnowform";
+    private static final String FLAG_NO_VEHICLE = "novehicle";
+    private static final String FLAG_NO_VINE_GROWTH = "novinegrowth";
+    private static final String FLAG_NO_WEATHER_CHANGE = "noweatherchange";
+    private static final String FLAG_OWNER_FLY = "ownerfly";
+    private static final String FLAG_OWNER_MEMBER_FLY = "ownermemberfly";
+    private static final String FLAG_PLAYER_GAMEMODE = "playergamemode";
+    private static final String FLAG_PLAYER_TIME = "playertime";
+    private static final String FLAG_PLAYER_WEATHER = "playerweather";
+    private static final String FLAG_RESPAWN_LOCATION = "respawnlocation";
+    private static final String FLAG_SPLEEF_ARENA = "spleefarena";
+    private static final String FLAG_TRAPPED_DESTINATION = "trappeddestination";
+
     public static void migrate(World world, Path gpClassicDataPath) throws FileNotFoundException, ClassNotFoundException {
-        if (!GriefDefenderPlugin.getGlobalConfig().getConfig().migrator.classicMigrator) {
-            return;
-        }
         count = 0;
         GriefDefenderPlugin.getInstance().getLogger().info("Starting GriefPrevention data migration for world " + world.getName() + "...");
         // Migrate playerdata first
@@ -90,6 +160,289 @@ public class GriefPreventionMigrator {
             GriefDefenderPlugin.getInstance().getLogger().info("Finished GriefPrevention data migration for world '" + world.getName() + "'."
                     + " Migrated a total of " + count + " claims.");
         }
+        if (Files.exists(gpFlags)) {
+            migrateGpFlags(world);
+        }
+    }
+
+    private static void migrateGpFlags(World world) {
+        YAMLConfigurationLoader flagsManager = YAMLConfigurationLoader.builder().setPath(gpFlags).build();
+        ConfigurationNode root = null;
+        try {
+            root = flagsManager.load();
+        } catch (IOException e1) {
+            e1.printStackTrace();
+            return;
+        }
+
+        int count = 0;
+        for (Entry<Object, ? extends ConfigurationNode> claims : root.getChildrenMap().entrySet()) {
+            Object key = claims.getKey();
+            int bukkitClaimId = -1;
+            try {
+                bukkitClaimId = Integer.parseInt(key.toString());
+            } catch (NumberFormatException e) {
+                e.printStackTrace();
+                continue;
+            }
+
+            final UUID claimUniqueId = idToUUID.get(bukkitClaimId);
+            if (claimUniqueId == null) {
+                GriefDefenderPlugin.getInstance().getLogger().info("Could not locate migrated GD claim for id '" + bukkitClaimId + "'. Skipping...");
+                continue;
+            }
+
+            final Set<Context> contexts = new HashSet<>();
+            final ClaimStorageData claimStorage = claimStorageMap.get(claimUniqueId);
+            if (claimStorage == null) {
+                // Different world
+                continue;
+            }
+            count++;
+            final UUID ownerUniqueId = claimStorage.getConfig().getOwnerUniqueId();
+            GDPermissionUser claimOwner = null;
+            if (ownerUniqueId != null) {
+                claimOwner = PermissionHolderCache.getInstance().getOrCreateUser(ownerUniqueId);
+            }
+            contexts.add(new Context(ContextKeys.CLAIM, claimUniqueId.toString()));
+            ConfigurationNode flags = claims.getValue();
+            GriefDefenderPlugin.getInstance().getLogger().info("Starting flag migration for legacy claim id '" + bukkitClaimId + "'...");
+            for (Entry<Object, ? extends ConfigurationNode> flagEntry : flags.getChildrenMap().entrySet()){
+                final String flag = (String) flagEntry.getKey();
+                final ConfigurationNode paramNode = flagEntry.getValue();
+                final String param = paramNode.getNode("params").getString();
+                final boolean value = paramNode.getNode("value").getBoolean();
+                if (!value) {
+                    continue;
+                }
+                GriefDefenderPlugin.getInstance().getLogger().info("Migrating flag '" + flag + "'...");
+                switch (flag) {
+                    case FLAG_COMMAND_BLACKLIST :
+                    case FLAG_COMMAND_WHITELIST :
+                        // TODO
+                        break;
+                    case FLAG_ENTER_MESSAGE :
+                        claimStorage.getConfig().setGreeting(LegacyComponentSerializer.legacy().deserialize(param, '§'));
+                        claimStorage.getConfig().setRequiresSave(true);
+                        claimStorage.save();
+                        break;
+                    case FLAG_ENTER_COMMAND :
+                        contexts.add(new Context(ContextKeys.FLAG, Flags.ENTER_CLAIM.getName()));
+                        contexts.add(FlagContexts.TARGET_PLAYER);
+                        PermissionUtil.getInstance().setOptionValue(DEFAULT_HOLDER, Options.PLAYER_COMMAND.getPermission(), param, contexts);
+                        break;
+                    case FLAG_ENTER_COMMAND_OWNER :
+                        contexts.add(new Context(ContextKeys.FLAG, Flags.ENTER_CLAIM.getName()));
+                        contexts.add(FlagContexts.TARGET_PLAYER);
+                        if (claimOwner == null) {
+                            GriefDefenderPlugin.getInstance().getLogger().info("Could not locate owner legacy claim id '" + bukkitClaimId + "'. Skipping...");
+                            break;
+                        }
+                        PermissionUtil.getInstance().setOptionValue(claimOwner, Options.PLAYER_COMMAND.getPermission(), param, contexts);
+                        break;
+                    case FLAG_ENTER_COMMAND_MEMBERS : {
+                        contexts.add(new Context(ContextKeys.FLAG, Flags.ENTER_CLAIM.getName()));
+                        contexts.add(FlagContexts.TARGET_PLAYER);
+                        List<UUID> members = new ArrayList<>();
+                        members.addAll(claimStorage.getConfig().getAccessors());
+                        members.addAll(claimStorage.getConfig().getBuilders());
+                        members.addAll(claimStorage.getConfig().getContainers());
+                        members.addAll(claimStorage.getConfig().getManagers());
+                        for (UUID memberUniqueId : members) {
+                            final GDPermissionUser user = PermissionHolderCache.getInstance().getOrCreateUser(memberUniqueId);
+                            PermissionUtil.getInstance().setOptionValue(user, Options.PLAYER_COMMAND.getPermission(), param, contexts);
+                        }
+                        break;
+                    }
+                    case FLAG_ENTER_PLAYER_COMMAND :
+                        contexts.add(new Context(ContextKeys.FLAG, Flags.ENTER_CLAIM.getName()));
+                        contexts.add(FlagContexts.TARGET_PLAYER);
+                        PermissionUtil.getInstance().setOptionValue(DEFAULT_HOLDER, Options.PLAYER_COMMAND.getPermission(), param, contexts);
+                        break;
+                    case FLAG_EXIT_COMMAND_MEMBERS : {
+                        contexts.add(new Context(ContextKeys.FLAG, Flags.EXIT_CLAIM.getName()));
+                        contexts.add(FlagContexts.TARGET_PLAYER);
+                        List<UUID> members = new ArrayList<>();
+                        members.addAll(claimStorage.getConfig().getAccessors());
+                        members.addAll(claimStorage.getConfig().getBuilders());
+                        members.addAll(claimStorage.getConfig().getContainers());
+                        members.addAll(claimStorage.getConfig().getManagers());
+                        for (UUID memberUniqueId : members) {
+                            final GDPermissionUser user = PermissionHolderCache.getInstance().getOrCreateUser(memberUniqueId);
+                            PermissionUtil.getInstance().setOptionValue(user, Options.PLAYER_COMMAND.getPermission(), param, contexts);
+                        }
+                        break;
+                    }
+                    case FLAG_EXIT_COMMAND_OWNER :
+                        contexts.add(new Context(ContextKeys.FLAG, Flags.EXIT_CLAIM.getName()));
+                        contexts.add(FlagContexts.TARGET_PLAYER);
+                        if (claimOwner == null) {
+                            GriefDefenderPlugin.getInstance().getLogger().info("Could not locate owner legacy claim id '" + bukkitClaimId + "'. Skipping...");
+                            break;
+                        }
+                        PermissionUtil.getInstance().setOptionValue(claimOwner, Options.PLAYER_COMMAND.getPermission(), param, contexts);
+                        break;
+                    case FLAG_EXIT_COMMAND :
+                    case FLAG_EXIT_PLAYER_COMMAND :
+                        contexts.add(new Context(ContextKeys.FLAG, Flags.EXIT_CLAIM.getName()));
+                        contexts.add(FlagContexts.TARGET_PLAYER);
+                        PermissionUtil.getInstance().setOptionValue(DEFAULT_HOLDER, Options.PLAYER_COMMAND.getPermission(), param, contexts);
+                        break;
+                    case FLAG_EXIT_MESSAGE :
+                        claimStorage.getConfig().setFarewell(LegacyComponentSerializer.legacy().deserialize(param, '§'));
+                        claimStorage.getConfig().setRequiresSave(true);
+                        claimStorage.save();
+                        break;
+                    case FLAG_HEALTH_REGEN :
+                        PermissionUtil.getInstance().setOptionValue(DEFAULT_HOLDER, Options.PLAYER_HEALTH_REGEN.getPermission(), param, contexts);
+                        break;
+                    case FLAG_KEEP_INVENTORY :
+                        PermissionUtil.getInstance().setOptionValue(DEFAULT_HOLDER, Options.PLAYER_KEEP_INVENTORY.getPermission(), "1", contexts);
+                        break;
+                    case FLAG_KEEP_LEVEL :
+                        PermissionUtil.getInstance().setOptionValue(DEFAULT_HOLDER, Options.PLAYER_KEEP_LEVEL.getPermission(), "1", contexts);
+                        break;
+                    case FLAG_NO_CHORUS_FRUIT :
+                        contexts.add(new Context(ContextKeys.TARGET, "chorus_fruit"));
+                        PermissionUtil.getInstance().setPermissionValue(DEFAULT_HOLDER, Flags.ITEM_USE.getPermission(), Tristate.FALSE, contexts);
+                        break;
+                    case FLAG_NO_ENDER_PEARL :
+                        contexts.add(new Context(ContextKeys.TARGET, "ender_pearl"));
+                        PermissionUtil.getInstance().setPermissionValue(DEFAULT_HOLDER, Flags.INTERACT_ITEM_SECONDARY.getPermission(), Tristate.FALSE, contexts);
+                        break;
+                    case FLAG_NO_ENTER :
+                        contexts.add(new Context(ContextKeys.TARGET, "player"));
+                        PermissionUtil.getInstance().setPermissionValue(DEFAULT_HOLDER, Flags.ENTER_CLAIM.getPermission(), Tristate.FALSE, contexts);
+                        break;
+                    case FLAG_NO_ENTER_PLAYER :
+                        // TODO
+                        break;
+                    case FLAG_NO_EXPIRATION :
+                        claimStorage.getConfig().setExpiration(false);
+                        claimStorage.getConfig().setRequiresSave(true);
+                        claimStorage.save();
+                        break;
+                    case FLAG_NO_EXPLOSION_DAMAGE :
+                        PermissionUtil.getInstance().setPermissionValue(DEFAULT_HOLDER, Flags.EXPLOSION_BLOCK.getPermission(), Tristate.FALSE, contexts);
+                        PermissionUtil.getInstance().setPermissionValue(DEFAULT_HOLDER, Flags.EXPLOSION_ENTITY.getPermission(), Tristate.FALSE, contexts);
+                        break;
+                    case FLAG_NO_FALL_DAMAGE :
+                        contexts.add(new Context(ContextKeys.SOURCE, "fall"));
+                        contexts.add(FlagContexts.TARGET_PLAYER);
+                        PermissionUtil.getInstance().setPermissionValue(DEFAULT_HOLDER, Flags.ENTITY_DAMAGE.getPermission(), Tristate.FALSE, contexts);
+                        break;
+                    case FLAG_NO_FIRE_DAMAGE :
+                        contexts.add(new Context(ContextKeys.SOURCE, "fire"));
+                        contexts.add(FlagContexts.TARGET_PLAYER);
+                        PermissionUtil.getInstance().setPermissionValue(DEFAULT_HOLDER, Flags.ENTITY_DAMAGE.getPermission(), Tristate.FALSE, contexts);
+                        break;
+                    case FLAG_NO_FIRE_SPREAD :
+                        contexts.add(new Context(ContextKeys.SOURCE, "fire"));
+                        PermissionUtil.getInstance().setPermissionValue(DEFAULT_HOLDER, Flags.BLOCK_SPREAD.getPermission(), Tristate.FALSE, contexts);
+                        break;
+                    case FLAG_NO_FLIGHT :
+                        PermissionUtil.getInstance().setOptionValue(DEFAULT_HOLDER, Options.PLAYER_DENY_FLIGHT.getPermission(), "true", contexts);
+                        break;
+                    case FLAG_NO_FLUID_FLOW :
+                        PermissionUtil.getInstance().setPermissionValue(DEFAULT_HOLDER, Flags.LIQUID_FLOW.getPermission(), Tristate.FALSE, contexts);
+                        break;
+                    case FLAG_NO_GROWTH :
+                        PermissionUtil.getInstance().setPermissionValue(DEFAULT_HOLDER, Flags.BLOCK_GROW.getPermission(), Tristate.FALSE, contexts);
+                        break;
+                    case FLAG_NO_HUNGER :
+                        PermissionUtil.getInstance().setOptionValue(DEFAULT_HOLDER, Options.PLAYER_DENY_HUNGER.getPermission(), "true", contexts);
+                        break;
+                    case FLAG_NO_ICE_FORM :
+                        contexts.add(FlagContexts.TARGET_ICE_FORM);
+                        PermissionUtil.getInstance().setPermissionValue(DEFAULT_HOLDER, Flags.BLOCK_MODIFY.getPermission(), Tristate.FALSE, contexts);
+                        break;
+                    case FLAG_NO_ITEM_DROP :
+                        contexts.add(FlagContexts.TARGET_PLAYER);
+                        PermissionUtil.getInstance().setPermissionValue(DEFAULT_HOLDER, Flags.ITEM_DROP.getPermission(), Tristate.FALSE, contexts);
+                        break;
+                    case FLAG_NO_ITEM_PICKUP :
+                        contexts.add(FlagContexts.TARGET_PLAYER);
+                        PermissionUtil.getInstance().setPermissionValue(DEFAULT_HOLDER, Flags.ITEM_PICKUP.getPermission(), Tristate.FALSE, contexts);
+                        break;
+                    case FLAG_NO_LEAF_DECAY :
+                        PermissionUtil.getInstance().setPermissionValue(DEFAULT_HOLDER, Flags.LEAF_DECAY.getPermission(), Tristate.FALSE, contexts);
+                        break;
+                    case FLAG_NO_MOB_DAMAGE :
+                        contexts.add(FlagContexts.SOURCE_PLAYER);
+                        contexts.add(new Context(ContextKeys.TARGET, "#monster"));
+                        PermissionUtil.getInstance().setPermissionValue(DEFAULT_HOLDER, Flags.ENTITY_DAMAGE.getPermission(), Tristate.FALSE, contexts);
+                        break;
+                    case FLAG_NO_MOB_SPAWNS :
+                        contexts.add(new Context(ContextKeys.TARGET, "#monster"));
+                        PermissionUtil.getInstance().setPermissionValue(DEFAULT_HOLDER, Flags.ENTITY_SPAWN.getPermission(), Tristate.FALSE, contexts);
+                        break;
+                    case FLAG_NO_PLAYER_DAMAGE :
+                        contexts.add(new Context(ContextKeys.TARGET, "player"));
+                        PermissionUtil.getInstance().setPermissionValue(DEFAULT_HOLDER, Flags.ENTITY_DAMAGE.getPermission(), Tristate.FALSE, contexts);
+                        break;
+                    case FLAG_NO_SNOW_FORM :
+                        contexts.add(FlagContexts.TARGET_SNOW_LAYER);
+                        PermissionUtil.getInstance().setPermissionValue(DEFAULT_HOLDER, Flags.BLOCK_MODIFY.getPermission(), Tristate.FALSE, contexts);
+                        break;
+                    case FLAG_NO_VEHICLE :
+                        contexts.add(FlagContexts.TARGET_TYPE_VEHICLE);
+                        PermissionUtil.getInstance().setPermissionValue(DEFAULT_HOLDER, Flags.INTERACT_ENTITY_SECONDARY.getPermission(), Tristate.FALSE, contexts);
+                        break;
+                    case FLAG_NO_VINE_GROWTH :
+                        contexts.add(FlagContexts.SOURCE_VINE);
+                        PermissionUtil.getInstance().setPermissionValue(DEFAULT_HOLDER, Flags.BLOCK_GROW.getPermission(), Tristate.FALSE, contexts);
+                        break;
+                    case FLAG_OWNER_FLY : {
+                        if (claimOwner == null) {
+                            GriefDefenderPlugin.getInstance().getLogger().info("Could not locate owner legacy claim id '" + bukkitClaimId + "'. Skipping...");
+                            break;
+                        }
+                        PermissionUtil.getInstance().setOptionValue(claimOwner, Options.PLAYER_DENY_FLIGHT.getPermission(), "1", contexts);
+                        break;
+                    }
+                    case FLAG_OWNER_MEMBER_FLY : {
+                        List<UUID> members = new ArrayList<>();
+                        members.addAll(claimStorage.getConfig().getAccessors());
+                        members.addAll(claimStorage.getConfig().getBuilders());
+                        members.addAll(claimStorage.getConfig().getContainers());
+                        members.addAll(claimStorage.getConfig().getManagers());
+                        for (UUID memberUniqueId : members) {
+                            final GDPermissionUser user = PermissionHolderCache.getInstance().getOrCreateUser(memberUniqueId);
+                            PermissionUtil.getInstance().setOptionValue(user, Options.PLAYER_DENY_FLIGHT.getPermission(), "1", contexts);
+                        }
+                        break;
+                    }
+
+                    case FLAG_RESPAWN_LOCATION :
+                        // TODO
+                        break;
+
+                    // NOT CURRENTLY SUPPORTED
+                    case FLAG_CHANGE_BIOME :
+                    case FLAG_INFINITE_ARROWS :
+                    case FLAG_NETHER_PORTAL_CONSOLE_COMMAND :
+                    case FLAG_NETHER_PORTAL_PLAYER_COMMAND :
+                    case FLAG_NO_COMBAT_LOOT :
+                    case FLAG_NO_ITEM_DAMAGE :
+                    case FLAG_NO_LOOT_PROTECTION :
+                    case FLAG_NO_MOB_SPAWNS_TYPE :
+                    case FLAG_NO_OPEN_DOORS :
+                    case FLAG_NO_PET_DAMAGE :
+                    case FLAG_NO_WEATHER_CHANGE :
+                    case FLAG_PLAYER_GAMEMODE :
+                    case FLAG_PLAYER_TIME :
+                    case FLAG_PLAYER_WEATHER :
+                    case FLAG_SPLEEF_ARENA :
+                    case FLAG_TRAPPED_DESTINATION :
+                        GriefDefenderPlugin.getInstance().getLogger().info("Flag '" + flag + "' not currently supported! Skipping...");
+                        break;
+                }
+            }
+ 
+            GriefDefenderPlugin.getInstance().getLogger().info("Successfully migrated GPFlags for claim id '" + bukkitClaimId + "' to '" + claimUniqueId + "'");
+        }
+        GriefDefenderPlugin.getInstance().getLogger().info("Finished GPFlags data migration for world '" + world.getName() + "'."
+                + " Migrated a total of " + count + " claims.");
     }
 
     private static void migratePlayerData(World world) {
@@ -178,7 +531,15 @@ public class GriefPreventionMigrator {
         if (parentsOnly && region.getChildrenMap().get("Parent Claim ID").getInt() != -1) {
             return;
         }
-        GriefDefenderPlugin.getInstance().getLogger().info("Migrating claim '" + file + "'...");
+
+        final ConfigurationNode lesserNode = region.getChildrenMap().get("Lesser Boundary Corner");
+        if (lesserNode.isVirtual()) {
+            return;
+        }
+        final String claimWorldName = getWorldName(lesserNode.getValue().toString());
+        if (lesserNode != null && !world.getName().equalsIgnoreCase(claimWorldName)) {
+            return;
+        }
         Vector3i lesserBoundaryCorner = null;
         Vector3i greaterBoundaryCorner = null;
         List<UUID> builders = new ArrayList<>();
@@ -192,12 +553,6 @@ public class GriefPreventionMigrator {
             Object key = mapEntry.getKey();
             ConfigurationNode value = mapEntry.getValue();
             if (key.equals("Lesser Boundary Corner")) {
-                final String worldName = getWorldName(value.getString());
-                if (!(worldName.equals(world.getName()))) {
-                    GriefDefenderPlugin.getInstance().getLogger().info("Detected different world " + worldName + ", skipping...");
-                    return;
-                }
-
                 lesserBoundaryCorner = classicPosFromString(value.getString(), true);
             } else if (key.equals("Greater Boundary Corner")) {
                 greaterBoundaryCorner = classicPosFromString(value.getString(), false);
@@ -265,6 +620,10 @@ public class GriefPreventionMigrator {
             } else if (key.equals("Parent Claim ID")) {
                 if (value.getInt() != -1) {
                     parentClaimUniqueId = idToUUID.get(value.getInt());
+                    if (parentClaimUniqueId == null) {
+                        GriefDefenderPlugin.getInstance().getLogger().info("Detected corrupted subdivision claim file '" + file + "' with parent id " + value.getInt() + " that does NOT exist. Skipping...");
+                        return;
+                    }
                 }
             } else if (key.equals("inheritNothing")) {
                 inherit = !value.getBoolean();
@@ -284,7 +643,11 @@ public class GriefPreventionMigrator {
         }
         Path claimDataFolderPath = null;
         if (parentClaimUniqueId != null) {
-            claimDataFolderPath = claimStorageMap.get(parentClaimUniqueId).filePath.getParent().resolve(type.getName().toLowerCase());
+            final ClaimStorageData claimStorage = claimStorageMap.get(parentClaimUniqueId);
+            claimDataFolderPath = claimStorage.filePath.getParent().resolve(type.getName().toLowerCase());
+            if (ownerUniqueId == null) {
+                ownerUniqueId = claimStorage.getConfig().getOwnerUniqueId();
+            }
         } else {
             claimDataFolderPath = BaseStorage.worldConfigMap.get(world.getUID()).getPath().getParent().resolve("ClaimData").resolve(type.getName().toLowerCase());
         }
@@ -314,9 +677,9 @@ public class GriefPreventionMigrator {
         claimDataConfig.setManagers(managers);
         claimDataConfig.setInheritParent(inherit);
         claimDataConfig.setDateLastActive(Instant.now());
+        claimDataConfig.setParent(parentClaimUniqueId);
         claimDataConfig.setWorldUniqueId(world.getUID());
         claimDataConfig.setType(type);
-
         claimDataConfig.setRequiresSave(true);
         claimStorage.save();
         GriefDefenderPlugin.getInstance().getLogger().info("Successfully migrated GriefPrevention claim file '" + file.getName() + "' to '" + claimFilePath + "'");

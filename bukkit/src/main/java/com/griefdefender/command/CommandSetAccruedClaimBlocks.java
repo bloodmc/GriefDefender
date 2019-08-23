@@ -30,6 +30,7 @@ import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.CommandCompletion;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Description;
+import co.aikar.commands.annotation.Optional;
 import co.aikar.commands.annotation.Subcommand;
 import co.aikar.commands.annotation.Syntax;
 
@@ -38,7 +39,6 @@ import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.cache.MessageCache;
 import com.griefdefender.cache.PermissionHolderCache;
-import com.griefdefender.configuration.MessageDataConfig;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.permission.GDPermissions;
@@ -46,41 +46,42 @@ import net.kyori.text.adapter.bukkit.TextAdapter;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
 @CommandAlias("%griefdefender")
 @CommandPermission(GDPermissions.COMMAND_SET_ACCRUED_CLAIM_BLOCKS)
 public class CommandSetAccruedClaimBlocks extends BaseCommand {
 
-    private MessageDataConfig MESSAGE_DATA = GriefDefenderPlugin.getInstance().messageData;
-
     @CommandCompletion("@gdplayers @gddummy")
-    @CommandAlias("setaccruedblocks")
+    @CommandAlias("scb|setaccruedblocks")
     @Description("Updates a player's accrued claim block total.")
-    @Syntax("<amount>")
+    @Syntax("<player> <amount> [world]")
     @Subcommand("player setaccruedblocks")
-    public void execute(CommandSender src, String[] args) throws InvalidCommandArgument {
-        if (GriefDefenderPlugin.getGlobalConfig().getConfig().economy.economyMode) {
-            TextAdapter.sendComponent(src, MessageCache.getInstance().COMMAND_NOT_AVAILABLE_ECONOMY);
-            return;
-        }
-
-        if (args.length < 2) {
-            throw new InvalidCommandArgument();
-        }
-
-        GDPermissionUser user = PermissionHolderCache.getInstance().getOrCreateUser(args[0]);
-        int newAmount = Integer.parseInt(args[1]);
-        World world = null;
+    public void execute(CommandSender src, String player, int amount, @Optional String worldName) throws InvalidCommandArgument {
+        GDPermissionUser user = PermissionHolderCache.getInstance().getOrCreateUser(player);
         if (user == null) {
-            TextAdapter.sendComponent(src, MESSAGE_DATA.getMessage(MessageStorage.COMMAND_PLAYER_NOT_FOUND,
-                    ImmutableMap.of("player", args[0])));
+            TextAdapter.sendComponent(src, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.COMMAND_PLAYER_NOT_FOUND,
+                    ImmutableMap.of("player", player)));
             return;
         }
-        if (args.length > 2) {
-            world = Bukkit.getServer().getWorld(args[2]);
+        World world = null;
+        if (worldName != null) {
+            world = Bukkit.getServer().getWorld(worldName);
             if (world == null) {
-                TextAdapter.sendComponent(src, MESSAGE_DATA.getMessage(MessageStorage.COMMAND_WORLD_NOT_FOUND,
-                        ImmutableMap.of("world", args[2])));
+                TextAdapter.sendComponent(src, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.COMMAND_WORLD_NOT_FOUND,
+                        ImmutableMap.of("world", worldName)));
+                return;
+            }
+        } else {
+            if (src instanceof Player) {
+                world = ((Player) src).getWorld();
+            } else {
+                // use default
+                world = Bukkit.getServer().getWorlds().get(0);
+            }
+            if (world == null) {
+                TextAdapter.sendComponent(src, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.COMMAND_WORLD_NOT_FOUND,
+                        ImmutableMap.of("world", worldName)));
                 return;
             }
         }
@@ -92,16 +93,20 @@ public class CommandSetAccruedClaimBlocks extends BaseCommand {
 
         // set player's blocks
         GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(world.getUID(), user.getUniqueId());
-        if (!playerData.setAccruedClaimBlocks(newAmount)) {
-            TextAdapter.sendComponent(src, MESSAGE_DATA.getMessage(MessageStorage.PLAYER_ACCRUED_BLOCKS_EXCEEDED,
+        if (!playerData.setAccruedClaimBlocks(amount)) {
+            TextAdapter.sendComponent(src, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PLAYER_ACCRUED_BLOCKS_EXCEEDED,
                     ImmutableMap.of(
                         "player", user.getName(),
                         "total", playerData.getAccruedClaimBlocks(),
-                        "amount", newAmount)));
+                        "amount", amount)));
             return;
         }
 
         playerData.getStorageData().save();
-        GriefDefenderPlugin.sendMessage(src, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ADJUST_ACCRUED_BLOCKS_SUCCESS));
+        GriefDefenderPlugin.sendMessage(src, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ADJUST_ACCRUED_BLOCKS_SUCCESS,
+                    ImmutableMap.of(
+                        "player", user.getName(),
+                        "total", playerData.getAccruedClaimBlocks(),
+                        "amount", amount)));
     }
 }

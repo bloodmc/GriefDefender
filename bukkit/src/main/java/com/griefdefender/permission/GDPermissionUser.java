@@ -24,31 +24,45 @@
  */
 package com.griefdefender.permission;
 
-import me.lucko.luckperms.api.User;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
+import com.griefdefender.GDPlayerData;
+import com.griefdefender.GriefDefenderPlugin;
+import com.griefdefender.api.User;
+import com.griefdefender.api.data.PlayerData;
+
 import java.util.UUID;
 
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class GDPermissionUser extends GDPermissionHolder {
+public class GDPermissionUser extends GDPermissionHolder implements User {
 
     private String userName;
     private UUID uniqueId;
+    private UUID worldUniqueId;
     private OfflinePlayer offlinePlayer;
+    private GDPlayerData playerData;
 
     public GDPermissionUser(Player player) {
         super(player.getUniqueId().toString());
         this.uniqueId = player.getUniqueId();
+        this.worldUniqueId = player.getWorld().getUID();
         this.offlinePlayer = player;
         this.userName = player.getName();
     }
 
-    public GDPermissionUser(User user) {
-        super(user.getObjectName());
-        this.userName = user.getName();
+    public GDPermissionUser(OfflinePlayer player) {
+        super(player.getUniqueId().toString());
+        this.uniqueId = player.getUniqueId();
+        this.userName = player.getName();
+    }
+
+    public GDPermissionUser(UUID uuid, String objectName, String friendlyName) {
+        super(objectName);
+        this.uniqueId = uuid;
+        this.userName = objectName;
     }
 
     public GDPermissionUser(UUID uuid) {
@@ -65,10 +79,18 @@ public class GDPermissionUser extends GDPermissionHolder {
 
     public String getName() {
         if (this.userName == null) {
-            this.userName = this.getOfflinePlayer().getName();
-            if (this.userName == null) {
+            if (this.uniqueId.equals(GriefDefenderPlugin.PUBLIC_UUID)) {
+                this.userName = "public";
+            } else if (this.uniqueId.equals(GriefDefenderPlugin.ADMIN_USER_UUID) || this.uniqueId.equals(GriefDefenderPlugin.WORLD_USER_UUID)) {
+                this.userName = "administrator";
+            } else if (this.getOfflinePlayer() != null) {
+                this.userName = this.getOfflinePlayer().getName();
+            } else {
                 // fallback to LP
                 this.userName = super.getFriendlyName();
+            }
+            if (this.userName == null) {
+                this.userName = "unknown";
             }
         }
 
@@ -96,11 +118,29 @@ public class GDPermissionUser extends GDPermissionHolder {
         return this.offlinePlayer;
     }
 
-    public User getLuckPermsUser() {
-        return (User) this.getLuckPermsHolder();
-    }
-
+    @Override
     public UUID getUniqueId() {
         return this.uniqueId;
+    }
+
+    @Override
+    public PlayerData getPlayerData() {
+        if (this.playerData == null) {
+            if (this.worldUniqueId != null) {
+                this.playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(this.worldUniqueId, this.uniqueId);
+            } else {
+                this.playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreateGlobalPlayerData(this.uniqueId);
+            }
+        }
+        return this.playerData;
+    }
+
+    public GDPlayerData getInternalPlayerData() {
+        return (GDPlayerData) this.getPlayerData();
+    }
+
+    @Override
+    public boolean isOnline() {
+        return this.getOnlinePlayer() != null;
     }
 }

@@ -1,7 +1,7 @@
 /*
  * This file is part of GriefDefender, licensed under the MIT License (MIT).
  *
- * Copyright (c) bloodmc
+ * Copyright (c) SpongePowered <https://www.spongepowered.org>
  * Copyright (c) contributors
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -22,32 +22,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.griefdefender.permission;
+package com.griefdefender.permission.option.type;
 
-import com.griefdefender.api.permission.option.Option;
-import net.kyori.text.Component;
+import com.griefdefender.api.permission.option.type.GameModeType;
 
-import java.util.Arrays;
-import java.util.List;
-
-public class GDOption implements Option {
-
-    private static final List<String> GLOBAL_OPTIONS = Arrays.asList(
-            "abandon-return-ratio", "blocks-accrued-per-hour", "chest-expiration",
-            "create-mode", "economy-block-cost",
-            "economy-block-sell", "initial-blocks",
-            "max-accrued-blocks", "max-level", "min-level",
-            "radius-list", "radius-inspect");
+public class GDGameModeType implements GameModeType {
 
     private final String id;
     private final String name;
-    private Component description;
-    private boolean isGlobal;
 
-    public GDOption(String id, String name) {
+    public GDGameModeType(String id, String name) {
         this.id = id;
         this.name = name;
-        this.isGlobal = GLOBAL_OPTIONS.contains(name);
     }
 
     @Override
@@ -55,25 +41,12 @@ public class GDOption implements Option {
         return this.id;
     }
 
-    public String getPermission() {
-        return "griefdefender." + this.name.toLowerCase();
-    }
-
+    @Override
     public String getName() {
         return this.name;
     }
 
-    public boolean isGlobal() {
-        return this.isGlobal;
-    }
-
-    @Override
     public String toString() {
         return this.name;
-    }
-
-    @Override
-    public Component getDescription() {
-        return this.description;
     }
 }

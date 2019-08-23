@@ -68,6 +68,7 @@ public class CommandClaimGreeting extends BaseCommand {
             claim.getInternalClaimData().setGreeting(greeting);
         }
         claim.getInternalClaimData().setRequiresSave(true);
+        claim.getInternalClaimData().save();
         Component resultMessage = null;
         if (!claim.getInternalClaimData().getGreeting().isPresent()) {
             resultMessage = MessageCache.getInstance().CLAIM_GREETING_CLEAR;

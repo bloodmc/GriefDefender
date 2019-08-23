@@ -42,7 +42,6 @@ import com.griefdefender.api.claim.TrustTypes;
 import com.griefdefender.cache.MessageCache;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
-import com.griefdefender.configuration.MessageDataConfig;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.event.GDCauseStackManager;
 import com.griefdefender.event.GDGroupTrustClaimEvent;
@@ -59,8 +58,6 @@ import java.util.Set;
 @CommandPermission(GDPermissions.COMMAND_UNTRUSTALL_GROUP)
 public class CommandUntrustGroupAll extends BaseCommand {
 
-    private MessageDataConfig MESSAGE_DATA = GriefDefenderPlugin.getInstance().messageData;
-
     @CommandCompletion("@gdgroups @gdtrusttypes @gddummy")
     @CommandAlias("untrustallgroup")
     @Description("Revokes group access to all your claims")
@@ -71,7 +68,7 @@ public class CommandUntrustGroupAll extends BaseCommand {
 
         // validate player argument
         if (group == null) {
-            GriefDefenderPlugin.sendMessage(player, MESSAGE_DATA.getMessage(MessageStorage.COMMAND_INVALID_GROUP,
+            GriefDefenderPlugin.sendMessage(player, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.COMMAND_INVALID_GROUP,
                     ImmutableMap.of(
                     "group", target)));
             return;
@@ -94,7 +91,7 @@ public class CommandUntrustGroupAll extends BaseCommand {
         GriefDefender.getEventManager().post(event);
         GDCauseStackManager.getInstance().popCause();
         if (event.cancelled()) {
-            TextAdapter.sendComponent(player, event.getMessage().orElse(MESSAGE_DATA.getMessage(MessageStorage.TRUST_PLUGIN_CANCEL,
+            TextAdapter.sendComponent(player, event.getMessage().orElse(MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.TRUST_PLUGIN_CANCEL,
                     ImmutableMap.of("target", group))));
             return;
         }
@@ -103,7 +100,7 @@ public class CommandUntrustGroupAll extends BaseCommand {
             this.removeAllGroupTrust(claim, group);
         }
 
-        final Component message = MESSAGE_DATA.getMessage(MessageStorage.UNTRUST_INDIVIDUAL_ALL_CLAIMS,
+        final Component message = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.UNTRUST_INDIVIDUAL_ALL_CLAIMS,
                ImmutableMap.of(
                 "player", group.getName()));
         GriefDefenderPlugin.sendMessage(player, message);

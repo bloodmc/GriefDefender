@@ -72,8 +72,8 @@ public class DefaultPermissionCategory extends ConfigCategory {
         this.defaultUserOptions.put(Options.TAX_RATE.getName(), "1.0");
         this.defaultUserOptions.put(Options.BLOCKS_ACCRUED_PER_HOUR.getName(), "120");
         this.defaultUserOptions.put(Options.CHEST_EXPIRATION.getName(), "7");
-        this.defaultUserOptions.put(Options.CREATE_LIMIT.getName(), "0");
-        this.defaultUserOptions.put(Options.CREATE_MODE.getName(), "0");
+        this.defaultUserOptions.put(Options.CREATE_LIMIT.getName(), "-1");
+        this.defaultUserOptions.put(Options.CREATE_MODE.getName(), "undefined");
         this.defaultUserOptions.put(Options.ECONOMY_BLOCK_COST.getName(), "0.0");
         this.defaultUserOptions.put(Options.ECONOMY_BLOCK_SELL_RETURN.getName(), "0.0");
         this.defaultUserOptions.put(Options.INITIAL_BLOCKS.getName(), "120");
@@ -81,34 +81,62 @@ public class DefaultPermissionCategory extends ConfigCategory {
         this.defaultUserOptions.put(Options.MIN_LEVEL.getName(), "0");
         this.defaultUserOptions.put(Options.MAX_LEVEL.getName(), "255");
         this.defaultUserOptions.put(Options.ABANDON_RETURN_RATIO.getName(), "1.0");
-
-        this.defaultBasicOptions.put(Options.MIN_SIZE_X.getName(), "5");
-        this.defaultBasicOptions.put(Options.MIN_SIZE_Y.getName(), "5");
-        this.defaultBasicOptions.put(Options.MIN_SIZE_Z.getName(), "5");
-        this.defaultBasicOptions.put(Options.MAX_SIZE_X.getName(), "0");
-        this.defaultBasicOptions.put(Options.MAX_SIZE_Y.getName(), "256");
-        this.defaultBasicOptions.put(Options.MAX_SIZE_Z.getName(), "0");
-
-        this.defaultSubdivisionOptions.put(Options.MIN_SIZE_X.getName(), "1");
-        this.defaultSubdivisionOptions.put(Options.MIN_SIZE_Y.getName(), "1");
-        this.defaultSubdivisionOptions.put(Options.MIN_SIZE_Z.getName(), "1");
-        this.defaultSubdivisionOptions.put(Options.MAX_SIZE_X.getName(), "1000");
-        this.defaultSubdivisionOptions.put(Options.MAX_SIZE_Y.getName(), "256");
-        this.defaultSubdivisionOptions.put(Options.MAX_SIZE_Z.getName(), "1000");
+        this.defaultUserOptions.put(Options.RAID.getName(), "true");
+        this.defaultUserOptions.put(Options.SPAWN_LIMIT.getName(), "-1");
+        this.defaultUserOptions.put(Options.PLAYER_DENY_FLIGHT.getName(), "false");
+        this.defaultUserOptions.put(Options.PLAYER_DENY_GODMODE.getName(), "false");
+        this.defaultUserOptions.put(Options.PLAYER_DENY_HUNGER.getName(), "false");
+        this.defaultUserOptions.put(Options.PLAYER_GAMEMODE.getName(), "undefined");
+        this.defaultUserOptions.put(Options.PLAYER_HEALTH_REGEN.getName(), "-1.0");
+        this.defaultUserOptions.put(Options.PLAYER_KEEP_INVENTORY.getName(), "undefined");
+        this.defaultUserOptions.put(Options.PLAYER_KEEP_LEVEL.getName(), "undefined");
+        this.defaultUserOptions.put(Options.PLAYER_WALK_SPEED.getName(), "-1");
+        this.defaultUserOptions.put(Options.PLAYER_WEATHER.getName(), "undefined");
 
         //this.defaultTownOptions.put(Options.ABANDON_RETURN_RATIO.getName(), "1.0");
-        this.defaultTownOptions.put(Options.CREATE_LIMIT.getName(), "1");
-        this.defaultTownOptions.put(Options.MIN_LEVEL.getName(), "0");
+        this.defaultTownOptions.put(Options.CREATE_LIMIT.getName(), "-1");
+        this.defaultTownOptions.put(Options.MIN_LEVEL.getName(), "-1");
         this.defaultTownOptions.put(Options.MIN_SIZE_X.getName(), "32");
         this.defaultTownOptions.put(Options.MIN_SIZE_Y.getName(), "32");
         this.defaultTownOptions.put(Options.MIN_SIZE_Z.getName(), "32");
-        this.defaultTownOptions.put(Options.MAX_LEVEL.getName(), "255");
-        this.defaultTownOptions.put(Options.MAX_SIZE_X.getName(), "0");
-        this.defaultTownOptions.put(Options.MAX_SIZE_Y.getName(), "256");
-        this.defaultTownOptions.put(Options.MAX_SIZE_Z.getName(), "0");
-        this.defaultTownOptions.put(Options.TAX_EXPIRATION.getName(), "7");
-        this.defaultTownOptions.put(Options.TAX_EXPIRATION_DAYS_KEEP.getName(), "7");
+        this.defaultTownOptions.put(Options.MAX_LEVEL.getName(), "-1");
+        this.defaultTownOptions.put(Options.MAX_SIZE_X.getName(), "-1");
+        this.defaultTownOptions.put(Options.MAX_SIZE_Y.getName(), "-1");
+        this.defaultTownOptions.put(Options.MAX_SIZE_Z.getName(), "-1");
+        this.defaultTownOptions.put(Options.TAX_EXPIRATION.getName(), "-1");
+        this.defaultTownOptions.put(Options.TAX_EXPIRATION_DAYS_KEEP.getName(), "-1");
         this.defaultTownOptions.put(Options.TAX_RATE.getName(), "1.0");
+    }
+
+    public void checkOptions() {
+        Map<String, String> options = new HashMap<>(this.defaultUserOptions);
+        for (Map.Entry<String, String> mapEntry : options.entrySet()) {
+            if (mapEntry.getKey().equalsIgnoreCase(Options.CREATE_LIMIT.getName()) && mapEntry.getValue().equals("0")) {
+                this.defaultUserOptions.put(mapEntry.getKey(), "undefined");
+                break;
+            }
+        }
+        options = new HashMap<>(this.defaultBasicOptions);
+        for (Map.Entry<String, String> mapEntry : options.entrySet()) {
+            if (mapEntry.getKey().equalsIgnoreCase(Options.CREATE_LIMIT.getName()) && mapEntry.getValue().equals("0")) {
+                this.defaultBasicOptions.put(mapEntry.getKey(), "undefined");
+                break;
+            }
+        }
+        options = new HashMap<>(this.defaultSubdivisionOptions);
+        for (Map.Entry<String, String> mapEntry : options.entrySet()) {
+            if (mapEntry.getKey().equalsIgnoreCase(Options.CREATE_LIMIT.getName()) && mapEntry.getValue().equals("0")) {
+                this.defaultSubdivisionOptions.put(mapEntry.getKey(), "undefined");
+                break;
+            }
+        }
+        options = new HashMap<>(this.defaultTownOptions);
+        for (Map.Entry<String, String> mapEntry : options.entrySet()) {
+            if (mapEntry.getKey().equalsIgnoreCase(Options.CREATE_LIMIT.getName()) && mapEntry.getValue().equals("0")) {
+                this.defaultTownOptions.put(mapEntry.getKey(), "undefined");
+                break;
+            }
+        }
     }
 
     public void refreshFlags() {

@@ -30,17 +30,18 @@ import com.griefdefender.GDTimings;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.Tristate;
 import com.griefdefender.api.claim.TrustTypes;
+import com.griefdefender.api.permission.Context;
+import com.griefdefender.api.permission.ContextKeys;
 import com.griefdefender.api.permission.flag.Flags;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.event.GDCauseStackManager;
-import com.griefdefender.permission.GDFlags;
 import com.griefdefender.permission.GDPermissionManager;
 import com.griefdefender.permission.GDPermissions;
+import com.griefdefender.permission.flag.GDFlags;
 import com.griefdefender.storage.BaseStorage;
 import com.griefdefender.util.PaginationUtil;
 import net.kyori.text.Component;
-import net.kyori.text.TextComponent;
 import net.kyori.text.adapter.bukkit.TextAdapter;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -105,7 +106,7 @@ public class CommandEventHandler implements Listener {
         if (pluginId == null || !pluginId.equals("minecraft")) {
             PluginCommand pluginCommand = Bukkit.getPluginCommand(command);
             if (pluginCommand != null) {
-                pluginId = pluginCommand.getName().toLowerCase();
+                pluginId = pluginCommand.getPlugin().getName().toLowerCase();
             }
             if (pluginId == null) {
                 pluginId = "minecraft";
@@ -126,15 +127,19 @@ public class CommandEventHandler implements Listener {
             GDTimings.PLAYER_COMMAND_EVENT.stopTiming();
             return;
         }
-        String commandPermission = pluginId + "." + command;
+        String commandTarget = pluginId + ":" + command;
         // first check the args
         String argument = "";
         for (String arg : args) {
-            //argument = argument + "." + arg;
+            if (arg.isEmpty()) {
+                continue;
+            }
+            commandTarget += "." + arg;
         }
 
-        if (GDFlags.COMMAND_EXECUTE && !commandExecuteSourceBlacklisted && !GriefDefenderPlugin.isTargetIdBlacklisted(Flags.COMMAND_EXECUTE.getName(), commandPermission + argument, player.getWorld().getUID())) {
-            final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, player.getLocation(), claim, GDPermissions.COMMAND_EXECUTE, player, commandPermission + argument, player, TrustTypes.ACCESSOR, true);
+        final Context context = new Context(ContextKeys.TARGET, commandTarget);
+        if (GDFlags.COMMAND_EXECUTE && !commandExecuteSourceBlacklisted && !GriefDefenderPlugin.isTargetIdBlacklisted(Flags.COMMAND_EXECUTE.getName(), commandTarget, player.getWorld().getUID())) {
+            final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, player.getLocation(), claim, GDPermissions.COMMAND_EXECUTE, player, commandTarget, player, TrustTypes.ACCESSOR, true);
             if (result == Tristate.FALSE) {
                 final Component denyMessage = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.COMMAND_BLOCKED,
                         ImmutableMap.of(
@@ -146,7 +151,6 @@ public class CommandEventHandler implements Listener {
                 return;
             }
         }
-
         GDTimings.PLAYER_COMMAND_EVENT.stopTiming();
     }
 }

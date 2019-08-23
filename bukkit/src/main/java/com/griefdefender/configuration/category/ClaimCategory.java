@@ -39,8 +39,14 @@ public class ClaimCategory extends ConfigCategory {
     public int claimListMax = 200;
     @Setting(value = "expiration-cleanup-interval", comment = "The interval in minutes for cleaning up expired claims. Default: 0. Set to 0 to disable.")
     public int expirationCleanupInterval = 0;
-    @Setting(value = "auto-nature-restore", comment = "Whether survival claims will be automatically restored to nature when auto-deleted. \nNote: This only supports vanilla blocks. Use with caution if using custom biomes.")
+    @Setting(value = "auto-nature-restore", comment = "Whether survival claims will be automatically restored to world generated state when expired. \nNote: This only supports world generated blocks. Consider using 'auto-schematic-restore' if using a custom world.")
     public boolean claimAutoNatureRestore = false;
+    @Setting(value = "auto-schematic-restore", comment = "Whether survival claims will be automatically restored to its claim creation schematic on abandon/expiration. "
+            + "\nNote: Enabling this feature will cause ALL newly created claims to automatically create a special schematic that will be used to restore claim on abandon/expiration."
+            + "\nNote: It is HIGHLY recommended to disable building in the wilderness before using this feature to avoid players exploiting."
+            + "\nNote: It is also recommended to ONLY use this feature in newly created worlds where there is no existing player data."
+            + "\nNote: This does NOT affect deletions. If admins want to restore back to original schematic, they can select '__restore__' by using /claimschematic command.")
+    public boolean claimAutoSchematicRestore = false;
     @Setting(value = "investigation-tool", comment = "The item used to investigate claims with a right-click.")
     public String investigationTool = "minecraft:stick";
     @Setting(value = "modification-tool", comment = "The item used to create/resize claims with a right click.")

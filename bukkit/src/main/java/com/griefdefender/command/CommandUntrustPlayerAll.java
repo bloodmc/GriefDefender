@@ -42,16 +42,13 @@ import com.griefdefender.api.claim.TrustTypes;
 import com.griefdefender.cache.MessageCache;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
-import com.griefdefender.configuration.MessageDataConfig;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.event.GDCauseStackManager;
 import com.griefdefender.event.GDUserTrustClaimEvent;
 import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.permission.GDPermissions;
 import net.kyori.text.Component;
-import net.kyori.text.TextComponent;
 import net.kyori.text.adapter.bukkit.TextAdapter;
-import net.kyori.text.format.TextColor;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
@@ -60,8 +57,6 @@ import java.util.Set;
 @CommandAlias("%griefdefender")
 @CommandPermission(GDPermissions.COMMAND_UNTRUSTALL_PLAYER)
 public class CommandUntrustPlayerAll extends BaseCommand {
-
-    private MessageDataConfig MESSAGE_DATA = GriefDefenderPlugin.getInstance().messageData;
 
     @CommandCompletion("@gdplayers @gddummy")
     @CommandAlias("untrustall")
@@ -78,7 +73,7 @@ public class CommandUntrustPlayerAll extends BaseCommand {
 
         // validate player argument
         if (user == null) {
-            GriefDefenderPlugin.sendMessage(player, MESSAGE_DATA.getMessage(MessageStorage.COMMAND_INVALID_PLAYER, ImmutableMap.of(
+            GriefDefenderPlugin.sendMessage(player, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.COMMAND_INVALID_PLAYER, ImmutableMap.of(
                     "player", target)));
             return;
         }
@@ -105,7 +100,7 @@ public class CommandUntrustPlayerAll extends BaseCommand {
         GriefDefender.getEventManager().post(event);
         GDCauseStackManager.getInstance().popCause();
         if (event.cancelled()) {
-            TextAdapter.sendComponent(player, event.getMessage().orElse(MESSAGE_DATA.getMessage(MessageStorage.TRUST_PLUGIN_CANCEL,
+            TextAdapter.sendComponent(player, event.getMessage().orElse(MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.TRUST_PLUGIN_CANCEL,
                     ImmutableMap.of("target", user.getName()))));
             return;
         }
@@ -114,7 +109,7 @@ public class CommandUntrustPlayerAll extends BaseCommand {
             this.removeAllUserTrust(claim, user);
         }
 
-        final Component message = MESSAGE_DATA.getMessage(MessageStorage.UNTRUST_INDIVIDUAL_ALL_CLAIMS,
+        final Component message = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.UNTRUST_INDIVIDUAL_ALL_CLAIMS,
                ImmutableMap.of(
                 "player", user.getName()));
         GriefDefenderPlugin.sendMessage(player, message);

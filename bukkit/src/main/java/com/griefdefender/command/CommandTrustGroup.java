@@ -44,14 +44,12 @@ import com.griefdefender.api.permission.Context;
 import com.griefdefender.cache.MessageCache;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
-import com.griefdefender.configuration.MessageDataConfig;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.event.GDCauseStackManager;
 import com.griefdefender.event.GDGroupTrustClaimEvent;
-import com.griefdefender.permission.GDPermissionHolder;
+import com.griefdefender.permission.GDPermissionGroup;
 import com.griefdefender.permission.GDPermissions;
 import com.griefdefender.util.PermissionUtil;
-import me.lucko.luckperms.api.Group;
 import net.kyori.text.Component;
 import net.kyori.text.adapter.bukkit.TextAdapter;
 
@@ -64,8 +62,6 @@ import org.bukkit.entity.Player;
 @CommandAlias("%griefdefender")
 @CommandPermission(GDPermissions.COMMAND_TRUST_GROUP)
 public class CommandTrustGroup extends BaseCommand {
-
-    private MessageDataConfig MESSAGE_DATA = GriefDefenderPlugin.getInstance().messageData;
 
     @CommandCompletion("@gdgroups @gdtrusttypes @gddummy")
     @CommandAlias("trustgroup")
@@ -83,9 +79,9 @@ public class CommandTrustGroup extends BaseCommand {
             return;
         }
 
-        final Group group = PermissionUtil.getInstance().getGroupSubject(groupName);
+        final GDPermissionGroup group = PermissionHolderCache.getInstance().getOrCreateGroup(groupName);
         if (group == null) {
-            GriefDefenderPlugin.sendMessage(player, MESSAGE_DATA.getMessage(MessageStorage.COMMAND_INVALID_GROUP, ImmutableMap.of(
+            GriefDefenderPlugin.sendMessage(player, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.COMMAND_INVALID_GROUP, ImmutableMap.of(
                     "group", groupName)));
             return;
         }
@@ -105,7 +101,7 @@ public class CommandTrustGroup extends BaseCommand {
 
         //check permission here
         if(claim.allowGrantPermission(player) != null) {
-            final Component message = MESSAGE_DATA.getMessage(MessageStorage.PERMISSION_TRUST,
+            final Component message = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PERMISSION_TRUST,
                     ImmutableMap.of(
                     "owner", claim.getOwnerName()));
             GriefDefenderPlugin.sendMessage(player, message);
@@ -118,7 +114,7 @@ public class CommandTrustGroup extends BaseCommand {
         GriefDefender.getEventManager().post(event);
         GDCauseStackManager.getInstance().popCause();
         if (event.cancelled()) {
-            TextAdapter.sendComponent(player, event.getMessage().orElse(MESSAGE_DATA.getMessage(MessageStorage.TRUST_PLUGIN_CANCEL,
+            TextAdapter.sendComponent(player, event.getMessage().orElse(MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.TRUST_PLUGIN_CANCEL,
                     ImmutableMap.of("target", group))));
             return;
         }
@@ -130,19 +126,19 @@ public class CommandTrustGroup extends BaseCommand {
         if (!groupTrustList.contains(group.getName())) {
             groupTrustList.add(group.getName());
         } else {
-            final Component message = MESSAGE_DATA.getMessage(MessageStorage.TRUST_ALREADY_HAS,
+            final Component message = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.TRUST_ALREADY_HAS,
                 ImmutableMap.of(
                     "target", group.getName(),
                     "type", trustType.getName()));
             GriefDefenderPlugin.sendMessage(player, message);
             return;
         }
-        final GDPermissionHolder holder = PermissionHolderCache.getInstance().getOrCreateGroup(group);
-        PermissionUtil.getInstance().setPermissionValue(claim, holder, permission, Tristate.TRUE, contexts);
+
+        PermissionUtil.getInstance().setPermissionValue(group, permission, Tristate.TRUE, contexts);
         claim.getInternalClaimData().setRequiresSave(true);
         claim.getInternalClaimData().save();
 
-        final Component message = MESSAGE_DATA.getMessage(MessageStorage.TRUST_GRANT, ImmutableMap.of(
+        final Component message = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.TRUST_GRANT, ImmutableMap.of(
                 "target", group.getName(),
                 "type", trustType.getName()));
         GriefDefenderPlugin.sendMessage(player, message);

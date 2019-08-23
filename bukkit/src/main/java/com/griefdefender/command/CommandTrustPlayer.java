@@ -33,7 +33,6 @@ import co.aikar.commands.annotation.Optional;
 import co.aikar.commands.annotation.Subcommand;
 import co.aikar.commands.annotation.Syntax;
 
-import com.griefdefender.configuration.MessageDataConfig;
 import com.griefdefender.configuration.MessageStorage;
 import net.kyori.text.Component;
 import net.kyori.text.adapter.bukkit.TextAdapter;
@@ -62,8 +61,6 @@ import org.bukkit.entity.Player;
 @CommandPermission(GDPermissions.COMMAND_TRUST_PLAYER)
 public class CommandTrustPlayer extends BaseCommand {
 
-    private MessageDataConfig MESSAGE_DATA = GriefDefenderPlugin.getInstance().messageData;
-
     @CommandCompletion("@gdplayers @gdtrusttypes @gddummy")
     @CommandAlias("trust")
     @Description("Grants a player access to your claim."
@@ -71,7 +68,7 @@ public class CommandTrustPlayer extends BaseCommand {
             + "\nContainer: access to interact with all blocks including inventory."
             + "\nBuilder: access to everything above including ability to place and break blocks."
             + "\nManager: access to everything above including ability to manage claim settings.")
-    @Syntax("<player> <accessor|builder|container|manager>")
+    @Syntax("<player> [<accessor|builder|container|manager>]")
     @Subcommand("trust player")
     public void execute(Player player, String target, @Optional String type) {
         TrustType trustType = null;
@@ -93,7 +90,7 @@ public class CommandTrustPlayer extends BaseCommand {
         }
 
         if (user == null) {
-            GriefDefenderPlugin.sendMessage(player, MESSAGE_DATA.getMessage(MessageStorage.COMMAND_INVALID_PLAYER,
+            GriefDefenderPlugin.sendMessage(player, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.COMMAND_INVALID_PLAYER,
                     ImmutableMap.of(
                     "player", target)));
             return;
@@ -122,7 +119,7 @@ public class CommandTrustPlayer extends BaseCommand {
         } else {
             //check permission here
             if(claim.allowGrantPermission(player) != null) {
-                final Component message = MESSAGE_DATA.getMessage(MessageStorage.PERMISSION_TRUST,
+                final Component message = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PERMISSION_TRUST,
                         ImmutableMap.of(
                         "player", claim.getOwnerName()));
                 GriefDefenderPlugin.sendMessage(player, message);
@@ -145,14 +142,14 @@ public class CommandTrustPlayer extends BaseCommand {
         GriefDefender.getEventManager().post(event);
         GDCauseStackManager.getInstance().popCause();
         if (event.cancelled()) {
-            TextAdapter.sendComponent(player, event.getMessage().orElse(event.getMessage().orElse(MESSAGE_DATA.getMessage(MessageStorage.TRUST_PLUGIN_CANCEL,
+            TextAdapter.sendComponent(player, event.getMessage().orElse(event.getMessage().orElse(MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.TRUST_PLUGIN_CANCEL,
                     ImmutableMap.of("target", user.getName())))));
             return;
         }
 
         final List<UUID> trustList = claim.getUserTrustList(trustType);
         if (trustList.contains(user.getUniqueId())) {
-            final Component message = MESSAGE_DATA.getMessage(MessageStorage.TRUST_ALREADY_HAS,
+            final Component message = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.TRUST_ALREADY_HAS,
                 ImmutableMap.of(
                     "target", user.getName(),
                     "type", trustType.getName()));
@@ -164,7 +161,7 @@ public class CommandTrustPlayer extends BaseCommand {
         claim.getInternalClaimData().setRequiresSave(true);
         claim.getInternalClaimData().save();
 
-        final Component message = MESSAGE_DATA.getMessage(MessageStorage.TRUST_GRANT, ImmutableMap.of(
+        final Component message = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.TRUST_GRANT, ImmutableMap.of(
                 "target", user.getName(),
                 "type", trustType.getName()));
         GriefDefenderPlugin.sendMessage(player, message);

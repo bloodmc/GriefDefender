@@ -31,7 +31,7 @@ import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
 public class MigratorCategory extends ConfigCategory {
 
     @Setting(value = "classic", comment = "Set to true to enable the classic migrator." + 
-            "\nNote: Migrates GP bukkit classic claim data to current format." +
+            "\nNote: Migrates GP bukkit classic claim data and GPFlags data, if available, to current format." +
             "\nNote: It is recommended to backup data before using.")
     public boolean classicMigrator = false;
 

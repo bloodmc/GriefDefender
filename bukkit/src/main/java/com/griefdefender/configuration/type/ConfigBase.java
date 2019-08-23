@@ -24,6 +24,7 @@
  */
 package com.griefdefender.configuration.type;
 
+import com.griefdefender.configuration.category.BanCategory;
 import com.griefdefender.configuration.category.BlacklistCategory;
 import com.griefdefender.configuration.category.ClaimCategory;
 import com.griefdefender.configuration.category.GeneralCategory;
@@ -34,6 +35,13 @@ import com.griefdefender.configuration.category.VisualCategory;
 import ninja.leaping.configurate.objectmapping.Setting;
 
 public class ConfigBase {
+
+    @Setting(value = "bans", comment = "Controls which item/block/entity id's are banned globally from all events. " 
+            + "\nNote: Id's support wildcards '?' and '*' by using Apache's wildcard matcher." 
+            + "\nThe wildcard '?' represents a single character."
+            + "\nThe wildcard '*' represents zero or more characters."
+            + "\nFor more information on usage, see https://commons.apache.org/proper/commons-io/javadocs/api-2.5/org/apache/commons/io/FilenameUtils.html#wildcardMatch(java.lang.String,%20java.lang.String)")
+    public BanCategory bans = new BanCategory();
 
     @Setting(value = "blacklist", comment = "Controls which item/block/entity id's are blacklisted from events either on a per-flag basis or globally. " 
             + "\nNote: Id's support wildcards '?' and '*' by using Apache's wildcard matcher." 

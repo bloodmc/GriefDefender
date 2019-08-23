@@ -40,7 +40,7 @@ import org.bukkit.entity.Player;
 @CommandPermission(GDPermissions.COMMAND_SUBDIVIDE_CLAIMS)
 public class CommandClaimSubdivision extends BaseCommand {
 
-    @CommandAlias("modesubdivide")
+    @CommandAlias("modesubdivide|subdivideclaims|sc")
     @Description("Switches the shovel tool to subdivision mode, used to subdivide your claims.")
     @Subcommand("mode subdivide")
     public void execute(Player player) {

@@ -42,7 +42,7 @@ import java.util.function.Consumer;
 
 public class GDCallbackHolder {
     public static final String CALLBACK_COMMAND = "callback";
-    public static final String CALLBACK_COMMAND_QUALIFIED = "/gp:" + CALLBACK_COMMAND;
+    public static final String CALLBACK_COMMAND_QUALIFIED = "/gd:" + CALLBACK_COMMAND;
     private static final GDCallbackHolder INSTANCE = new GDCallbackHolder();
 
     static final ConcurrentMap<UUID, Consumer<CommandSender>> reverseMap = new ConcurrentHashMap<>();

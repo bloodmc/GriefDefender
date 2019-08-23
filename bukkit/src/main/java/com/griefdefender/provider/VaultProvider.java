@@ -25,23 +25,55 @@
 package com.griefdefender.provider;
 
 import net.milkbowl.vault.economy.Economy;
+import net.milkbowl.vault.economy.EconomyResponse;
+
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
 public class VaultProvider {
 
-    final Economy vaultApi;
+    private Economy vaultApi;
 
     public VaultProvider() {
-        RegisteredServiceProvider<Economy> economyProvider = Bukkit.getServer().getServicesManager().getRegistration(net.milkbowl.vault.economy.Economy.class);
-        if (economyProvider != null) {
-            this.vaultApi = economyProvider.getProvider();
-        } else {
-            this.vaultApi = null;
-        }
+        this.initEconomy();
     }
 
     public Economy getApi() {
+        if (this.vaultApi == null) {
+            this.initEconomy();
+        }
         return this.vaultApi;
+    }
+
+    private void initEconomy() {
+        final RegisteredServiceProvider<Economy> economyProvider = Bukkit.getServer().getServicesManager().getRegistration(net.milkbowl.vault.economy.Economy.class);
+        if (economyProvider != null) {
+            this.vaultApi = economyProvider.getProvider();
+        }
+    }
+
+    public boolean hasAccount(OfflinePlayer player) {
+        if (this.getApi() == null) {
+            return false;
+        }
+        return this.vaultApi.hasAccount(player);
+    }
+
+    public double getBalance(Player player) {
+        if (this.getApi() == null) {
+            return 0;
+        }
+        return this.vaultApi.getBalance(player);
+    }
+
+    public boolean depositPlayer(OfflinePlayer player, double amount) {
+        if (this.getApi() == null) {
+            return false;
+        }
+
+        final EconomyResponse result = this.vaultApi.depositPlayer(player, amount);
+        return result.transactionSuccess();
     }
 }

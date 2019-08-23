@@ -15,6 +15,7 @@ import com.griefdefender.api.data.PlayerData;
 import com.griefdefender.cache.MessageCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.configuration.MessageStorage;
+import com.griefdefender.event.GDCauseStackManager;
 import com.griefdefender.permission.GDPermissions;
 import net.kyori.text.TextComponent;
 import net.kyori.text.adapter.bukkit.TextAdapter;
@@ -60,6 +61,7 @@ public class CommandClaimTransfer extends BaseCommand {
         }
 
         // change ownership
+        GDCauseStackManager.getInstance().pushCause(player);
         final ClaimResult claimResult = claim.transferOwner(otherPlayer.getUniqueId());
         if (!claimResult.successful()) {
             PlayerData targetPlayerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), otherPlayer.getUniqueId());

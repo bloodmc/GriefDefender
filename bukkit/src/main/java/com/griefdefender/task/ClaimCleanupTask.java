@@ -24,10 +24,12 @@
  */
 package com.griefdefender.task;
 
+import com.google.common.reflect.TypeToken;
 import com.griefdefender.GDBootstrap;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.claim.Claim;
+import com.griefdefender.api.claim.ClaimSchematic;
 import com.griefdefender.api.permission.option.Options;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.claim.GDClaimManager;
@@ -100,8 +102,8 @@ public class ClaimCleanupTask extends BukkitRunnable {
                 if (!claim.isBasicClaim()) {
                     continue;
                 }
-                final Double optionValue = GDPermissionManager.getInstance().getInternalOptionValue(subject, Options.EXPIRATION, claim, playerData);
-                final int optionClaimExpirationBasic = optionValue != null ? optionValue.intValue() : 0;
+                final int optionValue = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), subject, Options.EXPIRATION, claim);
+                final int optionClaimExpirationBasic = optionValue;
                 if (optionClaimExpirationBasic > 0) {
                     final Instant localNow = Instant.now();
                     final boolean claimNotActive = claimLastActive.plus(Duration.ofDays(optionClaimExpirationBasic)).isBefore(localNow);
@@ -115,19 +117,24 @@ public class ClaimCleanupTask extends BukkitRunnable {
                             continue;
                         }
 
-                        final int taxExpirationDays = GDPermissionManager.getInstance().getInternalOptionValue(subject, Options.TAX_EXPIRATION, claim, playerData).intValue();
-                        final int expireDaysToKeep = GDPermissionManager.getInstance().getInternalOptionValue(subject, Options.TAX_EXPIRATION_DAYS_KEEP, claim, playerData).intValue();
+                        final int taxExpirationDays = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), subject, Options.TAX_EXPIRATION, claim).intValue();
+                        final int expireDaysToKeep = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), subject, Options.TAX_EXPIRATION_DAYS_KEEP, claim).intValue();
                         if (!taxPastDueDate.plus(Duration.ofDays(taxExpirationDays + expireDaysToKeep)).isBefore(localNow)) {
                             continue;
                         }
                     }
 
+                    final ClaimSchematic schematic = claim.getSchematics().get("__restore__");
                     claimManager.deleteClaim(claim);
                     GriefDefenderPlugin.getInstance().getLogger().info("Removed " + claim.getOwnerName() + "'s unused claim @ "
                                                       + claim.getLesserBoundaryCorner());
 
                     if (activeConfig.getConfig().claim.claimAutoNatureRestore) {
                         BlockUtil.getInstance().restoreClaim(claim);
+                    } else if (activeConfig.getConfig().claim.claimAutoSchematicRestore) {
+                        if (schematic != null) {
+                            schematic.apply();
+                        }
                     }
                 }
             }

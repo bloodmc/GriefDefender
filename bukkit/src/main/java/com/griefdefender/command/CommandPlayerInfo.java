@@ -36,6 +36,7 @@ import co.aikar.commands.annotation.Syntax;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.common.reflect.TypeToken;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.claim.Claim;
@@ -45,7 +46,6 @@ import com.griefdefender.api.permission.option.Options;
 import com.griefdefender.cache.MessageCache;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
-import com.griefdefender.configuration.MessageDataConfig;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.internal.pagination.PaginationList;
 import com.griefdefender.internal.util.NMSUtil;
@@ -73,32 +73,29 @@ import java.util.List;
 @CommandPermission(GDPermissions.COMMAND_PLAYER_INFO_BASE)
 public class CommandPlayerInfo extends BaseCommand {
 
-    private MessageDataConfig MESSAGE_DATA = GriefDefenderPlugin.getInstance().messageData;
-
     @CommandCompletion("@gdplayers @gddummy")
     @CommandAlias("playerinfo")
     @Description("Gets information about a player.")
     @Syntax("[<player>|<player> <world>]")
     @Subcommand("player info")
     public void execute(CommandSender src, @Optional String[] args) throws InvalidCommandArgument {
-        OfflinePlayer user = null;
+        GDPermissionUser user = null;
         World world = null;
         if (args.length > 0) {
-            GDPermissionUser holder = PermissionHolderCache.getInstance().getOrCreateUser(args[0]);
-            if (holder == null) {
-                TextAdapter.sendComponent(src, MESSAGE_DATA.getMessage(MessageStorage.COMMAND_PLAYER_NOT_FOUND,
+            user = PermissionHolderCache.getInstance().getOrCreateUser(args[0]);
+            if (user == null) {
+                TextAdapter.sendComponent(src, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.COMMAND_PLAYER_NOT_FOUND,
                         ImmutableMap.of("player", args[0])));
                 return;
             }
             if (args.length > 1) {
                 world = Bukkit.getServer().getWorld(args[1]);
                 if (world == null) {
-                    TextAdapter.sendComponent(src, MESSAGE_DATA.getMessage(MessageStorage.COMMAND_WORLD_NOT_FOUND,
+                    TextAdapter.sendComponent(src, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.COMMAND_WORLD_NOT_FOUND,
                             ImmutableMap.of("world", args[1])));
                     return;
                 }
             }
-            user = holder.getOfflinePlayer();
         }
 
         if (user == null) {
@@ -107,7 +104,7 @@ public class CommandPlayerInfo extends BaseCommand {
                 return;
             }
 
-            user = (OfflinePlayer) src;
+            user = PermissionHolderCache.getInstance().getOrCreateUser((OfflinePlayer) src);
             if (world == null) {
                 world = ((Player) src).getWorld();
             }
@@ -140,35 +137,41 @@ public class CommandPlayerInfo extends BaseCommand {
         }
 
         final double claimableChunks = GriefDefenderPlugin.CLAIM_BLOCK_SYSTEM == ClaimBlockSystem.VOLUME ? (playerData.getRemainingClaimBlocks() / 65536.0) : (playerData.getRemainingClaimBlocks() / 256.0);
-        final Component uuidText = MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_UUID, 
+        final Component uuidText = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_UUID, 
                 ImmutableMap.of("id", user.getUniqueId().toString()));
-        final Component worldText = MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_WORLD, 
-                ImmutableMap.of("world", world.getName()));
-        final Component sizeLimitText = MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_CLAIM_SIZE_LIMIT, 
+        final Component worldText = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_WORLD, 
+                ImmutableMap.of("name", world.getName()));
+        final Component sizeLimitText = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_CLAIM_SIZE_LIMIT, 
                 ImmutableMap.of("limit", claimSizeLimit));
-        final Component initialBlockText = MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_BLOCK_INITIAL, 
+        final Component initialBlockText = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_BLOCK_INITIAL, 
                 ImmutableMap.of("amount", String.valueOf(playerData.getInitialClaimBlocks())));
-        final Component accruedBlockText = MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_BLOCK_ACCRUED, 
+        final Component accruedBlockText = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_BLOCK_ACCRUED, 
                 ImmutableMap.of(
                     "amount", String.valueOf(playerData.getAccruedClaimBlocks()),
                     "block_amount", String.valueOf(playerData.getBlocksAccruedPerHour())));
-        final Component maxAccruedBlockText = MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_BLOCK_MAX_ACCRUED, 
+        final Component maxAccruedBlockText = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_BLOCK_MAX_ACCRUED, 
                 ImmutableMap.of("amount", String.valueOf(playerData.getMaxAccruedClaimBlocks())));
-        final Component bonusBlockText = MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_BLOCK_BONUS, 
+        final Component bonusBlockText = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_BLOCK_BONUS, 
                 ImmutableMap.of("amount", String.valueOf(playerData.getBonusClaimBlocks())));
-        final Component remainingBlockText = MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_BLOCK_REMAINING, 
+        final Component remainingBlockText = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_BLOCK_REMAINING, 
                 ImmutableMap.of("amount", String.valueOf(playerData.getRemainingClaimBlocks())));
-        final Component minMaxLevelText = MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_CLAIM_LEVEL, 
+        final Component economyBlockAvailablePurchaseText = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_ECONOMY_BLOCK_AVAILABLE_PURCHASE, 
+                ImmutableMap.of("amount", String.valueOf(playerData.getRemainingClaimBlocks())));
+        final Component economyBlockCostText = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_ECONOMY_BLOCK_COST, 
+                ImmutableMap.of("amount", String.valueOf("$" + playerData.getEconomyBlockCost())));
+        final Component economyBlockSellReturnText = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_ECONOMY_BLOCK_SELL_RETURN, 
+                ImmutableMap.of("amount", String.valueOf("$" + playerData.getEconomyClaimBlockReturn())));
+        final Component minMaxLevelText = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_CLAIM_LEVEL, 
                 ImmutableMap.of("level", String.valueOf(playerData.getMinClaimLevel() + "-" + playerData.getMaxClaimLevel())));
-        final Component abandonRatioText = MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_ABANDON_RETURN_RATIO, 
+        final Component abandonRatioText = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_ABANDON_RETURN_RATIO, 
                 ImmutableMap.of("ratio", String.valueOf(playerData.getAbandonedReturnRatio(ClaimTypes.BASIC))));
-        final Component totalTaxText = MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_TAX_TOTAL, 
+        final Component totalTaxText = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_TAX_TOTAL, 
                 ImmutableMap.of("amount", String.valueOf(playerData.getInitialClaimBlocks())));
-        final Component totalBlockText = MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_BLOCK_TOTAL, 
+        final Component totalBlockText = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_BLOCK_TOTAL, 
                 ImmutableMap.of("amount", String.valueOf(playerData.getInitialClaimBlocks())));
-        final Component totalClaimableChunkText = MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_CHUNK_TOTAL, 
+        final Component totalClaimableChunkText = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_CHUNK_TOTAL, 
                 ImmutableMap.of("amount", String.valueOf(Math.round(claimableChunks * 100.0)/100.0)));
-        final Component totalClaimText = MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_CLAIM_TOTAL, 
+        final Component totalClaimText = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_CLAIM_TOTAL, 
                 ImmutableMap.of("amount", String.valueOf(claimList.size())));
 
         List<Component> claimsTextList = Lists.newArrayList();
@@ -179,22 +182,32 @@ public class CommandPlayerInfo extends BaseCommand {
         claimsTextList.add(accruedBlockText);
         claimsTextList.add(maxAccruedBlockText);
         claimsTextList.add(bonusBlockText);
-        claimsTextList.add(remainingBlockText);
+        if (GriefDefenderPlugin.getInstance().isEconomyModeEnabled()) {
+            claimsTextList.add(economyBlockAvailablePurchaseText);
+            claimsTextList.add(economyBlockCostText);
+            claimsTextList.add(economyBlockSellReturnText);
+        } else {
+            claimsTextList.add(remainingBlockText);
+        }
         claimsTextList.add(minMaxLevelText);
         claimsTextList.add(abandonRatioText);
         final int townLimit = playerData.getCreateClaimLimit(ClaimTypes.TOWN);
         final int basicLimit = playerData.getCreateClaimLimit(ClaimTypes.BASIC);
         final int subLimit = playerData.getCreateClaimLimit(ClaimTypes.SUBDIVISION);
+        String townLimitText = townLimit < 0 ? "∞" : String.valueOf(townLimit);
+        String basicLimitText = basicLimit < 0 ? "∞" : String.valueOf(basicLimit);
+        String subLimitText = subLimit < 0 ? "∞" : String.valueOf(subLimit);
+
         Component claimCreateLimits = TextComponent.builder("")
                 .append("TOWN", TextColor.GRAY)
                 .append(" : ")
-                .append(String.valueOf(townLimit), TextColor.GREEN)
+                .append(townLimitText, TextColor.GREEN)
                 .append(" BASIC", TextColor.GRAY)
                 .append(" : ")
-                .append(String.valueOf(basicLimit), TextColor.GREEN)
+                .append(basicLimitText, TextColor.GREEN)
                 .append(" SUB", TextColor.GRAY)
                 .append(" : ")
-                .append(String.valueOf(subLimit), TextColor.GREEN)
+                .append(subLimitText, TextColor.GREEN)
                 .build();
         claimsTextList.add(claimCreateLimits);
         if (GriefDefenderPlugin.getGlobalConfig().getConfig().claim.bankTaxSystem) {
@@ -214,25 +227,22 @@ public class CommandPlayerInfo extends BaseCommand {
                     .append(" : ")
                     .append(String.valueOf(playerData.getTaxRate(ClaimTypes.SUBDIVISION)), TextColor.GREEN)
                     .build();
-            Component currentTaxRateText = TextComponent.builder("")
-                    .append("Current Claim Tax Rate", TextColor.YELLOW)
-                    .append(" : ")
-                    .append("N/A", TextColor.RED)
-                    .build();
+            String taxRate = "N/A";
             if (src instanceof Player) {
                 Player player = (Player) src;
                 if (player.getUniqueId().equals(user.getUniqueId())) {
                     final GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAt(player.getLocation());
                     if (claim != null && !claim.isWilderness()) {
-                        final double playerTaxRate = GDPermissionManager.getInstance().getInternalOptionValue(user, Options.TAX_RATE, claim, playerData);
-                        currentTaxRateText = MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_TAX_CURRENT_RATE, 
-                                        ImmutableMap.of("rate", String.valueOf(playerTaxRate)));
+                        final double playerTaxRate = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Double.class), user, Options.TAX_RATE, claim);
+                        taxRate = String.valueOf(playerTaxRate);
                     }
                 }
             }
-            final Component globalTownTaxText = MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_TAX_GLOBAL_TOWN_RATE, 
+            final Component currentTaxRateText = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_TAX_CURRENT_RATE, 
+                    ImmutableMap.of("rate", taxRate));
+            final Component globalTownTaxText = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_TAX_GLOBAL_TOWN_RATE, 
                     ImmutableMap.of("rate", townTaxRate));
-            final Component globalClaimTaxText = MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_TAX_GLOBAL_CLAIM_RATE, 
+            final Component globalClaimTaxText = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_TAX_GLOBAL_CLAIM_RATE, 
                     ImmutableMap.of("rate", claimTaxRate));
             claimsTextList.add(currentTaxRateText);
             claimsTextList.add(globalTownTaxText);
@@ -243,15 +253,15 @@ public class CommandPlayerInfo extends BaseCommand {
         claimsTextList.add(totalClaimableChunkText);
         claimsTextList.add(totalClaimText);
 
-        if (NMSUtil.getInstance().getLastLogin(user) != 0) {
+        if (NMSUtil.getInstance().getLastLogin(user.getOfflinePlayer()) != 0) {
             Date lastActive = null;
             try {
-                lastActive = new Date(NMSUtil.getInstance().getLastLogin(user));
+                lastActive = new Date(NMSUtil.getInstance().getLastLogin(user.getOfflinePlayer()));
             } catch(DateTimeParseException ex) {
                 // ignore
             }
             if (lastActive != null) {
-                claimsTextList.add(MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_LAST_ACTIVE, 
+                claimsTextList.add(MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_LAST_ACTIVE, 
                         ImmutableMap.of("date", lastActive)));
             }
         }

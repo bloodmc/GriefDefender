@@ -33,6 +33,7 @@ import co.aikar.commands.annotation.Subcommand;
 import co.aikar.commands.annotation.Syntax;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.reflect.TypeToken;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.permission.option.Options;
@@ -51,7 +52,7 @@ import org.bukkit.entity.Player;
 @CommandPermission(GDPermissions.COMMAND_BUY_CLAIM_BLOCKS)
 public class CommandClaimBuyBlocks extends BaseCommand {
 
-    @CommandAlias("buyblocks")
+    @CommandAlias("buyclaim|buyclaimblocks|buyblocks")
     @Description("Purchases additional claim blocks with server money.\nNote: Requires economy plugin.")
     @Syntax("[<amount>]")
     @Subcommand("buy blocks")
@@ -67,7 +68,7 @@ public class CommandClaimBuyBlocks extends BaseCommand {
         }
 
         final Economy economy = GriefDefenderPlugin.getInstance().getVaultProvider().getApi();
-        if (!economy.hasAccount(player)) {
+        if (economy == null || !economy.hasAccount(player)) {
             final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_PLAYER_NOT_FOUND, ImmutableMap.of(
                     "player", player.getName()));
             GriefDefenderPlugin.sendMessage(player, message);
@@ -76,8 +77,8 @@ public class CommandClaimBuyBlocks extends BaseCommand {
 
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
         final GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAt(player.getLocation());
-        final double economyBlockCost = GDPermissionManager.getInstance().getInternalOptionValue(player, Options.ECONOMY_BLOCK_COST, playerData);
-        final double economyBlockSell = GDPermissionManager.getInstance().getInternalOptionValue(player, Options.ECONOMY_BLOCK_SELL_RETURN, playerData);
+        final double economyBlockCost = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Double.class), player, Options.ECONOMY_BLOCK_COST);
+        final double economyBlockSell = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Double.class), player, Options.ECONOMY_BLOCK_SELL_RETURN);
         if (economyBlockCost == 0 && economyBlockSell == 0) {
             GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().ECONOMY_BLOCK_BUY_SELL_DISABLED);
             return;
@@ -92,7 +93,7 @@ public class CommandClaimBuyBlocks extends BaseCommand {
         if (blockCount == null) {
             final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_BLOCK_PURCHASE_COST, ImmutableMap.of(
                     "amount", economyBlockCost,
-                    "balance", balance));
+                    "balance", String.valueOf("$" + balance)));
             GriefDefenderPlugin.sendMessage(player, message);
             return;
         } else {

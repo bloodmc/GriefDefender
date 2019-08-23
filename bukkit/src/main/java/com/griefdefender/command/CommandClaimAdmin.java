@@ -40,7 +40,7 @@ import org.bukkit.entity.Player;
 @CommandPermission(GDPermissions.COMMAND_ADMIN_CLAIMS)
 public class CommandClaimAdmin extends BaseCommand {
 
-    @CommandAlias("modeadmin")
+    @CommandAlias("modeadmin|adminclaims|ac")
     @Description("Switches the shovel tool to administrative claims mode")
     @Subcommand("mode admin")
     public void execute(Player player) {

@@ -46,30 +46,43 @@ public class ResultTypeRegistryModule implements CatalogRegistryModule<ResultTyp
         return instance;
     }
 
-    private final Map<String, ResultType> resultTypeMap = new HashMap<>();
+    private final Map<String, ResultType> registryMap = new HashMap<>();
 
     @Override
     public Optional<ResultType> getById(String id) {
-        return Optional.ofNullable(this.resultTypeMap.get(checkNotNull(id)));
+        if (id == null) {
+            return Optional.empty();
+        }
+
+        if (id.contains("griefdefender.")) {
+            id = id.replace("griefdefender.", "griefdefender:");
+        }
+        if (!id.contains(":")) {
+            id = "griefdefender:" + id;
+        }
+
+        return Optional.ofNullable(this.registryMap.get(checkNotNull(id)));
     }
 
     @Override
     public Collection<ResultType> getAll() {
-        return this.resultTypeMap.values();
+        return this.registryMap.values();
     }
 
     @Override
     public void registerDefaults() {
         RegistryHelper.mapFields(ResultTypes.class, input -> {
-            final ResultType type = new GDResultType("griefdefender:" + input.toLowerCase(), input.toLowerCase());
-            this.resultTypeMap.put(input.toLowerCase(Locale.ENGLISH), type);
+            final String name = input.toLowerCase().replace("_", "-");
+            final String id = "griefdefender:" + name;
+            final ResultType type = new GDResultType(id, name);
+            this.registryMap.put(id, type);
             return type;
         });
     }
 
     @Override
     public void registerCustomType(ResultType type) {
-        this.resultTypeMap.put(type.getName().toLowerCase(Locale.ENGLISH), type);
+        this.registryMap.put(type.getId().toLowerCase(Locale.ENGLISH), type);
     }
 
     static {

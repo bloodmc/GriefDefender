@@ -1,7 +1,7 @@
 /*
  * This file is part of GriefDefender, licensed under the MIT License (MIT).
  *
- * Copyright (c) SpongePowered <https://www.spongepowered.org>
+ * Copyright (c) bloodmc
  * Copyright (c) contributors
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -75,7 +75,7 @@ public class GDClaimType implements ClaimType {
     }
 
     public String toString() {
-        return this.name;
+        return this.id;
     }
 
     @Override

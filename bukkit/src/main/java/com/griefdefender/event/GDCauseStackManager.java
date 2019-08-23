@@ -1,7 +1,7 @@
 /*
  * This file is part of GriefDefender, licensed under the MIT License (MIT).
  *
- * Copyright (c) SpongePowered <https://www.spongepowered.org>
+ * Copyright (c) bloodmc
  * Copyright (c) contributors
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -29,11 +29,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.common.collect.Queues;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.event.EventCause;
+import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.internal.util.NMSUtil;
 
 import java.util.Deque;
 
-import javax.annotation.Nullable;
+import org.bukkit.OfflinePlayer;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class GDCauseStackManager {
 
@@ -62,6 +64,9 @@ public final class GDCauseStackManager {
 
     public GDCauseStackManager pushCause(Object obj) {
         checkNotNull(obj, "obj");
+        if (obj instanceof OfflinePlayer) {
+            obj = PermissionHolderCache.getInstance().getOrCreateUser((OfflinePlayer) obj);
+        }
         if (tick_stored == NMSUtil.getInstance().getRunningServerTicks()) {
             this.cause.push(obj);
             return this;

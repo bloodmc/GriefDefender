@@ -44,7 +44,6 @@ import com.griefdefender.api.claim.TrustTypes;
 import com.griefdefender.cache.MessageCache;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
-import com.griefdefender.configuration.MessageDataConfig;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.event.GDCauseStackManager;
 import com.griefdefender.event.GDUserTrustClaimEvent;
@@ -62,8 +61,6 @@ import java.util.UUID;
 @CommandAlias("%griefdefender")
 @CommandPermission(GDPermissions.COMMAND_TRUSTALL_PLAYER)
 public class CommandTrustPlayerAll extends BaseCommand {
-
-    private MessageDataConfig MESSAGE_DATA = GriefDefenderPlugin.getInstance().messageData;
 
     @CommandCompletion("@gdplayers @gdtrusttypes @gddummy")
     @CommandAlias("trustall")
@@ -95,7 +92,7 @@ public class CommandTrustPlayerAll extends BaseCommand {
 
         // validate player argument
         if (user == null) {
-            GriefDefenderPlugin.sendMessage(player, MESSAGE_DATA.getMessage(MessageStorage.COMMAND_INVALID_PLAYER,
+            GriefDefenderPlugin.sendMessage(player, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.COMMAND_INVALID_PLAYER,
                     ImmutableMap.of(
                     "player", target)));
             return;
@@ -123,7 +120,7 @@ public class CommandTrustPlayerAll extends BaseCommand {
         GriefDefender.getEventManager().post(event);
         GDCauseStackManager.getInstance().popCause();
         if (event.cancelled()) {
-            TextAdapter.sendComponent(player, event.getMessage().orElse(MESSAGE_DATA.getMessage(MessageStorage.TRUST_PLUGIN_CANCEL,
+            TextAdapter.sendComponent(player, event.getMessage().orElse(MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.TRUST_PLUGIN_CANCEL,
                     ImmutableMap.of("target", user.getName()))));
             return;
         }
@@ -132,7 +129,7 @@ public class CommandTrustPlayerAll extends BaseCommand {
             this.addAllUserTrust(claim, user, trustType);
         }
 
-        final Component message = MESSAGE_DATA.getMessage(MessageStorage.TRUST_INDIVIDUAL_ALL_CLAIMS,
+        final Component message = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.TRUST_INDIVIDUAL_ALL_CLAIMS,
                 ImmutableMap.of(
                 "player", user.getName()));
         GriefDefenderPlugin.sendMessage(player, message);

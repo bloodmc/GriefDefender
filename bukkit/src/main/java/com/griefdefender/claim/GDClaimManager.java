@@ -28,6 +28,7 @@ import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
+import com.google.common.reflect.TypeToken;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.GriefDefender;
@@ -42,7 +43,7 @@ import com.griefdefender.configuration.ClaimDataConfig;
 import com.griefdefender.configuration.ClaimStorageData;
 import com.griefdefender.configuration.GriefDefenderConfig;
 import com.griefdefender.configuration.PlayerStorageData;
-import com.griefdefender.event.GDDeleteClaimEvent;
+import com.griefdefender.event.GDRemoveClaimEvent;
 import com.griefdefender.internal.tracking.PlayerIndexStorage;
 import com.griefdefender.internal.tracking.chunk.GDChunk;
 import com.griefdefender.internal.util.BlockUtil;
@@ -62,6 +63,7 @@ import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -73,8 +75,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-
-import javax.annotation.Nullable;
 
 public class GDClaimManager implements ClaimManager {
 
@@ -266,17 +266,16 @@ public class GDClaimManager implements ClaimManager {
 
     @Override
     public ClaimResult deleteClaim(Claim claim, boolean deleteChildren) {
-        GDDeleteClaimEvent event = new GDDeleteClaimEvent(claim);
+        GDRemoveClaimEvent event = new GDRemoveClaimEvent(claim);
         GriefDefender.getEventManager().post(event);
         if (event.cancelled()) {
             return new GDClaimResult(claim, ClaimResultType.CLAIM_EVENT_CANCELLED, event.getMessage().orElse(null));
         }
 
-        this.deleteClaimInternal(claim, deleteChildren);
-        return new GDClaimResult(claim, ClaimResultType.SUCCESS);
+        return this.deleteClaimInternal(claim, deleteChildren);
     }
 
-    public void deleteClaimInternal(Claim claim, boolean deleteChildren) {
+    public ClaimResult deleteClaimInternal(Claim claim, boolean deleteChildren) {
         final GDClaim gpClaim = (GDClaim) claim;
         Set<Claim> subClaims = claim.getChildren(false);
         for (Claim child : subClaims) {
@@ -317,7 +316,7 @@ public class GDClaimManager implements ClaimManager {
             gpClaim.parent.children.remove(claim);
         }
 
-        DATASTORE.deleteClaimFromStorage((GDClaim) claim);
+        return DATASTORE.deleteClaimFromStorage((GDClaim) claim);
     }
 
     // Migrates children to new parent
@@ -456,6 +455,18 @@ public class GDClaimManager implements ClaimManager {
         return this.playerDataList;
     }
 
+    public Set<Claim> findOverlappingClaims(Claim claim) {
+        Set<Claim> claimSet = new HashSet<>();
+        for (Long chunkHash : claim.getChunkHashes()) {
+            for (Claim chunkClaim : this.chunksToClaimsMap.get(chunkHash)) {
+                if (!chunkClaim.equals(claim) && (claim.overlaps(chunkClaim) || chunkClaim.overlaps(claim))) {
+                    claimSet.add(chunkClaim);
+                }
+            }
+        }
+        return claimSet;
+    }
+
     @Override
     public Map<Long, Set<Claim>> getChunksToClaimsMap() {
         return ImmutableMap.copyOf(this.chunksToClaimsMap);
@@ -470,7 +481,7 @@ public class GDClaimManager implements ClaimManager {
             GDClaim gpClaim = (GDClaim) claim;
             gpClaim.save();
         }
-        this.theWildernessClaim.save();
+        this.getWildernessClaim().save();
 
         for (GDPlayerData playerData : this.getPlayerDataMap().values()) {
             playerData.getStorageData().save();
@@ -512,7 +523,7 @@ public class GDClaimManager implements ClaimManager {
         }
 
         Set<Claim> claimsInChunk = this.getInternalChunksToClaimsMap().get(BlockUtil.getInstance().asLong(pos.getX() >> 4, pos.getZ() >> 4));
-        if (useBorderBlockRadius && (playerData != null && !playerData.ignoreBorderCheck)) {
+        if (useBorderBlockRadius && (playerData != null && !playerData.bypassBorderCheck)) {
             final int borderBlockRadius = GriefDefenderPlugin.getActiveConfig(this.worldUniqueId).getConfig().claim.borderBlockRadius;
             // if borderBlockRadius > 0, check surrounding chunks
             if (borderBlockRadius > 0) {
@@ -630,7 +641,7 @@ public class GDClaimManager implements ClaimManager {
             if (newAccruedBlocks < 0) {
                 newAccruedBlocks = 0;
             }
-            final int maxAccruedBlocks = GDPermissionManager.getInstance().getInternalOptionValue(playerData.getSubject(), Options.MAX_ACCRUED_BLOCKS, playerData).intValue();
+            final int maxAccruedBlocks = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), playerData.getSubject(), Options.MAX_ACCRUED_BLOCKS);
             if (newAccruedBlocks > maxAccruedBlocks) {
                 newAccruedBlocks = maxAccruedBlocks;
             }

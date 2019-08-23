@@ -24,36 +24,149 @@
  */
 package com.griefdefender.configuration.category;
 
-import com.google.common.collect.Maps;
 import net.kyori.text.Component;
+import net.kyori.text.TextComponent;
 import ninja.leaping.configurate.objectmapping.Setting;
 import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
 
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 @ConfigSerializable
 public class BanCategory extends ConfigCategory {
 
-    @Setting
-    private Map<String, Component> banReasons = Maps.newHashMap();
+    @Setting(value = "blocks")
+    private Map<String, Component> blocks = new HashMap<>();
+    @Setting(value = "entities")
+    private Map<String, Component> entities = new HashMap<>();
+    @Setting(value = "items")
+    private Map<String, Component> items = new HashMap<>();
+    
 
-    public void addBanReason(String permission, Component reason) {
-        permission = permission.replace("griefdefender.flag.", "").toLowerCase();
-        this.banReasons.put(permission, reason);
-    }
-
-    public void removeBanReason(String permission) {
-        permission = permission.replace("griefdefender.flag.", "").toLowerCase();
-        this.banReasons.remove(permission);
-    }
-
-    public Component getReason(String permission) {
-        permission = permission.replace("griefdefender.flag.", "").toLowerCase();
-        for (Map.Entry<String, Component> banEntry : this.banReasons.entrySet()) {
-            if (permission.contains(banEntry.getKey())) {
-                return banEntry.getValue();
-            }
+    public boolean isBlockBanned(String id) {
+        if (id == null) {
+            return false;
         }
-        return null;
+        if (!id.contains(":")) {
+            id = "minecraft:" + id;
+        }
+        return this.blocks.containsKey(id);
+    }
+
+    public void addBlockBan(String id, Component reason) {
+        if (id == null) {
+            return;
+        }
+        if (reason == null) {
+            reason = TextComponent.empty();
+        }
+        if (!id.contains(":")) {
+            id = "minecraft:" + id;
+        }
+        this.blocks.put(id, reason);
+    }
+
+    public void removeBlockBan(String id) {
+        if (id == null) {
+            return;
+        }
+        if (!id.contains(":")) {
+            id = "minecraft:" + id;
+        }
+        this.blocks.remove(id);
+    }
+
+    public Component getBlockBanReason(String id) {
+        if (id == null) {
+            return null;
+        }
+        if (!id.contains(":")) {
+            id = "minecraft:" + id;
+        }
+        return this.blocks.get(id);
+    }
+
+    public boolean isEntityBanned(String id) {
+        if (id == null) {
+            return false;
+        }
+        if (!id.contains(":")) {
+            id = "minecraft:" + id;
+        }
+        return this.entities.containsKey(id);
+    }
+
+    public void addEntityBan(String id, Component reason) {
+        if (id == null) {
+            return;
+        }
+        if (reason == null) {
+            reason = TextComponent.empty();
+        }
+        this.entities.put(id, reason);
+    }
+
+    public void removeEntityBan(String id) {
+        if (id == null) {
+            return;
+        }
+        if (!id.contains(":")) {
+            id = "minecraft:" + id;
+        }
+        this.entities.remove(id);
+    }
+
+    public Component getEntityBanReason(String id) {
+        if (id == null) {
+            return null;
+        }
+        if (!id.contains(":")) {
+            id = "minecraft:" + id;
+        }
+        return this.entities.get(id);
+    }
+
+    public boolean isItemBanned(String id) {
+        if (id == null) {
+            return false;
+        }
+        if (!id.contains(":")) {
+            id = "minecraft:" + id;
+        }
+        return this.items.containsKey(id);
+    }
+
+    public void addItemBan(String id, Component reason) {
+        if (id == null) {
+            return;
+        }
+        if (reason == null) {
+            reason = TextComponent.empty();
+        }
+        if (!id.contains(":")) {
+            id = "minecraft:" + id;
+        }
+        this.items.put(id, reason);
+    }
+
+    public void removeItemBan(String id) {
+        if (id == null) {
+            return;
+        }
+        if (!id.contains(":")) {
+            id = "minecraft:" + id;
+        }
+        this.items.remove(id);
+    }
+
+    public Component getItemBanReason(String id) {
+        if (id == null) {
+            return null;
+        }
+        if (!id.contains(":")) {
+            id = "minecraft:" + id;
+        }
+        return this.items.get(id);
     }
 }

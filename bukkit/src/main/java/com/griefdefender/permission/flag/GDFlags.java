@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.griefdefender.permission;
+package com.griefdefender.permission.flag;
 
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.permission.flag.Flags;
@@ -33,6 +33,7 @@ public class GDFlags {
     public static boolean BLOCK_GROW;
     public static boolean BLOCK_MODIFY;
     public static boolean BLOCK_PLACE;
+    public static boolean BLOCK_SPREAD;
     public static boolean COLLIDE_BLOCK;
     public static boolean COLLIDE_ENTITY;
     public static boolean COMMAND_EXECUTE;
@@ -47,7 +48,6 @@ public class GDFlags {
     public static boolean EXIT_CLAIM;
     public static boolean EXPLOSION_BLOCK;
     public static boolean EXPLOSION_ENTITY;
-    public static boolean FIRE_SPREAD;
     public static boolean INTERACT_BLOCK_PRIMARY;
     public static boolean INTERACT_BLOCK_SECONDARY;
     public static boolean INTERACT_ENTITY_PRIMARY;
@@ -71,6 +71,7 @@ public class GDFlags {
         BLOCK_GROW = GriefDefenderPlugin.getGlobalConfig().getConfig().modules.isProtectionModuleEnabled(Flags.BLOCK_GROW.getName());
         BLOCK_MODIFY = GriefDefenderPlugin.getGlobalConfig().getConfig().modules.isProtectionModuleEnabled(Flags.BLOCK_MODIFY.getName());
         BLOCK_PLACE = GriefDefenderPlugin.getGlobalConfig().getConfig().modules.isProtectionModuleEnabled(Flags.BLOCK_PLACE.getName());
+        BLOCK_SPREAD  = GriefDefenderPlugin.getGlobalConfig().getConfig().modules.isProtectionModuleEnabled(Flags.BLOCK_SPREAD.getName());
         COLLIDE_BLOCK  = GriefDefenderPlugin.getGlobalConfig().getConfig().modules.isProtectionModuleEnabled(Flags.COLLIDE_BLOCK.getName());
         COLLIDE_ENTITY  = GriefDefenderPlugin.getGlobalConfig().getConfig().modules.isProtectionModuleEnabled(Flags.COLLIDE_ENTITY.getName());
         COMMAND_EXECUTE  = GriefDefenderPlugin.getGlobalConfig().getConfig().modules.isProtectionModuleEnabled(Flags.COMMAND_EXECUTE.getName());
@@ -85,7 +86,6 @@ public class GDFlags {
         EXIT_CLAIM  = GriefDefenderPlugin.getGlobalConfig().getConfig().modules.isProtectionModuleEnabled(Flags.EXIT_CLAIM.getName());
         EXPLOSION_BLOCK  = GriefDefenderPlugin.getGlobalConfig().getConfig().modules.isProtectionModuleEnabled(Flags.EXPLOSION_BLOCK.getName());
         EXPLOSION_ENTITY  = GriefDefenderPlugin.getGlobalConfig().getConfig().modules.isProtectionModuleEnabled(Flags.EXPLOSION_ENTITY.getName());
-        FIRE_SPREAD  = GriefDefenderPlugin.getGlobalConfig().getConfig().modules.isProtectionModuleEnabled(Flags.FIRE_SPREAD.getName());
         INTERACT_BLOCK_PRIMARY  = GriefDefenderPlugin.getGlobalConfig().getConfig().modules.isProtectionModuleEnabled(Flags.INTERACT_BLOCK_PRIMARY.getName());
         INTERACT_BLOCK_SECONDARY  = GriefDefenderPlugin.getGlobalConfig().getConfig().modules.isProtectionModuleEnabled(Flags.INTERACT_BLOCK_SECONDARY.getName());
         INTERACT_ENTITY_PRIMARY  = GriefDefenderPlugin.getGlobalConfig().getConfig().modules.isProtectionModuleEnabled(Flags.INTERACT_ENTITY_PRIMARY.getName());

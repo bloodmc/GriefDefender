@@ -26,6 +26,7 @@ package com.griefdefender.util;
 
 import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.reflect.TypeToken;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.claim.Claim;
@@ -36,6 +37,7 @@ import com.griefdefender.api.permission.option.Options;
 import com.griefdefender.cache.MessageCache;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
+import com.griefdefender.claim.GDClaimResult;
 import com.griefdefender.command.CommandHelper;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.event.GDCauseStackManager;
@@ -48,6 +50,11 @@ import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.event.ClickEvent;
 import net.kyori.text.format.TextColor;
+import net.milkbowl.vault.economy.Economy;
+import net.milkbowl.vault.economy.EconomyResponse;
+
+import org.bukkit.OfflinePlayer;
+import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -72,16 +79,18 @@ public class EconomyUtil {
         claim.parent = (GDClaim) parent;
         final GDPermissionUser user = PermissionHolderCache.getInstance().getOrCreateUser(player);
         final int claimCost = BlockUtil.getInstance().getClaimBlockCost(player.getWorld(), claim.lesserBoundaryCorner, claim.greaterBoundaryCorner, claim.cuboid);
-        final Double economyBlockCost = GDPermissionManager.getInstance().getInternalOptionValue(user, Options.ECONOMY_BLOCK_COST, claim, playerData);
+        final Double economyBlockCost = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Double.class), user, Options.ECONOMY_BLOCK_COST, claim);
         final double requiredFunds = claimCost * economyBlockCost;
-        final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_CLAIM_BUY_CONFIRMED, ImmutableMap.of(
-                "amount", requiredFunds));
-        GriefDefenderPlugin.sendMessage(player, message);
-        final Component buyConfirmationText = TextComponent.builder("")
-                .append("\n[")
-                .append("Confirm", TextColor.GREEN)
-                .append("]\n")
-                .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(economyClaimBuyConfirmed(player, playerData, height, requiredFunds, point1, point2, claimType, cuboid, parent)))).build();
+        final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_CLAIM_BUY_CONFIRMATION,
+                ImmutableMap.of("amount", String.valueOf("$" + requiredFunds)));
+        final Component buyConfirmationText = TextComponent.builder()
+                .append(message)
+                .append(TextComponent.builder()
+                    .append("\n[")
+                    .append(MessageCache.getInstance().LABEL_CONFIRM.color(TextColor.GREEN))
+                    .append("]\n")
+                    .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(economyClaimBuyConfirmed(player, playerData, height, requiredFunds, point1, point2, claimType, cuboid, parent)))).build())
+                .build();
         GriefDefenderPlugin.sendMessage(player, buyConfirmationText);
     }
 
@@ -106,6 +115,9 @@ public class EconomyUtil {
                     Set<Claim> claims = new HashSet<>();
                     claims.add(overlapClaim);
                     CommandHelper.showClaims(player, claims, height, true);
+                } else {
+                    GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CREATE_FAILED_RESULT,
+                            ImmutableMap.of("reason", result.getResultType())));
                 }
                 return;
             }
@@ -128,5 +140,56 @@ public class EconomyUtil {
                 gdClaim.getVisualizer().apply(player, false);
             }
         };
+    }
+
+    public GDClaimResult checkEconomyFunds(GDClaim claim, GDPlayerData newPlayerData, boolean withdrawFunds) {
+        if (!GriefDefenderPlugin.getInstance().isEconomyModeEnabled()) { 
+            return new GDClaimResult(claim, ClaimResultType.ECONOMY_ACCOUNT_NOT_FOUND);
+        }
+
+        final Object root = GDCauseStackManager.getInstance().getCurrentCause().root();
+        final GDPermissionUser user = root instanceof GDPermissionUser ? (GDPermissionUser) root : null;
+        final Player player = user != null ? user.getOnlinePlayer() : null;
+        final World world = claim.getWorld();
+        final int claimCost = BlockUtil.getInstance().getClaimBlockCost(world, claim.lesserBoundaryCorner, claim.greaterBoundaryCorner, claim.cuboid);
+        final OfflinePlayer vaultPlayer = newPlayerData.getSubject().getOfflinePlayer();
+        final Economy economy = GriefDefenderPlugin.getInstance().getVaultProvider().getApi();
+        if (!economy.hasAccount(vaultPlayer)) {
+            return new GDClaimResult(claim, ClaimResultType.ECONOMY_ACCOUNT_NOT_FOUND);
+        }
+
+        double requiredFunds = claimCost * claim.getOwnerEconomyBlockCost();
+        final double currentFunds = economy.getBalance(vaultPlayer);
+        if (currentFunds < requiredFunds) {
+            Component message = null;
+            if (player != null) {
+                message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_NOT_ENOUGH_FUNDS, ImmutableMap.of(
+                        "balance", String.valueOf("$" +currentFunds),
+                        "amount", String.valueOf("$" +requiredFunds)));
+                GriefDefenderPlugin.sendMessage(player, message);
+            }
+
+            newPlayerData.lastShovelLocation = null;
+            newPlayerData.claimResizing = null;
+            return new GDClaimResult(claim, ClaimResultType.ECONOMY_NOT_ENOUGH_FUNDS, message);
+        }
+
+        if (withdrawFunds) {
+            final EconomyResponse result = economy.withdrawPlayer(vaultPlayer, requiredFunds);
+            if (!result.transactionSuccess()) {
+                Component message = null;
+                if (player != null) {
+                    message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_WITHDRAW_ERROR, ImmutableMap.of(
+                            "reason", result.errorMessage));
+                    GriefDefenderPlugin.sendMessage(player, message);
+                }
+    
+                newPlayerData.lastShovelLocation = null;
+                newPlayerData.claimResizing = null;
+                return new GDClaimResult(claim, ClaimResultType.ECONOMY_WITHDRAW_FAIL, message);
+            }
+        }
+
+        return new GDClaimResult(claim, ClaimResultType.SUCCESS);
     }
 }

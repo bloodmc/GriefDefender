@@ -28,6 +28,7 @@ import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.CommandCompletion;
 import co.aikar.commands.annotation.CommandPermission;
+import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Subcommand;
 import co.aikar.commands.annotation.Syntax;
 
@@ -49,6 +50,7 @@ public class CommandClaimName extends BaseCommand {
 
     @CommandAlias("claimname")
     @Syntax("<name>")
+    @Description("Sets the name of your claim.")
     @Subcommand("claim name")
     public void execute(Player player, String name) {
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());

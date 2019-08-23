@@ -1,7 +1,7 @@
 /*
- * This file is part of SpongeAPI, licensed under the MIT License (MIT).
+ * This file is part of GriefDefender, licensed under the MIT License (MIT).
  *
- * Copyright (c) SpongePowered <https://www.spongepowered.org>
+ * Copyright (c) bloodmc
  * Copyright (c) contributors
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -22,32 +22,23 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.griefdefender.text;
+package com.griefdefender.configuration.serializer;
 
 import com.google.common.reflect.TypeToken;
 import net.kyori.text.Component;
+import net.kyori.text.TextComponent;
 import net.kyori.text.serializer.gson.GsonComponentSerializer;
+import net.kyori.text.serializer.legacy.LegacyComponentSerializer;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.gson.GsonConfigurationLoader;
 import ninja.leaping.configurate.loader.HeaderMode;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import ninja.leaping.configurate.objectmapping.serialize.TypeSerializer;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.StringReader;
 import java.io.StringWriter;
 
-/**
- * Represents a {@link TypeSerializer} for {@link Component} objects. Serialization
- * is handled by serializing the text to String with the
- * {@link GsonComponentSerializer} serializer, loading the String into a
- * {@link GsonConfigurationLoader}, and setting the value of the
- * {@link ConfigurationNode} to the root node of the GsonConfigurationLoader.
- * Although JSON is used for serialization internally, this has no effect on
- * the actual configuration format the developer chooses to use.
- */
 public class ComponentConfigSerializer implements TypeSerializer<Component> {
 
     /**
@@ -58,36 +49,38 @@ public class ComponentConfigSerializer implements TypeSerializer<Component> {
     }
 
     @Override
-    public Component deserialize(TypeToken<?> type, ConfigurationNode value) throws ObjectMappingException {
-        StringWriter writer = new StringWriter();
+    public Component deserialize(TypeToken<?> type, ConfigurationNode node) throws ObjectMappingException {
+        if (node.getString() == null || node.getString().isEmpty()) {
+            return TextComponent.empty();
+        }
+        if (node.getString().contains("text=")) {
+            // Try sponge data
+            StringWriter writer = new StringWriter();
 
-        GsonConfigurationLoader gsonLoader = GsonConfigurationLoader.builder()
-                .setIndent(0)
-                .setSink(() -> new BufferedWriter(writer))
-                .setHeaderMode(HeaderMode.NONE)
-                .build();
+            GsonConfigurationLoader gsonLoader = GsonConfigurationLoader.builder()
+                    .setIndent(0)
+                    .setSink(() -> new BufferedWriter(writer))
+                    .setHeaderMode(HeaderMode.NONE)
+                    .build();
 
-        try {
-            gsonLoader.save(value);
-        } catch (IOException e) {
-            throw new ObjectMappingException(e);
+            try {
+                gsonLoader.save(node);
+            } catch (IOException e) {
+                throw new ObjectMappingException(e);
+            }
+            return GsonComponentSerializer.INSTANCE.deserialize(writer.toString());
         }
 
-        return GsonComponentSerializer.INSTANCE.deserialize(writer.toString());
+        return LegacyComponentSerializer.legacy().deserialize(node.getString(), '&');
     }
 
     @Override
-    public void serialize(TypeToken<?> type, Component obj, ConfigurationNode value) throws ObjectMappingException {
-        String json = GsonComponentSerializer.INSTANCE.serialize(obj);
-        GsonConfigurationLoader gsonLoader = GsonConfigurationLoader.builder()
-                .setSource(() -> new BufferedReader(new StringReader(json)))
-                .build();
-
-        try {
-            value.setValue(gsonLoader.load());
-        } catch (IOException e) {
-            throw new ObjectMappingException(e);
+    public void serialize(TypeToken<?> type, Component obj, ConfigurationNode node) throws ObjectMappingException {
+        if (obj == TextComponent.empty()) {
+            return;
         }
+
+        node.setValue(LegacyComponentSerializer.legacy().serialize(obj, '&'));
     }
 
 }

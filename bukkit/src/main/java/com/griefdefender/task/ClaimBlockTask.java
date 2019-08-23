@@ -24,6 +24,7 @@
  */
 package com.griefdefender.task;
 
+import com.google.common.reflect.TypeToken;
 import com.griefdefender.GDBootstrap;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
@@ -34,6 +35,7 @@ import com.griefdefender.configuration.PlayerStorageData;
 import com.griefdefender.internal.util.NMSUtil;
 import com.griefdefender.permission.GDPermissionManager;
 import com.griefdefender.permission.GDPermissionUser;
+import com.griefdefender.provider.VaultProvider;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -54,7 +56,7 @@ public class ClaimBlockTask extends BukkitRunnable {
                 final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
                 final GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAtPlayer(playerData, player.getLocation());
                 final GDPermissionUser holder = PermissionHolderCache.getInstance().getOrCreateUser(player);
-                final int accrualPerHour = GDPermissionManager.getInstance().getInternalOptionValue(holder, Options.BLOCKS_ACCRUED_PER_HOUR, claim, playerData).intValue();
+                final int accrualPerHour = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), holder, Options.BLOCKS_ACCRUED_PER_HOUR, claim).intValue();
                 if (accrualPerHour > 0) {
                     Location lastLocation = playerData.lastAfkCheckLocation;
                     // if he's not in a vehicle and has moved at least three blocks since the last check and he's not being pushed around by fluids
@@ -66,16 +68,24 @@ public class ClaimBlockTask extends BukkitRunnable {
                             accruedBlocks = 1;
                         }
 
-                        int currentTotal = playerData.getAccruedClaimBlocks();
-                        if ((currentTotal + accruedBlocks) > playerData.getMaxAccruedClaimBlocks()) {
+                        if (GriefDefenderPlugin.getInstance().isEconomyModeEnabled()) {
+                            final VaultProvider vaultProvider = GriefDefenderPlugin.getInstance().getVaultProvider();
+                            if (!vaultProvider.hasAccount(player)) {
+                                continue;
+                            }
+                            vaultProvider.depositPlayer(player, accruedBlocks);
+                        } else {
+                            int currentTotal = playerData.getAccruedClaimBlocks();
+                            if ((currentTotal + accruedBlocks) > playerData.getMaxAccruedClaimBlocks()) {
+                                PlayerStorageData playerStorage = playerData.getStorageData();
+                                playerStorage.getConfig().setAccruedClaimBlocks(playerData.getMaxAccruedClaimBlocks());
+                                playerData.lastAfkCheckLocation = player.getLocation();
+                                return;
+                            }
+    
                             PlayerStorageData playerStorage = playerData.getStorageData();
-                            playerStorage.getConfig().setAccruedClaimBlocks(playerData.getMaxAccruedClaimBlocks());
-                            playerData.lastAfkCheckLocation = player.getLocation();
-                            return;
+                            playerStorage.getConfig().setAccruedClaimBlocks(playerStorage.getConfig().getAccruedClaimBlocks() + accruedBlocks);
                         }
-
-                        PlayerStorageData playerStorage = playerData.getStorageData();
-                        playerStorage.getConfig().setAccruedClaimBlocks(playerStorage.getConfig().getAccruedClaimBlocks() + accruedBlocks);
                     }
 
                     playerData.lastAfkCheckLocation = player.getLocation();

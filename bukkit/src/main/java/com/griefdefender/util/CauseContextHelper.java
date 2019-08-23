@@ -29,8 +29,10 @@ import com.griefdefender.api.claim.Claim;
 import com.griefdefender.api.claim.ClaimContexts;
 import com.griefdefender.api.permission.Context;
 import com.griefdefender.cache.MessageCache;
+import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.claim.GDClaimManager;
+import com.griefdefender.event.GDCauseStackManager;
 import com.griefdefender.internal.registry.GDItemType;
 import com.griefdefender.internal.registry.ItemTypeRegistryModule;
 import com.griefdefender.internal.tracking.chunk.GDChunk;
@@ -42,6 +44,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -50,12 +53,19 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class CauseContextHelper {
 
     @Nullable
     public static GDPermissionUser getEventUser(Location location) {
+        final GDPermissionUser user = GDCauseStackManager.getInstance().getCurrentCause().first(GDPermissionUser.class).orElse(null);
+        if (user != null) {
+            return user;
+        }
+        if (location == null) {
+            return null;
+        }
         final GDClaimManager claimWorldManager = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(location.getWorld().getUID());
         final GDChunk gpChunk = claimWorldManager.getChunk(location.getChunk());
         return gpChunk.getBlockUser(location);
@@ -113,7 +123,7 @@ public class CauseContextHelper {
             final String arg2 = parts.length > 1 ? parts[1] : null;
             String id = "";
             if (arg2 == null) {
-                id = arg1 + ":" + arg2;
+                id = "minecraft:" + arg1;
             } else {
                 id = arg1 + ":" + arg2;
             }
@@ -137,7 +147,7 @@ public class CauseContextHelper {
                     GriefDefenderPlugin.sendMessage(src, MessageCache.getInstance().PERMISSION_FLAG_DEFAULTS);
                     return new HashSet<>();
                 }
-                if (arg1.equals("any")) {
+                if (arg1.equals("any") || arg1.equals("global")) {
                     contextSet.add(ClaimContexts.GLOBAL_DEFAULT_CONTEXT);
                 } else if (arg1.equals("admin")) {
                     contextSet.add(ClaimContexts.ADMIN_DEFAULT_CONTEXT);
@@ -160,7 +170,7 @@ public class CauseContextHelper {
                     GriefDefenderPlugin.sendMessage(src, MessageCache.getInstance().PERMISSION_FLAG_OVERRIDES);
                     return null;
                 }
-                if (arg1.equals("any")) {
+                if (arg1.equals("any") || arg1.equals("global")) {
                     contextSet.add(ClaimContexts.GLOBAL_OVERRIDE_CONTEXT);
                 } else if (arg1.equals("admin")) {
                     contextSet.add(ClaimContexts.ADMIN_OVERRIDE_CONTEXT);
@@ -182,8 +192,10 @@ public class CauseContextHelper {
                 contextSet.add(new Context(contextName, arg1));
             } else if (contextName.equals("source")) {
                 contextSet.add(new Context(contextName, id));
+            } else if (contextName.contentEquals("state")) {
+                contextSet.add(new Context(contextName, id));
             } else if (contextName.equals("used_item")) {
-                final GDItemType type = ItemTypeRegistryModule.getInstance().getById(arg1).orElse(null); 
+                final GDItemType type = ItemTypeRegistryModule.getInstance().getById(id).orElse(null); 
                 if (type == null) {
                     GriefDefenderPlugin.sendMessage(src, TextComponent.of("Invalid context entered."));
                     return null;

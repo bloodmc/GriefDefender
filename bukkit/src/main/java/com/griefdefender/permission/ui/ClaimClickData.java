@@ -22,29 +22,16 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.griefdefender.configuration;
+package com.griefdefender.permission.ui;
 
-import com.google.common.reflect.TypeToken;
-import com.griefdefender.api.claim.ClaimType;
-import com.griefdefender.registry.ClaimTypeRegistryModule;
-import ninja.leaping.configurate.ConfigurationNode;
-import ninja.leaping.configurate.objectmapping.ObjectMappingException;
-import ninja.leaping.configurate.objectmapping.serialize.TypeSerializer;
+import com.griefdefender.claim.GDClaim;
 
-public class ClaimTypeSerializer implements TypeSerializer<ClaimType> {
+public class ClaimClickData {
+    public final GDClaim claim;
+    public final Object value;
 
-    @Override
-    public ClaimType deserialize(TypeToken<?> type, ConfigurationNode node) throws ObjectMappingException {
-        ClaimType ret = ClaimTypeRegistryModule.getInstance().getById(node.getString().toLowerCase()).orElse(null);
-        if (ret == null) {
-            throw new ObjectMappingException("Input '" + node.getValue() + "' was not a valid value for type " + type);
-        }
-        return ret;
+    public ClaimClickData(GDClaim claim, Object value) {
+        this.claim = claim;
+        this.value = value;
     }
-
-    @Override
-    public void serialize(TypeToken<?> type, ClaimType obj, ConfigurationNode node) throws ObjectMappingException {
-       node.setValue(obj.getName());
-    }
-
 }

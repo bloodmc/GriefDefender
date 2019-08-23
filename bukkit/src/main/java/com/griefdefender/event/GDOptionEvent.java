@@ -24,55 +24,40 @@
  */
 package com.griefdefender.event;
 
-import com.google.common.collect.ImmutableSet;
-import com.griefdefender.api.event.EventCause;
-import com.griefdefender.api.event.OptionEvent;
+import com.griefdefender.api.event.OptionPermissionEvent;
 import com.griefdefender.api.permission.Context;
 import com.griefdefender.api.permission.option.Option;
 import com.griefdefender.permission.GDPermissionHolder;
 
-public class GDOptionEvent implements OptionEvent {
+public class GDOptionEvent extends GDPermissionEvent implements OptionPermissionEvent {
 
-    private final GDPermissionHolder subject;
-    private boolean isCancelled = false;
-
-    public GDOptionEvent(GDPermissionHolder subject) {
-        this.subject = subject;
+    public GDOptionEvent(GDPermissionHolder subject, java.util.Set<Context> contexts) {
+        super(subject, contexts);
     }
 
-    public static class ClearAll extends GDOptionEvent implements OptionEvent.ClearAll {
+    public static class ClearAll extends GDOptionEvent implements OptionPermissionEvent.ClearAll {
 
-        public ClearAll(GDPermissionHolder subject) {
-            super(subject);
+        public ClearAll(GDPermissionHolder subject, java.util.Set<Context> contexts) {
+            super(subject, contexts);
         }
     }
 
-    public static class Clear extends GDOptionEvent implements OptionEvent.Clear {
-
-        private final java.util.Set<Context> contexts;
+    public static class Clear extends GDOptionEvent implements OptionPermissionEvent.Clear {
 
         public Clear(GDPermissionHolder subject, java.util.Set<Context> contexts) {
-            super(subject);
-            this.contexts = ImmutableSet.copyOf(contexts);
-        }
-
-        @Override
-        public java.util.Set<Context> getContexts() {
-            return this.contexts;
+            super(subject, contexts);
         }
     }
 
-    public static class Set extends GDOptionEvent implements OptionEvent.Set {
+    public static class Set extends GDOptionEvent implements OptionPermissionEvent.Set {
 
         private final Option option;
         private final String value;
-        private final java.util.Set<Context> contexts;
 
         public Set(GDPermissionHolder subject, Option option, String value, java.util.Set<Context> contexts) {
-            super(subject);
+            super(subject, contexts);
             this.option = option;
             this.value = value;
-            this.contexts = contexts;
         }
 
         @Override
@@ -84,30 +69,5 @@ public class GDOptionEvent implements OptionEvent {
         public String getValue() {
             return this.value;
         }
-
-        @Override
-        public java.util.Set<Context> getContexts() {
-            return this.contexts;
-        }
-    }
-
-    @Override
-    public String getSubjectId() {
-        return this.subject.getIdentifier();
-    }
-
-    @Override
-    public boolean cancelled() {
-        return this.isCancelled;
-    }
-
-    @Override
-    public void cancelled(boolean cancel) {
-        this.isCancelled = cancel;
-    }
-
-    @Override
-    public EventCause getCause() {
-        return GDCauseStackManager.getInstance().getCurrentCause();
     }
 }

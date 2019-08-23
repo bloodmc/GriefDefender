@@ -24,49 +24,34 @@
  */
 package com.griefdefender.permission;
 
-import com.griefdefender.util.PermissionUtil;
-import me.lucko.luckperms.api.PermissionHolder;
+import com.griefdefender.api.Subject;
 
-import java.util.UUID;
-
-public class GDPermissionHolder {
+public class GDPermissionHolder implements Subject {
 
     private String identifier;
-    protected PermissionHolder luckPermsHolder;
+    private String friendlyName;
     private Integer hashCode;
 
     public GDPermissionHolder(String identifier) {
         this.identifier = identifier;
+        this.friendlyName = identifier;
     }
 
     // used for default
-    public GDPermissionHolder(PermissionHolder holder) {
-        this.luckPermsHolder = holder;
-        this.identifier = holder.getObjectName();
+    public GDPermissionHolder(String objectName, String friendlyName) {
+        this.identifier = objectName;
+        this.friendlyName = friendlyName;
     }
 
-    public PermissionHolder getLuckPermsHolder() {
-        if (this.luckPermsHolder == null) {
-            UUID uuid = null;
-            try {
-                uuid = UUID.fromString(this.identifier);
-            } catch (IllegalArgumentException e) {
-                
-            }
-
-            if (uuid != null) {
-                this.luckPermsHolder = PermissionUtil.getInstance().getUserSubject(uuid);
-            } else {
-                this.luckPermsHolder = PermissionUtil.getInstance().getGroupSubject(this.identifier);
-            }
-        }
-        return this.luckPermsHolder;
-    }
-
+    @Override
     public String getFriendlyName() {
-        return this.getLuckPermsHolder().getFriendlyName();
+        if (this.friendlyName == null) {
+            return this.identifier;
+        }
+        return this.friendlyName;
     }
 
+    @Override
     public String getIdentifier() {
         return this.identifier;
     }
@@ -74,7 +59,7 @@ public class GDPermissionHolder {
     @Override
     public int hashCode() {
         if (this.hashCode == null) {
-            this.hashCode = 31 * this.getLuckPermsHolder().hashCode();
+            this.hashCode = 31 * this.identifier.hashCode();
         }
         return this.hashCode;
     }

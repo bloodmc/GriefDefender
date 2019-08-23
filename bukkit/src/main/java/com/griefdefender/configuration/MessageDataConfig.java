@@ -59,7 +59,7 @@ public class MessageDataConfig extends ConfigCategory {
             final String key = entry.getKey();
             Object value = entry.getValue();
             if (value instanceof Component) {
-                value = LegacyComponentSerializer.legacy().serialize((Component) value);
+                value = LegacyComponentSerializer.legacy().serialize((Component) value, '&');
             }
             rawMessage = rawMessage.replace("{" + key + "}", value.toString()); 
         }

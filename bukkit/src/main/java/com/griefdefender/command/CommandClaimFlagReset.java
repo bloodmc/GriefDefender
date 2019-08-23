@@ -72,12 +72,7 @@ public class CommandClaimFlagReset extends BaseCommand {
         }
 
         // Remove persisted data
-        for (Set<Context> contextSet : PermissionUtil.getInstance().getAllPermissions(claim, GriefDefenderPlugin.DEFAULT_HOLDER).keySet()) {
-            if (contextSet.contains(claim.getContext())) {
-                PermissionUtil.getInstance().clearPermissions(GriefDefenderPlugin.DEFAULT_HOLDER, contextSet);
-            }
-        }
-
+        PermissionUtil.getInstance().clearPermissions((GDClaim) claim);
         GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().FLAG_RESET_SUCCESS);
     }
 }

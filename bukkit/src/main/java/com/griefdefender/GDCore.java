@@ -24,21 +24,26 @@
  */
 package com.griefdefender;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import org.bukkit.Bukkit;
+import org.bukkit.World;
+
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Singleton;
 import com.griefdefender.api.Core;
+import com.griefdefender.api.Group;
+import com.griefdefender.api.Subject;
+import com.griefdefender.api.User;
 import com.griefdefender.api.claim.Claim;
 import com.griefdefender.api.claim.ClaimBlockSystem;
 import com.griefdefender.api.claim.ClaimManager;
 import com.griefdefender.api.data.PlayerData;
 import com.griefdefender.api.permission.flag.Flag;
-import org.bukkit.Bukkit;
-import org.bukkit.World;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import com.griefdefender.cache.PermissionHolderCache;
 
 @Singleton
 public class GDCore implements Core {
@@ -81,5 +86,25 @@ public class GDCore implements Core {
         }
 
         return ImmutableList.copyOf(claimList);
+    }
+
+    @Override
+    public Subject getDefaultSubject() {
+        return GriefDefenderPlugin.DEFAULT_HOLDER;
+    }
+
+    @Override
+    public Subject getSubject(String identifier) {
+        return PermissionHolderCache.getInstance().getOrCreateHolder(identifier);
+    }
+
+    @Override
+    public User getUser(UUID uuid) {
+        return PermissionHolderCache.getInstance().getOrCreateUser(uuid);
+    }
+
+    @Override
+    public Group getGroup(String name) {
+        return PermissionHolderCache.getInstance().getOrCreateGroup(name);
     }
 }

@@ -24,64 +24,52 @@
  */
 package com.griefdefender.claim;
 
+import org.bukkit.entity.Player;
+import org.checkerframework.checker.nullness.qual.NonNull;
+
+import com.griefdefender.GDPlayerData;
+import com.griefdefender.GriefDefenderPlugin;
+import com.griefdefender.cache.PermissionHolderCache;
+import com.griefdefender.permission.GDPermissionUser;
+
 import me.lucko.luckperms.api.PermissionHolder;
+import me.lucko.luckperms.api.User;
 import me.lucko.luckperms.api.context.ContextCalculator;
+import me.lucko.luckperms.api.context.MutableContextSet;
 
-public abstract class ClaimContextCalculator implements ContextCalculator<PermissionHolder> {
+public class ClaimContextCalculator implements ContextCalculator<PermissionHolder> {
 
-    /*@Override
-    public void accumulateContexts(PermissionHolder calculable, Set<Context> accumulator) {
-        if (calculable.getCommandSource().isPresent() && calculable.getCommandSource().get() instanceof Player) {
-            Player player = (Player) calculable.getCommandSource().get();
-            GPPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getPlayerData(player.getWorld(), player.getUniqueId());
-            if (playerData == null) {
-                return;
+    @Override
+    public @NonNull MutableContextSet giveApplicableContext(@NonNull PermissionHolder holder, @NonNull MutableContextSet contextSet) {
+        if (!(holder instanceof User)) {
+            return contextSet;
+        }
+
+        final GDPermissionUser user = PermissionHolderCache.getInstance().getOrCreateUser(holder.getObjectName());
+        if (user == null || user.getOnlinePlayer() == null) {
+            return contextSet;
+        }
+
+        final Player player = user.getOnlinePlayer();
+        GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getPlayerData(player.getWorld(), player.getUniqueId());
+        if (playerData.ignoreActiveContexts) {
+            playerData.ignoreActiveContexts = false;
+            return contextSet;
+        }
+
+        GDClaim sourceClaim = GriefDefenderPlugin.getInstance().dataStore.getClaimAtPlayer(playerData, player.getLocation());
+        if (sourceClaim != null) {
+            if (playerData == null || playerData.canIgnoreClaim(sourceClaim)) {
+                return contextSet;
             }
-            if (playerData.ignoreActiveContexts) {
-                playerData.ignoreActiveContexts = false;
-                return;
-            }
 
-            GPClaim sourceClaim = GriefDefenderPlugin.getInstance().dataStore.getClaimAtPlayer(playerData, player.getLocation());
-            if (sourceClaim != null) {
-                if (playerData == null || playerData.canIgnoreClaim(sourceClaim)) {
-                    return;
-                }
-
-                if (sourceClaim.parent != null && sourceClaim.getData().doesInheritParent()) {
-                    accumulator.add(sourceClaim.parent.getContext());
-                } else {
-                    accumulator.add(sourceClaim.getContext());
-                }
+            if (sourceClaim.parent != null && sourceClaim.getData().doesInheritParent()) {
+                contextSet.add(sourceClaim.parent.getContext());
+            } else {
+                contextSet.add(sourceClaim.getContext());
             }
         }
 
+        return contextSet;
     }
-
-    @Override
-    public boolean matches(Context context, Subject subject) {
-        if (context.equals("gd_claim")) {
-            if (subject.getCommandSource().isPresent() && subject.getCommandSource().get() instanceof Player) {
-                Player player = (Player) subject.getCommandSource().get();
-                GPPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getPlayerData(player.getWorld(), player.getUniqueId());
-                if (playerData == null) {
-                    return false;
-                }
-
-                GPClaim playerClaim = GriefDefenderPlugin.getInstance().dataStore.getClaimAtPlayer(playerData, player.getLocation());
-                if (playerClaim != null && playerClaim.id.equals(UUID.fromString(context.getValue()))) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    @Override
-    public @NonNull MutableContextSet giveApplicableContext(@NonNull PermissionHolder arg0,
-            @NonNull MutableContextSet arg1) {
-        // TODO Auto-generated method stub
-        return null;
-    }*/
 }

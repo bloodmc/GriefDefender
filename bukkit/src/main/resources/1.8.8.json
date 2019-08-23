@@ -3,21 +3,28 @@
     "libraries": [
         {
             "name": "com.griefdefender:adapter:1.8.8",
-            "sha1": "9e2bcd797702d27370565a7a49f4a44069178ea3",
-            "path": "com/griefdefender/adapter/1.8.8-SNAPSHOT/adapter-1.8.8-20190731.041903-12.jar",
-            "url": "https://repo.glaremasters.me/repository/bloodshot/com/griefdefender/adapter/1.8.8-SNAPSHOT/adapter-1.8.8-20190731.041903-12.jar"
+            "sha1": "5228e3ff78a4a15068b057d3335da11fcda5bc57",
+            "path": "com/griefdefender/adapter/1.8.8-SNAPSHOT/adapter-1.8.8-20190823.171045-16.jar",
+            "url": "https://repo.glaremasters.me/repository/bloodshot/com/griefdefender/adapter/1.8.8-SNAPSHOT/adapter-1.8.8-20190823.171045-16.jar"
         },
         {
             "name": "com.griefdefender:api:1.0.0",
-            "sha1": "e4aa950026c34ecc44e0e8a94e8d967cc91cfefc",
-            "path": "com/griefdefender/api/1.0.0-SNAPSHOT/api-1.0.0-20190727.235445-3.jar",
-            "url": "https://repo.glaremasters.me/repository/bloodshot/com/griefdefender/api/1.0.0-SNAPSHOT/api-1.0.0-20190727.235445-3.jar"
+            "sha1": "eb8a6efe3e4c6af9ed5e0100fd5c94e0a0ccd762",
+            "path": "com/griefdefender/api/1.0.0-SNAPSHOT/api-1.0.0-20190823.060031-8.jar",
+            "url": "https://repo.glaremasters.me/repository/bloodshot/com/griefdefender/api/1.0.0-SNAPSHOT/api-1.0.0-20190823.060031-8.jar"
         },
         {
             "name": "com.griefdefender:reflect-helper:1.0",
             "sha1": "7a50bffa9f0062ac4ca376d95a0e6599aa5f3257",
             "path": "com/griefdefender/reflect-helper/1.0/reflect-helper-1.0.jar",
             "url": "https://repo.glaremasters.me/repository/bloodshot/com/griefdefender/reflect-helper/1.0/reflect-helper-1.0.jar"
+        },
+        {
+            "name": "org.checkerframework:checker-qual:2.10.0",
+            "sha1": "5786699a0cb71f9dc32e6cca1d665eef07a0882f",
+            "path": "org/checkerframework/checker-qual/2.10.0/checker-qual-2.10.0.jar",
+            "relocate": "javax.inject:javaxinject",
+            "url": "https://repo1.maven.org/maven2/org/checkerframework/checker-qual/2.10.0/checker-qual-2.10.0.jar"
         },
         {
             "name": "org.ow2.asm:asm-debug-all:5.2",

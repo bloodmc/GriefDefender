@@ -34,9 +34,11 @@ import com.griefdefender.internal.util.BlockUtil;
 import com.griefdefender.internal.util.NMSUtil;
 import com.griefdefender.internal.util.VecHelper;
 import com.griefdefender.permission.GDPermissionUser;
+import com.griefdefender.util.CauseContextHelper;
 import com.griefdefender.util.Direction;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
@@ -58,12 +60,6 @@ public class BlockEventTracker implements Listener {
     private static Direction[] NOTIFY_DIRECTIONS = {Direction.WEST, Direction.EAST, Direction.DOWN, Direction.UP, Direction.NORTH, Direction.SOUTH};
     private int lastTick = -1;
     private GDChunk cacheChunk = null;
-
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onPlayerInteract(PlayerInteractEvent event) {
-        GDCauseStackManager.getInstance().pushCause(event.getClickedBlock());
-        GDCauseStackManager.getInstance().pushCause(event.getPlayer());
-    }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBlockBreakMonitor(BlockBreakEvent event) {
@@ -88,34 +84,12 @@ public class BlockEventTracker implements Listener {
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onBlockDispense(BlockDispenseEvent event) {
-        final GDClaimManager claimWorldManager = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(event.getBlock().getWorld().getUID());
-        final GDChunk gpChunk = claimWorldManager.getChunk(event.getBlock().getChunk());
-        final GDPermissionUser user = gpChunk.getBlockUser(event.getBlock().getLocation());
-        if (user != null) {
-            final Player player = Bukkit.getPlayer(user.getUniqueId());
-            if (player != null) {
-                GDCauseStackManager.getInstance().pushCause(player);
-            } else {
-                GDCauseStackManager.getInstance().pushCause(user);
-            }
-        }
-    }
-
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBlockIgnite(BlockIgniteEvent event) {
         //event
         final GDClaimManager claimWorldManager = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(event.getBlock().getWorld().getUID());
         final GDChunk gpChunk = claimWorldManager.getChunk(event.getBlock().getChunk());
         if (event.getPlayer() != null) {
             gpChunk.addTrackedBlockPosition(event.getBlock(), event.getPlayer().getUniqueId(), PlayerTracker.Type.NOTIFIER);
-            GDCauseStackManager.getInstance().pushCause(event.getPlayer());
-        } else {
-            if (event.getIgnitingEntity() != null) {
-                GDCauseStackManager.getInstance().pushCause(event.getIgnitingEntity());
-            } else {
-                GDCauseStackManager.getInstance().pushCause(event.getIgnitingBlock());
-            }
         }
     }
 
@@ -133,28 +107,15 @@ public class BlockEventTracker implements Listener {
         if (!event.isCancelled()) {
             final Vector3i testPos = VecHelper.toVector3i(event.getBlock().getLocation());
             final Block sourceBlock = NMSUtil.getInstance().getSourceBlock(event);
-            if (sourceBlock != null && sourceBlock.getLocation().equals(event.getBlock().getLocation())) {
+            final Location sourceLocation = sourceBlock != null ? sourceBlock.getLocation() : null;
+            if (sourceLocation != null && sourceLocation.equals(event.getBlock().getLocation())) {
                 return;
             }
 
             final GDClaimManager claimWorldManager = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(event.getBlock().getWorld().getUID());
             final GDChunk gpChunk = claimWorldManager.getChunk(event.getBlock().getChunk());
-            // check if we have a user in cause
-            final Object root = GDCauseStackManager.getInstance().getCurrentCause().root();
-            UUID uuid = null;
-            if (root instanceof Player) {
-                uuid = ((Player) root).getUniqueId();
-            }
-            if (uuid == null) {
-                if (sourceBlock != null) {
-                    final Vector3i sourcePos = VecHelper.toVector3i(sourceBlock.getLocation());
-                    final GDChunk sourceChunk = claimWorldManager.getChunk(sourceBlock.getChunk());
-                    GDPermissionUser user = sourceChunk.getBlockNotifier(sourcePos);
-                    if (user != null) {
-                        uuid = user.getUniqueId();
-                    }
-                }
-            }
+            final GDPermissionUser user = CauseContextHelper.getEventUser(sourceLocation);
+            final UUID uuid = user != null ? user.getUniqueId() : null;
 
             final Vector3i targetPos = VecHelper.toVector3i(event.getBlock().getLocation());
             //final Vector3i sourcePos = VecHelper.toVector3i(event.getSourceBlock().getLocation());
@@ -176,6 +137,7 @@ public class BlockEventTracker implements Listener {
             final GDClaimManager claimWorldManager = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(event.getClickedBlock().getWorld().getUID());
             final GDChunk gpChunk = claimWorldManager.getChunk(event.getClickedBlock().getChunk());
             final Vector3i targetPos = VecHelper.toVector3i(event.getClickedBlock().getLocation());
+            GDCauseStackManager.getInstance().pushCause(event.getPlayer());
             gpChunk.addTrackedBlockPosition(event.getClickedBlock(), event.getPlayer().getUniqueId(), PlayerTracker.Type.NOTIFIER);
             // We must track the position above clicked to block actions like water flow properly.
             final Vector3i blockAbovePos = VecHelper.toVector3i(BlockUtil.getInstance().getBlockRelative(event.getClickedBlock().getLocation(), BlockFace.UP));

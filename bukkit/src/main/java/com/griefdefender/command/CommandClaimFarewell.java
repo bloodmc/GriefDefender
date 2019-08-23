@@ -67,6 +67,7 @@ public class CommandClaimFarewell extends BaseCommand {
             claim.getInternalClaimData().setFarewell(farewell);
         }
         claim.getInternalClaimData().setRequiresSave(true);
+        claim.getInternalClaimData().save();
         Component resultMessage = null;
         if (!claim.getInternalClaimData().getFarewell().isPresent()) {
             resultMessage = MessageCache.getInstance().CLAIM_FAREWELL_CLEAR;

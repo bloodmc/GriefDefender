@@ -32,16 +32,25 @@ import co.aikar.commands.annotation.Subcommand;
 import com.google.common.collect.ImmutableMap;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
+import com.griefdefender.api.claim.Claim;
 import com.griefdefender.api.claim.ClaimResult;
 import com.griefdefender.cache.MessageCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.event.GDCauseStackManager;
 import com.griefdefender.permission.GDPermissions;
+import com.griefdefender.text.action.GDCallbackHolder;
 import com.griefdefender.util.PermissionUtil;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
+import net.kyori.text.adapter.bukkit.TextAdapter;
+import net.kyori.text.event.ClickEvent;
+import net.kyori.text.event.HoverEvent;
 import net.kyori.text.format.TextColor;
+
+import java.util.function.Consumer;
+
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 @CommandAlias("%griefdefender")
@@ -54,9 +63,7 @@ public class CommandClaimDelete extends BaseCommand {
     @Description("Deletes the claim you're standing in, even if it's not your claim.")
     @Subcommand("delete claim")
     public void execute(Player player) {
-        final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
         final GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAt(player.getLocation());
-        final boolean isTown = claim.isTown();
         if (claim.isWilderness()) {
             GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().CLAIM_NOT_FOUND);
             return;
@@ -75,27 +82,41 @@ public class CommandClaimDelete extends BaseCommand {
             return;
         }
 
-        if (!this.deleteTopLevelClaim && !claim.isTown() && claim.children.size() > 0 /*&& !playerData.warnedAboutMajorDeletion*/) {
-            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().CLAIM_CHILDREN_WARNING);
-            return;
-        }
+        final Component confirmationText = TextComponent.builder()
+                .append(GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.DELETE_CLAIM_WARNING, 
+                        ImmutableMap.of("player", claim.getOwnerName().color(TextColor.AQUA))))
+                .append(TextComponent.builder()
+                    .append("\n[")
+                    .append("Confirm", TextColor.GREEN)
+                    .append("]\n")
+                    .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createConfirmationConsumer(player, claim, deleteTopLevelClaim))))
+                    .hoverEvent(HoverEvent.showText(MessageCache.getInstance().UI_CLICK_CONFIRM)).build())
+                .build();
+        TextAdapter.sendComponent(player, confirmationText);
+    }
 
-        GDCauseStackManager.getInstance().pushCause(player);
-        ClaimResult claimResult = GriefDefenderPlugin.getInstance().dataStore.deleteClaim(claim, !this.deleteTopLevelClaim);
-        GDCauseStackManager.getInstance().popCause();
-        if (!claimResult.successful()) {
-            GriefDefenderPlugin.sendMessage(player, claimResult.getMessage().orElse(TextComponent.of("Could not delete claim. A plugin has denied it.").color(TextColor.RED)));
-            return;
-        }
+    private static Consumer<CommandSender> createConfirmationConsumer(Player player, Claim claim, boolean deleteTopLevelClaim) {
+        return confirm -> {
+            final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
+            GDCauseStackManager.getInstance().pushCause(player);
+            ClaimResult claimResult = GriefDefenderPlugin.getInstance().dataStore.deleteClaim(claim, !deleteTopLevelClaim);
+            GDCauseStackManager.getInstance().popCause();
+            if (!claimResult.successful()) {
+                GriefDefenderPlugin.sendMessage(player, claimResult.getMessage().orElse(MessageCache.getInstance().PLUGIN_EVENT_CANCEL));
+                return;
+            }
 
-        PermissionUtil.getInstance().clearPermissions(GriefDefenderPlugin.DEFAULT_HOLDER, claim.getContext());
-        GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().DELETE_CLAIM);
+            PermissionUtil.getInstance().clearPermissions((GDClaim) claim);
+            playerData.revertActiveVisual(player);
 
-        playerData.revertActiveVisual(player);
+            if (claim.isTown()) {
+                playerData.inTown = false;
+                playerData.townChat = false;
+            }
 
-        if (isTown) {
-            playerData.inTown = false;
-            playerData.townChat = false;
-        }
+            final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.DELETE_CLAIM_SUCCESS, 
+                ImmutableMap.of("player", claim.getOwnerName().color(TextColor.AQUA)));
+            GriefDefenderPlugin.sendMessage(player, message);
+        };
     }
 }

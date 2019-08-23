@@ -31,10 +31,14 @@ import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
 public class MessageCategory extends ConfigCategory {
 
     @Setting(value = "locale", comment = "Set the locale to use for GD messages. (Default: en_US)\n" +
-            "Available languages: en_US, de_DE, ru_RU, zh_CN. The data is stored under assets in jar.\n" +
+            "Available languages: en_US, de_DE, fr_FR, ru_RU, zh_CN. The data is stored under assets in jar.\n" +
             "Note: The language code must be lowercase and the country code must be uppercase.")
     public String locale = "en_US";
 
-    @Setting(value = "show-gd-prefix-greeting-farewell", comment = "Whether GD prefix should be shown in greeting/farewell claim messages. (Default: true)")
-    public boolean showGdPrefixGreetingFarewell = true;
+    @Setting(value = "enter-exit-show-gd-prefix", comment = "Whether GD prefix should be shown in enter/exit claim messages. (Default: true)")
+    public boolean enterExitShowGdPrefix = true;
+
+    @Setting(value = "enter-exit-chat-type", comment = "The default chat type to use when sending enter/claim messages to a player.\n" + 
+            "(0 = Chat, 1 = ActionBar, 2 = Title)/nNote: ActionBar is only available in MC 1.11+")
+    public int enterExitChatType = 0;
 }
