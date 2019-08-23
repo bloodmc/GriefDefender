@@ -64,8 +64,9 @@ public class ClaimTemplateStorage {
             this.loader = HoconConfigurationLoader.builder().setPath(path).build();
             this.configMapper = (ObjectMapper.BoundInstance) ObjectMapper.forClass(ClaimTemplateConfig.class).bindToNew();
 
-            reload();
-            save();
+            if (reload()) {
+                save();
+            }
         } catch (Exception e) {
             GriefDefenderPlugin.getInstance().getLogger().log(Level.SEVERE, "Failed to initialize claim template data", e);
         }
@@ -115,14 +116,16 @@ public class ClaimTemplateStorage {
         }
     }
 
-    public void reload() {
+    public boolean reload() {
         try {
             this.root = this.loader.load(ConfigurationOptions.defaults()
                     .setHeader(GriefDefenderPlugin.CONFIG_HEADER));
             this.configBase = this.configMapper.populate(this.root.getNode(GriefDefenderPlugin.MOD_ID));
         } catch (Exception e) {
             GriefDefenderPlugin.getInstance().getLogger().log(Level.SEVERE, "Failed to load configuration", e);
+            return false;
         }
+        return true;
     }
 
     public CommentedConfigurationNode getRootNode() {

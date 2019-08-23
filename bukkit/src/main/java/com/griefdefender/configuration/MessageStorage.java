@@ -312,8 +312,9 @@ public class MessageStorage {
             this.loader = HoconConfigurationLoader.builder().setPath(path).build();
             this.configMapper = (ObjectMapper.BoundInstance) ObjectMapper.forClass(MessageDataConfig.class).bindToNew();
 
-            reload();
-            save();
+            if (reload()) {
+                save();
+            }
         } catch (Exception e) {
             GriefDefenderPlugin.getInstance().getLogger().log(Level.SEVERE, "Failed to initialize configuration", e);
         }
@@ -332,14 +333,16 @@ public class MessageStorage {
         }
     }
 
-    public void reload() {
+    public boolean reload() {
         try {
             this.root = this.loader.load(ConfigurationOptions.defaults());
             this.configBase = this.configMapper.populate(this.root.getNode(GriefDefenderPlugin.MOD_ID));
             MESSAGE_DATA = this.configBase;
         } catch (Exception e) {
             GriefDefenderPlugin.getInstance().getLogger().log(Level.SEVERE, "Failed to load configuration", e);
+            return false;
         }
+        return true;
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})

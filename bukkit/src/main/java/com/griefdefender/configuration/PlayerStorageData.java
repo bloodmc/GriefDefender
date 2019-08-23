@@ -58,8 +58,9 @@ public class PlayerStorageData {
             this.loader = HoconConfigurationLoader.builder().setPath(path).build();
             this.configMapper = (ObjectMapper.BoundInstance) ObjectMapper.forClass(PlayerDataConfig.class).bindToNew();
 
-            reload();
-            save();
+            if (reload()) {
+                save();
+            }
         } catch (Exception e) {
             GriefDefenderPlugin.getInstance().getLogger().log(Level.SEVERE, "Failed to initialize configuration", e);
         }
@@ -83,13 +84,15 @@ public class PlayerStorageData {
         }
     }
 
-    public void reload() {
+    public boolean reload() {
         try {
             this.root = this.loader.load(ConfigurationOptions.defaults());
             this.configBase = this.configMapper.populate(this.root.getNode(GriefDefenderPlugin.MOD_ID));
         } catch (Exception e) {
             GriefDefenderPlugin.getInstance().getLogger().log(Level.SEVERE, "Failed to load configuration", e);
+            return false;
         }
+        return true;
     }
 
     public CommentedConfigurationNode getRootNode() {
