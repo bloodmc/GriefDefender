@@ -86,11 +86,23 @@ public class PermissionUtil {
     }
 
     public boolean containsDefaultContext(Set<Context> contexts) {
-        return PERMISSION_PROVIDER.containsDefaultContext(contexts);
+        for (Context context : contexts) {
+            if (context.getKey().equals("gd_claim_default")) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public boolean containsOverrideContext(Set<Context> contexts) {
-        return PERMISSION_PROVIDER.containsOverrideContext(contexts);
+        for (Context context : contexts) {
+            if (context.getKey().equals("gd_claim_override")) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public void clearPermissions(GDClaim claim) {
