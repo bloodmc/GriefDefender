@@ -53,7 +53,6 @@ import org.bukkit.entity.Monster;
 import org.bukkit.event.Event;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.plugin.RegisteredServiceProvider;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
@@ -207,15 +206,12 @@ import co.aikar.commands.RegisteredCommand;
 import co.aikar.commands.RootCommand;
 import co.aikar.timings.lib.MCTiming;
 import co.aikar.timings.lib.TimingManager;
-import me.lucko.luckperms.api.LuckPermsApi;
-import me.lucko.luckperms.api.User;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.adapter.bukkit.TextAdapter;
 import net.kyori.text.event.ClickEvent;
 import net.kyori.text.event.HoverEvent;
 import net.kyori.text.format.TextColor;
-import net.kyori.text.format.TextFormat;
 import net.kyori.text.serializer.plain.PlainComponentSerializer;
 import ninja.leaping.configurate.objectmapping.serialize.TypeSerializers;
 
@@ -301,8 +297,8 @@ public class GriefDefenderPlugin {
             }
 
             String messageUser = permissionSubject.getFriendlyName();
-            if (permissionSubject instanceof User) {
-                messageUser = ((User) permissionSubject).getName();
+            if (permissionSubject instanceof GDPermissionUser) {
+                messageUser = ((GDPermissionUser) permissionSubject).getName();
             }
 
             // record
@@ -390,12 +386,6 @@ public class GriefDefenderPlugin {
         this.getLogger().info("GriefDefender boot start.");
         Plugin permissionPlugin = Bukkit.getPluginManager().getPlugin("LuckPerms");
         if (permissionPlugin != null) {
-            RegisteredServiceProvider<LuckPermsApi> provider = Bukkit.getServicesManager().getRegistration(LuckPermsApi.class);
-            if (provider == null) {
-                this.getLogger().severe("Unable to initialize plugin. GriefDefender requires LuckPerms to be installed."
-                        + "\nSee https://github.com/lucko/LuckPerms/wiki/Migration on how to migrate from other permission plugins.");
-                return;
-            }
             this.permissionProvider = new LuckPermsProvider();
         } else {
             permissionPlugin = Bukkit.getPluginManager().getPlugin("PermissionsEx");
