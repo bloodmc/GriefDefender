@@ -55,10 +55,6 @@ public interface PermissionProvider {
 
     void addActiveContexts(Set<Context> contexts, GDPermissionHolder permissionHolder, GDPlayerData playerData, Claim claim);
 
-    boolean containsDefaultContext(Set<Context> contexts);
-
-    boolean containsOverrideContext(Set<Context> contexts);
-
     void clearPermissions(GDClaim claim);
 
     void clearPermissions(OfflinePlayer player, Context context);

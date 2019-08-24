@@ -289,26 +289,6 @@ public class LuckPermsProvider implements PermissionProvider {
         contexts.addAll(this.getGDContexts(activeContexts));
     }
 
-    public boolean containsDefaultContext(Set<Context> contexts) {
-        for (Context context : contexts) {
-            if (context.getKey().equals("gd_claim_default")) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    public boolean containsOverrideContext(Set<Context> contexts) {
-        for (Context context : contexts) {
-            if (context.getKey().equals("gd_claim_override")) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     public void clearPermissions(GDClaim claim) {
         Map<Set<Context>, Map<String, Boolean>> permissionMap = this.getAllPermissions(claim, GriefDefenderPlugin.DEFAULT_HOLDER);
         for (Entry<Set<Context>, Map<String, Boolean>> mapEntry : permissionMap.entrySet()) {
