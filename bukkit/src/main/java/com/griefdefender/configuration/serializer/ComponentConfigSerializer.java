@@ -77,10 +77,10 @@ public class ComponentConfigSerializer implements TypeSerializer<Component> {
     @Override
     public void serialize(TypeToken<?> type, Component obj, ConfigurationNode node) throws ObjectMappingException {
         if (obj == TextComponent.empty()) {
-            return;
+            node.setValue("");
+        } else {
+            node.setValue(LegacyComponentSerializer.legacy().serialize(obj, '&'));
         }
-
-        node.setValue(LegacyComponentSerializer.legacy().serialize(obj, '&'));
     }
 
 }

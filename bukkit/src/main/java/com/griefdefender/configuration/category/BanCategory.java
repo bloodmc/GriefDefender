@@ -44,6 +44,18 @@ public class BanCategory extends ConfigCategory {
     private Map<String, Component> items = new HashMap<>();
     
 
+    public Map<String, Component> getBlockMap() {
+        return this.blocks;
+    }
+
+    public Map<String, Component> getEntityMap() {
+        return this.entities;
+    }
+
+    public Map<String, Component> getItemMap() {
+        return this.items;
+    }
+
     public boolean isBlockBanned(String id) {
         if (id == null) {
             return false;

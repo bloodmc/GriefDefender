@@ -32,11 +32,9 @@ import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Optional;
 import co.aikar.commands.annotation.Subcommand;
 import co.aikar.commands.annotation.Syntax;
-import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.adapter.bukkit.TextAdapter;
 import net.kyori.text.format.TextColor;
-import net.kyori.text.serializer.legacy.LegacyComponentSerializer;
 
 import com.google.common.collect.ImmutableMap;
 import com.griefdefender.GriefDefenderPlugin;
@@ -44,8 +42,10 @@ import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.internal.registry.BlockTypeRegistryModule;
 import com.griefdefender.internal.registry.EntityTypeRegistryModule;
 import com.griefdefender.internal.registry.ItemTypeRegistryModule;
+import com.griefdefender.internal.util.NMSUtil;
 import com.griefdefender.permission.GDPermissions;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 @CommandAlias("%griefdefender")
 @CommandPermission(GDPermissions.COMMAND_CLAIM_BAN)
@@ -54,9 +54,9 @@ public class CommandClaimUnban extends BaseCommand {
     @CommandCompletion("@gdbantypes @gdmcids @gddummy")
     @CommandAlias("claimunban")
     @Description("Unbans target id allowing it to be used again.")
-    @Syntax("<type> <target>")
+    @Syntax("hand | <type> <target>")
     @Subcommand("unban")
-    public void execute(Player player, String type, String id) {
+    public void execute(Player player, String type, @Optional String id) {
         if (type.equalsIgnoreCase("block")) {
             if (!BlockTypeRegistryModule.getInstance().getById(id).isPresent()) {
                 TextAdapter.sendComponent(player, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.REGISTRY_BLOCK_NOT_FOUND,
@@ -89,6 +89,13 @@ public class CommandClaimUnban extends BaseCommand {
             GriefDefenderPlugin.getGlobalConfig().save();
             TextAdapter.sendComponent(player, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.COMMAND_CLAIMUNBAN_SUCCESS_ITEM,
                     ImmutableMap.of("id", TextComponent.of(id, TextColor.LIGHT_PURPLE))));
+        } else if (type.equalsIgnoreCase("hand")) {
+            final ItemStack itemInHand = player.getItemInHand();
+            final String handItemId = ItemTypeRegistryModule.getInstance().getNMSKey(itemInHand);
+            GriefDefenderPlugin.getGlobalConfig().getConfig().bans.removeItemBan(handItemId);
+            GriefDefenderPlugin.getGlobalConfig().save();
+            TextAdapter.sendComponent(player, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.COMMAND_CLAIMUNBAN_SUCCESS_ITEM,
+                    ImmutableMap.of("id", TextComponent.of(handItemId, TextColor.LIGHT_PURPLE))));
         } else {
             TextAdapter.sendComponent(player, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.COMMAND_INVALID_TYPE,
                     ImmutableMap.of("type", type)));

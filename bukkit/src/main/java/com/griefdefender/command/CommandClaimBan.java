@@ -46,6 +46,7 @@ import com.griefdefender.internal.registry.EntityTypeRegistryModule;
 import com.griefdefender.internal.registry.ItemTypeRegistryModule;
 import com.griefdefender.permission.GDPermissions;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 @CommandAlias("%griefdefender")
 @CommandPermission(GDPermissions.COMMAND_CLAIM_BAN)
@@ -54,9 +55,9 @@ public class CommandClaimBan extends BaseCommand {
     @CommandCompletion("@gdbantypes @gdmcids @gddummy")
     @CommandAlias("claimban")
     @Description("Bans target id from all usage.")
-    @Syntax("<type> <target> [<message>]")
+    @Syntax("hand | <type> <target> [<message>]")
     @Subcommand("ban")
-    public void execute(Player player, String type, String id, @Optional String message) {
+    public void execute(Player player, String type, @Optional String id, @Optional String message) {
         Component component = null;
         if (type.equalsIgnoreCase("block")) {
             if (!BlockTypeRegistryModule.getInstance().getById(id).isPresent()) {
@@ -103,6 +104,18 @@ public class CommandClaimBan extends BaseCommand {
             GriefDefenderPlugin.getGlobalConfig().save();
             TextAdapter.sendComponent(player, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.COMMAND_CLAIMBAN_SUCCESS_ITEM,
                     ImmutableMap.of("id", TextComponent.of(id, TextColor.LIGHT_PURPLE))));
+        } else if (type.equalsIgnoreCase("hand")) {
+            final ItemStack itemInHand = player.getItemInHand();
+            final String handItemId = ItemTypeRegistryModule.getInstance().getNMSKey(itemInHand);
+            if (message == null) {
+                component = TextComponent.empty();
+            } else {
+                component = LegacyComponentSerializer.legacy().deserialize(message, '&');
+            }
+            GriefDefenderPlugin.getGlobalConfig().getConfig().bans.addItemBan(handItemId, component);
+            GriefDefenderPlugin.getGlobalConfig().save();
+            TextAdapter.sendComponent(player, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.COMMAND_CLAIMBAN_SUCCESS_ITEM,
+                    ImmutableMap.of("id", TextComponent.of(handItemId, TextColor.LIGHT_PURPLE))));
         }
         if (component == null) {
             TextAdapter.sendComponent(player, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.COMMAND_INVALID_TYPE,

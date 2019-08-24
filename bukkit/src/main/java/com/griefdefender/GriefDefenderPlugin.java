@@ -704,6 +704,7 @@ public class GriefDefenderPlugin {
             tabList.add("block");
             tabList.add("entity");
             tabList.add("item");
+            tabList.add("hand");
             return ImmutableList.copyOf(tabList);
         });
         manager.getCommandCompletions().registerCompletion("gdclaimtypes", c -> {

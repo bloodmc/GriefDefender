@@ -52,6 +52,7 @@ import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.command.CommandHelper;
 import com.griefdefender.configuration.MessageStorage;
+import com.griefdefender.configuration.category.BanCategory;
 import com.griefdefender.event.GDCauseStackManager;
 import com.griefdefender.event.GDFlagPermissionEvent;
 import com.griefdefender.internal.registry.BlockTypeRegistryModule;
@@ -67,6 +68,7 @@ import net.kyori.text.TextComponent;
 import net.kyori.text.adapter.bukkit.TextAdapter;
 import net.kyori.text.format.TextColor;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -94,6 +96,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -587,31 +590,52 @@ public class GDPermissionManager implements PermissionManager {
         if (id.equalsIgnoreCase("player")) {
             return false;
         }
-        final World world = claim.getWorld();
-        final String permission = StringUtils.replace(id, ":", ".");
-        Component banReason = null;
-        if (type == BanType.BLOCK) {
-            banReason = GriefDefenderPlugin.getGlobalConfig().getConfig().bans.getBlockBanReason(id);
-            if (banReason != null && banReason.equals(TextComponent.empty())) {
-                banReason = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PERMISSION_BAN_BLOCK, 
-                        ImmutableMap.of("id", TextComponent.of(id, TextColor.GOLD)));
-            }
-        } else if (type == BanType.ITEM) {
-            banReason = GriefDefenderPlugin.getGlobalConfig().getConfig().bans.getItemBanReason(id);
-            if (banReason != null && banReason.equals(TextComponent.empty())) {
-                banReason = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PERMISSION_BAN_ITEM, 
-                        ImmutableMap.of("id", TextComponent.of(id, TextColor.GOLD)));
-            }
-        } else {
-            banReason = GriefDefenderPlugin.getGlobalConfig().getConfig().bans.getEntityBanReason(id);
-            if (banReason != null && banReason.equals(TextComponent.empty())) {
-                banReason = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PERMISSION_BAN_ENTITY, 
-                        ImmutableMap.of("id", TextComponent.of(id, TextColor.GOLD)));
+
+        GDPermissionUser user = null;
+        if (this.eventSubject != null && this.eventSubject instanceof GDPermissionUser) {
+            user = (GDPermissionUser) this.eventSubject;
+            if (user.getInternalPlayerData() != null && user.getInternalPlayerData().canIgnoreClaim(claim)) {
+                return false;
             }
         }
 
-        if (banReason != null && this.eventSubject != null && this.eventSubject instanceof GDPermissionUser) {
-            final GDPermissionUser user = (GDPermissionUser) this.eventSubject;
+        final String permission = StringUtils.replace(id, ":", ".");
+        Component banReason = null;
+        final BanCategory banCategory = GriefDefenderPlugin.getGlobalConfig().getConfig().bans;
+        if (type == BanType.BLOCK) {
+            for (Entry<String, Component> banId : banCategory.getBlockMap().entrySet()) {
+                if (FilenameUtils.wildcardMatch(id, banId.getKey())) {
+                    banReason = GriefDefenderPlugin.getGlobalConfig().getConfig().bans.getBlockBanReason(banId.getKey());
+                    if (banReason != null && banReason.equals(TextComponent.empty())) {
+                        banReason = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PERMISSION_BAN_BLOCK, 
+                                ImmutableMap.of("id", TextComponent.of(id, TextColor.GOLD)));
+                    }
+                    break;
+                }
+            }
+        } else if (type == BanType.ITEM) {
+            for (Entry<String, Component> banId : banCategory.getItemMap().entrySet()) {
+                if (FilenameUtils.wildcardMatch(id, banId.getKey())) {
+                    banReason = GriefDefenderPlugin.getGlobalConfig().getConfig().bans.getItemBanReason(banId.getKey());
+                    if (banReason != null && banReason.equals(TextComponent.empty())) {
+                        banReason = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PERMISSION_BAN_ITEM, 
+                                ImmutableMap.of("id", TextComponent.of(id, TextColor.GOLD)));
+                    }
+                }
+            }
+        } else if (type == BanType.ENTITY) {
+            for (Entry<String, Component> banId : banCategory.getEntityMap().entrySet()) {
+                if (FilenameUtils.wildcardMatch(id, banId.getKey())) {
+                    banReason = GriefDefenderPlugin.getGlobalConfig().getConfig().bans.getEntityBanReason(banId.getKey());
+                    if (banReason != null && banReason.equals(TextComponent.empty())) {
+                        banReason = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PERMISSION_BAN_ENTITY, 
+                                ImmutableMap.of("id", TextComponent.of(id, TextColor.GOLD)));
+                    }
+                }
+            }
+        }
+
+        if (banReason != null && user != null) {
             final Player player = user.getOnlinePlayer();
             if (player != null) {
                 if (banReason.equals(TextComponent.empty())) {
