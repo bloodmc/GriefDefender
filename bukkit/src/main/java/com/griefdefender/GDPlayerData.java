@@ -272,10 +272,10 @@ public class GDPlayerData implements PlayerData {
         return value;
     }
 
-    public double getEconomyBlockCost() {
+    public double getInternalEconomyBlockCost() {
         final Double value = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Double.class), this.getSubject(), Options.ECONOMY_BLOCK_COST);
         if (value == null) {
-            return Options.INITIAL_BLOCKS.getDefaultValue();
+            return Options.ECONOMY_BLOCK_COST.getDefaultValue();
         }
         return value;
     }
@@ -328,7 +328,7 @@ public class GDPlayerData implements PlayerData {
             }
 
             final double currentFunds = this.vaultProvider.getApi().getBalance(this.getSubject().getOfflinePlayer());
-            final Double economyBlockCost = this.getEconomyBlockCost();
+            final Double economyBlockCost = this.getInternalEconomyBlockCost();
             return (int) Math.round((currentFunds / economyBlockCost));
         }
         return 0;

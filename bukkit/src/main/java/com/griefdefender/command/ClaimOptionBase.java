@@ -335,6 +335,23 @@ public abstract class ClaimOptionBase extends BaseCommand {
             }
         }
 
+        if (displayType == MenuType.DEFAULT) {
+            final Set<Context> contexts = new HashSet<>();
+            contexts.add(ClaimContexts.GLOBAL_DEFAULT_CONTEXT);
+            for (Option option : OptionRegistryModule.getInstance().getAll()) {
+                boolean found = false;
+                for (Entry<String, OptionData> optionEntry : filteredContextMap.entrySet()) {
+                    if (optionEntry.getValue().option == option) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    filteredContextMap.put(option.getPermission(), new OptionData(option, "undefined", displayType, contexts));
+                }
+            }
+        }
+
         for (Map.Entry<Set<Context>, Map<String, String>> mapEntry : PermissionUtil.getInstance().getPermanentOptions(this.subject).entrySet()) {
             final Set<Context> contextSet = mapEntry.getKey();
             if (contextSet.contains(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)) {
@@ -343,16 +360,18 @@ public abstract class ClaimOptionBase extends BaseCommand {
             if (contextSet.contains(claim.getDefaultTypeContext())) {
                 this.addFilteredContexts(src, filteredContextMap, contextSet, MenuType.DEFAULT, mapEntry.getValue());
             }
-            if (claim.isTown() && contextSet.contains(claim.getContext())) {
-                this.addFilteredContexts(src, filteredContextMap, contextSet, MenuType.CLAIM, mapEntry.getValue());
-            }
-            if (contextSet.contains(ClaimContexts.GLOBAL_OVERRIDE_CONTEXT)) {
-                this.addFilteredContexts(src, filteredContextMap, contextSet, MenuType.OVERRIDE, mapEntry.getValue());
-            }
-            if (contextSet.contains(claim.getOverrideClaimContext())) {
-                this.addFilteredContexts(src, filteredContextMap, contextSet, MenuType.OVERRIDE, mapEntry.getValue());
-            } else if (contextSet.contains(claim.getOverrideTypeContext())) {
-                this.addFilteredContexts(src, filteredContextMap, contextSet, MenuType.OVERRIDE, mapEntry.getValue());
+            if (displayType != MenuType.DEFAULT) {
+                if (contextSet.contains(claim.getContext())) {
+                    this.addFilteredContexts(src, filteredContextMap, contextSet, MenuType.CLAIM, mapEntry.getValue());
+                }
+                if (contextSet.contains(ClaimContexts.GLOBAL_OVERRIDE_CONTEXT)) {
+                    this.addFilteredContexts(src, filteredContextMap, contextSet, MenuType.OVERRIDE, mapEntry.getValue());
+                }
+                if (contextSet.contains(claim.getOverrideClaimContext())) {
+                    this.addFilteredContexts(src, filteredContextMap, contextSet, MenuType.OVERRIDE, mapEntry.getValue());
+                } else if (contextSet.contains(claim.getOverrideTypeContext())) {
+                    this.addFilteredContexts(src, filteredContextMap, contextSet, MenuType.OVERRIDE, mapEntry.getValue());
+                }
             }
         }
 
@@ -376,6 +395,9 @@ public abstract class ClaimOptionBase extends BaseCommand {
             final Option option = optionData.option;
             for (OptionContextHolder optionHolder : optionData.optionContextMap.values()) {
                 if (displayType != MenuType.CLAIM && optionHolder.getType() != displayType) {
+                    continue;
+                }
+                if (option.getName().contains("tax") && !GriefDefenderPlugin.getGlobalConfig().getConfig().claim.bankTaxSystem) {
                     continue;
                 }
 

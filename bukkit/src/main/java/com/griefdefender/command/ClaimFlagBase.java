@@ -218,7 +218,7 @@ public abstract class ClaimFlagBase extends BaseCommand {
         for (String group : groups) {
             flagHeadBuilder.append(" ").append(displayGroup.equalsIgnoreCase(group) ? TextComponent.builder()
                     .append(whiteOpenBracket)
-                    .append(group.toUpperCase(), flagGroupCat.isAdminGroup() ? TextColor.RED : TextColor.GOLD)
+                    .append(group.toUpperCase(), flagGroups.get(group).isAdminGroup() ? TextColor.RED : TextColor.GOLD)
                     .append(whiteCloseBracket).build() : 
                         TextComponent.builder().append(group.toUpperCase(), TextColor.GRAY)
                             .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createCustomFlagConsumer(src, claim, group))))
@@ -388,16 +388,18 @@ public abstract class ClaimFlagBase extends BaseCommand {
             if (contextSet.contains(claim.getDefaultTypeContext())) {
                 this.addFilteredContexts(filteredContextMap, contextSet, MenuType.DEFAULT, mapEntry.getValue());
             }
-            if (contextSet.contains(claim.getContext())) {
-                this.addFilteredContexts(filteredContextMap, contextSet, MenuType.CLAIM, mapEntry.getValue());
-            }
-            if (contextSet.contains(ClaimContexts.GLOBAL_OVERRIDE_CONTEXT)) {
-                this.addFilteredContexts(filteredContextMap, contextSet, MenuType.OVERRIDE, mapEntry.getValue());
-            }
-            if (contextSet.contains(claim.getOverrideClaimContext())) {
-                this.addFilteredContexts(filteredContextMap, contextSet, MenuType.OVERRIDE, mapEntry.getValue());
-            } else if (contextSet.contains(claim.getOverrideTypeContext())) {
-                this.addFilteredContexts(filteredContextMap, contextSet, MenuType.OVERRIDE, mapEntry.getValue());
+            if (displayType != MenuType.DEFAULT) {
+                if (contextSet.contains(claim.getContext())) {
+                    this.addFilteredContexts(filteredContextMap, contextSet, MenuType.CLAIM, mapEntry.getValue());
+                }
+                if (contextSet.contains(ClaimContexts.GLOBAL_OVERRIDE_CONTEXT)) {
+                    this.addFilteredContexts(filteredContextMap, contextSet, MenuType.OVERRIDE, mapEntry.getValue());
+                }
+                if (contextSet.contains(claim.getOverrideClaimContext())) {
+                    this.addFilteredContexts(filteredContextMap, contextSet, MenuType.OVERRIDE, mapEntry.getValue());
+                } else if (contextSet.contains(claim.getOverrideTypeContext())) {
+                    this.addFilteredContexts(filteredContextMap, contextSet, MenuType.OVERRIDE, mapEntry.getValue());
+                }
             }
         }
 
@@ -533,7 +535,16 @@ public abstract class ClaimFlagBase extends BaseCommand {
         Map<CustomFlagData, Tristate> dataResults = new HashMap<>();
         for (CustomFlagData flagData : customFlag.getFlagData()) {
             Set<Context> newContexts = new HashSet<>(flagData.getContexts());
-            newContexts.add(claim.getContext());
+            boolean hasGDContext = false;
+            for (Context context : newContexts) {
+                if (context.getKey().contains("gd_claim")) {
+                    hasGDContext = true;
+                    break;
+                }
+            }
+            if (!hasGDContext) {
+                newContexts.add(claim.getContext());
+            }
             Tristate result = PermissionUtil.getInstance().getPermissionValue(claim, GriefDefenderPlugin.DEFAULT_HOLDER, flagData.getFlag().getPermission(), newContexts);
             dataResults.put(flagData, result);
         }

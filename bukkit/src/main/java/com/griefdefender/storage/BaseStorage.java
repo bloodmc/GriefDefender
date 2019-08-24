@@ -73,6 +73,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -391,6 +392,8 @@ public abstract class BaseStorage {
     }
 
     private void setDefaultOptions(String type, Set<Context> contexts, Map<String, String> defaultOptions) {
+        final Map<Set<Context>, Map<String, String>> permanentOptions = PermissionUtil.getInstance().getPermanentOptions(GriefDefenderPlugin.DEFAULT_HOLDER);
+        final Map<String, String> options = permanentOptions.get(contexts);
         GriefDefenderPlugin.getInstance().executor.execute(() -> {
             for (Map.Entry<String, String> optionEntry : defaultOptions.entrySet()) {
                 final Option option = OptionRegistryModule.getInstance().getById(optionEntry.getKey()).orElse(null);
@@ -400,6 +403,19 @@ public abstract class BaseStorage {
 
                 if (!((GDOption) option).validateStringValue(optionEntry.getValue(), true)) {
                     continue;
+                }
+                // Transient options are checked first so we must ignore setting if a persisted option exists
+                boolean foundPersisted = false;
+                if (options != null) {
+                    for (Entry<String, String> mapEntry : options.entrySet()) {
+                        if (mapEntry.getKey().equalsIgnoreCase(option.getPermission())) {
+                            foundPersisted = true;
+                            break;
+                        }
+                    }
+                    if (foundPersisted) {
+                        continue;
+                    }
                 }
                 PermissionUtil.getInstance().setTransientOption(GriefDefenderPlugin.DEFAULT_HOLDER, option.getPermission(), optionEntry.getValue(), contexts);
             }

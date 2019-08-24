@@ -158,7 +158,7 @@ public class CommandPlayerInfo extends BaseCommand {
         final Component economyBlockAvailablePurchaseText = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_ECONOMY_BLOCK_AVAILABLE_PURCHASE, 
                 ImmutableMap.of("amount", String.valueOf(playerData.getRemainingClaimBlocks())));
         final Component economyBlockCostText = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_ECONOMY_BLOCK_COST, 
-                ImmutableMap.of("amount", String.valueOf("$" + playerData.getEconomyBlockCost())));
+                ImmutableMap.of("amount", String.valueOf("$" + playerData.getInternalEconomyBlockCost())));
         final Component economyBlockSellReturnText = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_ECONOMY_BLOCK_SELL_RETURN, 
                 ImmutableMap.of("amount", String.valueOf("$" + playerData.getEconomyClaimBlockReturn())));
         final Component minMaxLevelText = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_CLAIM_LEVEL, 

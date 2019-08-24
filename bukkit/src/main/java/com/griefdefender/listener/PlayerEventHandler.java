@@ -77,6 +77,8 @@ import com.griefdefender.util.PlayerUtil;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.adapter.bukkit.TextAdapter;
+import net.kyori.text.format.TextColor;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.GameMode;
@@ -1293,6 +1295,22 @@ public class PlayerEventHandler implements Listener {
         if (playerData.shovelMode == ShovelTypes.SUBDIVISION && claim.isWilderness()) {
             GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().CREATE_SUBDIVISION_FAIL);
             return;
+        }
+
+        final ClaimType type = PlayerUtil.getInstance().getClaimTypeFromShovel(playerData.shovelMode);
+        if ((type == ClaimTypes.BASIC || type == ClaimTypes.TOWN) && GriefDefenderPlugin.getGlobalConfig().getConfig().economy.economyMode) {
+            // Check current economy mode cost
+            final Double economyBlockCost = playerData.getInternalEconomyBlockCost();
+            if (economyBlockCost == null || economyBlockCost <= 0) {
+                GriefDefenderPlugin.sendMessage(player, TextComponent.builder().color(TextColor.RED)
+                        .append("Economy mode is enabled but the current cost for blocks is ")
+                        .append("0", TextColor.GOLD)
+                        .append("\nRaise the value for option 'economy-block-cost' in config or via '")
+                        .append("/gd option claim", TextColor.WHITE)
+                        .append("' command.", TextColor.RED)
+                        .build());
+                return;
+            }
         }
 
         playerData.revertActiveVisual(player);
