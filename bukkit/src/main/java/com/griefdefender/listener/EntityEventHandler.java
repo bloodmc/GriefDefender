@@ -185,6 +185,7 @@ public class EntityEventHandler implements Listener {
         final GDClaimManager claimManager = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(location.getWorld().getUID());
         final Set<Claim> surroundingClaims = claimManager.findOverlappingClaims(radiusClaim);
         if (surroundingClaims.size() == 0) {
+            GDTimings.ENTITY_EXPLOSION_PRE_EVENT.stopTiming();
             return;
         }
         for (Claim claim : surroundingClaims) {
@@ -197,6 +198,7 @@ public class EntityEventHandler implements Listener {
                 break;
             }
         }
+        GDTimings.ENTITY_EXPLOSION_PRE_EVENT.stopTiming();
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
