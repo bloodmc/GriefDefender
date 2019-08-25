@@ -35,6 +35,7 @@ import com.griefdefender.api.permission.option.type.CreateModeTypes;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.configuration.MessageStorage;
+import com.griefdefender.internal.util.NMSUtil;
 import com.griefdefender.internal.visual.ClaimVisual;
 import com.griefdefender.internal.visual.GDClaimVisualType;
 import com.griefdefender.permission.GDPermissionUser;
@@ -44,8 +45,11 @@ import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextColor;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -180,5 +184,21 @@ public class PlayerUtil {
                     "entity", entity.getName()));
             GriefDefenderPlugin.sendClaimDenyMessage(claim, player, message);
         }
+    }
+
+    public boolean isSafeLocation(Location location) {
+        final Block currentBlock = location.getBlock();
+        final Block aboveBlock = currentBlock.getRelative(BlockFace.UP);
+        final Block belowBlock =currentBlock.getRelative(BlockFace.DOWN);
+        if (!NMSUtil.getInstance().isBlockTransparent(currentBlock)) {
+            return false;
+        }
+        if (!NMSUtil.getInstance().isBlockTransparent(aboveBlock)) {
+            return false;
+        }
+        if (!belowBlock.getType().isSolid()) {
+            return false;
+        }
+        return true;
     }
 }

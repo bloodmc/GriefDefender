@@ -368,6 +368,7 @@ public class MessageCache {
     public Component SCHEMATIC_CREATE_FAIL;
     public Component SCHEMATIC_NONE;
     public Component SPAWN_NOT_SET;
+    public Component TELEPORT_NO_SAFE_LOCATION;
     public Component TITLE_ACCESSOR;
     public Component TITLE_ALL;
     public Component TITLE_BUILDER;
@@ -717,6 +718,7 @@ public class MessageCache {
         SCHEMATIC_CREATE_FAIL = MessageStorage.MESSAGE_DATA.getMessage("schematic-create-fail");
         SCHEMATIC_NONE = MessageStorage.MESSAGE_DATA.getMessage("schematic-none");
         SPAWN_NOT_SET = MessageStorage.MESSAGE_DATA.getMessage("spawn-not-set");
+        TELEPORT_NO_SAFE_LOCATION = MessageStorage.MESSAGE_DATA.getMessage("teleport-no-safe-location");
         TITLE_ACCESSOR = MessageStorage.MESSAGE_DATA.getMessage("title-accessor");
         TITLE_ALL = MessageStorage.MESSAGE_DATA.getMessage("title-all");
         TITLE_BUILDER = MessageStorage.MESSAGE_DATA.getMessage("title-builder");

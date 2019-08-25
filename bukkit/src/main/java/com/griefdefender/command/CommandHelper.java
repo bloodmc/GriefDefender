@@ -98,6 +98,7 @@ import com.griefdefender.permission.ui.MenuType;
 import com.griefdefender.permission.ui.UIHelper;
 import com.griefdefender.text.action.GDCallbackHolder;
 import com.griefdefender.util.PermissionUtil;
+import com.griefdefender.util.PlayerUtil;
 import com.griefdefender.util.TaskUtil;
 
 import net.kyori.text.Component;
@@ -1018,13 +1019,19 @@ public class CommandHelper {
                 }
             }
 
-            player.teleport(location, TeleportCause.PLUGIN);
-        };
-    }
+            final double safeY = player.getWorld().getHighestBlockYAt(location);
+            location.setY(safeY);
+            int currentY = location.getBlockY();
+            while (currentY < player.getWorld().getMaxHeight()) {
+                if (PlayerUtil.getInstance().isSafeLocation(location)) {
+                    player.teleport(location, TeleportCause.PLUGIN);
+                    return;
+                }
+                currentY++;
+                location.setY(currentY);
+            }
 
-    public static Consumer<CommandSender> createForceTeleportConsumer(Player player, Location location) {
-        return teleport -> {
-            player.teleport(location, TeleportCause.PLUGIN);
+            TextAdapter.sendComponent(player, MessageCache.getInstance().TELEPORT_NO_SAFE_LOCATION);
         };
     }
 

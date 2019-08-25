@@ -458,7 +458,11 @@ public class GDClaimManager implements ClaimManager {
     public Set<Claim> findOverlappingClaims(Claim claim) {
         Set<Claim> claimSet = new HashSet<>();
         for (Long chunkHash : claim.getChunkHashes()) {
-            for (Claim chunkClaim : this.chunksToClaimsMap.get(chunkHash)) {
+            final Set<Claim> chunkClaims = this.chunksToClaimsMap.get(chunkHash);
+            if (chunkClaims == null) {
+                continue;
+            }
+            for (Claim chunkClaim : chunkClaims) {
                 if (!chunkClaim.equals(claim) && (claim.overlaps(chunkClaim) || chunkClaim.overlaps(claim))) {
                     claimSet.add(chunkClaim);
                 }
