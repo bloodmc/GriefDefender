@@ -33,11 +33,13 @@ public class ContextGroups {
     public static final Context SOURCE_AMBIENT = new Context(ContextKeys.SOURCE, ContextGroupKeys.AMBIENT);
     public static final Context SOURCE_ANIMAL = new Context(ContextKeys.SOURCE, ContextGroupKeys.ANIMAL);
     public static final Context SOURCE_AQUATIC = new Context(ContextKeys.SOURCE, ContextGroupKeys.AQUATIC);
+    public static final Context SOURCE_MISC = new Context(ContextKeys.SOURCE, ContextGroupKeys.MISC);
     public static final Context SOURCE_MONSTER = new Context(ContextKeys.SOURCE, ContextGroupKeys.MONSTER);
     public static final Context SOURCE_VEHICLE = new Context(ContextKeys.SOURCE, ContextGroupKeys.VEHICLE);
     public static final Context TARGET_AMBIENT = new Context(ContextKeys.TARGET, ContextGroupKeys.AMBIENT);
     public static final Context TARGET_ANIMAL = new Context(ContextKeys.TARGET, ContextGroupKeys.ANIMAL);
     public static final Context TARGET_AQUATIC = new Context(ContextKeys.TARGET, ContextGroupKeys.AQUATIC);
+    public static final Context TARGET_MISC = new Context(ContextKeys.TARGET, ContextGroupKeys.MISC);
     public static final Context TARGET_MONSTER = new Context(ContextKeys.TARGET, ContextGroupKeys.MONSTER);
     public static final Context TARGET_VEHICLE = new Context(ContextKeys.TARGET, ContextGroupKeys.VEHICLE);
 

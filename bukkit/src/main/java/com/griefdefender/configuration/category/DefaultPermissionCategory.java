@@ -93,18 +93,31 @@ public class DefaultPermissionCategory extends ConfigCategory {
         this.defaultUserOptions.put(Options.PLAYER_WALK_SPEED.getName(), "-1");
         this.defaultUserOptions.put(Options.PLAYER_WEATHER.getName(), "undefined");
 
-        //this.defaultTownOptions.put(Options.ABANDON_RETURN_RATIO.getName(), "1.0");
-        this.defaultTownOptions.put(Options.CREATE_LIMIT.getName(), "-1");
-        this.defaultTownOptions.put(Options.MIN_LEVEL.getName(), "-1");
+        this.defaultBasicOptions.put(Options.MIN_SIZE_X.getName(), "5");
+        this.defaultBasicOptions.put(Options.MIN_SIZE_Y.getName(), "5");
+        this.defaultBasicOptions.put(Options.MIN_SIZE_Z.getName(), "5");
+        this.defaultBasicOptions.put(Options.MAX_SIZE_X.getName(), "0");
+        this.defaultBasicOptions.put(Options.MAX_SIZE_Y.getName(), "256");
+        this.defaultBasicOptions.put(Options.MAX_SIZE_Z.getName(), "0");
+
+        this.defaultSubdivisionOptions.put(Options.MIN_SIZE_X.getName(), "1");
+        this.defaultSubdivisionOptions.put(Options.MIN_SIZE_Y.getName(), "1");
+        this.defaultSubdivisionOptions.put(Options.MIN_SIZE_Z.getName(), "1");
+        this.defaultSubdivisionOptions.put(Options.MAX_SIZE_X.getName(), "1000");
+        this.defaultSubdivisionOptions.put(Options.MAX_SIZE_Y.getName(), "256");
+        this.defaultSubdivisionOptions.put(Options.MAX_SIZE_Z.getName(), "1000");
+
+        this.defaultTownOptions.put(Options.CREATE_LIMIT.getName(), "1");
+        this.defaultTownOptions.put(Options.MIN_LEVEL.getName(), "0");
         this.defaultTownOptions.put(Options.MIN_SIZE_X.getName(), "32");
         this.defaultTownOptions.put(Options.MIN_SIZE_Y.getName(), "32");
         this.defaultTownOptions.put(Options.MIN_SIZE_Z.getName(), "32");
-        this.defaultTownOptions.put(Options.MAX_LEVEL.getName(), "-1");
-        this.defaultTownOptions.put(Options.MAX_SIZE_X.getName(), "-1");
-        this.defaultTownOptions.put(Options.MAX_SIZE_Y.getName(), "-1");
-        this.defaultTownOptions.put(Options.MAX_SIZE_Z.getName(), "-1");
-        this.defaultTownOptions.put(Options.TAX_EXPIRATION.getName(), "-1");
-        this.defaultTownOptions.put(Options.TAX_EXPIRATION_DAYS_KEEP.getName(), "-1");
+        this.defaultTownOptions.put(Options.MAX_LEVEL.getName(), "255");
+        this.defaultTownOptions.put(Options.MAX_SIZE_X.getName(), "0");
+        this.defaultTownOptions.put(Options.MAX_SIZE_Y.getName(), "256");
+        this.defaultTownOptions.put(Options.MAX_SIZE_Z.getName(), "0");
+        this.defaultTownOptions.put(Options.TAX_EXPIRATION.getName(), "7");
+        this.defaultTownOptions.put(Options.TAX_EXPIRATION_DAYS_KEEP.getName(), "7");
         this.defaultTownOptions.put(Options.TAX_RATE.getName(), "1.0");
     }
 

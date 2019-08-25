@@ -392,6 +392,13 @@ public class PermissionsExProvider implements PermissionProvider {
     }
 
     @Override
+    public Tristate getPermissionValueWithRequiredContexts(GDClaim claim, GDPermissionHolder holder, String permission,
+            Set<Context> contexts, String contextFilter) {
+        // TODO
+        return tristateFromInt(holderToPEXSubject(holder).getPermission(contextsGDToPEX(contexts), permission));
+    }
+
+    @Override
     public String getOptionValue(GDPermissionHolder holder, Option option, Set<Context> contexts) {
         return holderToPEXSubject(holder).getOption(contextsGDToPEX(contexts), option.getPermission()).orElse(null);
     }

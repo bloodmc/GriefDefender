@@ -177,6 +177,10 @@ public class PermissionUtil {
         return PERMISSION_PROVIDER.getPermissionValue(holder, permission, contexts);
     }
 
+    public Tristate getPermissionValueWithRequiredContexts(GDClaim claim, GDPermissionHolder holder, String permission, Set<Context> contexts, String contextFilter) {
+        return PERMISSION_PROVIDER.getPermissionValueWithRequiredContexts(claim, holder, permission, contexts, contextFilter);
+    }
+
     public String getOptionValue(GDPermissionHolder holder, Option option, Set<Context> contexts) {
         return PERMISSION_PROVIDER.getOptionValue(holder, option, contexts);
     }

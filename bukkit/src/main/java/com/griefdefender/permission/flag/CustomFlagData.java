@@ -24,11 +24,8 @@
  */
 package com.griefdefender.permission.flag;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 
-import com.griefdefender.api.Tristate;
 import com.griefdefender.api.permission.Context;
 import com.griefdefender.api.permission.flag.Flag;
 
@@ -64,22 +61,5 @@ public class CustomFlagData {
             }
         }
         return true;
-    }
-
-    public String getCustomPermission() {
-        int count = 0;
-        final Flag flag = this.getFlag();
-        final Set<Context> contexts = this.getContexts();
-        String permission = "";
-        if (count > 0) {
-            permission += ", ";
-        }
-        permission += "flag=" + flag.getName().toLowerCase();
-        count++;
-        for (Context context : contexts) {
-            String key = context.getKey();
-            permission += ", " + key + "=" + context.getValue();
-        }
-        return permission;
     }
 }

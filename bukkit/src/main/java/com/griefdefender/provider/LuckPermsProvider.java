@@ -373,13 +373,13 @@ public class LuckPermsProvider implements PermissionProvider {
             Set<Context> contexts = null;
             if (contextMap.get(node.getContexts()) == null) {
                 contexts = getGPContexts(node.getContexts());
-                if (serverName != null) {
+                if (serverName != null && !serverName.equalsIgnoreCase("undefined")) {
                     contexts.add(new Context("server", serverName));
                 }
                 contextMap.put(node.getContexts(), contexts);
             } else {
                 contexts = contextMap.get(node.getContexts());
-                if (serverName != null) {
+                if (serverName != null && !serverName.equalsIgnoreCase("undefined")) {
                     contexts.add(new Context("server", serverName));
                 }
             }
@@ -417,13 +417,13 @@ public class LuckPermsProvider implements PermissionProvider {
             Set<Context> contexts = null;
             if (contextMap.get(node.getContexts()) == null) {
                 contexts = getGPContexts(node.getContexts());
-                if (serverName != null) {
+                if (serverName != null && !serverName.equalsIgnoreCase("undefined")) {
                     contexts.add(new Context("server", serverName));
                 }
                 contextMap.put(node.getContexts(), contexts);
             } else {
                 contexts = contextMap.get(node.getContexts());
-                if (serverName != null) {
+                if (serverName != null && !serverName.equalsIgnoreCase("undefined")) {
                     contexts.add(new Context("server", serverName));
                 }
             }
@@ -459,13 +459,13 @@ public class LuckPermsProvider implements PermissionProvider {
             Set<Context> contexts = null;
             if (contextMap.get(node.getContexts()) == null) {
                 contexts = getGPContexts(node.getContexts());
-                if (serverName != null) {
+                if (serverName != null && !serverName.equalsIgnoreCase("undefined")) {
                     contexts.add(new Context("server", serverName));
                 }
                 contextMap.put(node.getContexts(), contexts);
             } else {
                 contexts = contextMap.get(node.getContexts());
-                if (serverName != null) {
+                if (serverName != null && !serverName.equalsIgnoreCase("undefined")) {
                     contexts.add(new Context("server", serverName));
                 }
             }
@@ -501,13 +501,13 @@ public class LuckPermsProvider implements PermissionProvider {
             Set<Context> contexts = null;
             if (contextMap.get(node.getContexts()) == null) {
                 contexts = getGPContexts(node.getContexts());
-                if (serverName != null) {
+                if (serverName != null && !serverName.equalsIgnoreCase("undefined")) {
                     contexts.add(new Context("server", serverName));
                 }
                 contextMap.put(node.getContexts(), contexts);
             } else {
                 contexts = contextMap.get(node.getContexts());
-                if (serverName != null) {
+                if (serverName != null && !serverName.equalsIgnoreCase("undefined")) {
                     contexts.add(new Context("server", serverName));
                 }
             }
@@ -645,7 +645,6 @@ public class LuckPermsProvider implements PermissionProvider {
             }
             boolean match = true;
             for (Context context : entry.getKey()) {
-                boolean found = false;
                 if (!contexts.contains(context)) {
                     match = false;
                     break;
@@ -695,6 +694,41 @@ public class LuckPermsProvider implements PermissionProvider {
         }
 
         cache.put(contextHash, Tristate.UNDEFINED);
+        return Tristate.UNDEFINED;
+    }
+
+    public Tristate getPermissionValueWithRequiredContexts(GDClaim claim, GDPermissionHolder holder, String permission, Set<Context> contexts, String contextFilter) {
+        Map<Set<Context>, Map<String, Boolean>> permanentPermissions = getPermanentPermissions(claim, holder);
+        for (Entry<Set<Context>, Map<String, Boolean>> entry : permanentPermissions.entrySet()) {
+            if (entry.getKey().isEmpty()) {
+                continue;
+            }
+            boolean match = true;
+            for (Context context : entry.getKey()) {
+                if (!contexts.contains(context)) {
+                    match = false;
+                    break;
+                }
+            }
+
+            // Check for required contexts
+            for (Context context : contexts) {
+                if (!context.getKey().contains(contextFilter)) {
+                    if (!entry.getKey().contains(context)) {
+                        match = false;
+                        break;
+                    }
+                }
+            }
+            if (match) {
+                for (Map.Entry<String, Boolean> permEntry : entry.getValue().entrySet()) {
+                    if (FilenameUtils.wildcardMatch(permission, permEntry.getKey())) {
+                        final Tristate value = Tristate.fromBoolean(permEntry.getValue());
+                        return value;
+                    }
+                }
+            }
+        }
         return Tristate.UNDEFINED;
     }
 

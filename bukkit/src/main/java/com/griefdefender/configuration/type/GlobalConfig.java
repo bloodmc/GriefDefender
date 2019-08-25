@@ -25,7 +25,6 @@
 package com.griefdefender.configuration.type;
 
 import com.griefdefender.configuration.category.CustomFlagGroupDefinitionCategory;
-import com.griefdefender.configuration.category.CustomFlagGroupCategory;
 import com.griefdefender.configuration.category.DefaultPermissionCategory;
 import com.griefdefender.configuration.category.EconomyCategory;
 import com.griefdefender.configuration.category.MessageCategory;
@@ -45,9 +44,9 @@ public class GlobalConfig extends ConfigBase {
             + "\n    admin-group=<true|false>: Whether this group is considered for admin use only."
             + "\n    hover=<text>: The hover text to be displayed when hovering over group name in GUI."
             + "\n    title=<text>: The title text to be used for TAB display."
-            + "\n    override=<type>: This is used to force a permission to a specific claim type or global. Accepted values are : 'admin', 'basic', subdivision', 'town', 'global', 'claim UUID'"
-            + "\n    default=<type>: This is used to set a default permission "
             + "\n    value=<true|false>: This is used to set a default value for the flag definition. It is only used in conjunction with 'override=<type>, default=<type> settings."
+            + "\n    contexts=[\"key=value\"]: A list of optional definition contexts that will be applied to all permissions."
+            + "\nNote: This is primary used with 'default' and 'override' contexts. Ex. contexts=[\"default=global\"]"
             + "\nEach group will have an associated permission in order to be viewable."
             + "\nThe 'user' group will use the permission : 'griefdefender.custom.flag.group.user'"
             + "\nThe 'admin' group will use the permission : 'griefdefender.custom.flag.group.admin'"

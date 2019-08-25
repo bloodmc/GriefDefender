@@ -47,26 +47,22 @@ import ninja.leaping.configurate.objectmapping.serialize.TypeSerializer;
 
 public class CustomFlagSerializer implements TypeSerializer<GDCustomFlagDefinition> {
 
-    private static final String INVALID_GD_CONTEXT = "Invalid 'gd-context' specified."
-            + "\nAccepted values are : "
-            + "\ngd_claim:<UUID>"
-            + "\ngd_claim_default:<type>"
-            + "\ngd_claim_override:<type>|<UUID>";
-    //private static final Pattern DATA_PATTERN = Pattern.compile("^?\\[ *((?:[\\w.-]+=[\\#\\w.-]+(?::[\\#\\w\\/.-]+)? *(?:, *(?!\\]$)|(?=\\]$)))+) *\\]$");
-    //private static final Pattern DATA_PATTERN = Pattern.compile("^?\\( *((?:[\\w.-]+=[\\w.-]+(?::[\\w\\/.-]+)? *(?:, *(?!\\)$)|(?=\\)$)))+) *\\)$");
-
     @Override
     public GDCustomFlagDefinition deserialize(TypeToken<?> type, ConfigurationNode node) throws ObjectMappingException {
         final String flagDisplayName = node.getKey().toString();
         final boolean enabled = node.getNode("enabled").getBoolean();
-        final String gdContext = node.getNode("gd-context").getString();
         final String descr = node.getNode("description").getString();
         Component description = TextComponent.empty();
         if (descr != null) {
             description = LegacyComponentSerializer.legacy().deserialize(descr, '&');
         }
 
+        List<String> contextList = node.getNode("contexts").getList(TypeToken.of(String.class));
         List<String> permissionList = node.getNode("permissions").getList(TypeToken.of(String.class));
+        if (permissionList == null) {
+            throw new ObjectMappingException("No permissions found for flag definition '" + flagDisplayName + "'. You must specify at least 1 or more permissions.");
+        }
+
         List<CustomFlagData> flagDataList = new ArrayList<>();
         for (String permissionEntry : permissionList) {
             String permission = permissionEntry.replace(" ", "");
@@ -114,44 +110,42 @@ public class CustomFlagSerializer implements TypeSerializer<GDCustomFlagDefiniti
         }
         final GDCustomFlagDefinition flagDefinition = new GDCustomFlagDefinition(flagDataList, flagDisplayName, description);
         flagDefinition.setIsEnabled(enabled);
-        if (gdContext != null) {
-            final String parts[] = gdContext.split(":");
-            if (parts.length <= 1) {
-                throw new ObjectMappingException(INVALID_GD_CONTEXT);
-            }
-            final String key = parts[0];
-            final String value = parts[1];
-            switch (key) {
-                case "gd_claim" :
-                    UUID uuid = null;
-                    try {
-                        uuid = UUID.fromString(value);
-                    } catch (IllegalArgumentException e) {
-                        throw new ObjectMappingException(INVALID_GD_CONTEXT);
-                    }
-                    break;
-                case "gd_claim_default" :
+        Set<Context> contexts = new HashSet<>();
+        if (contextList != null) {
+            for (String context : contextList) {
+                final String parts[] = context.split("=");
+                if (parts.length <= 1) {
+                    throw new ObjectMappingException("Invalid context '" + context + "' for flag definition '" + flagDisplayName + "'. Skipping...");
+                }
+                final String key = parts[0];
+                final String value = parts[1];
+                if (key.equalsIgnoreCase("default") || key.equalsIgnoreCase("gd_claim_default")) {
                     if (!value.equalsIgnoreCase("global") && !value.equalsIgnoreCase("basic") && !value.equalsIgnoreCase("admin")
                             && !value.equalsIgnoreCase("subdivision") && !value.equalsIgnoreCase("town")) {
-                        throw new ObjectMappingException(INVALID_GD_CONTEXT);
+                        throw new ObjectMappingException("Invalid context '" + key + "' with value '" + value + "'.");
                     }
-                    break;
-                case "gd_claim_override" :
+                    contexts.add(new Context("gd_claim_default", value));
+                } else if (key.equalsIgnoreCase("override") || key.equalsIgnoreCase("gd_claim_override")) {
                     if (!value.equalsIgnoreCase("global") && !value.equalsIgnoreCase("basic") && !value.equalsIgnoreCase("admin")
                             && !value.equalsIgnoreCase("subdivision") && !value.equalsIgnoreCase("town")) {
                         // try UUID
-                        uuid = null;
-                        try {
-                            uuid = UUID.fromString(value);
-                        } catch (IllegalArgumentException e) {
-                            throw new ObjectMappingException(INVALID_GD_CONTEXT);
+                        if (value.length() == 36) {
+                            UUID uuid = null;
+                            try {
+                                uuid = UUID.fromString(value);
+                            } catch (IllegalArgumentException e) {
+                                throw new ObjectMappingException("Invalid context '" + key + "' with value '" + value + "'.");
+                            }
+                        } else {
+                            throw new ObjectMappingException("Invalid context '" + key + "' with value '" + value + "'.");
                         }
                     }
-                    break;
-                default : 
-                    throw new ObjectMappingException(INVALID_GD_CONTEXT);
+                    contexts.add(new Context("gd_claim_override", value));
+                } else {
+                    contexts.add(new Context(key, value));
+                }
             }
-            flagDefinition.setGDContext(new Context(key, value));
+            flagDefinition.setDefinitionContexts(contexts);
         }
         return flagDefinition;
     }
@@ -164,15 +158,21 @@ public class CustomFlagSerializer implements TypeSerializer<GDCustomFlagDefiniti
             description = LegacyComponentSerializer.legacy().serialize((Component) obj.getDescription(), '&');
             node.getNode("description").setValue(description);
         }
-        if (obj.getGDContext() != null) {
-            node.getNode("gd-context").setValue(obj.getGDContext().getKey() + ":" + obj.getGDContext().getValue());
+
+        if (!obj.getDefinitionContexts().isEmpty()) {
+            List<String> contextList = new ArrayList<>();
+            ConfigurationNode contextNode = node.getNode("contexts");
+            for (Context context : obj.getDefinitionContexts()) {
+                contextList.add(context.getKey().toLowerCase() + "=" + context.getValue().toLowerCase());
+            }
+            contextNode.setValue(contextList);
         }
         ConfigurationNode permissionNode = node.getNode("permissions");
         List<String> permissions = new ArrayList<>();
         for (CustomFlagData flagData : obj.getFlagData()) {
             int count = 0;
             final Flag flag = flagData.getFlag();
-            final Set<Context> contexts = flagData.getContexts();
+            final Set<Context> dataContexts = flagData.getContexts();
             String permission = "";
             if (count > 0) {
                 permission += ", ";
@@ -180,10 +180,11 @@ public class CustomFlagSerializer implements TypeSerializer<GDCustomFlagDefiniti
             permission += "flag=" + flag.getName().toLowerCase();
             count++;
 
-            for (Context context : contexts) {
+            for (Context context : dataContexts) {
                 String key = context.getKey();
                 permission += ", " + key + "=" + context.getValue();
             }
+
             permissions.add(permission);
         }
         permissionNode.setValue(permissions);

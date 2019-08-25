@@ -156,11 +156,9 @@ public abstract class ClaimOptionBase extends BaseCommand {
                     GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().PERMISSION_GLOBAL_OPTION);
                     return;
                 }
-            } else {
-                if (!player.hasPermission(GDPermissions.USER_CLAIM_OPTIONS +"." + option.getPermission().toLowerCase())) {
-                    GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().PERMISSION_PLAYER_OPTION);
-                    return;
-                }
+            } else if (!player.hasPermission(GDPermissions.USER_CLAIM_OPTIONS +"." + option.getPermission().toLowerCase())) {
+                GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().PERMISSION_PLAYER_OPTION);
+                return;
             }
         }
 
@@ -361,8 +359,10 @@ public abstract class ClaimOptionBase extends BaseCommand {
                 this.addFilteredContexts(src, filteredContextMap, contextSet, MenuType.DEFAULT, mapEntry.getValue());
             }
             if (displayType != MenuType.DEFAULT) {
-                if (contextSet.contains(claim.getContext())) {
-                    this.addFilteredContexts(src, filteredContextMap, contextSet, MenuType.CLAIM, mapEntry.getValue());
+                if (claim.isTown() || isAdmin) {
+                    if (contextSet.contains(claim.getContext())) {
+                        this.addFilteredContexts(src, filteredContextMap, contextSet, MenuType.CLAIM, mapEntry.getValue());
+                    }
                 }
                 if (contextSet.contains(ClaimContexts.GLOBAL_OVERRIDE_CONTEXT)) {
                     this.addFilteredContexts(src, filteredContextMap, contextSet, MenuType.OVERRIDE, mapEntry.getValue());
@@ -393,11 +393,11 @@ public abstract class ClaimOptionBase extends BaseCommand {
         for (Entry<String, OptionData> mapEntry : filteredContextMap.entrySet()) {
             final OptionData optionData = mapEntry.getValue();
             final Option option = optionData.option;
+            if (option.getName().contains("tax") && !GriefDefenderPlugin.getGlobalConfig().getConfig().claim.bankTaxSystem) {
+                continue;
+            }
             for (OptionContextHolder optionHolder : optionData.optionContextMap.values()) {
                 if (displayType != MenuType.CLAIM && optionHolder.getType() != displayType) {
-                    continue;
-                }
-                if (option.getName().contains("tax") && !GriefDefenderPlugin.getGlobalConfig().getConfig().claim.bankTaxSystem) {
                     continue;
                 }
 

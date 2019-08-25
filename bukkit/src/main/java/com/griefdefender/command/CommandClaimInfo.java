@@ -180,25 +180,25 @@ public class CommandClaimInfo extends BaseCommand {
             claim = claim.getTown().get();
         }
 
-        final GDClaim gpClaim = (GDClaim) claim;
+        final GDClaim gdClaim = (GDClaim) claim;
         final GDPermissionUser owner = PermissionHolderCache.getInstance().getOrCreateUser(claim.getOwnerUniqueId());
         final UUID ownerUniqueId = claim.getOwnerUniqueId();
 
         if (!isAdmin) {
-            isAdmin = playerData.canIgnoreClaim(gpClaim);
+            isAdmin = playerData.canIgnoreClaim(gdClaim);
         }
         // if not owner of claim, validate perms
         if (!isAdmin && !player.getUniqueId().equals(claim.getOwnerUniqueId())) {
-            if (!gpClaim.getInternalClaimData().getContainers().contains(player.getUniqueId()) 
-                    && !gpClaim.getInternalClaimData().getBuilders().contains(player.getUniqueId())
-                    && !gpClaim.getInternalClaimData().getManagers().contains(player.getUniqueId())
+            if (!gdClaim.getInternalClaimData().getContainers().contains(player.getUniqueId()) 
+                    && !gdClaim.getInternalClaimData().getBuilders().contains(player.getUniqueId())
+                    && !gdClaim.getInternalClaimData().getManagers().contains(player.getUniqueId())
                     && !player.hasPermission(GDPermissions.COMMAND_CLAIM_INFO_OTHERS)) {
                 TextAdapter.sendComponent(player, MessageCache.getInstance().CLAIM_NOT_YOURS);
                 return;
             }
         }
 
-        final Component allowEdit = gpClaim.allowEdit(player);
+        final Component allowEdit = gdClaim.allowEdit(player);
 
         List<Component> textList = new ArrayList<>();
         Component name = claim.getName().orElse(null);
@@ -213,15 +213,16 @@ public class CommandClaimInfo extends BaseCommand {
         String containerGroups = "";
         String managerGroups = "";
 
-        final int minClaimLevel = gpClaim.getOwnerMinClaimLevel();
-        double claimY = gpClaim.getOwnerPlayerData() == null ? 65.0D : (minClaimLevel > 65.0D ? minClaimLevel : 65);
-        if (gpClaim.isCuboid()) {
-            claimY = gpClaim.lesserBoundaryCorner.getY();
+        final int minClaimLevel = gdClaim.getOwnerMinClaimLevel();
+        double claimY = gdClaim.getOwnerPlayerData() == null ? 65.0D : (minClaimLevel > 65.0D ? minClaimLevel : 65);
+        if (gdClaim.isCuboid()) {
+            claimY = gdClaim.lesserBoundaryCorner.getY();
         }
-        Location southWest = new Location(gpClaim.getWorld(), gpClaim.lesserBoundaryCorner.getX(), claimY, gpClaim.greaterBoundaryCorner.getZ());
-        Location northWest = new Location(gpClaim.getWorld(), gpClaim.lesserBoundaryCorner.getX(), claimY, gpClaim.lesserBoundaryCorner.getZ());
-        Location southEast = new Location(gpClaim.getWorld(), gpClaim.greaterBoundaryCorner.getX(), claimY, gpClaim.greaterBoundaryCorner.getZ());
-        Location northEast = new Location(gpClaim.getWorld(), gpClaim.greaterBoundaryCorner.getX(), claimY, gpClaim.lesserBoundaryCorner.getZ());
+
+        Location southWest = new Location(gdClaim.getWorld(), gdClaim.lesserBoundaryCorner.getX(), claimY, gdClaim.greaterBoundaryCorner.getZ());
+        Location northWest = new Location(gdClaim.getWorld(), gdClaim.lesserBoundaryCorner.getX(), claimY, gdClaim.lesserBoundaryCorner.getZ());
+        Location southEast = new Location(gdClaim.getWorld(), gdClaim.greaterBoundaryCorner.getX(), claimY, gdClaim.greaterBoundaryCorner.getZ());
+        Location northEast = new Location(gdClaim.getWorld(), gdClaim.greaterBoundaryCorner.getX(), claimY, gdClaim.lesserBoundaryCorner.getZ());
         // String southWestCorner = 
         Date created = null;
         Date lastActive = null;
@@ -268,7 +269,7 @@ public class CommandClaimInfo extends BaseCommand {
         Component worldName = TextComponent.builder()
                 .append(MessageCache.getInstance().LABEL_WORLD.color(TextColor.YELLOW))
                 .append(" : ")
-                .append(gpClaim.getWorld().getName(), TextColor.GRAY).build();
+                .append(gdClaim.getWorld().getName(), TextColor.GRAY).build();
         if (!claim.isWilderness() && !claim.isAdminClaim()) {
             claimName = TextComponent.builder()
                     .append(claimName)
@@ -278,10 +279,10 @@ public class CommandClaimInfo extends BaseCommand {
                     .append(claimCost).build();
         }
         // users
-        final List<UUID> accessorList = gpClaim.getUserTrustList(TrustTypes.ACCESSOR, true);
-        final List<UUID> builderList = gpClaim.getUserTrustList(TrustTypes.BUILDER, true);
-        final List<UUID> containerList = gpClaim.getUserTrustList(TrustTypes.CONTAINER, true);
-        final List<UUID> managerList = gpClaim.getUserTrustList(TrustTypes.MANAGER, true);
+        final List<UUID> accessorList = gdClaim.getUserTrustList(TrustTypes.ACCESSOR, true);
+        final List<UUID> builderList = gdClaim.getUserTrustList(TrustTypes.BUILDER, true);
+        final List<UUID> containerList = gdClaim.getUserTrustList(TrustTypes.CONTAINER, true);
+        final List<UUID> managerList = gdClaim.getUserTrustList(TrustTypes.MANAGER, true);
         for (UUID uuid : accessorList) {
             final GDPermissionUser user = PermissionHolderCache.getInstance().getOrCreateUser(uuid);
             final String userName = user.getFriendlyName();
@@ -312,16 +313,16 @@ public class CommandClaimInfo extends BaseCommand {
         }
 
         // groups
-        for (String group : gpClaim.getGroupTrustList(TrustTypes.ACCESSOR, true)) {
+        for (String group : gdClaim.getGroupTrustList(TrustTypes.ACCESSOR, true)) {
             accessorGroups += group + " ";
         }
-        for (String group : gpClaim.getGroupTrustList(TrustTypes.BUILDER, true)) {
+        for (String group : gdClaim.getGroupTrustList(TrustTypes.BUILDER, true)) {
             builderGroups += group + " ";
         }
-        for (String group : gpClaim.getGroupTrustList(TrustTypes.CONTAINER, true)) {
+        for (String group : gdClaim.getGroupTrustList(TrustTypes.CONTAINER, true)) {
             containerGroups += group + " ";
         }
-        for (String group : gpClaim.getGroupTrustList(TrustTypes.MANAGER, true)) {
+        for (String group : gdClaim.getGroupTrustList(TrustTypes.MANAGER, true)) {
             managerGroups += group + " ";
         }
 
@@ -347,7 +348,7 @@ public class CommandClaimInfo extends BaseCommand {
         if (isAdmin) {
             Component adminSettings = TextComponent.builder()
                     .append(MessageCache.getInstance().CLAIMINFO_UI_ADMIN_SETTINGS).decoration(TextDecoration.ITALIC, true).color(TextColor.RED)
-                    .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createSettingsConsumer(src, claim, generateAdminSettings(src, gpClaim), ClaimTypes.ADMIN))))
+                    .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createSettingsConsumer(src, claim, generateAdminSettings(src, gdClaim), ClaimTypes.ADMIN))))
                     .hoverEvent(HoverEvent.showText(MessageCache.getInstance().CLAIMINFO_UI_CLICK_ADMIN))
                     .build();
             textList.add(adminSettings);
@@ -356,11 +357,11 @@ public class CommandClaimInfo extends BaseCommand {
         Component bankInfo = null;
         Component forSaleText = null;
         if (GriefDefenderPlugin.getInstance().getVaultProvider() != null) {
-             if (GriefDefenderPlugin.getActiveConfig(gpClaim.getWorld().getUID()).getConfig().claim.bankTaxSystem) {
+             if (GriefDefenderPlugin.getActiveConfig(gdClaim.getWorld().getUID()).getConfig().claim.bankTaxSystem) {
                  bankInfo = TextComponent.builder()
                          .append(MessageCache.getInstance().CLAIMINFO_UI_BANK_INFO.color(TextColor.GOLD).decoration(TextDecoration.ITALIC, true))
                          .hoverEvent(HoverEvent.showText(MessageCache.getInstance().CLAIMINFO_UI_BANK_INFO))
-                         .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(Consumer -> { CommandHelper.displayClaimBankInfo(src, gpClaim, gpClaim.isTown() ? true : false, true); })))
+                         .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(Consumer -> { CommandHelper.displayClaimBankInfo(src, gdClaim, gdClaim.isTown() ? true : false, true); })))
                          .build();
              }
              forSaleText = TextComponent.builder()
@@ -398,7 +399,7 @@ public class CommandClaimInfo extends BaseCommand {
         final Component whiteCloseBracket = TextComponent.of("]");
         Component defaultTypeText = TextComponent.builder()
                 .append(whiteOpenBracket)
-                .append(gpClaim.getFriendlyNameType(true))
+                .append(gdClaim.getFriendlyNameType(true))
                 .append(whiteCloseBracket).build();
         if (allowEdit != null && !isAdmin) {
             adminShowText = allowEdit;
@@ -546,11 +547,11 @@ public class CommandClaimInfo extends BaseCommand {
         Component claimRaid = TextComponent.builder()
                 .append("Raid", TextColor.YELLOW)
                 .append(" : ")
-                .append(getClickableInfoText(src, claim, RAID_OVERRIDE, GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Boolean.class), owner, Options.RAID, gpClaim) == true ? TextComponent.of("ON", TextColor.GREEN) : TextComponent.of("OFF", TextColor.RED))).build();
+                .append(getClickableInfoText(src, claim, RAID_OVERRIDE, GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Boolean.class), owner, Options.RAID, gdClaim) == true ? TextComponent.of("ON", TextColor.GREEN) : TextComponent.of("OFF", TextColor.RED))).build();
         Component claimSpawn = null;
         if (claim.getData().getSpawnPos().isPresent()) {
             Vector3i spawnPos = claim.getData().getSpawnPos().get();
-            Location spawnLoc = new Location(gpClaim.getWorld(), spawnPos.getX(), spawnPos.getY(), spawnPos.getZ());
+            Location spawnLoc = new Location(gdClaim.getWorld(), spawnPos.getX(), spawnPos.getY(), spawnPos.getZ());
             claimSpawn = TextComponent.builder()
                     .append(MessageCache.getInstance().LABEL_SPAWN.color(TextColor.GREEN))
                     .append(" : ")
@@ -578,7 +579,7 @@ public class CommandClaimInfo extends BaseCommand {
                         ImmutableMap.of("direction", TextComponent.of("SE").color(TextColor.AQUA)))))
                 .build();
         Component southCorners = TextComponent.builder()
-                .append("SouthCorners", TextColor.YELLOW)
+                .append(MessageCache.getInstance().CLAIMINFO_UI_SOUTH_CORNERS.color(TextColor.YELLOW))
                 .append(" : ")
                 .append(southWestCorner)
                 .append(southEastCorner).build();
@@ -632,7 +633,7 @@ public class CommandClaimInfo extends BaseCommand {
         Component dateCreated = TextComponent.builder()
                 .append(MessageCache.getInstance().LABEL_CREATED.color(TextColor.YELLOW))
                 .append(" : ")
-                .append(created != null ? created.toString() : "Unknown", TextColor.GRAY).build();
+                .append(created != null ? TextComponent.of(created.toString(), TextColor.GRAY) : MessageCache.getInstance().LABEL_UNKNOWN.color(TextColor.GRAY)).build();
         Component dateLastActive = TextComponent.builder()
                 .append(MessageCache.getInstance().CLAIMINFO_UI_LAST_ACTIVE.color(TextColor.YELLOW))
                 .append(" : ")

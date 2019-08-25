@@ -413,26 +413,18 @@ public class BlockEventHandler implements Listener {
         }
 
         Block source = event.getBlock();
+        GDCauseStackManager.getInstance().pushCause(source);
         if (GriefDefenderPlugin.isSourceIdBlacklisted(Flags.EXPLOSION_BLOCK.toString(), source, world.getUID())) {
             return;
         }
 
         final GDPermissionUser user = CauseContextHelper.getEventUser(event.getBlock().getLocation());
-        if (user == null) {
-            // Cancel if no user found
-            event.setCancelled(true);
-            return;
-        }
-
         GDTimings.EXPLOSION_EVENT.startTiming();
         GDClaim targetClaim = null;
         final List<Block> filteredLocations = new ArrayList<>();
         for (Block block : event.blockList()) {
             final Location location = block.getLocation();
             targetClaim =  GriefDefenderPlugin.getInstance().dataStore.getClaimAt(location, targetClaim);
-            /*if (GDFlags.EXPLOSION_SURFACE && location.getPosition().getY() > ((net.minecraft.world.World) world).getSeaLevel()) {
-                result = GPPermissionHandler.getClaimPermission(event, location, targetClaim, GPPermissions.EXPLOSION_SURFACE, source, location.getBlock(), user, true);
-            } else {*/
             Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, GDPermissions.EXPLOSION_BLOCK, source, location.getBlock(), user, true);
             if (result == Tristate.FALSE) {
                 // Avoid lagging server from large explosions.
@@ -443,7 +435,7 @@ public class BlockEventHandler implements Listener {
                 filteredLocations.add(block);
             }
         }
-        // Workaround for SpongeForge bug
+
         if (event.isCancelled()) {
             event.blockList().clear();
         } else if (!filteredLocations.isEmpty()) {

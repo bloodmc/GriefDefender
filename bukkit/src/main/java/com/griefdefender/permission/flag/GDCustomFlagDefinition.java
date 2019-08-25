@@ -44,7 +44,7 @@ import net.kyori.text.format.TextColor;
 public class GDCustomFlagDefinition {
 
     private boolean enabled = true;
-    private Context gdContext;
+    private Set<Context> definitionContexts = new HashSet<>();
     private List<CustomFlagData> data = new ArrayList<>();
     private String displayName;
     private Tristate defaultValue = Tristate.UNDEFINED;
@@ -82,12 +82,12 @@ public class GDCustomFlagDefinition {
         return this.description;
     }
 
-    public Context getGDContext() {
-        return this.gdContext;
+    public Set<Context> getDefinitionContexts() {
+        return this.definitionContexts;
     }
 
-    public void setGDContext(Context context) {
-        this.gdContext = context;
+    public void setDefinitionContexts(Set<Context> contexts) {
+        this.definitionContexts = contexts;
     }
 
     public String getDisplayName() {

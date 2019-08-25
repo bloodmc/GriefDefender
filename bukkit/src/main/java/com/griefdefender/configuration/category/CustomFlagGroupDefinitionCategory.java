@@ -27,6 +27,7 @@ package com.griefdefender.configuration.category;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.griefdefender.api.claim.ClaimContexts;
 import com.griefdefender.permission.flag.GDCustomFlagDefinition;
 import com.griefdefender.permission.flag.GDCustomFlagTypes;
 
@@ -60,6 +61,7 @@ public class CustomFlagGroupDefinitionCategory extends ConfigCategory {
         }
         if (adminGroup.isEnabled() && adminGroup.getFlagDefinitions().isEmpty()) {
             for (GDCustomFlagDefinition definition : GDCustomFlagTypes.ADMIN_FLAGS) {
+                definition.getDefinitionContexts().add(ClaimContexts.GLOBAL_DEFAULT_CONTEXT);
                 adminGroup.getFlagDefinitions().put(definition.getDisplayName(), definition);
             }
             adminGroup.isAdmin = true;

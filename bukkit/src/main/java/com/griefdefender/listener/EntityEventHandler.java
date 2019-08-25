@@ -24,11 +24,13 @@
  */
 package com.griefdefender.listener;
 
+import com.flowpowered.math.vector.Vector3i;
 import com.google.common.reflect.TypeToken;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GDTimings;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.Tristate;
+import com.griefdefender.api.claim.Claim;
 import com.griefdefender.api.claim.TrustType;
 import com.griefdefender.api.claim.TrustTypes;
 import com.griefdefender.api.permission.Context;
@@ -37,6 +39,7 @@ import com.griefdefender.api.permission.option.Options;
 import com.griefdefender.cache.MessageCache;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
+import com.griefdefender.claim.GDClaimManager;
 import com.griefdefender.event.GDCauseStackManager;
 import com.griefdefender.internal.tracking.EntityTracker;
 import com.griefdefender.internal.tracking.entity.GDEntity;
@@ -47,14 +50,15 @@ import com.griefdefender.permission.GDPermissions;
 import com.griefdefender.permission.flag.GDFlags;
 import com.griefdefender.storage.BaseStorage;
 import com.griefdefender.util.CauseContextHelper;
-import com.griefdefender.util.PermissionUtil;
 import com.griefdefender.util.PlayerUtil;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.CreatureSpawner;
+import org.bukkit.entity.Creeper;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.ExperienceOrb;
 import org.bukkit.entity.FallingBlock;
 import org.bukkit.entity.Item;
@@ -62,6 +66,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.entity.TNTPrimed;
 import org.bukkit.entity.Tameable;
+import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -78,7 +83,10 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntitySpawnEvent;
+import org.bukkit.event.entity.ExplosionPrimeEvent;
+import org.bukkit.event.entity.SlimeSplitEvent;
 import org.bukkit.event.entity.SpawnerSpawnEvent;
+import org.bukkit.event.hanging.HangingBreakEvent;
 import org.bukkit.event.vehicle.VehicleDamageEvent;
 import org.bukkit.event.vehicle.VehicleDestroyEvent;
 import org.bukkit.event.vehicle.VehicleEnterEvent;
@@ -153,12 +161,52 @@ public class EntityEventHandler implements Listener {
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
+    public void onExplosionPrimeEvent(ExplosionPrimeEvent event) {
+        final World world = event.getEntity().getLocation().getWorld();
+        if (!GDFlags.EXPLOSION_BLOCK && !GDFlags.EXPLOSION_ENTITY) {
+            return;
+        }
+        if (!GriefDefenderPlugin.getInstance().claimsEnabledForWorld(world.getUID())) {
+            return;
+        }
+
+        GDCauseStackManager.getInstance().pushCause(event.getEntity());
+        GDTimings.ENTITY_EXPLOSION_PRE_EVENT.startTiming();
+        final GDEntity gdEntity = EntityTracker.getCachedEntity(event.getEntity().getEntityId());
+        GDPermissionUser user = null;
+        if (gdEntity != null) {
+            user = PermissionHolderCache.getInstance().getOrCreateUser(gdEntity.getOwnerUUID());
+        } else {
+           user = CauseContextHelper.getEventUser(event.getEntity().getLocation());
+        }
+
+        final Location location = event.getEntity().getLocation();
+        final GDClaim radiusClaim = NMSUtil.getInstance().createClaimFromCenter(location, event.getRadius());
+        final GDClaimManager claimManager = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(location.getWorld().getUID());
+        final Set<Claim> surroundingClaims = claimManager.findOverlappingClaims(radiusClaim);
+        if (surroundingClaims.size() == 0) {
+            return;
+        }
+        for (Claim claim : surroundingClaims) {
+            // Use any location for permission check
+            final Vector3i pos = claim.getLesserBoundaryCorner();
+            Location targetLocation = new Location(location.getWorld(), pos.getX(), pos.getY(), pos.getZ());
+            Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, claim, GDPermissions.EXPLOSION_BLOCK, event.getEntity(), targetLocation, user, true);
+            if (result == Tristate.FALSE) {
+                event.setCancelled(true);
+                break;
+            }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onEntityExplodeEvent(EntityExplodeEvent event) {
         final World world = event.getEntity().getLocation().getWorld();
         if (!GDFlags.EXPLOSION_BLOCK || !GriefDefenderPlugin.getInstance().claimsEnabledForWorld(world.getUID())) {
             return;
         }
 
+        GDCauseStackManager.getInstance().pushCause(event.getEntity());
         // check entity tracker
         final GDEntity gdEntity = EntityTracker.getCachedEntity(event.getEntity().getEntityId());
         GDPermissionUser user = null;
@@ -249,11 +297,22 @@ public class EntityEventHandler implements Listener {
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
-    public void onEntityDamage(EntityDamageByEntityEvent event) {
-        /*if (event.getDamager() instanceof Projectile) {
-            return;
-        }*/
+    public void onHangingBreakEvent(HangingBreakEvent event) {
         GDTimings.ENTITY_DAMAGE_EVENT.startTiming();
+        Object source = event.getCause().name();
+        final Object causeSource = GDCauseStackManager.getInstance().getCurrentCause().first(Entity.class).orElse(null);
+        if (causeSource != null) {
+            source = causeSource;
+        }
+
+        if (protectEntity(event, source, event.getEntity())) {
+            event.setCancelled(true);
+        }
+        GDTimings.ENTITY_DAMAGE_EVENT.stopTiming();
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onEntityDamage(EntityDamageByEntityEvent event) {
         if (event.getDamager() instanceof Player) {
             final Player player = (Player) event.getDamager();
             GDCauseStackManager.getInstance().pushCause(player);
@@ -268,6 +327,7 @@ public class EntityEventHandler implements Listener {
             }
         }
 
+        GDTimings.ENTITY_DAMAGE_EVENT.startTiming();
         if (protectEntity(event, event.getDamager(), event.getEntity())) {
             event.setCancelled(true);
         }
@@ -320,6 +380,13 @@ public class EntityEventHandler implements Listener {
         final GDPermissionUser user = owner != null ? PermissionHolderCache.getInstance().getOrCreateUser(owner) : CauseContextHelper.getEventUser(null);
         if (GriefDefenderPlugin.isSourceIdBlacklisted(Flags.ENTITY_DAMAGE.getName(), source, targetEntity.getWorld().getUID())) {
             return false;
+        }
+
+        if (source instanceof Creeper || source instanceof TNTPrimed) {
+            final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, targetEntity.getLocation(), claim, GDPermissions.EXPLOSION_ENTITY, source, targetEntity, user, true);
+            if (result == Tristate.FALSE) {
+                return true;
+            }
         }
 
         GDPlayerData playerData = null;
@@ -379,12 +446,17 @@ public class EntityEventHandler implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onCreatureSpawn(CreatureSpawnEvent event) {
-        handleEntitySpawn(event, event.getSpawnReason());
+        handleEntitySpawn(event, event.getSpawnReason(), event.getEntity());
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onSpawnerSpawn(SpawnerSpawnEvent event) {
-        handleEntitySpawn(event, event.getSpawner());
+        handleEntitySpawn(event, event.getSpawner(), event.getEntity());
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onSlimeSplitEvent(SlimeSplitEvent event) {
+        handleEntitySpawn(event, event.getEntity(), event.getEntity());
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
@@ -397,26 +469,26 @@ public class EntityEventHandler implements Listener {
             gdEntity.setNotifierUUID(user.getUniqueId());
             EntityTracker.addTempEntity(gdEntity);
         }
-        handleEntitySpawn(event, null);
+        handleEntitySpawn(event, null, event.getEntity());
     }
 
     //@EventHandler(priority = EventPriority.LOWEST)
     //public void onEntitySpawn(EntitySpawnEvent event) {
     //}
 
-    public void handleEntitySpawn(EntitySpawnEvent event, Object source) {
+    public void handleEntitySpawn(Event event, Object source, Entity entity) {
         if (!GDFlags.ENTITY_SPAWN) {
             return;
         }
 
-        final World world = event.getEntity().getWorld();
+        final World world = entity.getWorld();
         if (!GriefDefenderPlugin.getInstance().claimsEnabledForWorld(world.getUID())) {
             return;
         }
         if (GriefDefenderPlugin.isSourceIdBlacklisted(Flags.ENTITY_SPAWN.getName(), source, world.getUID())) {
             return;
         }
-        if (event.getEntity() instanceof FallingBlock) {
+        if (entity instanceof FallingBlock) {
             return;
         }
 
@@ -439,7 +511,6 @@ public class EntityEventHandler implements Listener {
             }
         }
 
-        final Entity entity = event.getEntity();
         // Player drops are handled in PlayerDropItemEvent
         if (source instanceof GDPermissionUser && entity instanceof Item) {
             GDTimings.ENTITY_SPAWN_EVENT.stopTiming();
@@ -475,7 +546,7 @@ public class EntityEventHandler implements Listener {
         }
 
         if (GDPermissionManager.getInstance().getFinalPermission(event, entity.getLocation(), targetClaim, permission, source, entity, user, TrustTypes.ACCESSOR, true) == Tristate.FALSE) {
-            event.setCancelled(true);
+            ((Cancellable) event).setCancelled(true);
         }
 
         GDTimings.ENTITY_SPAWN_EVENT.stopTiming();

@@ -45,25 +45,21 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class GDOption<T> implements Option<T> {
 
-    private static final List<Option> GLOBAL_OPTIONS = Arrays.asList(
-            Options.ABANDON_RETURN_RATIO, Options.BLOCKS_ACCRUED_PER_HOUR, Options.CHEST_EXPIRATION, Options.ECONOMY_BLOCK_COST, 
-            Options.ECONOMY_BLOCK_SELL_RETURN, Options.EXPIRATION, Options.INITIAL_BLOCKS, Options.MAX_ACCRUED_BLOCKS, Options.RADIUS_LIST, 
-            Options.RADIUS_LIST);
+    private static final List<String> GLOBAL_OPTIONS = Arrays.asList(
+            "abandon-return-ratio", "blocks-accrued-per-hour", "chest-expiration", "economy-block-cost", 
+            "economy-block-sell-return", "expiration", "initial-blocks", "max-accrued-blocks", "radius-list", 
+            "radius-list");
     private static final List<String> ADMIN_OPTIONS = Arrays.asList(
-            "player-command", "player-deny-godmode", "player-deny-hunger", "player-gamemode", 
-            "player-health-regen", "player-keep-inventory", "player-keep-level", "player-walk-speed", 
-            "radius-list", "radius-inspect");
-    private static final List<Option> TOWN_OPTIONS = Arrays.asList(
-            Options.ABANDON_RETURN_RATIO, Options.BLOCKS_ACCRUED_PER_HOUR, Options.CHEST_EXPIRATION, Options.ECONOMY_BLOCK_COST, 
-            Options.ECONOMY_BLOCK_SELL_RETURN, Options.EXPIRATION, Options.INITIAL_BLOCKS, Options.MAX_ACCRUED_BLOCKS, 
-            Options.TAX_EXPIRATION, Options.TAX_EXPIRATION_DAYS_KEEP, Options.TAX_RATE);
+            "player-command", "player-deny-godmode", "player-deny-hunger", "player-gamemode",
+            "player-health-regen", "player-keep-inventory", "player-keep-level", "player-walk-speed",
+            "radius-inspect", "radius-list");
 
     private final String id;
     private final String name;
     private final Class<T> allowed;
     private Component description;
-    private boolean isGlobal;
-    private boolean isAdmin;
+    private Boolean isGlobal;
+    private Boolean isAdmin;
 
     GDOption(OptionBuilder<T> builder) {
         this(builder.id, builder.name, builder.typeClass);
@@ -73,8 +69,8 @@ public class GDOption<T> implements Option<T> {
         this.id = id;
         this.name = name;
         this.allowed = allowed;
-        this.isGlobal = GLOBAL_OPTIONS.contains(name);
         this.isAdmin = ADMIN_OPTIONS.contains(name);
+        this.isGlobal = GLOBAL_OPTIONS.contains(name);
     }
 
     @Override

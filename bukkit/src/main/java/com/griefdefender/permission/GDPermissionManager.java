@@ -333,16 +333,7 @@ public class GDPermissionManager implements PermissionManager {
             }
         }
 
-        if (claim.isAdminClaim()) {
-            contexts.add(ClaimContexts.ADMIN_DEFAULT_CONTEXT);
-        } else if (claim.isBasicClaim() || claim.isSubdivision()) {
-            contexts.add(ClaimContexts.BASIC_DEFAULT_CONTEXT);
-        } else if (claim.isTown()) {
-            contexts.add(ClaimContexts.TOWN_DEFAULT_CONTEXT);
-        } else { // wilderness
-            contexts.add(ClaimContexts.WILDERNESS_DEFAULT_CONTEXT);
-        }
-
+        contexts.add(claim.getDefaultTypeContext());
         contexts.add(ClaimContexts.GLOBAL_DEFAULT_CONTEXT);
         //contexts.add(claim.getWorld().getContext());
         contexts.addAll(this.eventContexts);
@@ -689,11 +680,17 @@ public class GDPermissionManager implements PermissionManager {
             } else {
                 contexts.add(ContextGroups.TARGET_MONSTER);
             }
-        } else {
+        }  else if (creatureType.contains("ambient")) {
             if (isSource) {
                 contexts.add(ContextGroups.SOURCE_AMBIENT);
             } else {
                 contexts.add(ContextGroups.TARGET_AMBIENT);
+            }
+        } else {
+            if (isSource) {
+                contexts.add(ContextGroups.SOURCE_MISC);
+            } else {
+                contexts.add(ContextGroups.TARGET_MISC);
             }
         }
     }
