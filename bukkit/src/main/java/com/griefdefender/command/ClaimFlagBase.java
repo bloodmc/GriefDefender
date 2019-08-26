@@ -198,7 +198,7 @@ public abstract class ClaimFlagBase extends BaseCommand {
     protected void showCustomFlags(GDPermissionUser src, GDClaim claim, String displayGroup) {
         final Player player = src.getOnlinePlayer();
         final String lastPermissionMenuType = this.lastActivePresetMenuMap.getIfPresent(player.getUniqueId());
-        if (lastPermissionMenuType != null && lastPermissionMenuType.equalsIgnoreCase(displayGroup)) {
+        if (lastPermissionMenuType != null && !lastPermissionMenuType.equalsIgnoreCase(displayGroup.toLowerCase())) {
             PaginationUtil.getInstance().resetActivePage(player.getUniqueId());
         }
 
@@ -255,9 +255,10 @@ public abstract class ClaimFlagBase extends BaseCommand {
             textComponents.add(TextComponent.of(" "));
         }
 
-        String lastActiveMenu = this.lastActivePresetMenuMap.getIfPresent(src.getUniqueId());
-        if (lastActiveMenu == null) {
-            lastActiveMenu = "user";
+        String lastMenu = this.lastActiveMenuTypeMap.getIfPresent(src.getUniqueId());
+        MenuType lastActiveMenu = MenuType.CLAIM;
+        if (lastMenu != null) {
+            lastActiveMenu = MenuType.valueOf(lastMenu.toUpperCase());
         }
         Component footer = null;
         if (player.hasPermission(GDPermissions.ADVANCED_FLAGS)) {
@@ -266,7 +267,7 @@ public abstract class ClaimFlagBase extends BaseCommand {
             .append(" ")
             .append(TextComponent.builder()
                     .append(TextComponent.of("ADVANCED").color(TextColor.GRAY)
-                    .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createClaimFlagConsumer(src, claim, MenuType.CLAIM)))))
+                    .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createClaimFlagConsumer(src, claim, lastActiveMenu)))))
                     .build())
             .build();
         }
@@ -468,13 +469,15 @@ public abstract class ClaimFlagBase extends BaseCommand {
             textList.add(TextComponent.of(" "));
         }
 
-        final String lastActiveMenu = this.lastActivePresetMenuMap.getIfPresent(src.getUniqueId());
-        
+        String lastActivePresetMenu = this.lastActivePresetMenuMap.getIfPresent(src.getUniqueId());
+        if (lastActivePresetMenu == null) {
+            lastActivePresetMenu = "user";
+        }
         Component footer = null;
         if (player.hasPermission(GDPermissions.ADVANCED_FLAGS)) {
             footer = TextComponent.builder().append(TextComponent.builder()
                     .append(TextComponent.of("PRESET").color(TextColor.GRAY)
-                    .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createCustomFlagConsumer(src, claim, lastActiveMenu)))))
+                    .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createCustomFlagConsumer(src, claim, lastActivePresetMenu)))))
                     .build())
                 .append(" ")
                 .append(whiteOpenBracket)
