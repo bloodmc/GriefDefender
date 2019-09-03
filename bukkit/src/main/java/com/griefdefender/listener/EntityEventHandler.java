@@ -86,10 +86,11 @@ import org.bukkit.event.entity.EntitySpawnEvent;
 import org.bukkit.event.entity.ExplosionPrimeEvent;
 import org.bukkit.event.entity.SlimeSplitEvent;
 import org.bukkit.event.entity.SpawnerSpawnEvent;
-import org.bukkit.event.hanging.HangingBreakEvent;
+import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 import org.bukkit.event.vehicle.VehicleDamageEvent;
 import org.bukkit.event.vehicle.VehicleDestroyEvent;
 import org.bukkit.event.vehicle.VehicleEnterEvent;
+import org.bukkit.event.vehicle.VehicleMoveEvent;
 import org.bukkit.projectiles.ProjectileSource;
 
 import java.util.ArrayList;
@@ -254,6 +255,11 @@ public class EntityEventHandler implements Listener {
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
+    public void onVehicleMove(VehicleMoveEvent event) {
+        CommonEntityEventHandler.getInstance().onEntityMove(event, event.getFrom(), event.getTo(), event.getVehicle());
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onVehicleDamage(VehicleDamageEvent event) {
         GDTimings.ENTITY_DAMAGE_EVENT.startTiming();
         if (protectEntity(event, event.getAttacker(), (Entity) event.getVehicle())) {
@@ -299,15 +305,9 @@ public class EntityEventHandler implements Listener {
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
-    public void onHangingBreakEvent(HangingBreakEvent event) {
+    public void onHangingBreakEvent(HangingBreakByEntityEvent event) {
         GDTimings.ENTITY_DAMAGE_EVENT.startTiming();
-        Object source = event.getCause().name();
-        final Object causeSource = GDCauseStackManager.getInstance().getCurrentCause().first(Entity.class).orElse(null);
-        if (causeSource != null) {
-            source = causeSource;
-        }
-
-        if (protectEntity(event, source, event.getEntity())) {
+        if (protectEntity(event, event.getRemover(), event.getEntity())) {
             event.setCancelled(true);
         }
         GDTimings.ENTITY_DAMAGE_EVENT.stopTiming();
@@ -354,10 +354,13 @@ public class EntityEventHandler implements Listener {
         }
 
         final GDClaim claim = this.baseStorage.getClaimAt(targetEntity.getLocation());
-        if (source instanceof Player && targetEntity instanceof Player) {
+        final Player targetPlayer = targetEntity instanceof Player ? (Player) targetEntity : null;
+        boolean checkedPvp = false;
+        if (source instanceof Player && targetPlayer != null) {
             if (!claim.isPvpEnabled()) {
                 return true;
             }
+            checkedPvp = true;
         }
         String permission = GDPermissions.ENTITY_DAMAGE;
         ProjectileSource projectileSource = null;
@@ -375,7 +378,11 @@ public class EntityEventHandler implements Listener {
                 owner = ((Player) targetEntity).getUniqueId();
             }
         }
-
+        if (!checkedPvp && owner != null && targetPlayer != null && !owner.equals(targetPlayer.getUniqueId())) {
+            if (!claim.isPvpEnabled()) {
+                return true;
+            }
+        }
         if (source != null && source instanceof Player) {
             GDCauseStackManager.getInstance().pushCause(source);
         }
@@ -416,6 +423,10 @@ public class EntityEventHandler implements Listener {
 
         final TrustType trustType = TrustTypes.BUILDER;
         if (GDPermissionManager.getInstance().getFinalPermission(event, targetEntity.getLocation(), claim, permission, source, targetEntity, user, trustType, true) == Tristate.FALSE) {
+            if (source != null && source instanceof Player) {
+                final Player player = (Player) source;
+                CommonEntityEventHandler.getInstance().sendInteractEntityDenyMessage(NMSUtil.getInstance().getActiveItem(player), targetEntity, claim, player);
+            }
             return true;
         }
 

@@ -588,28 +588,24 @@ public abstract class ClaimOptionBase extends BaseCommand {
             String newValue = "";
             if (option.getAllowedType().isAssignableFrom(Tristate.class)) {
                 Tristate value = getMenuTypeValue(TypeToken.of(Tristate.class), currentValue);
-                if (displayType == MenuType.CLAIM && optionHolder.getType() == MenuType.DEFAULT) {
-                    if (value == Tristate.TRUE) {
-                        newValue = "false";
-                    } else if (value == Tristate.FALSE) {
-                        newValue = "undefined";
-                    } else {
-                        newValue = "true";
-                    }
-                } else {
-                    // Always fall back to transient default
+                if (value == Tristate.TRUE) {
+                    newValue = "false";
+                } else if (value == Tristate.FALSE) {
                     newValue = "undefined";
+                } else {
+                    newValue = "true";
                 }
             }
             if (option.getAllowedType().isAssignableFrom(Boolean.class)) {
                 Boolean value = getMenuTypeValue(TypeToken.of(Boolean.class), currentValue);
-                if (value == null) {
-                    newValue = "true";
-                } else if (value) {
-                    newValue = "false";
+                Tristate result = Tristate.UNDEFINED;
+                if (displayType == MenuType.DEFAULT || (displayType == MenuType.CLAIM && optionHolder.getType() == MenuType.DEFAULT)) {
+                    result = Tristate.fromBoolean(!value);
                 } else {
-                    newValue = "undefined";
+                    // Always fall back to transient default
+                    result = Tristate.UNDEFINED;
                 }
+                newValue = result.toString().toLowerCase();
             }
             if (option.getAllowedType().isAssignableFrom(GameModeType.class)) {
                 GameModeType value = getMenuTypeValue(TypeToken.of(GameModeType.class), currentValue);
@@ -842,6 +838,12 @@ public abstract class ClaimOptionBase extends BaseCommand {
         if (type.getRawType().isAssignableFrom(Tristate.class)) {
             if (value.equalsIgnoreCase("undefined")) {
                 return (T) Tristate.UNDEFINED;
+            }
+            if (value.equalsIgnoreCase("true")) {
+                return (T) Tristate.TRUE;
+            }
+            if (value.equalsIgnoreCase("false")) {
+                return (T) Tristate.FALSE;
             }
             int permValue = 0;
             try {

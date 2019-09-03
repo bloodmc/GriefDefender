@@ -665,7 +665,7 @@ public class CommandHelper {
                             .append("[")
                             .append("TP", TextColor.LIGHT_PURPLE)
                             .append("]")
-                            .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(CommandHelper.createTeleportConsumer(src, spawnLoc, claim))))
+                            .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(CommandHelper.createTeleportConsumer(src, spawnLoc, claim, true))))
                             .hoverEvent(HoverEvent.showText(MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.CLAIMLIST_UI_CLICK_TELEPORT_TARGET,
                                     ImmutableMap.of(
                                             "name", teleportName,
@@ -998,6 +998,10 @@ public class CommandHelper {
     }
 
     public static Consumer<CommandSender> createTeleportConsumer(CommandSender src, Location location, Claim claim) {
+        return createTeleportConsumer(src, location, claim, false);
+    }
+
+    public static Consumer<CommandSender> createTeleportConsumer(CommandSender src, Location location, Claim claim, boolean isClaimSpawn) {
         return teleport -> {
             if (!(src instanceof Player)) {
                 // ignore
@@ -1019,7 +1023,12 @@ public class CommandHelper {
                 }
             }
 
-            final double safeY = player.getWorld().getHighestBlockYAt(location);
+            if (isClaimSpawn) {
+                player.teleport(location, TeleportCause.PLUGIN);
+                return;
+            }
+
+            final double safeY = player.getWorld().getEnvironment() != Environment.NETHER ? player.getWorld().getHighestBlockYAt(location) : location.getBlockY();
             location.setY(safeY);
             int currentY = location.getBlockY();
             while (currentY < player.getWorld().getMaxHeight()) {

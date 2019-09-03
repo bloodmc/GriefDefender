@@ -68,6 +68,7 @@ public class CommandClaimName extends BaseCommand {
             claim.getInternalClaimData().setName(text);
         }
         claim.getInternalClaimData().setRequiresSave(true);
+        claim.getInternalClaimData().save();
         final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_NAME,
                 ImmutableMap.of(
                 "name", text));

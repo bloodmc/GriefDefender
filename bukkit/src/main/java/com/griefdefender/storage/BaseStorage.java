@@ -40,6 +40,7 @@ import com.griefdefender.api.claim.ClaimType;
 import com.griefdefender.api.claim.ClaimTypes;
 import com.griefdefender.api.permission.Context;
 import com.griefdefender.api.permission.flag.Flag;
+import com.griefdefender.api.permission.flag.Flags;
 import com.griefdefender.api.permission.option.Option;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.claim.GDClaimManager;
@@ -53,6 +54,7 @@ import com.griefdefender.event.GDCauseStackManager;
 import com.griefdefender.event.GDRemoveClaimEvent;
 import com.griefdefender.internal.util.VecHelper;
 import com.griefdefender.permission.GDPermissions;
+import com.griefdefender.permission.flag.FlagContexts;
 import com.griefdefender.permission.option.GDOption;
 import com.griefdefender.registry.FlagRegistryModule;
 import com.griefdefender.registry.OptionRegistryModule;
@@ -386,6 +388,22 @@ public abstract class BaseStorage {
                     continue;
                 }
                 PermissionUtil.getInstance().setTransientPermission(GriefDefenderPlugin.DEFAULT_HOLDER, GDPermissions.FLAG_BASE + "." + mapEntry.getKey(), mapEntry.getValue(), contexts);
+                if (flag == Flags.ENTITY_DAMAGE) {
+                    // allow monsters to be attacked by default
+                    contexts.add(FlagContexts.TARGET_TYPE_MONSTER);
+                    PermissionUtil.getInstance().setTransientPermission(GriefDefenderPlugin.DEFAULT_HOLDER, GDPermissions.FLAG_BASE + "." + mapEntry.getKey(), true, contexts);
+                    contexts.remove(FlagContexts.TARGET_TYPE_MONSTER);
+                    // deny item frame damage by default
+                    contexts.add(FlagContexts.TARGET_ITEM_FRAME);
+                    PermissionUtil.getInstance().setTransientPermission(GriefDefenderPlugin.DEFAULT_HOLDER, GDPermissions.FLAG_BASE + "." + mapEntry.getKey(), false, contexts);
+                    contexts.remove(FlagContexts.TARGET_ITEM_FRAME);
+                }
+                if (flag == Flags.INTERACT_ENTITY_SECONDARY) {
+                    // deny item frame rotation by default
+                    contexts.add(FlagContexts.TARGET_ITEM_FRAME);
+                    PermissionUtil.getInstance().setTransientPermission(GriefDefenderPlugin.DEFAULT_HOLDER, GDPermissions.FLAG_BASE + "." + mapEntry.getKey(), false, contexts);
+                    contexts.remove(FlagContexts.TARGET_ITEM_FRAME);
+                }
             }
             PermissionUtil.getInstance().refreshCachedData(GriefDefenderPlugin.DEFAULT_HOLDER);
         });

@@ -659,7 +659,7 @@ public class LuckPermsProvider implements PermissionProvider {
                     }
                 }
                 // If we get here, continue on normally
-                break;
+                continue;
             }
         }
 
@@ -689,7 +689,7 @@ public class LuckPermsProvider implements PermissionProvider {
                     }
                 }
                 // If we get here, continue on normally
-                break;
+                continue;
             }
         }
 

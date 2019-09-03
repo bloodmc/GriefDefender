@@ -32,15 +32,14 @@ public class GDClaimType implements ClaimType {
 
     private final String id;
     private final String name;
-    private final Context context;
     private final Context defaultContext;
     private final Context overrideContext;
 
     public GDClaimType(String id, String name) {
         this.id = id;
         this.name = name;
-        this.context = new Context("gd_claim_type", name.toLowerCase());
-        if (name.equalsIgnoreCase("any")) {
+        
+        if (name.equalsIgnoreCase("any") || name.equalsIgnoreCase("global")) {
             this.defaultContext = ClaimContexts.GLOBAL_DEFAULT_CONTEXT;
             this.overrideContext = ClaimContexts.GLOBAL_OVERRIDE_CONTEXT;
         } else if (name.equalsIgnoreCase("admin")) {
@@ -80,7 +79,7 @@ public class GDClaimType implements ClaimType {
 
     @Override
     public Context getContext() {
-        return this.context;
+        return this.defaultContext;
     }
 
     @Override

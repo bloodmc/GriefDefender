@@ -30,23 +30,33 @@ import com.griefdefender.api.ChatTypes;
 import com.griefdefender.api.User;
 import com.griefdefender.api.claim.Claim;
 import com.griefdefender.api.event.BorderClaimEvent;
+import com.griefdefender.cache.PermissionHolderCache;
+
 import net.kyori.text.Component;
+
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Player;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.Optional;
+import java.util.UUID;
 
 public class GDBorderClaimEvent extends GDClaimEvent implements BorderClaimEvent {
 
     private final User user;
+    private final Entity entity;
+    private final UUID uniqueId;
     private final Claim exitClaim;
     private Component enterMessage;
     private Component exitMessage;
     private ChatType enterChatType = ChatTypes.CHAT;
     private ChatType exitChatType = ChatTypes.CHAT;
 
-    public GDBorderClaimEvent(User user, Claim exit, Claim enter) {
+    public GDBorderClaimEvent(Entity entity, Claim exit, Claim enter) {
         super(enter);
-        this.user = user;
+        this.user = entity instanceof Player ? PermissionHolderCache.getInstance().getOrCreateUser((Player) entity) : null;
+        this.entity = entity;
+        this.uniqueId = entity.getUniqueId();
         this.exitClaim = exit;
         final int defaultChatType = GriefDefenderPlugin.getGlobalConfig().getConfig().message.enterExitChatType;
         if (defaultChatType == 1) {
@@ -60,9 +70,18 @@ public class GDBorderClaimEvent extends GDClaimEvent implements BorderClaimEvent
         return this.exitClaim;
     }
 
+    public Entity getEntity() {
+        return this.entity;
+    }
+
     @Override
-    public User getUser() {
-        return this.user;
+    public UUID getEntityUniqueId() {
+        return this.uniqueId;
+    }
+
+    @Override
+    public Optional<User> getUser() {
+        return Optional.ofNullable(this.user);
     }
 
     @Override

@@ -42,6 +42,8 @@ public class GDPermissions {
     public static final String COMMAND_GIVE_PET = "griefdefender.user.claim.command.give.pet";
     public static final String COMMAND_CLAIM_BANK = "griefdefender.user.claim.command.bank";
     public static final String COMMAND_CLAIM_BUY = "griefdefender.user.claim.command.buy";
+    public static final String COMMAND_CLAIM_CONTRACT = "griefdefender.user.claim.command.contract";
+    public static final String COMMAND_CLAIM_EXPAND = "griefdefender.user.claim.command.expand";
     public static final String COMMAND_CLAIM_INFO_OTHERS = "griefdefender.user.claim.command.info.others";
     public static final String COMMAND_CLAIM_INFO_BASE = "griefdefender.user.claim.command.info.base";
     public static final String COMMAND_CLAIM_INFO_TELEPORT_OTHERS = "griefdefender.user.claim.command.info.teleport.others";

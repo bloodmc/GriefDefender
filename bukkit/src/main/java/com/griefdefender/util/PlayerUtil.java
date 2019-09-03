@@ -60,6 +60,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class PlayerUtil {
 
+    private static BlockFace[] faces = { BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST};
+
     private static PlayerUtil instance;
 
     public static PlayerUtil getInstance() {
@@ -68,6 +70,20 @@ public class PlayerUtil {
 
     static {
         instance = new PlayerUtil();
+    }
+
+    public BlockFace getBlockFace(Player player) {
+        return faces[Math.round(player.getLocation().getYaw() / 90f) & 0x3].getOppositeFace();
+    }
+
+    public BlockFace getBlockFace(String param) {
+        BlockFace face = null;
+        try {
+            face = BlockFace.valueOf(param);
+        } catch (IllegalArgumentException e) {
+            // ignore
+        }
+        return face;
     }
 
     public ClaimType getClaimTypeFromShovel(ShovelType shovelMode) {

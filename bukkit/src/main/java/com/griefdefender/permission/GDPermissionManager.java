@@ -282,8 +282,7 @@ public class GDPermissionManager implements PermissionManager {
         for (Claim parentClaim : inheritParents) {
             GDClaim parent = (GDClaim) parentClaim;
             // check parent context
-            contexts.add(parent.getContext());  
-
+            contexts.add(parent.getContext());
             Tristate value = PermissionUtil.getInstance().getPermissionValue((GDClaim) claim, holder, permission, contexts);
             if (value != Tristate.UNDEFINED) {
                 return processResult(claim, permission, value, holder);
@@ -300,43 +299,46 @@ public class GDPermissionManager implements PermissionManager {
         }
 
         if (holder == GriefDefenderPlugin.DEFAULT_HOLDER) {
-            return getFlagDefaultPermission(claim, permission);
+            return getFlagDefaultPermission(claim, permission, contexts);
         }
 
-        return getClaimFlagPermission(claim, permission);
+        return getClaimFlagPermission(claim, permission, contexts);
     }
 
     private Tristate getClaimFlagPermission(Claim claim, String permission) {
-        Set<Context> contexts = new HashSet<>();
-        contexts.add(claim.getContext());
-        contexts.add(claim.getType().getContext());
-        contexts.addAll(this.eventContexts);
+        return this.getClaimFlagPermission(claim, permission, new HashSet<>());
+    }
+
+    private Tristate getClaimFlagPermission(Claim claim, String permission, Set<Context> contexts) {
+        if (contexts.isEmpty()) {
+            final List<Claim> inheritParents = claim.getInheritedParents();
+            contexts.addAll(this.eventContexts);
+            for (Claim parentClaim : inheritParents) {
+                GDClaim parent = (GDClaim) parentClaim;
+                // check parent context
+                contexts.add(parent.getContext());
+                Tristate value = PermissionUtil.getInstance().getPermissionValue((GDClaim) claim, GriefDefenderPlugin.DEFAULT_HOLDER, permission, contexts);
+                if (value != Tristate.UNDEFINED) {
+                    return processResult(claim, permission, value, GriefDefenderPlugin.DEFAULT_HOLDER);
+                }
+
+                contexts.remove(parent.getContext());
+            }
+            contexts.add(claim.getContext());
+        }
 
         Tristate value = PermissionUtil.getInstance().getPermissionValue((GDClaim) claim, GriefDefenderPlugin.DEFAULT_HOLDER, permission, contexts);
         if (value != Tristate.UNDEFINED) {
             return processResult(claim, permission, value, GriefDefenderPlugin.DEFAULT_HOLDER);
         }
 
-        return getFlagDefaultPermission(claim, permission);
+        return getFlagDefaultPermission(claim, permission, contexts);
     }
 
     // Only uses world and claim type contexts
-    private Tristate getFlagDefaultPermission(Claim claim, String permission) {
-        final GDClaim gpClaim = (GDClaim) claim;
-        // Fallback to defaults
-        Set<Context> contexts = new HashSet<>();
-        if (gpClaim.parent != null && claim.getData().doesInheritParent()) {
-            if (gpClaim.parent.parent != null && gpClaim.parent.getData().doesInheritParent()) {
-                claim = gpClaim.parent.parent;
-            } else {
-                claim = gpClaim.parent;
-            }
-        }
-
+    private Tristate getFlagDefaultPermission(Claim claim, String permission, Set<Context> contexts) {
         contexts.add(claim.getDefaultTypeContext());
         contexts.add(ClaimContexts.GLOBAL_DEFAULT_CONTEXT);
-        //contexts.add(claim.getWorld().getContext());
-        contexts.addAll(this.eventContexts);
         Tristate value = PermissionUtil.getInstance().getPermissionValue((GDClaim) claim, GriefDefenderPlugin.DEFAULT_HOLDER, permission, contexts);
         if (value != Tristate.UNDEFINED) {
             return processResult(claim, permission, value, GriefDefenderPlugin.DEFAULT_HOLDER);

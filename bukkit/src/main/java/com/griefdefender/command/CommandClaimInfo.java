@@ -540,10 +540,16 @@ public class CommandClaimInfo extends BaseCommand {
                 .append(MessageCache.getInstance().CLAIMINFO_UI_DENY_MESSAGES.color(TextColor.YELLOW))
                 .append(" : ")
                 .append(getClickableInfoText(src, claim, DENY_MESSAGES, claim.getData().allowDenyMessages() ? TextComponent.of("ON", TextColor.GREEN) : TextComponent.of("OFF", TextColor.RED))).build();
+        Component pvpSetting = TextComponent.of("UNDEFINED", TextColor.GRAY);
+        if (claim.getData().getPvpOverride() == Tristate.TRUE) {
+            pvpSetting = TextComponent.of("ON", TextColor.GREEN);
+        } else if (claim.getData().getPvpOverride() == Tristate.FALSE) {
+            pvpSetting = TextComponent.of("OFF", TextColor.RED);
+        }
         Component claimPvP = TextComponent.builder()
                 .append("PvP", TextColor.YELLOW)
                 .append(" : ")
-                .append(getClickableInfoText(src, claim, PVP_OVERRIDE, claim.getData().getPvpOverride() == Tristate.TRUE ? TextComponent.of("ON", TextColor.GREEN) : TextComponent.of("OFF", TextColor.RED))).build();
+                .append(getClickableInfoText(src, claim, PVP_OVERRIDE, pvpSetting)).build();
         Component claimRaid = TextComponent.builder()
                 .append("Raid", TextColor.YELLOW)
                 .append(" : ")
@@ -556,7 +562,7 @@ public class CommandClaimInfo extends BaseCommand {
                     .append(MessageCache.getInstance().LABEL_SPAWN.color(TextColor.GREEN))
                     .append(" : ")
                     .append(spawnPos.toString(), TextColor.GRAY)
-                    .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(CommandHelper.createTeleportConsumer(player, spawnLoc, claim))))
+                    .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(CommandHelper.createTeleportConsumer(player, spawnLoc, claim, true))))
                     .hoverEvent(HoverEvent.showText(MessageCache.getInstance().CLAIMINFO_UI_TELEPORT_SPAWN))
                     .build();
         }

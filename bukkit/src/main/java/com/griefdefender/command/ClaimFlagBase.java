@@ -394,6 +394,7 @@ public abstract class ClaimFlagBase extends BaseCommand {
             }
         }
 
+        final List<Claim> inheritParents = claim.getInheritedParents();
         for (Map.Entry<Set<Context>, Map<String, Boolean>> mapEntry : PermissionUtil.getInstance().getPermanentPermissions(claim, this.subject).entrySet()) {
             final Set<Context> contextSet = mapEntry.getKey();
             if (contextSet.contains(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)) {
@@ -406,6 +407,13 @@ public abstract class ClaimFlagBase extends BaseCommand {
                 if (contextSet.contains(claim.getContext())) {
                     this.addFilteredContexts(filteredContextMap, contextSet, MenuType.CLAIM, mapEntry.getValue());
                 }
+                for (Claim parentClaim : inheritParents) {
+                    GDClaim parent = (GDClaim) parentClaim;
+                    // check parent context
+                    if (contextSet.contains(parent.getContext())) {
+                        this.addFilteredContexts(filteredContextMap, contextSet, MenuType.INHERIT, mapEntry.getValue());
+                    }
+                }
                 if (contextSet.contains(ClaimContexts.GLOBAL_OVERRIDE_CONTEXT)) {
                     this.addFilteredContexts(filteredContextMap, contextSet, MenuType.OVERRIDE, mapEntry.getValue());
                 }
@@ -413,20 +421,6 @@ public abstract class ClaimFlagBase extends BaseCommand {
                     this.addFilteredContexts(filteredContextMap, contextSet, MenuType.OVERRIDE, mapEntry.getValue());
                 } else if (contextSet.contains(claim.getOverrideTypeContext())) {
                     this.addFilteredContexts(filteredContextMap, contextSet, MenuType.OVERRIDE, mapEntry.getValue());
-                }
-            }
-        }
-
-        Map<Set<Context>, ClaimClickData> inheritPermissionMap = Maps.newHashMap();
-
-        final List<Claim> inheritParents = claim.getInheritedParents();
-        Collections.reverse(inheritParents);
-        for (Claim current : inheritParents) {
-            GDClaim currentClaim = (GDClaim) current;
-            for (Map.Entry<Set<Context>, Map<String, Boolean>> mapEntry : PermissionUtil.getInstance().getPermanentPermissions(claim, this.subject).entrySet()) {
-                final Set<Context> contextSet = mapEntry.getKey();
-                if (contextSet.contains(currentClaim.getContext())) {
-                    inheritPermissionMap.put(mapEntry.getKey(), new ClaimClickData(currentClaim, mapEntry.getValue()));
                 }
             }
         }
@@ -755,9 +749,27 @@ public abstract class ClaimFlagBase extends BaseCommand {
                 hasEditPermission = false;
             }
         } else if (flagType == MenuType.INHERIT) {
-            hoverEventText = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.FLAG_UI_INHERIT_PARENT,
-                    ImmutableMap.of("name", claim.getFriendlyNameType()));
-            hasEditPermission = false;
+            UUID parentUniqueId = null;
+            for (Context context : contexts) {
+                if (context.getKey().equals("gd_claim")) {
+                    try {
+                        parentUniqueId = UUID.fromString(context.getValue());
+                    } catch (IllegalArgumentException e) {
+                        // ignore
+                    }
+                }
+            }
+            // should never happen but just in case
+            if (parentUniqueId == null) {
+                hoverEventText = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.FLAG_UI_INHERIT_PARENT,
+                        ImmutableMap.of("name", "unknown"));
+                hasEditPermission = false;
+            } else {
+                final GDClaim parentClaim = (GDClaim) GriefDefenderPlugin.getInstance().dataStore.getClaim(claim.getWorldUniqueId(), parentUniqueId);
+                hoverEventText = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.FLAG_UI_INHERIT_PARENT,
+                        ImmutableMap.of("name", parentClaim.getFriendlyNameType()));
+                hasEditPermission = false;
+            }
         } else {
             Component denyReason = claim.allowEdit(player);
             if (denyReason != null) {

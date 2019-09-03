@@ -88,6 +88,7 @@ public class GDFlag implements Flag {
                 case "block-place" :
                 case "collide-block" :
                 case "collide-entity" :
+                case "entity-damage" :
                 case "explosion-block" :
                 case "explosion-entity" :
                 case "fire-spread" :

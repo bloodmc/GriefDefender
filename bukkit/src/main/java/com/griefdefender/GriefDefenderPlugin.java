@@ -88,11 +88,13 @@ import com.griefdefender.command.CommandClaimBasic;
 import com.griefdefender.command.CommandClaimBuy;
 import com.griefdefender.command.CommandClaimBuyBlocks;
 import com.griefdefender.command.CommandClaimClear;
+import com.griefdefender.command.CommandClaimContract;
 import com.griefdefender.command.CommandClaimCuboid;
 import com.griefdefender.command.CommandClaimDelete;
 import com.griefdefender.command.CommandClaimDeleteAll;
 import com.griefdefender.command.CommandClaimDeleteAllAdmin;
 import com.griefdefender.command.CommandClaimDeleteTop;
+import com.griefdefender.command.CommandClaimExpand;
 import com.griefdefender.command.CommandClaimFarewell;
 import com.griefdefender.command.CommandClaimFlag;
 import com.griefdefender.command.CommandClaimFlagDebug;
@@ -567,11 +569,13 @@ public class GriefDefenderPlugin {
         manager.registerCommand(new CommandClaimBuy());
         manager.registerCommand(new CommandClaimBuyBlocks());
         manager.registerCommand(new CommandClaimClear());
+        manager.registerCommand(new CommandClaimContract());
         manager.registerCommand(new CommandClaimCuboid());
         manager.registerCommand(new CommandClaimDelete());
         manager.registerCommand(new CommandClaimDeleteAll());
         manager.registerCommand(new CommandClaimDeleteAllAdmin());
         manager.registerCommand(new CommandClaimDeleteTop());
+        manager.registerCommand(new CommandClaimExpand());
         manager.registerCommand(new CommandClaimFarewell());
         manager.registerCommand(new CommandClaimFlag());
         manager.registerCommand(new CommandClaimFlagDebug());
@@ -705,6 +709,16 @@ public class GriefDefenderPlugin {
             tabList.add("entity");
             tabList.add("item");
             tabList.add("hand");
+            return ImmutableList.copyOf(tabList);
+        });
+        manager.getCommandCompletions().registerCompletion("gdblockfaces", c -> {
+            List<String> tabList = new ArrayList<>();
+            tabList.add("north");
+            tabList.add("east");
+            tabList.add("south");
+            tabList.add("west");
+            tabList.add("up");
+            tabList.add("down");
             return ImmutableList.copyOf(tabList);
         });
         manager.getCommandCompletions().registerCompletion("gdclaimtypes", c -> {

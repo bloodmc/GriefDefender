@@ -255,6 +255,18 @@ public class GDClaim implements Claim {
         return this.claimVisual;
     }
 
+    public void resetVisuals() {
+        List<UUID> playersWatching = new ArrayList<>(this.playersWatching);
+        for (UUID playerUniqueId : playersWatching) {
+            final Player spongePlayer = Bukkit.getServer().getPlayer(playerUniqueId);
+            final GDPlayerData data = this.worldClaimManager.getOrCreatePlayerData(playerUniqueId);
+            if (spongePlayer != null) {
+                data.revertActiveVisual(spongePlayer);
+            }
+        }
+        this.claimVisual = null;
+    }
+
     public GDPlayerData getOwnerPlayerData() {
         if (this.ownerPlayerData == null && this.ownerUniqueId != null) {
             this.ownerPlayerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(this.world.getUID(), this.ownerUniqueId);
@@ -1310,6 +1322,7 @@ public class GDClaim implements Claim {
         if (result.getClaims().size() > 1) {
             this.migrateClaims(new ArrayList<>(result.getClaims()));
         }
+        this.resetVisuals();
         return new GDClaimResult(this, ClaimResultType.SUCCESS);
     }
 
@@ -1430,6 +1443,7 @@ public class GDClaim implements Claim {
         if (result.getClaims().size() > 1) {
             this.migrateClaims(new ArrayList<>(result.getClaims()));
         }
+        this.resetVisuals();
         return new GDClaimResult(this, ClaimResultType.SUCCESS);
     }
 
