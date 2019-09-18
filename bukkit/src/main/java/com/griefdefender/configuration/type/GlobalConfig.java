@@ -75,7 +75,7 @@ public class GlobalConfig extends ConfigBase {
     public MigratorCategory migrator = new MigratorCategory();
     @Setting(value = "modules")
     public ModuleCategory modules = new ModuleCategory();
-    @Setting(value = "default-global-permissions")
+    @Setting(value = "default-permissions")
     public DefaultPermissionCategory permissionCategory = new DefaultPermissionCategory();
     @Setting
     public ThreadCategory thread = new ThreadCategory();

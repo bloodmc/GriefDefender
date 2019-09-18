@@ -29,7 +29,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import org.bukkit.OfflinePlayer;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import com.griefdefender.GDPlayerData;
@@ -113,14 +112,6 @@ public interface PermissionProvider {
 
     /**
      * Clears all permissions that contain {@link Context}
-     * from passed player.
-     * 
-     * @param claim The claim
-     */
-    void clearPermissions(OfflinePlayer player, Context context);
-
-    /**
-     * Clears all permissions that contain {@link Context}
      * from passed holder.
      * 
      * @param claim The claim
@@ -164,25 +155,22 @@ public interface PermissionProvider {
     /**
      * Gets all persisted permissions with associated contexts of holder.
      * 
-     * @param claim The current claim
      * @param holder The holder
      * @return An immutable map of persisted permissions or empty if none.
      */
-    Map<Set<Context>, Map<String, Boolean>> getPermanentPermissions(GDClaim claim, GDPermissionHolder holder);
+    Map<Set<Context>, Map<String, Boolean>> getPermanentPermissions(GDPermissionHolder holder);
 
     /**
      * Gets all transient permissions with associated contexts of holder.
      * 
-     * @param claim The current claim
      * @param holder The holder
      * @return An immutable map of transient permissions or empty if none.
      */
-    Map<Set<Context>, Map<String, Boolean>> getTransientPermissions(GDClaim claim, GDPermissionHolder holder);
+    Map<Set<Context>, Map<String, Boolean>> getTransientPermissions(GDPermissionHolder holder);
 
     /**
      * Gets all persisted options with associated contexts of holder.
      * 
-     * @param claim The current claim
      * @param holder The holder
      * @return An immutable map of persisted options or empty if none.
      */
@@ -191,7 +179,6 @@ public interface PermissionProvider {
     /**
      * Gets all transient options with associated contexts of holder.
      * 
-     * @param claim The current claim
      * @param holder The holder
      * @return An immutable map of transient options or empty if none.
      */
@@ -200,29 +187,26 @@ public interface PermissionProvider {
     /**
      * Gets all persisted options and associated values of holder.
      * 
-     * @param claim The current claim
      * @param holder The holder
      * @return An immutable map of persisted options or empty if none.
      */
-    Map<String, String> getPermanentOptions(GDClaim claim, GDPermissionHolder holder, Set<Context> contexts);
+    Map<String, String> getPermanentOptions(GDPermissionHolder holder, Set<Context> contexts);
 
     /**
      * Gets all transient options and associated values of holder.
      * 
-     * @param claim The current claim
      * @param holder The holder
      * @return An immutable map of transient options or empty if none.
      */
-    Map<String, String> getTransientOptions(GDClaim claim, GDPermissionHolder holder, Set<Context> contexts);
+    Map<String, String> getTransientOptions(GDPermissionHolder holder, Set<Context> contexts);
 
     /**
      * Gets all persisted permissions, including inherited nodes, with associated contexts of holder.
      * 
-     * @param claim The current claim
      * @param holder The holder
      * @return An immutable map of persisted permissions or empty if none.
      */
-    Map<Set<Context>, Map<String, Boolean>> getAllPermissions(GDClaim claim, GDPermissionHolder holder);
+    Map<Set<Context>, Map<String, Boolean>> getAllPermissions(GDPermissionHolder holder);
 
     /**
      * Gets the current value of a permission assigned to a holder.

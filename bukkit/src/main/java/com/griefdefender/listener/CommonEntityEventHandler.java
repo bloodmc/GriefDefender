@@ -98,6 +98,14 @@ public class CommonEntityEventHandler {
 
         final Player player = targetEntity instanceof Player ? (Player) targetEntity : null;
         final GDPermissionUser user = player != null ? PermissionHolderCache.getInstance().getOrCreateUser(player) : null;
+        if (user != null) {
+            if (user.getInternalPlayerData().teleportDelay > 0) {
+                if (!toPos.equals(VecHelper.toVector3i(user.getInternalPlayerData().teleportSourceLocation))) {
+                    user.getInternalPlayerData().teleportDelay = 0;
+                    TextAdapter.sendComponent(player, MessageCache.getInstance().TELEPORT_MOVE_CANCEL);
+                }
+            }
+        }
         final World world = targetEntity.getWorld();
         if (!GriefDefenderPlugin.getInstance().claimsEnabledForWorld(world.getUID())) {
             return;

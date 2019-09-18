@@ -140,7 +140,7 @@ public abstract class ClaimFlagBase extends BaseCommand {
             return;
         }
 
-        if (flag != null && !player.hasPermission(GDPermissions.USER_CLAIM_FLAGS + flag.getName())) {
+        if (flag != null && !player.hasPermission(GDPermissions.USER_CLAIM_FLAGS + "." + flag.getName().toLowerCase())) {
             TextAdapter.sendComponent(player, MessageCache.getInstance().PERMISSION_FLAG_USE);
             return;
         }
@@ -387,20 +387,21 @@ public abstract class ClaimFlagBase extends BaseCommand {
         overrideContexts.add(claim.getOverrideClaimContext());
 
         Map<String, FlagData> filteredContextMap = new HashMap<>();
-        for (Map.Entry<Set<Context>, Map<String, Boolean>> mapEntry : PermissionUtil.getInstance().getTransientPermissions(claim, this.subject).entrySet()) {
+        for (Map.Entry<Set<Context>, Map<String, Boolean>> mapEntry : PermissionUtil.getInstance().getTransientPermissions(this.subject).entrySet()) {
             final Set<Context> contextSet = mapEntry.getKey();
-            if (contextSet.contains(claim.getDefaultTypeContext()) || contextSet.contains(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)) {
+            if (contextSet.contains(claim.getDefaultTypeContext())) {
+                this.addFilteredContexts(filteredContextMap, contextSet, MenuType.DEFAULT, mapEntry.getValue());
+            } else if (contextSet.contains(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)) {
                 this.addFilteredContexts(filteredContextMap, contextSet, MenuType.DEFAULT, mapEntry.getValue());
             }
         }
 
         final List<Claim> inheritParents = claim.getInheritedParents();
-        for (Map.Entry<Set<Context>, Map<String, Boolean>> mapEntry : PermissionUtil.getInstance().getPermanentPermissions(claim, this.subject).entrySet()) {
+        for (Map.Entry<Set<Context>, Map<String, Boolean>> mapEntry : PermissionUtil.getInstance().getPermanentPermissions(this.subject).entrySet()) {
             final Set<Context> contextSet = mapEntry.getKey();
-            if (contextSet.contains(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)) {
-                this.addFilteredContexts(filteredContextMap, contextSet, MenuType.DEFAULT, mapEntry.getValue());
-            }
             if (contextSet.contains(claim.getDefaultTypeContext())) {
+                this.addFilteredContexts(filteredContextMap, contextSet, MenuType.DEFAULT, mapEntry.getValue());
+            } else if (contextSet.contains(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)) {
                 this.addFilteredContexts(filteredContextMap, contextSet, MenuType.DEFAULT, mapEntry.getValue());
             }
             if (displayType != MenuType.DEFAULT) {
@@ -777,7 +778,7 @@ public abstract class ClaimFlagBase extends BaseCommand {
                 hasEditPermission = false;
             } else {
                 // check flag perm
-                if (!player.hasPermission(GDPermissions.USER_CLAIM_FLAGS + flag.getName())) {
+                if (!player.hasPermission(GDPermissions.USER_CLAIM_FLAGS + "." + flag.getName().toLowerCase())) {
                     hoverEventText = MessageCache.getInstance().PERMISSION_FLAG_USE;
                     hasEditPermission = false;
                 }

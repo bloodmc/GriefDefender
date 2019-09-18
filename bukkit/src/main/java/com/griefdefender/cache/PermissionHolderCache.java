@@ -43,9 +43,9 @@ import java.util.concurrent.TimeUnit;
 public class PermissionHolderCache {
 
     private static PermissionHolderCache instance;
-    private final Cache<UUID, GDPermissionUser> userCache = Caffeine.newBuilder().expireAfterAccess(30, TimeUnit.MINUTES)
+    private final Cache<UUID, GDPermissionUser> userCache = Caffeine.newBuilder().expireAfterAccess(10, TimeUnit.MINUTES)
             .build();
-    private final Cache<String, GDPermissionGroup> groupCache = Caffeine.newBuilder().expireAfterAccess(30, TimeUnit.MINUTES)
+    private final Cache<String, GDPermissionGroup> groupCache = Caffeine.newBuilder().expireAfterAccess(10, TimeUnit.MINUTES)
             .build();
     private final ConcurrentHashMap<GDPermissionHolder, Cache<Integer, Tristate>> permissionCache = new ConcurrentHashMap<>();
 
@@ -54,14 +54,7 @@ public class PermissionHolderCache {
             return null;
         }
 
-        GDPermissionUser holder = this.userCache.getIfPresent(user.getUniqueId());
-        if (holder != null) {
-            return holder;
-        }
-
-        holder = new GDPermissionUser(user);
-        this.userCache.put(user.getUniqueId(), holder);
-        return holder;
+        return this.getOrCreateUser(user.getUniqueId());
     }
 
     public GDPermissionUser getOrCreateUser(UUID uuid) {

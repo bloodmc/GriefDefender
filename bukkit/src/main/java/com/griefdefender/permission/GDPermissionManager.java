@@ -88,6 +88,7 @@ import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
@@ -338,8 +339,13 @@ public class GDPermissionManager implements PermissionManager {
     // Only uses world and claim type contexts
     private Tristate getFlagDefaultPermission(Claim claim, String permission, Set<Context> contexts) {
         contexts.add(claim.getDefaultTypeContext());
-        contexts.add(ClaimContexts.GLOBAL_DEFAULT_CONTEXT);
         Tristate value = PermissionUtil.getInstance().getPermissionValue((GDClaim) claim, GriefDefenderPlugin.DEFAULT_HOLDER, permission, contexts);
+        if (value != Tristate.UNDEFINED) {
+            return processResult(claim, permission, value, GriefDefenderPlugin.DEFAULT_HOLDER);
+        }
+        contexts.remove(claim.getDefaultTypeContext());
+        contexts.add(ClaimContexts.GLOBAL_DEFAULT_CONTEXT);
+        value = PermissionUtil.getInstance().getPermissionValue((GDClaim) claim, GriefDefenderPlugin.DEFAULT_HOLDER, permission, contexts);
         if (value != Tristate.UNDEFINED) {
             return processResult(claim, permission, value, GriefDefenderPlugin.DEFAULT_HOLDER);
         }
@@ -483,6 +489,10 @@ public class GDPermissionManager implements PermissionManager {
             } else if (obj instanceof DamageCause) {
                 final DamageCause damageCause = (DamageCause) obj;
                 String id = damageCause.name().toLowerCase();
+                return populateEventSourceTarget(id, isSource);
+            } else if (obj instanceof TeleportCause) {
+                final TeleportCause teleportCause = (TeleportCause) obj;
+                String id = teleportCause.name().toLowerCase();
                 return populateEventSourceTarget(id, isSource);
             } else if (obj instanceof SpawnReason) {
                 return populateEventSourceTarget("spawnreason:" + ((SpawnReason) obj).name().toLowerCase(), isSource);

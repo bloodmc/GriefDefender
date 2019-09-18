@@ -48,6 +48,7 @@ public class GDPermissions {
     public static final String COMMAND_CLAIM_INFO_BASE = "griefdefender.user.claim.command.info.base";
     public static final String COMMAND_CLAIM_INFO_TELEPORT_OTHERS = "griefdefender.user.claim.command.info.teleport.others";
     public static final String COMMAND_CLAIM_INFO_TELEPORT_BASE = "griefdefender.user.claim.command.info.teleport.base";
+    public static final String COMMAND_CLAIM_MODE = "griefdefender.user.claim.command.claim-mode";
     public static final String COMMAND_CLAIM_OPTIONS_BASE = "griefdefender.user.claim.option.base";
     public static final String COMMAND_CLAIM_SELL = "griefdefender.user.claim.command.sell";
     public static final String COMMAND_CLAIM_SPAWN = "griefdefender.user.claim.command.spawn";

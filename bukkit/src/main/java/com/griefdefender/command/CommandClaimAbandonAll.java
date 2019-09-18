@@ -38,11 +38,13 @@ import com.griefdefender.api.GriefDefender;
 import com.griefdefender.api.claim.Claim;
 import com.griefdefender.api.permission.option.Options;
 import com.griefdefender.cache.MessageCache;
+import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.event.GDCauseStackManager;
 import com.griefdefender.event.GDRemoveClaimEvent;
 import com.griefdefender.permission.GDPermissionManager;
+import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.permission.GDPermissions;
 import com.griefdefender.text.action.GDCallbackHolder;
 import com.griefdefender.util.PermissionUtil;
@@ -55,6 +57,10 @@ import net.kyori.text.format.TextColor;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.economy.EconomyResponse;
 
+import java.time.Duration;
+import java.time.Instant;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import org.bukkit.command.CommandSender;
@@ -68,8 +74,8 @@ public class CommandClaimAbandonAll extends BaseCommand {
     @Description("Abandons ALL your claims")
     @Subcommand("abandon all")
     public void execute(Player player) {
-        final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
-        int originalClaimCount = playerData.getInternalClaims().size();
+        final GDPermissionUser user = PermissionHolderCache.getInstance().getOrCreateUser(player);
+        int originalClaimCount = user.getInternalPlayerData().getInternalClaims().size();
 
         if (originalClaimCount == 0) {
             try {
@@ -87,63 +93,91 @@ public class CommandClaimAbandonAll extends BaseCommand {
                     .append("\n[")
                     .append("Confirm", TextColor.GREEN)
                     .append("]\n")
-                    .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createConfirmationConsumer(player, playerData))))
+                    .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createConfirmationConsumer(user))))
                     .hoverEvent(HoverEvent.showText(MessageCache.getInstance().UI_CLICK_CONFIRM)).build())
                 .build();
         TextAdapter.sendComponent(player, confirmationText);
     }
 
-    private static Consumer<CommandSender> createConfirmationConsumer(Player player, GDPlayerData playerData) {
+    private static Consumer<CommandSender> createConfirmationConsumer(GDPermissionUser user) {
         return confirm -> {
-            GDCauseStackManager.getInstance().pushCause(player);
-            GDRemoveClaimEvent.Abandon event = new GDRemoveClaimEvent.Abandon(ImmutableList.copyOf(playerData.getInternalClaims()));
-            GriefDefender.getEventManager().post(event);
-            GDCauseStackManager.getInstance().popCause();
-            if (event.cancelled()) {
-                TextAdapter.sendComponent(player, event.getMessage().orElse(TextComponent.of("Could not abandon claim. A plugin has denied it.").color(TextColor.RED)));
-                return;
-            }
-
-            double refund = 0;
-            // adjust claim blocks
+            Set<Claim> allowedClaims = new HashSet<>();
+            Set<Claim> delayedClaims = new HashSet<>();
+            final int abandonDelay = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), user, Options.ABANDON_DELAY);
+            final Player player = user.getOnlinePlayer();
+            final GDPlayerData playerData = user.getInternalPlayerData();
             for (Claim claim : playerData.getInternalClaims()) {
-                // remove all context permissions
-                PermissionUtil.getInstance().clearPermissions((GDClaim) claim);
-                if (claim.isSubdivision() || claim.isAdminClaim() || claim.isWilderness()) {
-                    continue;
-                }
-                final double abandonReturnRatio = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Double.class), player, Options.ABANDON_RETURN_RATIO, claim);
-                if (GriefDefenderPlugin.getInstance().isEconomyModeEnabled()) {
-                    refund += claim.getClaimBlocks() * abandonReturnRatio;
+                if (abandonDelay > 0) {
+                    final Instant localNow = Instant.now();
+                    final Instant dateCreated = ((GDClaim) claim).getInternalClaimData().getDateCreated();
+                    final Instant dateExpires = dateCreated.plus(Duration.ofDays(abandonDelay));
+                    final boolean delayActive = !dateExpires.isBefore(localNow);
+                    if (delayActive) {
+                        delayedClaims.add(claim);
+                    } else {
+                        allowedClaims.add(claim);
+                    }
                 } else {
-                    playerData.setAccruedClaimBlocks(playerData.getAccruedClaimBlocks() - ((int) Math.ceil(claim.getClaimBlocks() * (1 - abandonReturnRatio))));
+                    allowedClaims.add(claim);
                 }
             }
 
-            playerData.restoreAbandonClaim = event.isRestoring();
-            GriefDefenderPlugin.getInstance().dataStore.deleteClaimsForPlayer(player.getUniqueId());
-            playerData.restoreAbandonClaim = false;
-
-            if (GriefDefenderPlugin.getInstance().isEconomyModeEnabled()) {
-                final Economy economy = GriefDefenderPlugin.getInstance().getVaultProvider().getApi();
-                if (!economy.hasAccount(player)) {
+            if (!allowedClaims.isEmpty()) {
+                GDCauseStackManager.getInstance().pushCause(user);
+                GDRemoveClaimEvent.Abandon event = new GDRemoveClaimEvent.Abandon(ImmutableList.copyOf(allowedClaims));
+                GriefDefender.getEventManager().post(event);
+                GDCauseStackManager.getInstance().popCause();
+                if (event.cancelled()) {
+                    TextAdapter.sendComponent(user.getOnlinePlayer(), event.getMessage().orElse(MessageCache.getInstance().PLUGIN_EVENT_CANCEL).color(TextColor.RED));
                     return;
                 }
 
-                final EconomyResponse result = economy.depositPlayer(player, refund);
-                if (result.transactionSuccess()) {
-                    final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_CLAIM_ABANDON_SUCCESS, ImmutableMap.of(
-                            "amount", TextComponent.of(String.valueOf(refund))));
-                    GriefDefenderPlugin.sendMessage(player, message);
+                double refund = 0;
+                // adjust claim blocks
+                for (Claim claim : allowedClaims) {
+                    // remove all context permissions
+                    PermissionUtil.getInstance().clearPermissions((GDClaim) claim);
+                    if (claim.isSubdivision() || claim.isAdminClaim() || claim.isWilderness()) {
+                        continue;
+                    }
+                    final double abandonReturnRatio = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Double.class), user, Options.ABANDON_RETURN_RATIO, claim);
+                    if (GriefDefenderPlugin.getInstance().isEconomyModeEnabled()) {
+                        refund += claim.getClaimBlocks() * abandonReturnRatio;
+                    } else {
+                        playerData.setAccruedClaimBlocks(playerData.getAccruedClaimBlocks() - ((int) Math.ceil(claim.getClaimBlocks() * (1 - abandonReturnRatio))));
+                    }
                 }
-            } else {
-                int remainingBlocks = playerData.getRemainingClaimBlocks();
-                final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ABANDON_SUCCESS, ImmutableMap.of(
-                        "amount", remainingBlocks));
-                GriefDefenderPlugin.sendMessage(player, message);
+    
+                playerData.restoreAbandonClaim = event.isRestoring();
+                GriefDefenderPlugin.getInstance().dataStore.abandonClaimsForPlayer(user, allowedClaims);
+                playerData.restoreAbandonClaim = false;
+    
+                if (GriefDefenderPlugin.getInstance().isEconomyModeEnabled()) {
+                    final Economy economy = GriefDefenderPlugin.getInstance().getVaultProvider().getApi();
+                    if (!economy.hasAccount(player)) {
+                        return;
+                    }
+    
+                    final EconomyResponse result = economy.depositPlayer(user.getOnlinePlayer(), refund);
+                    if (result.transactionSuccess()) {
+                        final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_CLAIM_ABANDON_SUCCESS, ImmutableMap.of(
+                                "amount", TextComponent.of(String.valueOf(refund))));
+                        TextAdapter.sendComponent(player, message);
+                    }
+                } else {
+                    int remainingBlocks = playerData.getRemainingClaimBlocks();
+                    final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ABANDON_SUCCESS, ImmutableMap.of(
+                            "amount", remainingBlocks));
+                    TextAdapter.sendComponent(player, message);
+                }
+
+                playerData.revertActiveVisual(player);
             }
 
-            playerData.revertActiveVisual(player);
+            if (!delayedClaims.isEmpty()) {
+                TextAdapter.sendComponent(player, MessageCache.getInstance().ABANDON_ALL_DELAY_WARNING);
+                CommandHelper.showClaims(player, delayedClaims, 0, true);
+            }
         };
     }
 }

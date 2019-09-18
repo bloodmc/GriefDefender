@@ -29,60 +29,50 @@ import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Subcommand;
-import co.aikar.commands.annotation.Syntax;
+import net.kyori.text.Component;
+import net.kyori.text.adapter.bukkit.TextAdapter;
 
 import com.google.common.collect.ImmutableMap;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
+import com.griefdefender.api.claim.ClaimBlockSystem;
 import com.griefdefender.cache.MessageCache;
-import com.griefdefender.claim.GDClaim;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.permission.GDPermissions;
-import net.kyori.text.Component;
-import net.kyori.text.TextComponent;
-import net.kyori.text.adapter.bukkit.TextAdapter;
-import net.kyori.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.entity.Player;
 
 @CommandAlias("%griefdefender")
-@CommandPermission(GDPermissions.COMMAND_TOWN_TAG)
-public class CommandTownTag extends BaseCommand {
+@CommandPermission(GDPermissions.COMMAND_CLAIM_MODE)
+public class CommandClaimMode extends BaseCommand {
 
-    @CommandAlias("towntag")
-    @Description("Sets the tag of your town.")
-    @Syntax("<tag>")
-    @Subcommand("town tag")
-    public void execute(Player player, String tag) {
+    @CommandAlias("claim|claimmode")
+    @Description("Toggles claim mode creation. Note: This will default to basic claim mode.")
+    @Subcommand("mode claim")
+    public void execute(Player player) {
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
-        final GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAtPlayer(playerData, player.getLocation());
-        if (claim == null || !claim.isInTown()) {
-            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().TOWN_NOT_IN);
-            return;
-        }
-
-        final GDClaim town = claim.getTownClaim();
-        final Component result = town.allowEdit(player);
-        if (result != null) {
-            GriefDefenderPlugin.sendMessage(player, result);
-            return;
-        }
-
-        TextComponent name = LegacyComponentSerializer.legacy().deserialize(tag, '&');
-        if (name == TextComponent.empty() || name.content().equals("clear")) {
-            town.getTownData().setTownTag(null);
+        playerData.claimMode = !playerData.claimMode;
+        playerData.claimSubdividing = null;
+        if (!playerData.claimMode) {
+            playerData.revertActiveVisual(player);
+            // check for any active WECUI visuals
+            if (GriefDefenderPlugin.getInstance().getWorldEditProvider() != null) {
+                GriefDefenderPlugin.getInstance().getWorldEditProvider().revertVisuals(player, playerData, null);
+            }
+            TextAdapter.sendComponent(player, MessageCache.getInstance().COMMAND_CLAIMMODE_DISABLED);
         } else {
-            town.getTownData().setTownTag(name);
+            TextAdapter.sendComponent(player, MessageCache.getInstance().COMMAND_CLAIMMODE_ENABLED);
+            if (GriefDefenderPlugin.CLAIM_BLOCK_SYSTEM == ClaimBlockSystem.VOLUME) {
+                final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PLAYER_REMAINING_BLOCKS_3D,
+                        ImmutableMap.of(
+                        "block-amount", playerData.getRemainingClaimBlocks(),
+                        "chunk-amount", playerData.getRemainingChunks()));
+                GriefDefenderPlugin.sendMessage(player, message);
+            } else {
+                final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PLAYER_REMAINING_BLOCKS_2D,
+                       ImmutableMap.of(
+                        "block-amount", playerData.getRemainingClaimBlocks()));
+                GriefDefenderPlugin.sendMessage(player, message);
+            }
         }
-
-        town.getInternalClaimData().setRequiresSave(true);
-        Component resultMessage = null;
-        if (!claim.getTownData().getTownTag().isPresent()) {
-            resultMessage = MessageCache.getInstance().TOWN_TAG_CLEAR;
-        } else {
-            resultMessage = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.TOWN_TAG,
-                    ImmutableMap.of(
-                    "tag", name));
-        }
-        TextAdapter.sendComponent(player, resultMessage);
     }
 }

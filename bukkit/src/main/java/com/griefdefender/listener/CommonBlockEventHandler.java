@@ -168,11 +168,6 @@ public class CommonBlockEventHandler {
             return;
         }
 
-        if (player == null) {
-            final GDPermissionUser user = CauseContextHelper.getEventUser(location);
-            player = user != null ? user.getOnlinePlayer() : null;
-        }
-
         GDClaim targetClaim = this.storage.getClaimAt(location);
 
         final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, GDPermissions.BLOCK_BREAK, source, block, player, TrustTypes.BUILDER, true);

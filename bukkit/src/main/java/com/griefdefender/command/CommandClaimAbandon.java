@@ -62,6 +62,9 @@ import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -116,6 +119,18 @@ public class CommandClaimAbandon extends BaseCommand {
             }
         }
 
+        final int abandonDelay = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), user, Options.ABANDON_DELAY, claim);
+        if (abandonDelay > 0) {
+            final Instant localNow = Instant.now();
+            final Instant dateCreated = claim.getInternalClaimData().getDateCreated();
+            final Instant delayExpires = dateCreated.plus(Duration.ofDays(abandonDelay));
+            final boolean delayActive = !delayExpires.isBefore(localNow);
+            if (delayActive) {
+                TextAdapter.sendComponent(player, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.ABANDON_CLAIM_DELAY_WARNING, 
+                        ImmutableMap.of("date", Date.from(delayExpires))));
+                return;
+            }
+        }
         final boolean autoSchematicRestore = GriefDefenderPlugin.getActiveConfig(player.getWorld().getUID()).getConfig().claim.claimAutoSchematicRestore;
         final Component confirmationText = TextComponent.builder()
                 .append(autoSchematicRestore ? MessageCache.getInstance().SCHEMATIC_ABANDON_RESTORE_WARNING : MessageCache.getInstance().ABANDON_WARNING)

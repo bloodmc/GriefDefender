@@ -28,18 +28,28 @@ import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Description;
+import co.aikar.commands.annotation.Optional;
 import co.aikar.commands.annotation.Subcommand;
+import co.aikar.commands.annotation.Syntax;
+
 import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.reflect.TypeToken;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
+import com.griefdefender.api.claim.Claim;
 import com.griefdefender.api.claim.TrustTypes;
+import com.griefdefender.api.permission.option.Options;
 import com.griefdefender.cache.MessageCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.configuration.MessageStorage;
+import com.griefdefender.permission.GDPermissionManager;
 import com.griefdefender.permission.GDPermissions;
 import net.kyori.text.Component;
+import net.kyori.text.serializer.plain.PlainComponentSerializer;
+
 import org.bukkit.Location;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
 @CommandAlias("%griefdefender")
@@ -48,11 +58,40 @@ public class CommandClaimSpawn extends BaseCommand {
 
     @CommandAlias("claimspawn")
     @Description("Teleports you to claim spawn if available.")
+    @Syntax("[name] [user]")
     @Subcommand("claim spawn")
-    public void execute(Player player) {
-        final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
-        final GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAtPlayer(playerData, player.getLocation());
-        if (!playerData.canIgnoreClaim(claim) && !claim.isUserTrusted(player, TrustTypes.ACCESSOR) && !player.hasPermission(GDPermissions.COMMAND_DELETE_CLAIMS)) {
+    public void execute(Player player, @Optional String claimName, @Optional OfflinePlayer targetPlayer) {
+        final GDPlayerData srcPlayerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
+        GDPlayerData targetPlayerData = null;
+        if (targetPlayer != null) {
+            targetPlayerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), targetPlayer.getUniqueId());
+        } else {
+            targetPlayerData = srcPlayerData;
+        }
+
+        GDClaim claim = null;
+        if (claimName != null) {
+            for (Claim playerClaim : targetPlayerData.getInternalClaims()) {
+                String name = null;
+                Component component = playerClaim.getName().orElse(null);
+                if (component != null) {
+                    name = PlainComponentSerializer.INSTANCE.serialize(component);
+                    if (claimName.equalsIgnoreCase(name)) {
+                        claim = (GDClaim) playerClaim;
+                        break;
+                    }
+                }
+            }
+            if (claim == null) {
+                GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.COMMAND_CLAIMNAME_NOT_FOUND,
+                        ImmutableMap.of("name", claimName)));
+                return;
+            }
+        } else {
+            claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAtPlayer(targetPlayerData, player.getLocation());
+        }
+
+        if (!srcPlayerData.canIgnoreClaim(claim) && !claim.isUserTrusted(player, TrustTypes.ACCESSOR) && !player.hasPermission(GDPermissions.COMMAND_DELETE_CLAIMS)) {
             GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_ACCESS,
                     ImmutableMap.of("player", claim.getOwnerName())));
             return;
@@ -65,6 +104,12 @@ public class CommandClaimSpawn extends BaseCommand {
         }
 
         final Location spawnLocation = new Location(claim.getWorld(), spawnPos.getX(), spawnPos.getY(), spawnPos.getZ());
+        int teleportDelay = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), player, Options.PLAYER_TELEPORT_DELAY, claim);
+        if (teleportDelay > 0) {
+            srcPlayerData.teleportDelay = teleportDelay + 1;
+            srcPlayerData.teleportLocation = spawnLocation;
+            return;
+        }
         player.teleport(spawnLocation);
         final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.SPAWN_TELEPORT,
                 ImmutableMap.of(

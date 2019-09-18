@@ -350,6 +350,11 @@ public abstract class ClaimOptionBase extends BaseCommand {
             }
         }
 
+        if (displayType == MenuType.CLAIM) {
+            final Set<Context> contexts = new HashSet<>();
+            contexts.add(ClaimContexts.GLOBAL_DEFAULT_CONTEXT);
+            filteredContextMap.put(Options.PVP.getPermission(), new OptionData(Options.PVP, "undefined", MenuType.DEFAULT, contexts));
+        }
         for (Map.Entry<Set<Context>, Map<String, String>> mapEntry : PermissionUtil.getInstance().getPermanentOptions(this.subject).entrySet()) {
             final Set<Context> contextSet = mapEntry.getKey();
             if (contextSet.contains(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)) {

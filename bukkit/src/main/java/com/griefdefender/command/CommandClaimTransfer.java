@@ -6,6 +6,8 @@ import co.aikar.commands.annotation.CommandCompletion;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Subcommand;
+import co.aikar.commands.annotation.Syntax;
+
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.claim.ClaimResult;
@@ -32,6 +34,7 @@ public class CommandClaimTransfer extends BaseCommand {
     @CommandCompletion("@gdplayers @gddummy")
     @CommandAlias("claimtransfer|transferclaim")
     @Description("Transfers a basic or admin claim to another player.")
+    @Syntax("<player>")
     @Subcommand("claim transfer")
     public void execute(Player player, OfflinePlayer otherPlayer) {
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());

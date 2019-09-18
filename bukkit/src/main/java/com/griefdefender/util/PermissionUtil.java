@@ -32,6 +32,7 @@ import com.griefdefender.api.permission.Context;
 import com.griefdefender.api.permission.PermissionResult;
 import com.griefdefender.api.permission.flag.Flag;
 import com.griefdefender.api.permission.option.Option;
+import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.permission.GDPermissionHolder;
 import com.griefdefender.provider.PermissionProvider;
@@ -110,7 +111,7 @@ public class PermissionUtil {
     }
 
     public void clearPermissions(OfflinePlayer player, Context context) {
-        PERMISSION_PROVIDER.clearPermissions(player, context);
+        PERMISSION_PROVIDER.clearPermissions(PermissionHolderCache.getInstance().getOrCreateUser(player), context);
     }
 
     public void clearPermissions(GDPermissionHolder holder, Context context) {
@@ -133,12 +134,12 @@ public class PermissionUtil {
         return PERMISSION_PROVIDER.getOptions(holder, contexts);
     }
 
-    public Map<Set<Context>, Map<String, Boolean>> getPermanentPermissions(GDClaim claim, GDPermissionHolder holder) {
-        return PERMISSION_PROVIDER.getPermanentPermissions(claim, holder);
+    public Map<Set<Context>, Map<String, Boolean>> getPermanentPermissions(GDPermissionHolder holder) {
+        return PERMISSION_PROVIDER.getPermanentPermissions(holder);
     }
 
-    public Map<Set<Context>, Map<String, Boolean>> getTransientPermissions(GDClaim claim, GDPermissionHolder holder) {
-        return PERMISSION_PROVIDER.getTransientPermissions(claim, holder);
+    public Map<Set<Context>, Map<String, Boolean>> getTransientPermissions(GDPermissionHolder holder) {
+        return PERMISSION_PROVIDER.getTransientPermissions(holder);
     }
 
     public Map<Set<Context>, Map<String, String>> getPermanentOptions(GDPermissionHolder holder) {
@@ -149,16 +150,16 @@ public class PermissionUtil {
         return PERMISSION_PROVIDER.getTransientOptions(holder);
     }
 
-    public Map<String, String> getPermanentOptions(GDClaim claim, GDPermissionHolder holder, Set<Context> contexts) {
-        return PERMISSION_PROVIDER.getPermanentOptions(claim, holder, contexts);
+    public Map<String, String> getPermanentOptions(GDPermissionHolder holder, Set<Context> contexts) {
+        return PERMISSION_PROVIDER.getPermanentOptions(holder, contexts);
     }
 
-    public Map<String, String> getTransientOptions(GDClaim claim, GDPermissionHolder holder, Set<Context> contexts) {
-        return PERMISSION_PROVIDER.getTransientOptions(claim, holder, contexts);
+    public Map<String, String> getTransientOptions(GDPermissionHolder holder, Set<Context> contexts) {
+        return PERMISSION_PROVIDER.getTransientOptions(holder, contexts);
     }
 
-    public Map<Set<Context>, Map<String, Boolean>> getAllPermissions(GDClaim claim, GDPermissionHolder holder) {
-        return PERMISSION_PROVIDER.getAllPermissions(claim, holder);
+    public Map<Set<Context>, Map<String, Boolean>> getAllPermissions(GDPermissionHolder holder) {
+        return PERMISSION_PROVIDER.getAllPermissions(holder);
     }
 
     public Tristate getPermissionValue(GDPermissionHolder holder, String permission) {

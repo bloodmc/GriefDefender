@@ -79,7 +79,7 @@ public class PlayerUtil {
     public BlockFace getBlockFace(String param) {
         BlockFace face = null;
         try {
-            face = BlockFace.valueOf(param);
+            face = BlockFace.valueOf(param.toUpperCase());
         } catch (IllegalArgumentException e) {
             // ignore
         }

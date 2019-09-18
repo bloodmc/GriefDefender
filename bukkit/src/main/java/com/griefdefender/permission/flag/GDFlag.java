@@ -81,7 +81,7 @@ public class GDFlag implements Flag {
 
     @Override
     public boolean getDefaultClaimTypeValue(ClaimType type) {
-        if (type == ClaimTypes.ADMIN || type == ClaimTypes.BASIC || type == ClaimTypes.TOWN) {
+        if (type == null || type != ClaimTypes.WILDERNESS) {
             switch (this.name) {
                 case "block-break" :
                 case "block-modify" :

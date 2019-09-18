@@ -22,31 +22,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.griefdefender.command;
+package com.griefdefender.configuration.category;
 
-import co.aikar.commands.BaseCommand;
-import co.aikar.commands.annotation.CommandAlias;
-import co.aikar.commands.annotation.CommandPermission;
-import co.aikar.commands.annotation.Description;
-import co.aikar.commands.annotation.Subcommand;
-import com.griefdefender.GriefDefenderPlugin;
-import com.griefdefender.cache.MessageCache;
-import com.griefdefender.permission.GDPermissions;
-import org.bukkit.entity.Player;
+import ninja.leaping.configurate.objectmapping.Setting;
+import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
 
-@CommandAlias("%griefdefender")
-@CommandPermission(GDPermissions.COMMAND_CLAIM_WORLDEDIT)
-public class CommandClaimWorldEdit extends BaseCommand {
+@ConfigSerializable
+public class PvpCategory extends ConfigCategory {
 
-    @CommandAlias("claimwe|claimworldedit")
-    @Description("Uses the worldedit selection to create a claim.")
-    @Subcommand("claim worldedit|claim we")
-    public void execute(Player player) {
-        if (GriefDefenderPlugin.getInstance().getWorldEditProvider() == null) {
-            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().COMMAND_WORLDEDIT_MISSING);
-            return;
-        }
-
-        GriefDefenderPlugin.getInstance().getWorldEditProvider().createClaim(player);
-    }
+    @Setting(value = "combat-timeout", comment = "How long combat is considered to continue after the most recent damage.")
+    public int combatTimeout = 15;
 }

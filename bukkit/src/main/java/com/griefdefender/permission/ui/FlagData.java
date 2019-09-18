@@ -30,8 +30,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import com.griefdefender.api.claim.ClaimContexts;
 import com.griefdefender.api.permission.Context;
 import com.griefdefender.api.permission.flag.Flag;
+import com.griefdefender.api.permission.flag.Flags;
 
 import net.kyori.text.format.TextColor;
 
@@ -53,6 +55,26 @@ public class FlagData {
             if (flagHolder.getType() == MenuType.CLAIM && type == MenuType.DEFAULT) {
                 // ignore
                 return false;
+            }
+            // Context Default Types have higher priority than global
+            if (contexts.contains(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)) {
+                for (Context context : flagHolder.getAllContexts()) {
+                    if (context.getKey().equalsIgnoreCase("gd_claim_default")) {
+                        if (!context.getValue().equalsIgnoreCase("global")) {
+                            return false;
+                        }
+                    }
+                }
+            }
+            // Context Override Types have higher priority than global
+            if (contexts.contains(ClaimContexts.GLOBAL_OVERRIDE_CONTEXT)) {
+                for (Context context : flagHolder.getAllContexts()) {
+                    if (context.getKey().equalsIgnoreCase("gd_claim_override")) {
+                        if (!context.getValue().equalsIgnoreCase("global")) {
+                            return false;
+                        }
+                    }
+                }
             }
         }
         this.flagContextMap.put(Objects.hash(filteredContexts), new FlagContextHolder(flag, value, type, contexts));

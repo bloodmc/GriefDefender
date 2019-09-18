@@ -24,24 +24,37 @@
  */
 package com.griefdefender.task;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.reflect.TypeToken;
 import com.griefdefender.GDBootstrap;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.permission.option.Options;
+import com.griefdefender.cache.MessageCache;
 import com.griefdefender.claim.GDClaim;
+import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.permission.GDPermissionManager;
+import com.griefdefender.text.action.GDCallbackHolder;
+
+import net.kyori.text.TextComponent;
+import net.kyori.text.adapter.bukkit.TextAdapter;
+import net.kyori.text.event.ClickEvent;
+import net.kyori.text.event.HoverEvent;
+import net.kyori.text.format.TextColor;
+
+import java.util.function.Consumer;
 
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.World;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
 public class PlayerTickTask extends BukkitRunnable {
 
     public PlayerTickTask() {
-        this.runTaskTimer(GDBootstrap.getInstance(), 100L, 100L);
+        this.runTaskTimer(GDBootstrap.getInstance(), 1L, 1L);
     }
 
     @Override
@@ -53,20 +66,39 @@ public class PlayerTickTask extends BukkitRunnable {
                 }
                 final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
                 final GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAtPlayer(playerData, player.getLocation());
-                final GameMode gameMode = player.getGameMode();
-                // Handle player health regen
-                if (gameMode != GameMode.CREATIVE && gameMode != GameMode.SPECTATOR) {
-                    final double maxHealth = player.getMaxHealth();
-                    if (player.getHealth() < maxHealth) {
-                        final double regenAmount = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Double.class), playerData.getSubject(), Options.PLAYER_HEALTH_REGEN, claim);
-                        if (regenAmount > 0) {
-                            final double newHealth = player.getHealth() + regenAmount;
-                            if (newHealth > maxHealth) {
-                                player.setHealth(maxHealth);
-                            } else {
-                                player.setHealth(newHealth);
+                // health regen
+                if (world.getFullTime() % 100 == 0L) {
+                    final GameMode gameMode = player.getGameMode();
+                    // Handle player health regen
+                    if (gameMode != GameMode.CREATIVE && gameMode != GameMode.SPECTATOR) {
+                        final double maxHealth = player.getMaxHealth();
+                        if (player.getHealth() < maxHealth) {
+                            final double regenAmount = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Double.class), playerData.getSubject(), Options.PLAYER_HEALTH_REGEN, claim);
+                            if (regenAmount > 0) {
+                                final double newHealth = player.getHealth() + regenAmount;
+                                if (newHealth > maxHealth) {
+                                    player.setHealth(maxHealth);
+                                } else {
+                                    player.setHealth(newHealth);
+                                }
                             }
                         }
+                    }
+                }
+                // teleport delay
+                if (world.getFullTime() % 20 == 0L) {
+                    if (playerData.teleportDelay > 0) {
+                        final int delay = playerData.teleportDelay - 1;
+                        if (delay == 0) {
+                            player.teleport(playerData.teleportLocation);
+                            playerData.teleportDelay = 0;
+                            playerData.teleportLocation = null;
+                            playerData.teleportSourceLocation = null;
+                            continue;
+                        }
+                        TextAdapter.sendComponent(player, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.TELEPORT_DELAY_NOTICE, 
+                                ImmutableMap.of("delay", TextComponent.of(delay, TextColor.GOLD))));
+                        playerData.teleportDelay = delay;
                     }
                 }
             }

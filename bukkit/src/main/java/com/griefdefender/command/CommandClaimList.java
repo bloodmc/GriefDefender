@@ -26,6 +26,7 @@ package com.griefdefender.command;
 
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.CommandAlias;
+import co.aikar.commands.annotation.CommandCompletion;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Optional;
@@ -40,20 +41,18 @@ import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.claim.Claim;
 import com.griefdefender.api.claim.ClaimType;
 import com.griefdefender.api.claim.ClaimTypes;
+import com.griefdefender.api.claim.TrustTypes;
 import com.griefdefender.cache.MessageCache;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaimManager;
-import com.griefdefender.configuration.MessageDataConfig;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.internal.pagination.PaginationList;
-import com.griefdefender.internal.util.BlockUtil;
 import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.permission.GDPermissions;
 import com.griefdefender.text.action.GDCallbackHolder;
 import com.griefdefender.util.PaginationUtil;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
-import net.kyori.text.adapter.bukkit.TextAdapter;
 import net.kyori.text.event.ClickEvent;
 import net.kyori.text.event.HoverEvent;
 import net.kyori.text.format.TextColor;
@@ -77,9 +76,6 @@ import java.util.function.Consumer;
 public class CommandClaimList extends BaseCommand {
 
     private final ClaimType forcedType;
-    private boolean canListOthers;
-    private boolean canListAdmin;
-    private boolean displayOwned = true;
     private final Cache<UUID, String> lastActiveClaimTypeMap = Caffeine.newBuilder().expireAfterAccess(10, TimeUnit.MINUTES)
             .build();
 
@@ -91,42 +87,17 @@ public class CommandClaimList extends BaseCommand {
         this.forcedType = type;
     }
 
+    @CommandCompletion("@gdplayers @gdworlds @gddummy")
     @CommandAlias("claimlist|claimslist")
     @Syntax("[<player>|<player> <world>]")
     @Description("List information about a player's claim blocks and claims.")
     @Subcommand("claim list")
-    public void execute(Player src, @Optional String[] args) {
-        GDPermissionUser user = null;
-        World world = null;
-        if (args.length > 0) {
-            user = PermissionHolderCache.getInstance().getOrCreateUser(args[0]);
-            if (user == null) {
-                TextAdapter.sendComponent(src, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.COMMAND_PLAYER_NOT_FOUND,
-                        ImmutableMap.of("player", args[0])));
-                return;
-            }
-            if (args.length > 1) {
-                world = Bukkit.getServer().getWorld(args[1]);
-                if (world == null) {
-                    TextAdapter.sendComponent(src, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.COMMAND_WORLD_NOT_FOUND,
-                            ImmutableMap.of("world", args[1])));
-                    return;
-                }
-            }
-        }
-
-        if (user == null) {
-            user = PermissionHolderCache.getInstance().getOrCreateUser(src);
-            if (world == null) {
-                world = ((Player) user.getOnlinePlayer()).getWorld();
-            }
-        }
+    public void execute(Player src, @Optional OfflinePlayer targetPlayer, @Optional World world) {
+        final GDPermissionUser user = targetPlayer == null ? PermissionHolderCache.getInstance().getOrCreateUser(src) : PermissionHolderCache.getInstance().getOrCreateUser(targetPlayer);
         if (world == null) {
-            world = Bukkit.getServer().getWorlds().get(0);
+            world = src.getWorld();
         }
 
-        this.canListOthers = src.hasPermission(GDPermissions.LIST_OTHER_CLAIMS);
-        this.canListAdmin = src.hasPermission(GDPermissions.LIST_OTHER_CLAIMS);
         showClaimList(src, user, this.forcedType, world.getUID());
     }
 
@@ -135,17 +106,17 @@ public class CommandClaimList extends BaseCommand {
         Set<Claim> claims = new HashSet<>();
         final String worldName = worldUniqueId == null ? "" : Bukkit.getWorld(worldUniqueId).getName();
         for (World world : Bukkit.getServer().getWorlds()) {
-            if (!this.displayOwned && !world.getUID().equals(worldUniqueId)) {
+            if (type != null && !world.getUID().equals(worldUniqueId)) {
                 continue;
             }
             final GDClaimManager claimWorldManager = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(world.getUID());
             // load the target player's data
             final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(world, user.getUniqueId());
             Set<Claim> claimList = null;
-            if (this.displayOwned) {
+            if (type == null) {
                 claimList = playerData.getClaims();
             } else {
-                claimList = BlockUtil.getInstance().getNearbyClaims(src.getLocation(), 100);
+                claimList = claimWorldManager.getWorldClaims();
             }
 
             for (Claim claim : claimList) {
@@ -153,28 +124,38 @@ public class CommandClaimList extends BaseCommand {
                     continue;
                 }
 
-                if (user != null && this.displayOwned) {
-                    if (user.getUniqueId().equals(claim.getOwnerUniqueId())) {
-                        claims.add(claim);
-                    }
-                } else if (type != null) {
-                    if (claim.getType() == type) {
+                final boolean isUserTrusted = claim.isUserTrusted(user.getUniqueId(), TrustTypes.ACCESSOR);
+                if (type == null) {
+                    if (isUserTrusted) {
+                        System.out.println("Adding claim UUID " + claim.getUniqueId());
                         claims.add(claim);
                     }
                 } else {
-                    claims.add(claim);
+                    if (claim.getType() == type) {
+                        if (isUserTrusted) {
+                            System.out.println("2Adding claim UUID " + claim.getUniqueId());
+                            claims.add(claim);
+                        }
+                    } else if (type == ClaimTypes.SUBDIVISION) {
+                        for (Claim child : claim.getChildren(true)) {
+                            if (child.getType() == type) {
+                                System.out.println("FOUND CHILD " + child);
+                                claims.add(child);
+                            }
+                        }
+                    }
                 }
             }
         }
         if (src instanceof Player) {
             final Player player = (Player) src;
             final String lastClaimType = this.lastActiveClaimTypeMap.getIfPresent(player.getUniqueId());
-            String currentType = type == null ? "ALL" : type.toString();
+            String currentType = type == null ? "OWN" : type.toString();
             if (lastClaimType != null && !lastClaimType.equals(currentType.toString())) {
                 PaginationUtil.getInstance().resetActivePage(player.getUniqueId());
             }
         }
-        claimsTextList = CommandHelper.generateClaimTextList(claimsTextList, claims, worldName, user, src, createClaimListConsumer(src, user, type, worldUniqueId), this.canListOthers, false);
+        claimsTextList = CommandHelper.generateClaimTextListCommand(claimsTextList, claims, worldName, user, src, createClaimListConsumer(src, user, type, worldUniqueId), false);
 
         final Component whiteOpenBracket = TextComponent.of("[");
         final Component whiteCloseBracket = TextComponent.of("]");
@@ -188,12 +169,12 @@ public class CommandClaimList extends BaseCommand {
         Component townShowText = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.UI_CLICK_FILTER_TYPE,
                 ImmutableMap.of("type", TextComponent.of("TOWN", TextColor.GREEN)));
         Component ownedTypeText = TextComponent.builder("")
-                .append(this.displayOwned && type == null ? 
+                .append(type == null ? 
                         TextComponent.builder("")
                         .append(whiteOpenBracket)
                         .append(MessageCache.getInstance().TITLE_OWN.color(TextColor.GOLD))
                         .append(whiteCloseBracket).build() : MessageCache.getInstance().TITLE_OWN.color(TextColor.GRAY))
-                .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createClaimListConsumer(src, user, "OWN", worldUniqueId))))
+                .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createClaimListConsumer(src, user, null, worldUniqueId))))
                 .hoverEvent(HoverEvent.showText(ownedShowText)).build();
         Component adminTypeText = TextComponent.builder("")
                 .append(type == ClaimTypes.ADMIN ? TextComponent.builder("")
@@ -250,25 +231,13 @@ public class CommandClaimList extends BaseCommand {
             if (activePage == null) {
                 activePage = 1;
             }
-            this.lastActiveClaimTypeMap.put(player.getUniqueId(), type == null ? "ALL" : type.toString());
+            this.lastActiveClaimTypeMap.put(player.getUniqueId(), type == null ? "OWN" : type.toString());
         }
         paginationList.sendTo(src, activePage);
     }
 
-    private Consumer<CommandSender> createClaimListConsumer(Player src, GDPermissionUser user, String type, UUID worldUniqueId) {
-        return consumer -> {
-            if (type.equalsIgnoreCase("ALL")) {
-                this.displayOwned = false;
-            } else {
-                this.displayOwned = true;
-            }
-            showClaimList(src, user, null, worldUniqueId);
-        };
-    }
-
     private Consumer<CommandSender> createClaimListConsumer(Player src, GDPermissionUser user, ClaimType type, UUID worldUniqueId) {
         return consumer -> {
-            this.displayOwned = false;
             showClaimList(src, user, type, worldUniqueId);
         };
     }

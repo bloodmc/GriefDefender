@@ -42,7 +42,7 @@ class ClaimVisualRevertTask implements Runnable {
     public void run() {
         // don't do anything if the player's current visualization is different
         // from the one scheduled to revert
-        if (this.playerData.visualBlocks == null) {
+        if (this.playerData.visualBlocks.isEmpty()) {
             return;
         }
 

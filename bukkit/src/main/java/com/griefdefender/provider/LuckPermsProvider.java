@@ -40,7 +40,6 @@ import com.griefdefender.api.permission.flag.Flag;
 import com.griefdefender.api.permission.option.Option;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
-import com.griefdefender.listener.LuckPermsEventHandler;
 import com.griefdefender.permission.GDPermissionHolder;
 import com.griefdefender.permission.GDPermissionResult;
 import com.griefdefender.permission.GDPermissionUser;
@@ -100,7 +99,6 @@ public class LuckPermsProvider implements PermissionProvider {
 
     public LuckPermsProvider() {
         this.luckPermsApi = Bukkit.getServicesManager().getRegistration(LuckPermsApi.class).getProvider();
-        new LuckPermsEventHandler(this.luckPermsApi);
     }
 
     public LuckPermsApi getApi() {
@@ -290,10 +288,10 @@ public class LuckPermsProvider implements PermissionProvider {
     }
 
     public void clearPermissions(GDClaim claim) {
-        Map<Set<Context>, Map<String, Boolean>> permissionMap = this.getAllPermissions(claim, GriefDefenderPlugin.DEFAULT_HOLDER);
+        Map<Set<Context>, Map<String, Boolean>> permissionMap = this.getPermanentPermissions(GriefDefenderPlugin.DEFAULT_HOLDER);
         for (Entry<Set<Context>, Map<String, Boolean>> mapEntry : permissionMap.entrySet()) {
             for (Context context : mapEntry.getKey()) {
-                if (context.getKey().equalsIgnoreCase("gd_claim")) {
+                if (context.getKey().equalsIgnoreCase("gd_claim") && context.getValue().equalsIgnoreCase(claim.getUniqueId().toString())) {
                     this.clearPermissions(GriefDefenderPlugin.DEFAULT_HOLDER, mapEntry.getKey());
                     break;
                 }
@@ -352,7 +350,7 @@ public class LuckPermsProvider implements PermissionProvider {
         return cachedData.getMeta();
     }
 
-    public Map<Set<Context>, Map<String, Boolean>> getPermanentPermissions(GDClaim claim, GDPermissionHolder holder) {
+    public Map<Set<Context>, Map<String, Boolean>> getPermanentPermissions(GDPermissionHolder holder) {
         final PermissionHolder permissionHolder = this.getLuckPermsHolder(holder);
         if (permissionHolder == null) {
             return new HashMap<>();
@@ -396,7 +394,7 @@ public class LuckPermsProvider implements PermissionProvider {
         return permanentPermissionMap;
     }
 
-    public Map<Set<Context>, Map<String, Boolean>> getTransientPermissions(GDClaim claim, GDPermissionHolder holder) {
+    public Map<Set<Context>, Map<String, Boolean>> getTransientPermissions(GDPermissionHolder holder) {
         final PermissionHolder permissionHolder = this.getLuckPermsHolder(holder);
         if (permissionHolder == null) {
             return new HashMap<>();
@@ -523,7 +521,7 @@ public class LuckPermsProvider implements PermissionProvider {
         return permanentPermissionMap;
     }
 
-    public Map<String, String> getPermanentOptions(GDClaim claim, GDPermissionHolder holder, Set<Context> contexts) {
+    public Map<String, String> getPermanentOptions(GDPermissionHolder holder, Set<Context> contexts) {
         final PermissionHolder permissionHolder = this.getLuckPermsHolder(holder);
         if (permissionHolder == null) {
             return new HashMap<>();
@@ -545,7 +543,7 @@ public class LuckPermsProvider implements PermissionProvider {
         return options;
     }
 
-    public Map<String, String> getTransientOptions(GDClaim claim, GDPermissionHolder holder, Set<Context> contexts) {
+    public Map<String, String> getTransientOptions(GDPermissionHolder holder, Set<Context> contexts) {
         final PermissionHolder permissionHolder = this.getLuckPermsHolder(holder);
         if (permissionHolder == null) {
             return new HashMap<>();
@@ -567,7 +565,7 @@ public class LuckPermsProvider implements PermissionProvider {
         return options;
     }
 
-    public Map<Set<Context>, Map<String, Boolean>> getAllPermissions(GDClaim claim, GDPermissionHolder holder) {
+    public Map<Set<Context>, Map<String, Boolean>> getAllPermissions(GDPermissionHolder holder) {
         final PermissionHolder permissionHolder = this.getLuckPermsHolder(holder);
         if (permissionHolder == null) {
             return new HashMap<>();
@@ -638,7 +636,7 @@ public class LuckPermsProvider implements PermissionProvider {
             return result;
         }
         // check persistent permissions first
-        Map<Set<Context>, Map<String, Boolean>> permanentPermissions = getPermanentPermissions(claim, holder);
+        Map<Set<Context>, Map<String, Boolean>> permanentPermissions = getPermanentPermissions(holder);
         for (Entry<Set<Context>, Map<String, Boolean>> entry : permanentPermissions.entrySet()) {
             if (entry.getKey().isEmpty()) {
                 continue;
@@ -668,7 +666,7 @@ public class LuckPermsProvider implements PermissionProvider {
         }
 
         // check transient permissions last
-        Map<Set<Context>, Map<String, Boolean>> transientPermissions = getTransientPermissions(claim, holder);
+        Map<Set<Context>, Map<String, Boolean>> transientPermissions = getTransientPermissions(holder);
         for (Entry<Set<Context>, Map<String, Boolean>> entry : transientPermissions.entrySet()) {
             if (entry.getKey().isEmpty()) {
                 continue;
@@ -698,7 +696,7 @@ public class LuckPermsProvider implements PermissionProvider {
     }
 
     public Tristate getPermissionValueWithRequiredContexts(GDClaim claim, GDPermissionHolder holder, String permission, Set<Context> contexts, String contextFilter) {
-        Map<Set<Context>, Map<String, Boolean>> permanentPermissions = getPermanentPermissions(claim, holder);
+        Map<Set<Context>, Map<String, Boolean>> permanentPermissions = getPermanentPermissions(holder);
         for (Entry<Set<Context>, Map<String, Boolean>> entry : permanentPermissions.entrySet()) {
             if (entry.getKey().isEmpty()) {
                 continue;

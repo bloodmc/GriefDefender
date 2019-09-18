@@ -119,8 +119,10 @@ public class OptionRegistryModule implements CatalogRegistryModule<Option> {
         this.createKey("griefdefender:player-health-regen", "player-health-regen", Double.class);
         this.createKey("griefdefender:player-keep-inventory", "player-keep-inventory", Tristate.class);
         this.createKey("griefdefender:player-keep-level", "player-keep-level", Tristate.class);
+        this.createKey("griefdefender:player-teleport-delay", "player-teleport-delay", Integer.class);
         this.createKey("griefdefender:player-walk-speed", "player-walk-speed", Integer.class);
         this.createKey("griefdefender:player-weather", "player-weather", WeatherType.class);
+        this.createKey("griefdefender:pvp", "pvp", Tristate.class);
 
         RegistryHelper.mapFields(Options.class, input -> {
             final String name = input.replace("_", "-");

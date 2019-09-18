@@ -56,7 +56,7 @@ public class ClaimVisualApplyTask implements Runnable {
     @Override
     public void run() {
         // Only revert active visual if we are not currently creating a claim
-        if (this.playerData.visualBlocks != null && this.playerData.lastShovelLocation == null) {
+        if (!this.playerData.visualBlocks.isEmpty() && this.playerData.lastShovelLocation == null) {
             if (this.resetActive) {
                 this.playerData.revertActiveVisual(this.player);
             }
@@ -72,7 +72,7 @@ public class ClaimVisualApplyTask implements Runnable {
             this.visualization.getClaim().playersWatching.add(this.player.getUniqueId());
         }
         // If we still have active visuals to revert, combine with new
-        if (this.playerData.visualBlocks != null) {
+        if (!this.playerData.visualBlocks.isEmpty()) {
             this.playerData.visualBlocks.addAll(this.visualization.visualTransactions);
         } else {
             this.playerData.visualBlocks = new ArrayList<>(this.visualization.visualTransactions);

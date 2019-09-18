@@ -25,6 +25,9 @@
 package com.griefdefender;
 
 import java.lang.ref.WeakReference;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -78,12 +81,13 @@ public class GDPlayerData implements PlayerData {
     public Location lastShovelLocation;
     public Location endShovelLocation;
     public Location lastValidInspectLocation;
+    public boolean claimMode = false;
     public ShovelType shovelMode = ShovelTypes.BASIC;
 
     public GDClaim claimResizing;
     public GDClaim claimSubdividing;
 
-    public List<BlockTransaction> visualBlocks;
+    public List<BlockTransaction> visualBlocks = new ArrayList<>();
     public UUID visualClaimId;
     public UUID petRecipientUniqueId;
     public BukkitTask visualRevertTask;
@@ -111,6 +115,13 @@ public class GDPlayerData implements PlayerData {
 
     public boolean allowFlight = false;
     public boolean ignoreFallDamage = false;
+
+    // teleport data
+    public int teleportDelay = 0;
+    public Location teleportSourceLocation;
+    public Location teleportLocation;
+
+    public Instant lastPvpTimestamp;
 
     // cached global option values
     public int minClaimLevel;
@@ -203,6 +214,7 @@ public class GDPlayerData implements PlayerData {
             this.visualRevertTask = null;
         }
 
+        this.lastShovelLocation = null;
         GDClaim claim = null;
         if (this.visualClaimId != null) {
             claim = (GDClaim) GriefDefenderPlugin.getInstance().dataStore.getClaim(this.worldUniqueId, this.visualClaimId);
@@ -211,7 +223,7 @@ public class GDPlayerData implements PlayerData {
             }
         }
         this.visualClaimId = null;
-        if (this.visualBlocks == null || !player.getWorld().equals(this.visualBlocks.get(0).getFinal().getLocation().getWorld())) {
+        if (this.visualBlocks.isEmpty()|| !player.getWorld().equals(this.visualBlocks.get(0).getFinal().getLocation().getWorld())) {
             return;
         }
 
@@ -226,6 +238,7 @@ public class GDPlayerData implements PlayerData {
             }
             NMSUtil.getInstance().sendBlockChange(player, snapshot);
         }
+        this.visualBlocks.clear();
     }
 
     @Override
@@ -656,8 +669,23 @@ public class GDPlayerData implements PlayerData {
         return totalTax;
     }
 
+    public boolean inPvpCombat(World world) {
+        if (this.lastPvpTimestamp == null) {
+            return false;
+        }
+
+        final Instant now = Instant.now();
+        final int combatTimeout = GriefDefenderPlugin.getActiveConfig(world).getConfig().pvp.combatTimeout;
+        if (this.lastPvpTimestamp.plusSeconds(combatTimeout).isBefore(now)) {
+            this.lastPvpTimestamp = null;
+            return false;
+        }
+
+        return true;
+    }
+
     public void onDisconnect() {
-        this.visualBlocks = null;
+        this.visualBlocks.clear();
         this.eventResultCache = null;
         this.claimResizing = null;
         this.claimSubdividing = null;

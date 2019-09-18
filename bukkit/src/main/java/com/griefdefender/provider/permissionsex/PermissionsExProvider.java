@@ -286,15 +286,6 @@ public class PermissionsExProvider implements PermissionProvider {
     }
 
     @Override
-    public void clearPermissions(OfflinePlayer player, Context context) {
-        pex.getSubjects(PermissionsEx.SUBJECTS_USER).get(player.getUniqueId().toString()).thenAccept(subj -> {
-            final Set<ContextValue<?>> contexts = ImmutableSet.of(contextGDToPEX(context));
-            subj.data().update(data -> data.clearPermissions(contexts));
-            subj.transientData().update(data -> data.clearPermissions(contexts));
-        });
-    }
-
-    @Override
     public void clearPermissions(GDPermissionHolder holder, Context context) {
         holderToPEXSubject(holder).data().update(data -> data.clearPermissions(ImmutableSet.of(contextGDToPEX(context))));
     }
@@ -320,12 +311,12 @@ public class PermissionsExProvider implements PermissionProvider {
     }
 
     @Override
-    public Map<Set<Context>, Map<String, Boolean>> getPermanentPermissions(GDClaim claim, GDPermissionHolder holder) {
+    public Map<Set<Context>, Map<String, Boolean>> getPermanentPermissions(GDPermissionHolder holder) {
         return tKeys(holderToPEXSubject(holder).data().get().getAllPermissions(), map -> Maps.transformValues(map, this::pValIntegerToBool));
     }
 
     @Override
-    public Map<Set<Context>, Map<String, Boolean>> getTransientPermissions(GDClaim claim, GDPermissionHolder holder) {
+    public Map<Set<Context>, Map<String, Boolean>> getTransientPermissions(GDPermissionHolder holder) {
         return tKeys(holderToPEXSubject(holder).transientData().get().getAllPermissions(), map -> Maps.transformValues(map, this::pValIntegerToBool));
     }
 
@@ -340,17 +331,17 @@ public class PermissionsExProvider implements PermissionProvider {
     }
 
     @Override
-    public Map<String, String> getPermanentOptions(GDClaim claim, GDPermissionHolder holder, Set<Context> contexts) {
+    public Map<String, String> getPermanentOptions(GDPermissionHolder holder, Set<Context> contexts) {
         return holderToPEXSubject(holder).data().get().getOptions(contextsGDToPEX(contexts));
     }
 
     @Override
-    public Map<String, String> getTransientOptions(GDClaim claim, GDPermissionHolder holder, Set<Context> contexts) {
+    public Map<String, String> getTransientOptions(GDPermissionHolder holder, Set<Context> contexts) {
         return holderToPEXSubject(holder).transientData().get().getOptions(contextsGDToPEX(contexts));
     }
 
     @Override
-    public Map<Set<Context>, Map<String, Boolean>> getAllPermissions(GDClaim claim, GDPermissionHolder holder) {
+    public Map<Set<Context>, Map<String, Boolean>> getAllPermissions(GDPermissionHolder holder) {
         final Map<Set<Context>, Map<String, Boolean>> allPermissions = new HashMap<>();
         holderToPEXSubject(holder).data().get().getAllPermissions().forEach((contexts, perms) ->
                 allPermissions.put(contextsPEXToGD(contexts), new HashMap<>(Maps.transformValues(perms, this::pValIntegerToBool))));

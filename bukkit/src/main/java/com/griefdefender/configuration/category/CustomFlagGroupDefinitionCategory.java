@@ -29,7 +29,7 @@ import java.util.Map;
 
 import com.griefdefender.api.claim.ClaimContexts;
 import com.griefdefender.permission.flag.GDCustomFlagDefinition;
-import com.griefdefender.permission.flag.GDCustomFlagTypes;
+import com.griefdefender.permission.flag.GDCustomFlagDefinitions;
 
 import ninja.leaping.configurate.objectmapping.Setting;
 import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
@@ -51,7 +51,7 @@ public class CustomFlagGroupDefinitionCategory extends ConfigCategory {
             userGroup = new CustomFlagGroupCategory();
         }
         if (userGroup.isEnabled() && userGroup.getFlagDefinitions().isEmpty()) {
-            for (GDCustomFlagDefinition definition : GDCustomFlagTypes.USER_FLAGS) {
+            for (GDCustomFlagDefinition definition : GDCustomFlagDefinitions.USER_FLAGS) {
                 userGroup.getFlagDefinitions().put(definition.getDisplayName(), definition);
             }
             this.groups.put("user", userGroup);
@@ -60,8 +60,7 @@ public class CustomFlagGroupDefinitionCategory extends ConfigCategory {
             adminGroup = new CustomFlagGroupCategory();
         }
         if (adminGroup.isEnabled() && adminGroup.getFlagDefinitions().isEmpty()) {
-            for (GDCustomFlagDefinition definition : GDCustomFlagTypes.ADMIN_FLAGS) {
-                definition.getDefinitionContexts().add(ClaimContexts.GLOBAL_DEFAULT_CONTEXT);
+            for (GDCustomFlagDefinition definition : GDCustomFlagDefinitions.ADMIN_FLAGS) {
                 adminGroup.getFlagDefinitions().put(definition.getDisplayName(), definition);
             }
             adminGroup.isAdmin = true;

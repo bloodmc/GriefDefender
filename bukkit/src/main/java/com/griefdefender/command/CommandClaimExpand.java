@@ -65,7 +65,7 @@ import net.kyori.text.format.TextColor;
 @CommandPermission(GDPermissions.COMMAND_CLAIM_EXPAND)
 public class CommandClaimExpand extends BaseCommand {
 
-    @CommandCompletion("@gdblockfaces @gddummy")
+    @CommandCompletion("@gddummy @gdblockfaces @gddummy")
     @CommandAlias("claimexpand|expandclaim")
     @Description("Expands the claim in the direction you are facing.")
     @Syntax("<amount> [direction]")

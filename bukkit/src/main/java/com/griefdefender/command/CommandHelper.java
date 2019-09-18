@@ -548,8 +548,7 @@ public class CommandHelper {
 
     public static void showClaims(CommandSender src, Set<Claim> claims, int height, boolean visualizeClaims, boolean overlap) {
         final String worldName = src instanceof Player ? ((Player) src).getWorld().getName() : Bukkit.getWorlds().get(0).getName();
-        final boolean canListOthers = src.hasPermission(GDPermissions.LIST_OTHER_CLAIMS);
-        List<Component> claimsTextList = generateClaimTextList(new ArrayList<Component>(), claims, worldName, null, src, createShowClaimsConsumer(src, claims, height, visualizeClaims), canListOthers, false, overlap);
+        List<Component> claimsTextList = generateClaimTextList(new ArrayList<Component>(), claims, worldName, null, src, createShowClaimsConsumer(src, claims, height, visualizeClaims), false, overlap, false);
 
         if (visualizeClaims && src instanceof Player) {
             Player player = (Player) src;
@@ -583,36 +582,26 @@ public class CommandHelper {
         };
     }
 
-    public static List<Component> generateClaimTextList(List<Component> claimsTextList, Set<Claim> claimList, String worldName, GDPermissionUser user, CommandSender src, Consumer<CommandSender> returnCommand, boolean canListOthers, boolean listChildren) {
-        return generateClaimTextList(claimsTextList, claimList, worldName, user, src, returnCommand, canListOthers, listChildren, false);
+    public static List<Component> generateClaimTextListCommand(List<Component> claimsTextList, Set<Claim> claimList, String worldName, GDPermissionUser user, CommandSender src, Consumer<CommandSender> returnCommand, boolean listChildren) {
+        return generateClaimTextList(claimsTextList, claimList, worldName, user, src, returnCommand, listChildren, false, true);
     }
 
-    public static List<Component> generateClaimTextList(List<Component> claimsTextList, Set<Claim> claimList, String worldName, GDPermissionUser user, CommandSender src, Consumer<CommandSender> returnCommand, boolean canListOthers, boolean listChildren, boolean overlap) {
-        final OfflinePlayer offlinePlayer = src instanceof OfflinePlayer ? (OfflinePlayer) src : null;
-        GDPermissionUser holder = null;
-        if (offlinePlayer != null) {
-            holder = PermissionHolderCache.getInstance().getOrCreateUser(offlinePlayer);
-        }
+    public static List<Component> generateClaimTextList(List<Component> claimsTextList, Set<Claim> claimList, String worldName, GDPermissionUser user, CommandSender src, Consumer<CommandSender> returnCommand, boolean listChildren) {
+        return generateClaimTextList(claimsTextList, claimList, worldName, user, src, returnCommand, listChildren, false, false);
+    }
+
+    public static List<Component> generateClaimTextList(List<Component> claimsTextList, Set<Claim> claimList, String worldName, GDPermissionUser user, CommandSender src, Consumer<CommandSender> returnCommand, boolean listChildren, boolean overlap, boolean listCommand) {
         if (claimList.size() > 0) {
             for (Claim playerClaim : claimList) {
                 GDClaim claim = (GDClaim) playerClaim;
-                if (!overlap && !listChildren && claim.isSubdivision() && !claim.getData().getEconomyData().isForSale()) {
-                    continue;
-                }
-                // Only list claims trusted if not an overlap claim
-                if (!overlap && holder != null && !claim.isUserTrusted(holder, TrustTypes.ACCESSOR) && !canListOthers) {
+                if (!listCommand && !overlap && !listChildren && claim.isSubdivision() && !claim.getData().getEconomyData().isForSale()) {
                     continue;
                 }
 
                 double teleportHeight = claim.getOwnerPlayerData() == null ? 65.0D : (claim.getOwnerMinClaimLevel() > 65.0D ? claim.getOwnerMinClaimLevel() : 65);
-
                 Vector3i lesserPos = claim.lesserBoundaryCorner;
                 Vector3i greaterPos = claim.greaterBoundaryCorner;
                 Vector3i center = claim.lesserBoundaryCorner.add(lesserPos.getX(), lesserPos.getY(), lesserPos.getZ()).div(2);
-                if (teleportHeight == 65 && claim.getWorld().getEnvironment() == Environment.NORMAL) {
-                    teleportHeight = claim.getWorld().getHighestBlockYAt((int)center.getX(), (int)center.getZ());
-                }
-
                 Vector3i newCenter = new Vector3i(center.getX(), teleportHeight, center.getZ());
                 Vector3i southWest = new Vector3i(newCenter.getX(), newCenter.getY(), newCenter.getZ());
                 //final double teleportHeight = claim.getOwnerPlayerData() == null ? 65.0D : (claim.getOwnerPlayerData().getMinClaimLevel() > 65.0D ? claim.getOwnerPlayerData().getMinClaimLevel() : 65);
@@ -678,7 +667,7 @@ public class CommandHelper {
 
                 List<Component> childrenTextList = new ArrayList<>();
                 if (!listChildren) {
-                    childrenTextList = generateClaimTextList(new ArrayList<Component>(), claim.getChildren(true), worldName, user, src, returnCommand, canListOthers, true);
+                    childrenTextList = generateClaimTextList(new ArrayList<Component>(), claim.getChildren(true), worldName, user, src, returnCommand, true);
                 }
                 final Player player = src instanceof Player ? (Player) src : null;
                 Component buyClaim = TextComponent.empty();
@@ -1023,7 +1012,14 @@ public class CommandHelper {
                 }
             }
 
+            final int teleportDelay = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), player, Options.PLAYER_TELEPORT_DELAY, claim);
             if (isClaimSpawn) {
+                if (teleportDelay > 0) {
+                    playerData.teleportDelay = teleportDelay + 1;
+                    playerData.teleportSourceLocation = player.getLocation();
+                    playerData.teleportLocation = location;
+                    return;
+                }
                 player.teleport(location, TeleportCause.PLUGIN);
                 return;
             }
@@ -1033,6 +1029,11 @@ public class CommandHelper {
             int currentY = location.getBlockY();
             while (currentY < player.getWorld().getMaxHeight()) {
                 if (PlayerUtil.getInstance().isSafeLocation(location)) {
+                    if (teleportDelay > 0) {
+                        playerData.teleportDelay = teleportDelay + 1;
+                        playerData.teleportLocation = location;
+                        return;
+                    }
                     player.teleport(location, TeleportCause.PLUGIN);
                     return;
                 }

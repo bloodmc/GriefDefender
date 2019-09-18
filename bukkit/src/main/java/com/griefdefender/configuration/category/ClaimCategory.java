@@ -43,13 +43,14 @@ public class ClaimCategory extends ConfigCategory {
     public boolean claimAutoNatureRestore = false;
     @Setting(value = "auto-schematic-restore", comment = "Whether survival claims will be automatically restored to its claim creation schematic on abandon/expiration. "
             + "\nNote: Enabling this feature will cause ALL newly created claims to automatically create a special schematic that will be used to restore claim on abandon/expiration."
+            + "\nNote: Enabling this feature will disable ability to resize claims."
             + "\nNote: It is HIGHLY recommended to disable building in the wilderness before using this feature to avoid players exploiting."
             + "\nNote: It is also recommended to ONLY use this feature in newly created worlds where there is no existing player data."
             + "\nNote: This does NOT affect deletions. If admins want to restore back to original schematic, they can select '__restore__' by using /claimschematic command.")
     public boolean claimAutoSchematicRestore = false;
-    @Setting(value = "investigation-tool", comment = "The item used to investigate claims with a right-click.")
+    @Setting(value = "investigation-tool", comment = "The item used to investigate claims with a right-click.\nNote: Set to empty quotes if you want to assign no item and use '/claim' mode exclusively.")
     public String investigationTool = "minecraft:stick";
-    @Setting(value = "modification-tool", comment = "The item used to create/resize claims with a right click.")
+    @Setting(value = "modification-tool", comment = "The item used to create/resize claims with a right click.\nNote: Set to empty quotes if you want to assign no item and use '/claim' mode exclusively.")
     public String modificationTool = "minecraft:golden_shovel";
     @Setting(value = "claims-enabled",
             comment = "Whether claiming is enabled or not. (0 = Disabled, 1 = Enabled)")

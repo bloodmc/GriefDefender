@@ -30,6 +30,8 @@ import co.aikar.commands.annotation.CommandCompletion;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Subcommand;
+import co.aikar.commands.annotation.Syntax;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.griefdefender.GDPlayerData;
@@ -64,6 +66,7 @@ public class CommandClaimDeleteAll extends BaseCommand {
     @CommandCompletion("@gdplayers @gddummy")
     @CommandAlias("deleteall")
     @Description("Delete all of another player's claims.")
+    @Syntax("<player>")
     @Subcommand("delete all")
     public void execute(Player src, OfflinePlayer otherPlayer) {
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(src.getWorld(), otherPlayer.getUniqueId());

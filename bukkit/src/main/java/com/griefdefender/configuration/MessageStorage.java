@@ -90,6 +90,7 @@ public class MessageStorage {
     public static String DESCRIPTION_PLAYER_INFO = "player-info";
 
     // messages with parameters
+    public static final String ABANDON_CLAIM_DELAY_WARNING = "abandon-claim-delay-warning";
     public static final String ABANDON_FAILED = "abandon-failed";
     public static final String ABANDON_OTHER_SUCCESS = "abandon-other-success";
     public static final String ABANDON_SUCCESS = "abandon-success";
@@ -135,6 +136,7 @@ public class MessageStorage {
     public static final String COMMAND_CLAIMBAN_SUCCESS_ENTITY = "command-claimban-success-entity";
     public static final String COMMAND_CLAIMBAN_SUCCESS_ITEM = "command-claimban-success-item";
     public static final String COMMAND_CLAIMCLEAR_NO_ENTITIES = "command-claimclear-no-entities";
+    public static final String COMMAND_CLAIMNAME_NOT_FOUND = "command-claimname-not-found";
     public static final String COMMAND_CLAIMUNBAN_SUCCESS_BLOCK = "command-claimunban-success-block";
     public static final String COMMAND_CLAIMUNBAN_SUCCESS_ENTITY = "command-claimunban-success-entity";
     public static final String COMMAND_CLAIMUNBAN_SUCCESS_ITEM = "command-claimunban-success-item";
@@ -283,6 +285,8 @@ public class MessageStorage {
     public static final String TAX_CLAIM_PAID_PARTIAL = "tax-claim-paid-partial";
     public static final String TAX_INFO = "tax-info";
     public static final String TAX_PAST_DUE = "tax-past-due";
+    public static final String TELEPORT_CONFIRM = "teleport-confirm";
+    public static final String TELEPORT_DELAY_NOTICE = "teleport-delay-notice";
     public static final String TOOL_NOT_EQUIPPED = "tool-not-equipped";
     public static final String TOWN_CREATE_NOT_ENOUGH_FUNDS = "town-create-not-enough-funds";
     public static final String TOWN_NAME = "town-name";

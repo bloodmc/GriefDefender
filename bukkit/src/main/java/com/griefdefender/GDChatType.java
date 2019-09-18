@@ -22,31 +22,28 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.griefdefender.command;
+package com.griefdefender;
 
-import co.aikar.commands.BaseCommand;
-import co.aikar.commands.annotation.CommandAlias;
-import co.aikar.commands.annotation.CommandPermission;
-import co.aikar.commands.annotation.Description;
-import co.aikar.commands.annotation.Subcommand;
-import com.griefdefender.GriefDefenderPlugin;
-import com.griefdefender.cache.MessageCache;
-import com.griefdefender.permission.GDPermissions;
-import org.bukkit.entity.Player;
+import com.griefdefender.api.ChatType;
 
-@CommandAlias("%griefdefender")
-@CommandPermission(GDPermissions.COMMAND_CLAIM_WORLDEDIT)
-public class CommandClaimWorldEdit extends BaseCommand {
+public class GDChatType implements ChatType {
 
-    @CommandAlias("claimwe|claimworldedit")
-    @Description("Uses the worldedit selection to create a claim.")
-    @Subcommand("claim worldedit|claim we")
-    public void execute(Player player) {
-        if (GriefDefenderPlugin.getInstance().getWorldEditProvider() == null) {
-            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().COMMAND_WORLDEDIT_MISSING);
-            return;
-        }
+    private final String id;
+    private final String name;
 
-        GriefDefenderPlugin.getInstance().getWorldEditProvider().createClaim(player);
+    public GDChatType(String id, String name) {
+        this.id = id;
+        this.name = name;
     }
+
+    @Override
+    public String getId() {
+        return this.id;
+    }
+
+    @Override
+    public String getName() {
+        return this.name;
+    }
+
 }

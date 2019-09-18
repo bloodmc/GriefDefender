@@ -30,6 +30,7 @@ import co.aikar.commands.annotation.CommandCompletion;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Subcommand;
+import co.aikar.commands.annotation.Syntax;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -58,6 +59,7 @@ public class CommandUntrustGroup extends BaseCommand {
     @CommandCompletion("@gdgroups @gddummy")
     @CommandAlias("untrustgroup")
     @Description("Revokes group access to your claim.")
+    @Syntax("<group>")
     @Subcommand("untrust group")
     public void execute(Player player, String target) {
         final GDPermissionGroup group = PermissionHolderCache.getInstance().getOrCreateGroup(target);

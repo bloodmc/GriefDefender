@@ -1187,9 +1187,15 @@ public class GDClaim implements Claim {
         }
 
         if (playerData == null) {
+            if (GriefDefenderPlugin.getActiveConfig(this.world.getUID()).getConfig().claim.claimAutoSchematicRestore) {
+                return new GDClaimResult(this, ClaimResultType.FAILURE);
+            }
             startCorner = new Location(this.world, minx, miny, minz);
             endCorner = new Location(this.world, maxx, maxy, maxz);
         } else {
+            if (!playerData.canIgnoreClaim(this) && GriefDefenderPlugin.getActiveConfig(this.world.getUID()).getConfig().claim.claimAutoSchematicRestore) {
+                return new GDClaimResult(this, ClaimResultType.FAILURE);
+            }
             startCorner = playerData.lastShovelLocation;
             endCorner = playerData.endShovelLocation;
         }
@@ -1343,9 +1349,15 @@ public class GDClaim implements Claim {
         }
 
         if (playerData == null) {
+            if (GriefDefenderPlugin.getActiveConfig(this.world.getUID()).getConfig().claim.claimAutoSchematicRestore) {
+                return new GDClaimResult(this, ClaimResultType.FAILURE);
+            }
             startCorner = new Location(this.world, smallX, smallY, smallZ);
             endCorner = new Location(this.world, bigX, bigY, bigZ);
         } else {
+            if (!playerData.canIgnoreClaim(this) && GriefDefenderPlugin.getActiveConfig(this.world.getUID()).getConfig().claim.claimAutoSchematicRestore) {
+                return new GDClaimResult(this, ClaimResultType.FAILURE);
+            }
             startCorner = playerData.lastShovelLocation;
             endCorner = playerData.endShovelLocation;
         }

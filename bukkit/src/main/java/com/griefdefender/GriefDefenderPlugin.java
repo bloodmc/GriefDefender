@@ -106,6 +106,7 @@ import com.griefdefender.command.CommandClaimIgnore;
 import com.griefdefender.command.CommandClaimInfo;
 import com.griefdefender.command.CommandClaimInherit;
 import com.griefdefender.command.CommandClaimList;
+import com.griefdefender.command.CommandClaimMode;
 import com.griefdefender.command.CommandClaimName;
 import com.griefdefender.command.CommandClaimOption;
 import com.griefdefender.command.CommandClaimOptionGroup;
@@ -187,6 +188,7 @@ import com.griefdefender.provider.EssentialsProvider;
 import com.griefdefender.provider.LuckPermsProvider;
 import com.griefdefender.provider.PermissionProvider;
 import com.griefdefender.provider.VaultProvider;
+import com.griefdefender.registry.ChatTypeRegistryModule;
 import com.griefdefender.registry.ClaimTypeRegistryModule;
 import com.griefdefender.registry.CreateModeTypeRegistryModule;
 import com.griefdefender.registry.FlagRegistryModule;
@@ -402,6 +404,7 @@ public class GriefDefenderPlugin {
         PUBLIC_USER = new GDPermissionUser(PUBLIC_UUID, PUBLIC_NAME);
         WORLD_USER = new GDPermissionUser(WORLD_USER_UUID, WORLD_USER_NAME);
         Guice.createInjector(Stage.PRODUCTION, new GriefDefenderImplModule());
+        ChatTypeRegistryModule.getInstance().registerDefaults();
         ClaimTypeRegistryModule.getInstance().registerDefaults();
         ShovelTypeRegistryModule.getInstance().registerDefaults();
         TrustTypeRegistryModule.getInstance().registerDefaults();
@@ -587,6 +590,7 @@ public class GriefDefenderPlugin {
         manager.registerCommand(new CommandClaimInfo());
         manager.registerCommand(new CommandClaimInherit());
         manager.registerCommand(new CommandClaimList());
+        manager.registerCommand(new CommandClaimMode());
         manager.registerCommand(new CommandClaimName());
         manager.registerCommand(new CommandClaimOption());
         manager.registerCommand(new CommandClaimOptionGroup());
@@ -778,6 +782,13 @@ public class GriefDefenderPlugin {
         manager.getCommandCompletions().registerCompletion("gdcontexts", c -> {
             return ImmutableList.of("context[<override|default|used_item|source|world|server|player|group>]");
         });
+        manager.getCommandCompletions().registerCompletion("gdworlds", c -> {
+            List<String> tabList = new ArrayList<>();
+            for (World world : Bukkit.getServer().getWorlds()) {
+                tabList.add(world.getName().toLowerCase());
+            }
+            return ImmutableList.copyOf(tabList);
+        });
         manager.getCommandCompletions().registerCompletion("gddummy", c -> {
             return ImmutableList.of();
         });
@@ -832,11 +843,10 @@ public class GriefDefenderPlugin {
             GDFlags.populateFlagStatus();
             PermissionHolderCache.getInstance().getOrCreatePermissionCache(GriefDefenderPlugin.DEFAULT_HOLDER).invalidateAll();
             CLAIM_BLOCK_SYSTEM = BaseStorage.globalConfig.getConfig().playerdata.claimBlockSystem;
-            final GDItemType defaultModTool = ItemTypeRegistryModule.getInstance().getById("minecraft:golden_shovel").orElse(null);
             final GDBlockType defaultCreateVisualBlock = BlockTypeRegistryModule.getInstance().getById("minecraft:diamond_block").orElse(null);
             this.createVisualBlock = BlockTypeRegistryModule.getInstance().getById(BaseStorage.globalConfig.getConfig().visual.claimCreateStartBlock).orElse(defaultCreateVisualBlock);
-            this.modificationTool  = ItemTypeRegistryModule.getInstance().getById(BaseStorage.globalConfig.getConfig().claim.modificationTool).orElse(defaultModTool);
-            this.investigationTool = ItemTypeRegistryModule.getInstance().getById(BaseStorage.globalConfig.getConfig().claim.investigationTool).orElse(ItemTypeRegistryModule.getInstance().getById("minecraft:stick").get());
+            this.modificationTool  = ItemTypeRegistryModule.getInstance().getById(BaseStorage.globalConfig.getConfig().claim.modificationTool).orElse(null);
+            this.investigationTool = ItemTypeRegistryModule.getInstance().getById(BaseStorage.globalConfig.getConfig().claim.investigationTool).orElse(null);
             this.maxInspectionDistance = BaseStorage.globalConfig.getConfig().general.maxClaimInspectionDistance;
             if (this.dataStore != null) {
                 for (World world : Bukkit.getServer().getWorlds()) {

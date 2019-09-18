@@ -88,7 +88,7 @@ public class CommandClaimBuy extends BaseCommand {
             }
         }
 
-        List<Component> claimsTextList = CommandHelper.generateClaimTextList(new ArrayList<Component>(), claimsForSale, player.getWorld().getName(), null, player, CommandHelper.createCommandConsumer(player, "claimbuy", ""), true, false);
+        List<Component> claimsTextList = CommandHelper.generateClaimTextListCommand(new ArrayList<Component>(), claimsForSale, player.getWorld().getName(), null, player, CommandHelper.createCommandConsumer(player, "claimbuy", ""), false);
         PaginationList.Builder paginationBuilder = PaginationList.builder()
                 .title(MessageCache.getInstance().COMMAND_CLAIMBUY_TITLE).padding(TextComponent.of(" ").decoration(TextDecoration.STRIKETHROUGH, true)).contents(claimsTextList);
         paginationBuilder.sendTo(player);

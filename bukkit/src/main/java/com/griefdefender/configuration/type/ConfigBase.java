@@ -29,6 +29,7 @@ import com.griefdefender.configuration.category.BlacklistCategory;
 import com.griefdefender.configuration.category.ClaimCategory;
 import com.griefdefender.configuration.category.GeneralCategory;
 import com.griefdefender.configuration.category.OptionCategory;
+import com.griefdefender.configuration.category.PvpCategory;
 import com.griefdefender.configuration.category.TownCategory;
 import com.griefdefender.configuration.category.VisualCategory;
 
@@ -58,6 +59,9 @@ public class ConfigBase {
 
     @Setting
     public GeneralCategory general = new GeneralCategory();
+
+    @Setting
+    public PvpCategory pvp = new PvpCategory();
 
     @Setting
     public TownCategory town = new TownCategory();
