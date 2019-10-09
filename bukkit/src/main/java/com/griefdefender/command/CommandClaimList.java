@@ -44,6 +44,7 @@ import com.griefdefender.api.claim.ClaimTypes;
 import com.griefdefender.api.claim.TrustTypes;
 import com.griefdefender.cache.MessageCache;
 import com.griefdefender.cache.PermissionHolderCache;
+import com.griefdefender.claim.GDClaim;
 import com.griefdefender.claim.GDClaimManager;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.internal.pagination.PaginationList;
@@ -92,8 +93,14 @@ public class CommandClaimList extends BaseCommand {
     @Syntax("[<player>|<player> <world>]")
     @Description("List information about a player's claim blocks and claims.")
     @Subcommand("claim list")
-    public void execute(Player src, @Optional OfflinePlayer targetPlayer, @Optional World world) {
+    public void execute(Player src, @Optional String targetPlayer, @Optional World world) {
         final GDPermissionUser user = targetPlayer == null ? PermissionHolderCache.getInstance().getOrCreateUser(src) : PermissionHolderCache.getInstance().getOrCreateUser(targetPlayer);
+        if (user == null) {
+            GriefDefenderPlugin.sendMessage(src, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.COMMAND_INVALID_PLAYER,
+                    ImmutableMap.of(
+                    "player", targetPlayer)));
+            return;
+        }
         if (world == null) {
             world = src.getWorld();
         }
@@ -105,6 +112,7 @@ public class CommandClaimList extends BaseCommand {
         List<Component> claimsTextList = new ArrayList<>();
         Set<Claim> claims = new HashSet<>();
         final String worldName = worldUniqueId == null ? "" : Bukkit.getWorld(worldUniqueId).getName();
+        final boolean otherUser = !src.getUniqueId().equals(user.getUniqueId());
         for (World world : Bukkit.getServer().getWorlds()) {
             if (type != null && !world.getUID().equals(worldUniqueId)) {
                 continue;
@@ -113,7 +121,7 @@ public class CommandClaimList extends BaseCommand {
             // load the target player's data
             final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(world, user.getUniqueId());
             Set<Claim> claimList = null;
-            if (type == null) {
+            if (type == null || otherUser) {
                 claimList = playerData.getClaims();
             } else {
                 claimList = claimWorldManager.getWorldClaims();
@@ -124,22 +132,17 @@ public class CommandClaimList extends BaseCommand {
                     continue;
                 }
 
-                final boolean isUserTrusted = claim.isUserTrusted(user.getUniqueId(), TrustTypes.ACCESSOR);
+                if (((GDClaim) claim).allowEdit(src) != null && !claim.isUserTrusted(src.getUniqueId(), TrustTypes.ACCESSOR)) {
+                    continue;
+                }
                 if (type == null) {
-                    if (isUserTrusted) {
-                        System.out.println("Adding claim UUID " + claim.getUniqueId());
-                        claims.add(claim);
-                    }
+                    claims.add(claim);
                 } else {
                     if (claim.getType() == type) {
-                        if (isUserTrusted) {
-                            System.out.println("2Adding claim UUID " + claim.getUniqueId());
-                            claims.add(claim);
-                        }
+                        claims.add(claim);
                     } else if (type == ClaimTypes.SUBDIVISION) {
                         for (Claim child : claim.getChildren(true)) {
                             if (child.getType() == type) {
-                                System.out.println("FOUND CHILD " + child);
                                 claims.add(child);
                             }
                         }
@@ -172,8 +175,8 @@ public class CommandClaimList extends BaseCommand {
                 .append(type == null ? 
                         TextComponent.builder("")
                         .append(whiteOpenBracket)
-                        .append(MessageCache.getInstance().TITLE_OWN.color(TextColor.GOLD))
-                        .append(whiteCloseBracket).build() : MessageCache.getInstance().TITLE_OWN.color(TextColor.GRAY))
+                        .append(otherUser ? TextComponent.of(user.getFriendlyName()).color(TextColor.GOLD) : MessageCache.getInstance().TITLE_OWN.color(TextColor.GOLD))
+                        .append(whiteCloseBracket).build() : otherUser ? TextComponent.of(user.getFriendlyName()).color(TextColor.GRAY) : MessageCache.getInstance().TITLE_OWN.color(TextColor.GRAY))
                 .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createClaimListConsumer(src, user, null, worldUniqueId))))
                 .hoverEvent(HoverEvent.showText(ownedShowText)).build();
         Component adminTypeText = TextComponent.builder("")
@@ -209,13 +212,13 @@ public class CommandClaimList extends BaseCommand {
                 .append(MessageCache.getInstance().LABEL_DISPLAYING.color(TextColor.AQUA))
                 .append(" : ", TextColor.AQUA)
                 .append(ownedTypeText)
-                .append("  ")
-                .append(adminTypeText)
-                .append("  ")
+                .append(" ")
+                .append(otherUser ? TextComponent.of("") : adminTypeText)
+                .append(otherUser ? "" : " ")
                 .append(basicTypeText)
-                .append("  ")
+                .append(" ")
                 .append(subTypeText)
-                .append("  ")
+                .append(" ")
                 .append(townTypeText).build();
         final int fillSize = 20 - (claimsTextList.size() + 2);
         for (int i = 0; i < fillSize; i++) {

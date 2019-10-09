@@ -715,7 +715,7 @@ public class PlayerEventHandler implements Listener {
         final Object source = player;
         final Location location = event.getClickedBlock() != null ? event.getClickedBlock().getLocation() : null;
 
-        if (event.getHand() == EquipmentSlot.HAND && (playerData.claimMode || (itemInHand != null && GriefDefenderPlugin.getInstance().modificationTool != null && NMSUtil.getInstance().itemsEqual(itemInHand, GriefDefenderPlugin.getInstance().modificationTool)))) {
+        if (NMSUtil.getInstance().isMainHandSlot(event.getHand()) && (playerData.claimMode || (itemInHand != null && GriefDefenderPlugin.getInstance().modificationTool != null && NMSUtil.getInstance().itemsEqual(itemInHand, GriefDefenderPlugin.getInstance().modificationTool)))) {
             onPlayerHandleClaimCreateAction(event, clickedBlock, player, itemInHand, playerData);
             // avoid changing blocks after using a shovel
             event.setUseInteractedBlock(Result.DENY);
@@ -1416,7 +1416,7 @@ public class PlayerEventHandler implements Listener {
 
     private boolean investigateClaim(PlayerInteractEvent event, Player player, Block clickedBlock, ItemStack itemInHand) {
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
-        if (playerData.claimMode && event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+        if (playerData.claimMode && (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK)) {
             // claim mode inspects with left-click
             return false;
         }

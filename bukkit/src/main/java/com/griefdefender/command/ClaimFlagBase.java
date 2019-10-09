@@ -908,17 +908,16 @@ public abstract class ClaimFlagBase extends BaseCommand {
                 } else {
                     newValue = Tristate.UNDEFINED;
                 }
-    
-                PermissionResult result = null;
-                for (Flag flag : customFlag.getFlags()) {
-                    GDFlagPermissionEvent.Set event = new GDFlagPermissionEvent.Set(this.subject, flagData.getFlag(), newValue, newContexts);
-                    GriefDefender.getEventManager().post(event);
-                    if (event.cancelled()) {
-                        return;
-                    }
 
-                    result = GriefDefenderPlugin.getInstance().getPermissionProvider().setPermissionValue(GriefDefenderPlugin.DEFAULT_HOLDER, flag, newValue, newContexts);
+                PermissionResult result = null;
+                final Flag flag = flagData.getFlag();
+                GDFlagPermissionEvent.Set event = new GDFlagPermissionEvent.Set(this.subject, flagData.getFlag(), newValue, newContexts);
+                GriefDefender.getEventManager().post(event);
+                if (event.cancelled()) {
+                    return;
                 }
+
+                result = GriefDefenderPlugin.getInstance().getPermissionProvider().setPermissionValue(GriefDefenderPlugin.DEFAULT_HOLDER, flag, newValue, newContexts);
             }
             GDCauseStackManager.getInstance().popCause();
             showCustomFlags(src, claim, displayType);

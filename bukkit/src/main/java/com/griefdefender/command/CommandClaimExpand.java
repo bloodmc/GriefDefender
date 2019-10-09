@@ -95,10 +95,8 @@ public class CommandClaimExpand extends BaseCommand {
             return;
         }
 
-        System.out.println("PLAYER IS FACING " + face);
         final Vector3i lesser = claim.lesserBoundaryCorner;
         final Vector3i greater = claim.greaterBoundaryCorner;
-        System.out.println("CURRENT CORNERS lesser = " + lesser + ", greater = " + greater);
         Vector3i point1 = null;
         Vector3i point2 = null;
         if (face == BlockFace.EAST) {

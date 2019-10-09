@@ -518,6 +518,11 @@ public class GDPermissionManager implements PermissionManager {
                 if (targetEntity instanceof Item) {
                     return getPermissionContexts(claim, ((Item) targetEntity).getItemStack(), isSource);
                 }
+                if (targetEntity.getType() == null) {
+                    // Plugin sending fake player and violating API contract so just ignore...
+                    return contexts;
+                }
+
                 final String name = targetEntity.getType().getName() == null ? targetEntity.getType().name().toLowerCase() : targetEntity.getType().getName();
                 final GDEntityType type = EntityTypeRegistryModule.getInstance().getById(name).orElse(null);
                 if (type == null) {

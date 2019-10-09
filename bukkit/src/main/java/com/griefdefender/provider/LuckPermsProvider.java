@@ -320,12 +320,12 @@ public class LuckPermsProvider implements PermissionProvider {
     }
 
     public boolean holderHasPermission(GDPermissionHolder holder, String permission) {
-        Node node = this.luckPermsApi.getNodeFactory().newBuilder(permission).build();
         final PermissionHolder permissionHolder = this.getLuckPermsHolder(holder);
         if (permissionHolder == null) {
             return false;
         }
-        return permissionHolder.hasPermission(node) == me.lucko.luckperms.api.Tristate.TRUE;
+
+        return permissionHolder.getCachedData().getPermissionData(Contexts.allowAll()).getPermissionValue(permission) == me.lucko.luckperms.api.Tristate.TRUE;
     }
 
     public Map<String, Boolean> getPermissions(GDPermissionHolder holder, Set<Context> contexts) {
