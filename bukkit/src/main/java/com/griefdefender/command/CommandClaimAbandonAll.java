@@ -148,9 +148,9 @@ public class CommandClaimAbandonAll extends BaseCommand {
                     }
                 }
     
-                playerData.restoreAbandonClaim = event.isRestoring();
+                playerData.useRestoreSchematic = event.isRestoring();
                 GriefDefenderPlugin.getInstance().dataStore.abandonClaimsForPlayer(user, allowedClaims);
-                playerData.restoreAbandonClaim = false;
+                playerData.useRestoreSchematic = false;
     
                 if (GriefDefenderPlugin.getInstance().isEconomyModeEnabled()) {
                     final Economy economy = GriefDefenderPlugin.getInstance().getVaultProvider().getApi();

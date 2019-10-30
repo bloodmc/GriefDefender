@@ -2827,6 +2827,7 @@ public class GDClaim implements Claim {
                         if (!result.successful()) {
                             return result;
                         }
+                        requiredFunds = claimCost * claim.getOwnerEconomyBlockCost();
                     } else {
                         final int remainingClaimBlocks = playerData.getRemainingClaimBlocks() - claimCost;
                         if (remainingClaimBlocks < 0) {

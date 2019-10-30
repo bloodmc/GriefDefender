@@ -200,10 +200,12 @@ public abstract class ClaimOptionBase extends BaseCommand {
                         break;
                     }
                 }
-                if (contextSet.isEmpty()) {
-                    type = MenuType.CLAIM;
+                if (!option.isGlobal()) {
+                    contextSet.add(claim.getContext());
+                    if (contextSet.isEmpty() ) {
+                        type = MenuType.CLAIM;
+                    }
                 }
-                contextSet.add(claim.getContext());
                 GDCauseStackManager.getInstance().pushCause(player);
                 PermissionUtil.getInstance().setOptionValue(this.subject, option.getPermission(), value, contextSet);
                 TextAdapter.sendComponent(player, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.OPTION_SET_TARGET,

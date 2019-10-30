@@ -238,6 +238,7 @@ public class MessageCache {
     public Component FLAG_DESCRIPTION_PROJECTILE_IMPACT_BLOCK;
     public Component FLAG_DESCRIPTION_PROJECTILE_IMPACT_ENTITY;
     public Component FLAG_RESET_SUCCESS;
+    public Component FLAG_RESET_WARNING;
     public Component FLAG_UI_CLICK_ALLOW;
     public Component FLAG_UI_CLICK_DENY;
     public Component FLAG_UI_CLICK_REMOVE;
@@ -595,6 +596,7 @@ public class MessageCache {
         FLAG_DESCRIPTION_PROJECTILE_IMPACT_BLOCK = MessageStorage.MESSAGE_DATA.getMessage("flag-description-projectile-impact-block");
         FLAG_DESCRIPTION_PROJECTILE_IMPACT_ENTITY = MessageStorage.MESSAGE_DATA.getMessage("flag-description-projectile-impact-entity");
         FLAG_RESET_SUCCESS = MessageStorage.MESSAGE_DATA.getMessage("flag-reset-success");
+        FLAG_RESET_WARNING = MessageStorage.MESSAGE_DATA.getMessage("flag-reset-warning");
         FLAG_UI_CLICK_ALLOW = MessageStorage.MESSAGE_DATA.getMessage("flag-ui-click-allow");
         FLAG_UI_CLICK_DENY = MessageStorage.MESSAGE_DATA.getMessage("flag-ui-click-deny");
         FLAG_UI_CLICK_REMOVE = MessageStorage.MESSAGE_DATA.getMessage("flag-ui-click-remove");

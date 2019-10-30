@@ -109,6 +109,7 @@ public class MessageStorage {
     public static final String CLAIM_BELOW_LEVEL = "claim-below-level";
     public static final String CLAIM_CHEST_OUTSIDE_LEVEL = "claim-chest-outside-level";
     public static final String CLAIM_CONTEXT_NOT_FOUND = "claim-context-not-found";
+    public static final String CLAIM_EXPIRED_INACTIVITY = "claim-expired-inactivity";
     public static final String CLAIM_FAREWELL = "claim-farewell";
     public static final String CLAIM_FAREWELL_INVALID = "claim-farewell-invalid";
     public static final String CLAIM_GREETING = "claim-greeting";

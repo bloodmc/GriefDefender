@@ -380,7 +380,6 @@ public abstract class BaseStorage {
     }
 
     private void setDefaultFlags(Set<Context> contexts, Map<String, Boolean> defaultFlags) {
-        final boolean defaultWildernessValue = contexts.contains(ClaimContexts.WILDERNESS_DEFAULT_CONTEXT);
         GriefDefenderPlugin.getInstance().executor.execute(() -> {
             for (Map.Entry<String, Boolean> mapEntry : defaultFlags.entrySet()) {
                 final Flag flag = FlagRegistryModule.getInstance().getById(mapEntry.getKey()).orElse(null);
@@ -393,16 +392,6 @@ public abstract class BaseStorage {
                     contexts.add(FlagContexts.TARGET_TYPE_MONSTER);
                     PermissionUtil.getInstance().setTransientPermission(GriefDefenderPlugin.DEFAULT_HOLDER, GDPermissions.FLAG_BASE + "." + mapEntry.getKey(), true, contexts);
                     contexts.remove(FlagContexts.TARGET_TYPE_MONSTER);
-                    // deny item frame damage by default
-                    contexts.add(FlagContexts.TARGET_ITEM_FRAME);
-                    PermissionUtil.getInstance().setTransientPermission(GriefDefenderPlugin.DEFAULT_HOLDER, GDPermissions.FLAG_BASE + "." + mapEntry.getKey(), defaultWildernessValue, contexts);
-                    contexts.remove(FlagContexts.TARGET_ITEM_FRAME);
-                }
-                if (flag == Flags.INTERACT_ENTITY_SECONDARY) {
-                    // deny item frame rotation by default
-                    contexts.add(FlagContexts.TARGET_ITEM_FRAME);
-                    PermissionUtil.getInstance().setTransientPermission(GriefDefenderPlugin.DEFAULT_HOLDER, GDPermissions.FLAG_BASE + "." + mapEntry.getKey(), defaultWildernessValue, contexts);
-                    contexts.remove(FlagContexts.TARGET_ITEM_FRAME);
                 }
             }
             PermissionUtil.getInstance().refreshCachedData(GriefDefenderPlugin.DEFAULT_HOLDER);

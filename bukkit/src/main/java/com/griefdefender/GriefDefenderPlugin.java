@@ -89,6 +89,7 @@ import com.griefdefender.command.CommandClaimBuy;
 import com.griefdefender.command.CommandClaimBuyBlocks;
 import com.griefdefender.command.CommandClaimClear;
 import com.griefdefender.command.CommandClaimContract;
+import com.griefdefender.command.CommandClaimCreate;
 import com.griefdefender.command.CommandClaimCuboid;
 import com.griefdefender.command.CommandClaimDelete;
 import com.griefdefender.command.CommandClaimDeleteAll;
@@ -573,6 +574,7 @@ public class GriefDefenderPlugin {
         manager.registerCommand(new CommandClaimBuyBlocks());
         manager.registerCommand(new CommandClaimClear());
         manager.registerCommand(new CommandClaimContract());
+        manager.registerCommand(new CommandClaimCreate());
         manager.registerCommand(new CommandClaimCuboid());
         manager.registerCommand(new CommandClaimDelete());
         manager.registerCommand(new CommandClaimDeleteAll());
@@ -723,6 +725,7 @@ public class GriefDefenderPlugin {
             tabList.add("west");
             tabList.add("up");
             tabList.add("down");
+            tabList.add("all");
             return ImmutableList.copyOf(tabList);
         });
         manager.getCommandCompletions().registerCompletion("gdclaimtypes", c -> {

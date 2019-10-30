@@ -32,16 +32,24 @@ import co.aikar.commands.annotation.Subcommand;
 import com.google.common.collect.ImmutableMap;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
-import com.griefdefender.api.permission.Context;
+import com.griefdefender.api.claim.Claim;
 import com.griefdefender.cache.MessageCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.permission.GDPermissions;
+import com.griefdefender.text.action.GDCallbackHolder;
 import com.griefdefender.util.PermissionUtil;
 import net.kyori.text.Component;
+import net.kyori.text.TextComponent;
+import net.kyori.text.adapter.bukkit.TextAdapter;
+import net.kyori.text.event.ClickEvent;
+import net.kyori.text.event.HoverEvent;
+import net.kyori.text.format.TextColor;
+
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.util.Set;
+import java.util.function.Consumer;
 
 @CommandAlias("%griefdefender")
 @CommandPermission(GDPermissions.COMMAND_FLAGS_RESET)
@@ -71,8 +79,23 @@ public class CommandClaimFlagReset extends BaseCommand {
             return;
         }
 
-        // Remove persisted data
-        PermissionUtil.getInstance().clearPermissions((GDClaim) claim);
-        GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().FLAG_RESET_SUCCESS);
+        final Component confirmationText = TextComponent.builder()
+                .append(MessageCache.getInstance().FLAG_RESET_WARNING)
+                .append(TextComponent.builder()
+                    .append("\n[")
+                    .append("Confirm", TextColor.GREEN)
+                    .append("]\n")
+                    .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createConfirmationConsumer(player, claim))))
+                    .hoverEvent(HoverEvent.showText(MessageCache.getInstance().UI_CLICK_CONFIRM)).build())
+                .build();
+        TextAdapter.sendComponent(player, confirmationText);
+    }
+
+    private static Consumer<CommandSender> createConfirmationConsumer(Player player, Claim claim) {
+        return confirm -> {
+            // Remove persisted data
+            PermissionUtil.getInstance().clearPermissions((GDClaim) claim);
+            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().FLAG_RESET_SUCCESS);
+        };
     }
 }

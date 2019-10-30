@@ -166,9 +166,9 @@ public class CommandClaimAbandon extends BaseCommand {
             }
 
             GDClaimManager claimManager = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(player.getWorld().getUID());
-            playerData.restoreAbandonClaim = event.isRestoring();
+            playerData.useRestoreSchematic = event.isRestoring();
             final ClaimResult claimResult = claimManager.deleteClaimInternal(claim, abandonTopClaim);
-            playerData.restoreAbandonClaim = false;
+            playerData.useRestoreSchematic = false;
             if (!claimResult.successful()) {
                 TextAdapter.sendComponent(player, event.getMessage().orElse(GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ABANDON_FAILED,
                         ImmutableMap.of("result", claimResult.getMessage().orElse(TextComponent.of(claimResult.getResultType().toString()))))));

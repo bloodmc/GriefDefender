@@ -24,19 +24,24 @@
  */
 package com.griefdefender.task;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.reflect.TypeToken;
 import com.griefdefender.GDBootstrap;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.claim.Claim;
-import com.griefdefender.api.claim.ClaimSchematic;
 import com.griefdefender.api.permission.option.Options;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.claim.GDClaimManager;
 import com.griefdefender.configuration.GriefDefenderConfig;
+import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.internal.util.BlockUtil;
 import com.griefdefender.permission.GDPermissionManager;
 import com.griefdefender.permission.GDPermissionUser;
+import com.griefdefender.util.PermissionUtil;
+
+import net.kyori.text.Component;
+import net.kyori.text.serializer.plain.PlainComponentSerializer;
 
 import org.bukkit.Bukkit;
 import org.bukkit.World;
@@ -63,6 +68,8 @@ public class ClaimCleanupTask extends BukkitRunnable {
                 continue;
             }
 
+            final GriefDefenderConfig<?> activeConfig = GriefDefenderPlugin.getActiveConfig(world);
+            final boolean schematicRestore = activeConfig.getConfig().claim.claimAutoSchematicRestore;
             Iterator<Claim> iterator = new HashSet<>(claimList).iterator();
             while (iterator.hasNext()) {
                 GDClaim claim = (GDClaim) iterator.next();
@@ -75,7 +82,6 @@ public class ClaimCleanupTask extends BukkitRunnable {
                     continue;
                 }
 
-                GriefDefenderConfig<?> activeConfig = GriefDefenderPlugin.getActiveConfig(world);
                 int areaOfDefaultClaim = 0;
                 if (activeConfig.getConfig().claim.autoChestClaimBlockRadius >= 0) {
                     areaOfDefaultClaim = (int) Math.pow(activeConfig.getConfig().claim.autoChestClaimBlockRadius * 2 + 1, 2);
@@ -88,15 +94,21 @@ public class ClaimCleanupTask extends BukkitRunnable {
                 if (claim.getArea() <= areaOfDefaultClaim && claimExpirationChest > 0) {
                     if (claimLastActive.plus(Duration.ofDays(claimExpirationChest))
                         .isBefore(Instant.now())) {
-
+                        playerData.useRestoreSchematic = schematicRestore;
                         claimManager.deleteClaim(claim);
-
-                        if (activeConfig.getConfig().claim.claimAutoNatureRestore) {
+                        playerData.useRestoreSchematic = false;
+                        final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_EXPIRED_INACTIVITY,
+                                ImmutableMap.of(
+                                "player", subject.getFriendlyName(),
+                                "uuid", claim.getUniqueId().toString()));
+                        GriefDefenderPlugin.getInstance().getLogger().info(PlainComponentSerializer.INSTANCE.serialize(message));
+                        if (!schematicRestore && activeConfig.getConfig().claim.claimAutoNatureRestore) {
                             BlockUtil.getInstance().restoreClaim(claim);
                         }
-
-                        GriefDefenderPlugin.getInstance().getLogger().info(" " + claim.getOwnerName() + "'s new player claim " + "'" + claim.getUniqueId() + "' expired.");
+                        // remove all context permissions
+                        PermissionUtil.getInstance().clearPermissions(claim);
                     }
+                    return;
                 }
 
                 if (!claim.isBasicClaim()) {
@@ -124,18 +136,19 @@ public class ClaimCleanupTask extends BukkitRunnable {
                         }
                     }
 
-                    final ClaimSchematic schematic = claim.getSchematics().get("__restore__");
+                    playerData.useRestoreSchematic = schematicRestore;
                     claimManager.deleteClaim(claim);
-                    GriefDefenderPlugin.getInstance().getLogger().info("Removed " + claim.getOwnerName() + "'s unused claim @ "
-                                                      + claim.getLesserBoundaryCorner());
-
-                    if (activeConfig.getConfig().claim.claimAutoNatureRestore) {
+                    playerData.useRestoreSchematic = false;
+                    final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_EXPIRED_INACTIVITY,
+                            ImmutableMap.of(
+                            "player", subject.getFriendlyName(),
+                            "uuid", claim.getUniqueId().toString()));
+                    GriefDefenderPlugin.getInstance().getLogger().info(PlainComponentSerializer.INSTANCE.serialize(message));
+                    if (!schematicRestore && activeConfig.getConfig().claim.claimAutoNatureRestore) {
                         BlockUtil.getInstance().restoreClaim(claim);
-                    } else if (activeConfig.getConfig().claim.claimAutoSchematicRestore) {
-                        if (schematic != null) {
-                            schematic.apply();
-                        }
                     }
+                    // remove all context permissions
+                    PermissionUtil.getInstance().clearPermissions(claim);
                 }
             }
         }

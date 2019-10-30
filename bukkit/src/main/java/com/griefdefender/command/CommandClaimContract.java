@@ -84,33 +84,43 @@ public class CommandClaimContract extends BaseCommand {
             return;
         }
 
-        final BlockFace face = direction == null ? PlayerUtil.getInstance().getBlockFace(player) : PlayerUtil.getInstance().getBlockFace(direction);
-        if (face == null || amount <= 0) {
-            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().COMMAND_INVALID);
-            return;
-        }
-
-        if ((face == BlockFace.UP || face == BlockFace.DOWN) && !claim.cuboid) {
-            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().COMMAND_INVALID);
-            return;
-        }
-
         final Vector3i lesser = claim.lesserBoundaryCorner;
         final Vector3i greater = claim.greaterBoundaryCorner;
         Vector3i point1 = null;
         Vector3i point2 = null;
-        if (face == BlockFace.EAST) {
-            point1 = new Vector3i(lesser.getX(), lesser.getY(), lesser.getZ());
-            point2 = new Vector3i(greater.getX() - amount, greater.getY(), greater.getZ());
-        } else if (face == BlockFace.WEST) {
-            point1 = new Vector3i(lesser.getX() + amount, lesser.getY(), lesser.getZ());
-            point2 = new Vector3i(greater.getX(), greater.getY(), greater.getZ());
-        } else if (face == BlockFace.NORTH) {
-            point1 = new Vector3i(lesser.getX(), lesser.getY(), lesser.getZ() + amount);
-            point2 = new Vector3i(greater.getX(), greater.getY(), greater.getZ());
-        } else if (face == BlockFace.SOUTH) {
-            point1 = new Vector3i(lesser.getX(), lesser.getY(), lesser.getZ());
-            point2 = new Vector3i(greater.getX(), greater.getY(), greater.getZ() - amount);
+        if (direction == null || !direction.equalsIgnoreCase("all")) {
+            final BlockFace face = direction == null ? PlayerUtil.getInstance().getBlockFace(player) : PlayerUtil.getInstance().getBlockFace(direction);
+            if (face == null || amount <= 0) {
+                GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().COMMAND_INVALID);
+                return;
+            }
+    
+            if ((face == BlockFace.UP || face == BlockFace.DOWN) && !claim.cuboid) {
+                GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().COMMAND_INVALID);
+                return;
+            }
+            if (face == BlockFace.EAST) {
+                point1 = new Vector3i(lesser.getX(), lesser.getY(), lesser.getZ());
+                point2 = new Vector3i(greater.getX() - amount, greater.getY(), greater.getZ());
+            } else if (face == BlockFace.WEST) {
+                point1 = new Vector3i(lesser.getX() + amount, lesser.getY(), lesser.getZ());
+                point2 = new Vector3i(greater.getX(), greater.getY(), greater.getZ());
+            } else if (face == BlockFace.NORTH) {
+                point1 = new Vector3i(lesser.getX(), lesser.getY(), lesser.getZ() + amount);
+                point2 = new Vector3i(greater.getX(), greater.getY(), greater.getZ());
+            } else if (face == BlockFace.SOUTH) {
+                point1 = new Vector3i(lesser.getX(), lesser.getY(), lesser.getZ());
+                point2 = new Vector3i(greater.getX(), greater.getY(), greater.getZ() - amount);
+            }
+        } else {
+            point1 = new Vector3i(
+                    lesser.getX() + amount,
+                    lesser.getY(),
+                    lesser.getZ() + amount);
+            point2 = new Vector3i(
+                greater.getX() - amount,
+                greater.getY(),
+                greater.getZ() - amount);
         }
 
         final ClaimResult result = claim.resize(point1, point2);

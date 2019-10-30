@@ -144,7 +144,7 @@ public class GDPlayerData implements PlayerData {
 
     public boolean dataInitialized = false;
     public boolean showVisualFillers = true;
-    public boolean restoreAbandonClaim = false;
+    public boolean useRestoreSchematic = false;
     private boolean checkedDimensionHeight = false;
 
     public GDPlayerData(UUID worldUniqueId, UUID playerUniqueId, PlayerStorageData playerStorage, GriefDefenderConfig<?> activeConfig, Set<Claim> claims) {

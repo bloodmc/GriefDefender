@@ -240,6 +240,12 @@ public class FileStorage extends BaseStorage {
             if (claimWorldManager.getWildernessClaim() == null) {
                 claimWorldManager.createWildernessClaim(world);
             }
+
+            // Load schematics
+            if (GriefDefenderPlugin.getInstance().getWorldEditProvider() != null) {
+                GriefDefenderPlugin.getInstance().getLogger().info("Loading schematics for world " + world.getName() + "...");
+                GriefDefenderPlugin.getInstance().getWorldEditProvider().loadSchematics(world);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -458,7 +464,7 @@ public class FileStorage extends BaseStorage {
             if (GriefDefenderPlugin.getInstance().getWorldEditProvider() != null) {
                 final Path schematicPath = GriefDefenderPlugin.getInstance().getWorldEditProvider().getSchematicWorldMap().get(claim.getWorldUniqueId());
                 if (schematicPath != null && Files.exists(schematicPath.resolve(claim.getUniqueId().toString()))) {
-                    if (ownerData != null && ownerData.restoreAbandonClaim) {
+                    if (ownerData != null && ownerData.useRestoreSchematic) {
                         final ConfigBase activeConfig = GriefDefenderPlugin.getActiveConfig(claim.getWorldUniqueId()).getConfig();
                         if (GriefDefenderPlugin.getInstance().getWorldEditProvider() != null && activeConfig.claim.claimAutoSchematicRestore) {
                             final ClaimSchematic schematic = claim.getSchematics().get("__restore__");
