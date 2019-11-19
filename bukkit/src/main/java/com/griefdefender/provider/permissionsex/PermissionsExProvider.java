@@ -422,7 +422,7 @@ public class PermissionsExProvider implements PermissionProvider {
 
     @Override
     public void refreshCachedData(GDPermissionHolder holder) {
-        holderToPEXSubject(holder).clearCache(null);
+        holderToPEXSubject(holder).accept(null);
     }
 }
 
