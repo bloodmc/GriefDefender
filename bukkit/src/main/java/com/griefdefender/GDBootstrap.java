@@ -136,7 +136,7 @@ public class GDBootstrap extends JavaPlugin {
         BootstrapUtil.addUrlToClassLoader(name, file);
         // inject reflect helper
         final String javaVersion = System.getProperty("java.version");
-        if (javaVersion.startsWith("11") || javaVersion.startsWith("12")) {
+        if (getJavaVersion() >= 11) {
             name = "com.griefdefender:reflect-helper:2.0";
         } else {
             name = "com.griefdefender:reflect-helper:1.0";
@@ -207,5 +207,18 @@ public class GDBootstrap extends JavaPlugin {
             t.printStackTrace();
         }
         return null;
+    }
+
+    private static int getJavaVersion() {
+        String version = System.getProperty("java.version");
+        if(version.startsWith("1.")) {
+            version = version.substring(2, 3);
+        } else {
+            final int dot = version.indexOf(".");
+            if(dot != -1) { 
+                version = version.substring(0, dot);
+            }
+        }
+        return Integer.parseInt(version);
     }
 }

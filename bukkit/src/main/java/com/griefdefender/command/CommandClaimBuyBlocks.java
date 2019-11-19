@@ -38,7 +38,6 @@ import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.permission.option.Options;
 import com.griefdefender.cache.MessageCache;
-import com.griefdefender.claim.GDClaim;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.permission.GDPermissionManager;
 import com.griefdefender.permission.GDPermissions;
@@ -76,7 +75,6 @@ public class CommandClaimBuyBlocks extends BaseCommand {
         }
 
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
-        final GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAt(player.getLocation());
         final double economyBlockCost = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Double.class), player, Options.ECONOMY_BLOCK_COST);
         final double economyBlockSell = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Double.class), player, Options.ECONOMY_BLOCK_SELL_RETURN);
         if (economyBlockCost == 0 && economyBlockSell == 0) {
@@ -103,15 +101,6 @@ public class CommandClaimBuyBlocks extends BaseCommand {
             }
 
             final double totalCost = blockCount * economyBlockCost;
-            final int newClaimBlockTotal = playerData.getAccruedClaimBlocks() + blockCount;
-            if (newClaimBlockTotal > playerData.getMaxAccruedClaimBlocks()) {
-                final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_BLOCK_PURCHASE_LIMIT, ImmutableMap.of(
-                            "total", newClaimBlockTotal,
-                            "limit", playerData.getMaxAccruedClaimBlocks()));
-                    GriefDefenderPlugin.sendMessage(player, message);
-                    return;
-            }
-
             final EconomyResponse result = economy.withdrawPlayer(player, totalCost);
 
             if (!result.transactionSuccess()) {
@@ -121,7 +110,8 @@ public class CommandClaimBuyBlocks extends BaseCommand {
                 return;
             }
 
-            playerData.addAccruedClaimBlocks(blockCount);
+            final int bonusTotal = playerData.getBonusClaimBlocks();
+            playerData.setBonusClaimBlocks(bonusTotal + blockCount);
             playerData.getStorageData().save();
 
             final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_BLOCK_PURCHASE_CONFIRMATION, ImmutableMap.of(

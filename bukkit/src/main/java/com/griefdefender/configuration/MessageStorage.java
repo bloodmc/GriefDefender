@@ -114,6 +114,7 @@ public class MessageStorage {
     public static final String CLAIM_FAREWELL_INVALID = "claim-farewell-invalid";
     public static final String CLAIM_GREETING = "claim-greeting";
     public static final String CLAIM_LAST_ACTIVE = "claim-last-active";
+    public static final String CLAIM_MODE_START = "claim-mode-start";
     public static final String CLAIM_NAME = "claim-name";
     public static final String CLAIM_OWNER_ONLY = "claim-owner-only";
     public static final String CLAIM_PROTECTED_ENTITY = "claim-protected-entity";

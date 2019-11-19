@@ -299,18 +299,6 @@ public class PlayerEventHandler implements Listener {
                         "block-amount", playerData.getRemainingClaimBlocks()));
                 GriefDefenderPlugin.sendMessage(player, message);
             }
-        } else if (!playerData.claimMode) {
-            if (playerData.lastShovelLocation != null) {
-                playerData.revertActiveVisual(player);
-                // check for any active WECUI visuals
-                if (this.worldEditProvider != null) {
-                    this.worldEditProvider.revertVisuals(player, playerData, null);
-                }
-            }
-            playerData.lastShovelLocation = null;
-            playerData.endShovelLocation = null;
-            playerData.claimResizing = null;
-            playerData.shovelMode = ShovelTypes.BASIC;
         }
         GDTimings.PLAYER_CHANGE_HELD_ITEM_EVENT.stopTiming();
     }
@@ -790,8 +778,15 @@ public class PlayerEventHandler implements Listener {
 
         final TeleportCause type = event.getCause();
         final Location sourceLocation = event.getFrom();
+        final Location destination = event.getTo();
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
         final GDClaim sourceClaim =  this.dataStore.getClaimAtPlayer(playerData, player.getLocation());
+        // Handle BorderClaimEvent
+        if (!CommonEntityEventHandler.getInstance().onEntityMove(event, sourceLocation, destination, player)) {
+            event.setCancelled(true);
+            GDTimings.ENTITY_TELEPORT_EVENT.stopTiming();
+            return;
+        }
 
         if (sourceClaim != null) {
             final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_PORTAL_EXIT,
@@ -817,7 +812,6 @@ public class PlayerEventHandler implements Listener {
         }
 
         // check if destination world is enabled
-        final Location destination = event.getTo();
         final World toWorld = destination.getWorld();
         if (!GriefDefenderPlugin.getInstance().claimsEnabledForWorld(toWorld.getUID())) {
             GDTimings.ENTITY_TELEPORT_EVENT.stopTiming();
@@ -889,6 +883,19 @@ public class PlayerEventHandler implements Listener {
     }
 
     private void onPlayerHandleClaimCreateAction(PlayerInteractEvent event, Block clickedBlock, Player player, ItemStack itemInHand, GDPlayerData playerData) {
+        if (player.isSneaking() && (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK)) {
+            playerData.revertActiveVisual(player);
+            // check for any active WECUI visuals
+            if (this.worldEditProvider != null) {
+                this.worldEditProvider.revertVisuals(player, playerData, null);
+            }
+            playerData.lastShovelLocation = null;
+            playerData.endShovelLocation = null;
+            playerData.claimResizing = null;
+            playerData.shovelMode = ShovelTypes.BASIC;
+            return;
+        }
+
         GDTimings.PLAYER_HANDLE_SHOVEL_ACTION.startTiming();
         Location location = clickedBlock != null ? clickedBlock.getLocation() : null;
 
@@ -1068,11 +1075,18 @@ public class PlayerEventHandler implements Listener {
             }
         }
 
-        playerData.revertActiveVisual(player);
         playerData.lastShovelLocation = location;
-        final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_START,
-                ImmutableMap.of(
-                "type", PlayerUtil.getInstance().getClaimTypeComponentFromShovel(playerData.shovelMode)));
+        Component message = null;
+        if (playerData.claimMode) {
+            message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_MODE_START,
+                    ImmutableMap.of(
+                    "type", PlayerUtil.getInstance().getClaimTypeComponentFromShovel(playerData.shovelMode)));
+        } else {
+            message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_START,
+                    ImmutableMap.of(
+                    "type", PlayerUtil.getInstance().getClaimTypeComponentFromShovel(playerData.shovelMode),
+                    "item", ItemTypeRegistryModule.getInstance().getNMSKey(event.getItem())));
+        }
         GriefDefenderPlugin.sendMessage(player, message);
         ClaimVisual visual = ClaimVisual.fromClick(location, location.getBlockY(), PlayerUtil.getInstance().getVisualTypeFromShovel(playerData.shovelMode), player, playerData);
         visual.apply(player, false);
@@ -1175,9 +1189,17 @@ public class PlayerEventHandler implements Listener {
         if (claim.isSubdivision()) {
             GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().RESIZE_OVERLAP_SUBDIVISION);
         } else {
-            final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_START,
-                    ImmutableMap.of(
-                    "type", playerData.shovelMode.getName()));
+            Component message = null;
+            if (playerData.claimMode) {
+                message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_START,
+                        ImmutableMap.of(
+                        "type", playerData.shovelMode.getName()));
+            } else {
+                message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_START,
+                        ImmutableMap.of(
+                        "type", playerData.shovelMode.getName(),
+                        "item", ItemTypeRegistryModule.getInstance().getNMSKey(event.getItem())));
+            }
             GriefDefenderPlugin.sendMessage(player, message);
             playerData.lastShovelLocation = location;
             playerData.claimSubdividing = claim;
@@ -1417,6 +1439,9 @@ public class PlayerEventHandler implements Listener {
     private boolean investigateClaim(PlayerInteractEvent event, Player player, Block clickedBlock, ItemStack itemInHand) {
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
         if (playerData.claimMode && (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK)) {
+            if (player.isSneaking()) {
+                return true;
+            }
             // claim mode inspects with left-click
             return false;
         }
@@ -1425,17 +1450,6 @@ public class PlayerEventHandler implements Listener {
         }
 
         GDTimings.PLAYER_INVESTIGATE_CLAIM.startTiming();
-        if (event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK) {
-            if (!playerData.claimMode || !playerData.visualBlocks.isEmpty()) {
-                playerData.revertActiveVisual(player);
-                if (this.worldEditProvider != null) {
-                    this.worldEditProvider.revertVisuals(player, playerData, null);
-                }
-                GDTimings.PLAYER_INVESTIGATE_CLAIM.stopTiming();
-                return false;
-            }
-        }
-
         GDClaim claim = null;
         if (event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_AIR) {
             claim = this.findNearbyClaim(player);
@@ -1489,7 +1503,6 @@ public class PlayerEventHandler implements Listener {
 
         if (claim.getUniqueId() != playerData.visualClaimId) {
             int height = playerData.lastValidInspectLocation != null ? playerData.lastValidInspectLocation.getBlockY() : clickedBlock.getLocation().getBlockY();
-            playerData.revertActiveVisual(player);
             claim.getVisualizer().createClaimBlockVisuals(playerData.getClaimCreateMode() == CreateModeTypes.VOLUME ? height : PlayerUtil.getInstance().getEyeHeight(player), player.getLocation(), playerData);
             claim.getVisualizer().apply(player);
             if (this.worldEditProvider != null) {

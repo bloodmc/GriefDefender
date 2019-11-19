@@ -86,14 +86,14 @@ public class CommonEntityEventHandler {
         this.storage = GriefDefenderPlugin.getInstance().dataStore;
     }
 
-    public void onEntityMove(Event event, Location fromLocation, Location toLocation, Entity targetEntity){
+    public boolean onEntityMove(Event event, Location fromLocation, Location toLocation, Entity targetEntity){
         final Vector3i fromPos = VecHelper.toVector3i(fromLocation);
         final Vector3i toPos = VecHelper.toVector3i(toLocation);
         if (fromPos.equals(toPos)) {
-            return;
+            return true;
         }
         if ((!GDFlags.ENTER_CLAIM && !GDFlags.EXIT_CLAIM)) {
-            return;
+            return true;
         }
 
         final Player player = targetEntity instanceof Player ? (Player) targetEntity : null;
@@ -108,12 +108,12 @@ public class CommonEntityEventHandler {
         }
         final World world = targetEntity.getWorld();
         if (!GriefDefenderPlugin.getInstance().claimsEnabledForWorld(world.getUID())) {
-            return;
+            return true;
         }
         final boolean enterBlacklisted = GriefDefenderPlugin.isSourceIdBlacklisted(Flags.ENTER_CLAIM.getName(), targetEntity, world.getUID());
         final boolean exitBlacklisted = GriefDefenderPlugin.isSourceIdBlacklisted(Flags.EXIT_CLAIM.getName(), targetEntity, world.getUID());
         if (enterBlacklisted && exitBlacklisted) {
-            return;
+            return true;
         }
 
         GDTimings.ENTITY_MOVE_EVENT.startTiming();
@@ -137,7 +137,7 @@ public class CommonEntityEventHandler {
         }
         if (fromClaim == toClaim) {
             GDTimings.ENTITY_MOVE_EVENT.stopTiming();
-            return;
+            return true;
         }
 
         GDBorderClaimEvent gpEvent = new GDBorderClaimEvent(targetEntity, fromClaim, toClaim);
@@ -148,7 +148,7 @@ public class CommonEntityEventHandler {
                     final Vehicle vehicle = (Vehicle) targetEntity;
                     vehicle.teleport(fromLocation);
                     GDTimings.ENTITY_MOVE_EVENT.stopTiming();
-                    return;
+                    return false;
                 }
                 if (event instanceof Cancellable) {
                     ((Cancellable) event).setCancelled(true);
@@ -157,6 +157,7 @@ public class CommonEntityEventHandler {
                 if (player != null && cancelMessage != null) {
                     TextAdapter.sendComponent(player, cancelMessage);
                 }
+                return false;
             } else {
                 final boolean showGpPrefix = GriefDefenderPlugin.getGlobalConfig().getConfig().message.enterExitShowGdPrefix;
                 user.getInternalPlayerData().lastClaim = new WeakReference<>(toClaim);
@@ -177,7 +178,7 @@ public class CommonEntityEventHandler {
                 }
 
                 Component farewellMessage = gpEvent.getExitMessage().orElse(null);
-                if (farewellMessage != null && !farewellMessage.equals(TextComponent.empty()) && !farewellMessage.equals("")) {
+                if (farewellMessage != null && !farewellMessage.equals(TextComponent.empty())) {
                     ChatType chatType = gpEvent.getExitMessageChatType();
                     if (chatType == ChatTypes.ACTION_BAR) {
                         TextAdapter.sendActionBar(player, TextComponent.builder("")
@@ -200,7 +201,7 @@ public class CommonEntityEventHandler {
             }
 
             GDTimings.ENTITY_MOVE_EVENT.stopTiming();
-            return;
+            return true;
         }
 
         if (fromClaim != toClaim) {
@@ -239,20 +240,20 @@ public class CommonEntityEventHandler {
                     final Vehicle vehicle = (Vehicle) targetEntity;
                     vehicle.teleport(fromLocation);
                     GDTimings.ENTITY_MOVE_EVENT.stopTiming();
-                    return;
+                    return false;
                 }
                 if (event instanceof Cancellable) {
                     ((Cancellable) event).setCancelled(true);
                 }
                 GDTimings.ENTITY_MOVE_EVENT.stopTiming();
-                return;
+                return false;
             }
 
             if (user != null) {
                 final boolean showGpPrefix = GriefDefenderPlugin.getGlobalConfig().getConfig().message.enterExitShowGdPrefix;
                 user.getInternalPlayerData().lastClaim = new WeakReference<>(toClaim);
                 Component welcomeMessage = gpEvent.getEnterMessage().orElse(null);
-                if (welcomeMessage != null && !welcomeMessage.equals(TextComponent.empty()) && !welcomeMessage.equals("")) {
+                if (welcomeMessage != null && !welcomeMessage.equals(TextComponent.empty())) {
                     ChatType chatType = gpEvent.getEnterMessageChatType();
                     if (chatType == ChatTypes.ACTION_BAR) {
                         TextAdapter.sendActionBar(player, TextComponent.builder("")
@@ -268,7 +269,7 @@ public class CommonEntityEventHandler {
                 }
 
                 Component farewellMessage = gpEvent.getExitMessage().orElse(null);
-                if (farewellMessage != null && !farewellMessage.equals(TextComponent.empty()) && !farewellMessage.equals("")) {
+                if (farewellMessage != null && !farewellMessage.equals(TextComponent.empty())) {
                     ChatType chatType = gpEvent.getExitMessageChatType();
                     if (chatType == ChatTypes.ACTION_BAR) {
                         TextAdapter.sendActionBar(player, TextComponent.builder("")
@@ -294,6 +295,7 @@ public class CommonEntityEventHandler {
         }
 
         GDTimings.ENTITY_MOVE_EVENT.stopTiming();
+        return true;
     }
 
     private void checkPlayerFlight(Player player, GDPlayerData playerData, GDClaim fromClaim, GDClaim toClaim) {

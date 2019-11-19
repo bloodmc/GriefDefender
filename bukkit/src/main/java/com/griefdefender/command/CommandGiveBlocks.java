@@ -10,7 +10,6 @@ import com.google.common.collect.ImmutableMap;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.cache.MessageCache;
-import com.griefdefender.claim.GDClaim;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.permission.GDPermissions;
 import com.griefdefender.text.action.GDCallbackHolder;
@@ -40,7 +39,6 @@ public class CommandGiveBlocks extends BaseCommand {
     @Subcommand("giveblocks")
     public void execute(Player src, OfflinePlayer targetPlayer, int amount) {
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(src.getWorld(), src.getUniqueId());
-        final GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAt(src.getLocation());
         int availableBlocks = playerData.getAccruedClaimBlocks() + playerData.getBonusClaimBlocks();
         if (amount > availableBlocks) {
             TextAdapter.sendComponent(src, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.COMMAND_GIVEBLOCKS_NOT_ENOUGH, 
@@ -56,13 +54,13 @@ public class CommandGiveBlocks extends BaseCommand {
                     .append("\n[")
                     .append("Confirm", TextColor.GREEN)
                     .append("]\n")
-                    .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createConfirmationConsumer(src, targetPlayer, claim, amount))))
+                    .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createConfirmationConsumer(src, targetPlayer, amount))))
                     .hoverEvent(HoverEvent.showText(MessageCache.getInstance().UI_CLICK_CONFIRM)).build())
                 .build();
         TextAdapter.sendComponent(src, confirmationText);
     }
 
-    private static Consumer<CommandSender> createConfirmationConsumer(Player src, OfflinePlayer targetPlayer, GDClaim claim, int amount) {
+    private static Consumer<CommandSender> createConfirmationConsumer(Player src, OfflinePlayer targetPlayer, int amount) {
         return confirm -> {
             final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(src.getWorld(), src.getUniqueId());
             final int accruedTotal = playerData.getAccruedClaimBlocks();
@@ -87,7 +85,7 @@ public class CommandGiveBlocks extends BaseCommand {
             if (targetPlayer.isOnline()) {
                 final Component targetMessage = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.COMMAND_GIVEBLOCKS_RECEIVED, 
                         ImmutableMap.of("amount", TextComponent.of(amount, TextColor.GOLD),
-                                        "player", claim.getOwnerName().color(TextColor.AQUA)));
+                                        "player", TextComponent.of(src.getName(), TextColor.AQUA)));
                 TextAdapter.sendComponent((Player) targetPlayer, targetMessage);
             }
         };

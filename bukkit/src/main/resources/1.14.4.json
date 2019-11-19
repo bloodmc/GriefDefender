@@ -100,7 +100,6 @@
             "name": "com.flowpowered:flow-math:1.0.3",
             "sha1": "d98020239e5015091ad3be927cef9dea0d61a234",
             "path": "com/flowpowered/flow-math/1.0.3/flow-math-1.0.3.jar",
-            "relocate": "com.flowpowered:flowpowered",
             "url": "https://repo1.maven.org/maven2/com/flowpowered/flow-math/1.0.3/flow-math-1.0.3.jar"
         },
         {
@@ -212,70 +211,60 @@
             "name": "net.kyori:event-api:3.0.0",
             "sha1": "4e207f07d2adaa15e174a085f65bc6ae5a81029e",
             "path": "net/kyori/event-api/3.0.0/event-api-3.0.0.jar",
-            "relocate": "net.kyori:kyori",
             "url": "https://repo1.maven.org/maven2/net/kyori/event-api/3.0.0/event-api-3.0.0.jar"
         },
         {
             "name": "net.kyori:event-method:3.0.0",
             "sha1": "85fe9bbf8ebadde4c82602af29352ba5db06e8e5",
             "path": "net/kyori/event-method/3.0.0/event-method-3.0.0.jar",
-            "relocate": "net.kyori:kyori",
             "url": "https://repo1.maven.org/maven2/net/kyori/event-method/3.0.0/event-method-3.0.0.jar"
         },
         {
             "name": "net.kyori:event-method-asm:3.0.0",
             "sha1": "69113430c1ba05c9d9fa6e48028edd53e3e16723",
             "path": "net/kyori/event-method-asm/3.0.0/event-method-asm-3.0.0.jar",
-            "relocate": "net.kyori:kyori",
             "url": "https://repo1.maven.org/maven2/net/kyori/event-method-asm/3.0.0/event-method-asm-3.0.0.jar"
         },
         {
             "name": "net.kyori:text-adapter-bukkit:3.0.3",
             "sha1": "37033ab1173d73a62a087cbd5c8d356774f4cee3",
             "path": "net/kyori/text-adapter-bukkit/3.0.3/text-adapter-bukkit-3.0.3.jar",
-            "relocate": "net.kyori:kyori",
             "url": "https://repo1.maven.org/maven2/net/kyori/text-adapter-bukkit/3.0.3/text-adapter-bukkit-3.0.3.jar"
         },
         {
             "name": "net.kyori:text-adapter-bungeecord:3.0.2",
             "sha1": "d57c245bdc182bdf37d1b7a32691859add018a2b",
             "path": "net/kyori/text-adapter-bungeecord/3.0.2/text-adapter-bungeecord-3.0.2.jar",
-            "relocate": "net.kyori:kyori",
             "url": "https://repo1.maven.org/maven2/net/kyori/text-adapter-bungeecord/3.0.2/text-adapter-bungeecord-3.0.2.jar"
         },
         {
             "name": "net.kyori:text-adapter-spongeapi:3.0.2",
             "sha1": "8562afb1594a9d34b891f23add503741d0656873",
             "path": "net/kyori/text-adapter-spongeapi/3.0.2/text-adapter-spongeapi-3.0.2.jar",
-            "relocate": "net.kyori:kyori",
             "url": "https://repo1.maven.org/maven2/net/kyori/text-adapter-spongeapi/3.0.2/text-adapter-spongeapi-3.0.2.jar"
         },
         {
             "name": "net.kyori:text-api:3.0.2",
             "sha1": "608cdb44a74bbd68745941760df730ed55e4b47c",
             "path": "net/kyori/text-api/3.0.2/text-api-3.0.2.jar",
-            "relocate": "net.kyori:kyori",
             "url": "https://repo1.maven.org/maven2/net/kyori/text-api/3.0.2/text-api-3.0.2.jar"
         },
         {
             "name": "net.kyori:text-serializer-gson:3.0.2",
             "sha1": "9ac22f04f3504c52ff1618c5a8d9a6145d8d9c9e",
             "path": "net/kyori/text-serializer-gson/3.0.2/text-serializer-gson-3.0.2.jar",
-            "relocate": "net.kyori:kyori",
             "url": "https://repo1.maven.org/maven2/net/kyori/text-serializer-gson/3.0.2/text-serializer-gson-3.0.2.jar"
         },
         {
             "name": "net.kyori:text-serializer-legacy:3.0.2",
             "sha1": "8acbfb36356259273a8e3a15782e4f2980375bc5",
             "path": "net/kyori/text-serializer-legacy/3.0.2/text-serializer-legacy-3.0.2.jar",
-            "relocate": "net.kyori:kyori",
             "url": "https://repo1.maven.org/maven2/net/kyori/text-serializer-legacy/3.0.2/text-serializer-legacy-3.0.2.jar"
         },
         {
             "name": "net.kyori:text-serializer-plain:3.0.2",
             "sha1": "8d60703f579019f7c26959d2e46501c3d389b48d",
             "path": "net/kyori/text-serializer-plain/3.0.2/text-serializer-plain-3.0.2.jar",
-            "relocate": "net.kyori:kyori",
             "url": "https://repo1.maven.org/maven2/net/kyori/text-serializer-plain/3.0.2/text-serializer-plain-3.0.2.jar"
         }
     ]
