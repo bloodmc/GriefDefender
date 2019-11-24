@@ -1,0 +1,203 @@
+buildscript {
+    repositories {
+        maven {
+            name = 'forge'
+            url = 'http://files.minecraftforge.net/maven'
+        }
+        maven {
+            url = 'https://plugins.gradle.org/m2/'
+        }
+    }
+
+    dependencies {
+        classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
+        classpath 'com.github.jengelman.gradle.plugins:shadow:5.1.0'
+    }
+}
+
+plugins {
+    id 'com.github.johnrengelman.shadow' version '5.1.0'
+    id 'org.spongepowered.plugin' version '0.8.1'
+    id 'net.minecrell.vanillagradle.server' version '2.2-4'
+    id 'java'
+}
+
+compileJava.options.encoding = 'UTF-8'
+
+// Environment variables for the build set by the build server
+ext.buildNumber = System.env.BUILD_NUMBER ?: '0'
+
+defaultTasks 'clean', 'build'
+
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
+
+archivesBaseName = project.name.toLowerCase()
+
+project.ext.getGitHash = {
+    def command = Runtime.getRuntime().exec("git rev-parse --short HEAD")
+    def result = command.waitFor()
+    return (result == 0) ? command.inputStream.text.trim() : "nogit"
+}
+
+repositories {
+    mavenLocal()
+    maven {
+        name = 'sk89q'
+        url = 'https://maven.sk89q.com/repo'
+    }
+    maven {
+        name = 'bstats'
+        url = 'https://repo.codemc.org/repository/maven-public'
+    }
+    maven {
+        name = 'sponge'
+        url = 'https://repo.spongepowered.org/maven/'
+    }
+    maven {
+        name = 'nucleus'
+        url = 'http://repo.drnaylor.co.uk/artifactory/list/minecraft'
+    }
+    maven {
+        name = 'sonatype_releases'
+        url = 'https://oss.sonatype.org/content/repositories/releases'
+    }
+    maven {
+        name = 'sonatype_snapshots'
+        url = 'https://oss.sonatype.org/content/repositories/snapshots'
+    }
+    maven {
+        name = 'glare'
+        url = 'https://repo.glaremasters.me/repository/bloodshot'
+    }
+    maven {
+        name = 'aikar'
+        url = 'https://repo.aikar.co/content/groups/aikar'
+    }
+    maven {
+        name = 'worldedit'
+        url = 'http://maven.sk89q.com/artifactory/repo'
+    }
+    maven {
+        name = 'jitpack'
+        url = 'https://jitpack.io'
+    }
+}
+
+minecraft {
+    version = project.minecraftVersion
+    mappings = project.mcpMappings
+}
+
+sourceSets {
+    api
+}
+
+dependencies {
+    compileOnly 'com.griefdefender:api:1.0.0-20190906.173641-10'
+    compileOnly "com.griefdefender:reflect-helper:1.0"
+    // Sponge
+    apiCompile "org.spongepowered:spongeapi:$apiVersion"
+
+    compileOnly ("org.spongepowered:spongecommon:$commonVersion:dev") {
+        exclude module: 'testplugins'
+    }
+    // Plugins
+    compileOnly ("io.github.nucleuspowered:nucleus-api:1.14.1-S7.1"){
+        exclude module: 'spongeapi'
+    }
+    compile "com.github.bloodmc:mcclans-api:develop-SNAPSHOT"
+    compileOnly "com.sk89q.worldedit:worldedit-core:6.1.4-SNAPSHOT"
+
+    // required for bootstrap
+    compile "com.googlecode.json-simple:json-simple:1.1.1"
+    compileOnly "aopalliance:aopalliance:1.0"
+    compileOnly "co.aikar:acf-core:0.5.0-SNAPSHOT"
+    compileOnly "co.aikar:acf-sponge:0.5.0-SNAPSHOT"
+    compileOnly "co.aikar:locales:1.0-SNAPSHOT"
+    compileOnly "co.aikar:minecraft-timings:1.0.4"
+    compileOnly "co.aikar:Table:1.0.0-SNAPSHOT"
+    compileOnly "com.flowpowered:flow-math:1.0.3"
+    compileOnly "com.github.ben-manes.caffeine:caffeine:2.7.0"
+    compileOnly "com.squareup.okhttp3:okhttp:3.14.2"
+    compileOnly "com.squareup.okio:okio:2.2.2"
+    compileOnly "commons-io:commons-io:2.6"
+    compileOnly "it.unimi.dsi:fastutil:8.2.3"
+    compileOnly "javax.inject:javax.inject:1"
+    compileOnly "me.lucko:jar-relocator:1.3"
+    compileOnly "me.lucko.luckperms:luckperms-api:4.4"
+    compileOnly "net.jodah:expiringmap:0.5.9"
+    compileOnly "org.apache.commons:commons-lang3:3.9"
+    compileOnly "org.checkerframework:checker:2.8.2"
+    compileOnly "org.jetbrains:annotations:17.0.0"
+    compileOnly "org.jetbrains.kotlin:kotlin-stdlib:1.3.31"
+    compileOnly "org.ow2.asm:asm-debug-all:5.2"
+    compileOnly "org.spongepowered:configurate-core:3.7-SNAPSHOT"
+    compileOnly "org.spongepowered:configurate-gson:3.7-SNAPSHOT"
+    compileOnly "org.spongepowered:configurate-hocon:3.7-SNAPSHOT"
+    compileOnly "org.spongepowered:configurate-yaml:3.7-SNAPSHOT"
+    compileOnly "net.kyori:event-api:3.0.0"
+    compileOnly "net.kyori:event-method:3.0.0"
+    compileOnly "net.kyori:event-method-asm:3.0.0"
+    compileOnly "net.kyori:text-adapter-bukkit:3.0.3"
+    compileOnly "net.kyori:text-adapter-bungeecord:3.0.3"
+    compileOnly "net.kyori:text-adapter-spongeapi:3.0.3"
+    compileOnly "net.kyori:text-api:3.0.2"
+    compileOnly "net.kyori:text-serializer-gson:3.0.2"
+    compileOnly "net.kyori:text-serializer-legacy:3.0.2"
+    compileOnly "net.kyori:text-serializer-plain:3.0.2"
+}
+
+jar {
+    manifest.attributes('FMLAT': 'griefdefender_at.cfg')
+    manifest.attributes('Implementation-Title': 'GriefDefender')
+    manifest.attributes('Implementation-Version': "$version")
+    manifest.attributes('Git-Hash': project.ext.getGitHash())
+    classifier = 'SNAPSHOT'
+    baseName = 'griefdefender-sponge'
+}
+
+if (JavaVersion.current().isJava8Compatible()) {
+    tasks.withType(Javadoc) {
+        options.addStringOption('Xdoclint:none', '-quiet')
+    }
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives shadowJar
+}
+
+shadowJar {
+    mainSpec.sourcePaths.clear()
+    dependsOn reobfJar
+
+    classifier = ''
+
+    dependencies {
+        include dependency("com.squareup.okhttp3:okhttp:3.9.1")
+        include dependency("com.squareup.okio:okio:1.13.0")
+        include dependency("com.googlecode.json-simple:json-simple:1.1.1")
+    }
+
+    relocate("aopalliance", "com.griefdefender.lib.aopalliance")
+    relocate("com.github.benmanes.caffeine", "com.griefdefender.lib.caffeine")
+    relocate("it.unimi.dsi", "com.griefdefender.lib.fastutil")
+    relocate("net.jodah", "com.griefdefender.lib.jodah")
+    relocate("okhttp3", "com.griefdefender.lib.okhttp3")
+    relocate("okio", "com.griefdefender.lib.okio")
+    relocate("org.apache.commons.io", "com.griefdefender.lib.commonsio")
+    relocate("org.apache.commons.lang3", "com.griefdefender.lib.commonslang3")
+    relocate("org.checkerframework", "com.griefdefender.lib.checkerframework")
+    relocate("org.jetbrains", "com.griefdefender.lib.jetbrains")
+
+
+    exclude "dummyThing"
+    afterEvaluate {
+        from zipTree(reobfJar.jar)
+    }
+}
