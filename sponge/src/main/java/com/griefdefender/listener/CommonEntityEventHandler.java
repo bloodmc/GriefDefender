@@ -331,7 +331,9 @@ public class CommonEntityEventHandler {
                     user.getInternalPlayerData().inTown = false;
                 }
 
-                checkPlayerFlight(player, user.getInternalPlayerData(), fromClaim, toClaim);
+                if (player != null) {
+                    checkPlayerFlight(player, user.getInternalPlayerData(), fromClaim, toClaim);
+                }
             }
         }
 

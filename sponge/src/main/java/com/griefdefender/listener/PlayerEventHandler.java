@@ -980,13 +980,12 @@ public class PlayerEventHandler {
             return;
         }
 
-        /*if (!playerData.claimMode) {
+        if (!playerData.claimMode) {
             GriefDefenderConfig<?> activeConfig = GriefDefenderPlugin.getActiveConfig(player.getWorld().getProperties());
-            ItemType materialInHand = player.getItemInHand(handType).get().getType();
-            if (!materialInHand.getId().equals(activeConfig.getConfig().claim.modificationTool)) {
+            if (!itemInHand.getType().getId().equals(activeConfig.getConfig().claim.modificationTool)) {
                 return;
             }
-        }*/
+        }
 
         GDTimings.PLAYER_HANDLE_SHOVEL_ACTION.startTimingIfSync();
         BlockSnapshot clickedBlock = targetBlock;
