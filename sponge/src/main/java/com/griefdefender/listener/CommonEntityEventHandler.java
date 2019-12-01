@@ -296,7 +296,7 @@ public class CommonEntityEventHandler {
                 return false;
             }
 
-            if (user != null) {
+            if (player != null) {
                 final boolean showGpPrefix = GriefDefenderPlugin.getGlobalConfig().getConfig().message.enterExitShowGdPrefix;
                 user.getInternalPlayerData().lastClaim = new WeakReference<>(toClaim);
                 Component welcomeMessage = gpEvent.getEnterMessage().orElse(null);

@@ -28,6 +28,7 @@ import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.permission.ContextKeys;
 import com.griefdefender.api.permission.flag.Flag;
 import com.griefdefender.registry.FlagRegistryModule;
+import com.griefdefender.util.PermissionUtil;
 import org.apache.commons.io.FileUtils;
 import org.spongepowered.api.service.context.Context;
 import org.spongepowered.api.service.permission.PermissionService;
@@ -138,7 +139,7 @@ public class GPSpongeMigrator {
                     }
                 }
                 // migrate default user
-                migrateSubject(GriefDefenderPlugin.getInstance().permissionService.getDefaults(), false);
+                migrateSubject(GriefDefenderPlugin.getInstance().permissionService.getDefaults(), false, true);
                 GriefDefenderPlugin.getInstance().getLogger().info("Performing user permission migration: 100%");
             });
         });
@@ -160,6 +161,10 @@ public class GPSpongeMigrator {
     }
 
     public void migrateSubject(Subject subject, boolean isGroup) {
+        migrateSubject(subject, isGroup, false);
+    }
+
+    public void migrateSubject(Subject subject, boolean isGroup, boolean isDefault) {
         boolean migrated = false;
         try {
             for (Map.Entry<Set<Context>, Map<String, Boolean>> mapEntry : subject.getSubjectData().getAllPermissions().entrySet()) {
@@ -192,18 +197,34 @@ public class GPSpongeMigrator {
                     final Flag flag = FlagRegistryModule.getInstance().getById(flagBase).orElse(null);
                     if (flag == null) {
                         GriefDefenderPlugin.getInstance().getLogger().info("Detected legacy permission '" + originalPermission + "' on subject " + subject.getFriendlyIdentifier().orElse(subject.getIdentifier()) + "'. Migrating...");
-                        subject.getSubjectData().setPermission(originalContexts, originalPermission, Tristate.UNDEFINED);
+                        if (isDefault) {
+                            PermissionUtil.getInstance().setPermissionValue(GriefDefenderPlugin.DEFAULT_HOLDER, originalPermission, com.griefdefender.api.Tristate.UNDEFINED, this.getGDContexts(originalContexts));
+                        } else {
+                            subject.getSubjectData().setPermission(originalContexts, originalPermission, Tristate.UNDEFINED);
+                        }
                         GriefDefenderPlugin.getInstance().getLogger().info("Removed legacy permission '" + originalPermission + "'.");
-                        subject.getSubjectData().setPermission(originalContexts, currentPermission, Tristate.fromBoolean(entry.getValue()));
+                        if (isDefault) {
+                            PermissionUtil.getInstance().setPermissionValue(GriefDefenderPlugin.DEFAULT_HOLDER, currentPermission, com.griefdefender.api.Tristate.fromBoolean(entry.getValue()), this.getGDContexts(originalContexts));
+                        } else {
+                            subject.getSubjectData().setPermission(originalContexts, currentPermission, Tristate.fromBoolean(entry.getValue()));
+                        }
                         GriefDefenderPlugin.getInstance().getLogger().info("Set new permission '" + currentPermission + "' with contexts " + originalContexts);
                         GriefDefenderPlugin.getInstance().getLogger().info("Successfully migrated permission " + currentPermission + " to " + currentPermission + " with contexts " + originalContexts);
                     } else {
                         GriefDefenderPlugin.getInstance().getLogger().info("Detected legacy flag permission '" + originalPermission + "' on subject " + subject.getFriendlyIdentifier().orElse(subject.getIdentifier()) + "'. Migrating...");
-                        subject.getSubjectData().setPermission(originalContexts, originalPermission, Tristate.UNDEFINED);
+                        if (isDefault) {
+                            PermissionUtil.getInstance().setPermissionValue(GriefDefenderPlugin.DEFAULT_HOLDER, originalPermission, com.griefdefender.api.Tristate.UNDEFINED, this.getGDContexts(originalContexts));
+                        } else {
+                            subject.getSubjectData().setPermission(originalContexts, originalPermission, Tristate.UNDEFINED);
+                        }
                         GriefDefenderPlugin.getInstance().getLogger().info("Removed legacy flag permission '" + originalPermission + "'.");
                         Set<Context> newContextSet = new HashSet<>(gdContexts);
                         applyContexts(flagBase, currentPermission, newContextSet);
-                        subject.getSubjectData().setPermission(newContextSet, flag.getPermission(), Tristate.fromBoolean(entry.getValue()));
+                        if (isDefault) {
+                            PermissionUtil.getInstance().setPermissionValue(GriefDefenderPlugin.DEFAULT_HOLDER, flag.getPermission(), com.griefdefender.api.Tristate.fromBoolean(entry.getValue()), this.getGDContexts(newContextSet));
+                        } else {
+                            subject.getSubjectData().setPermission(newContextSet, flag.getPermission(), Tristate.fromBoolean(entry.getValue()));
+                        }
                         GriefDefenderPlugin.getInstance().getLogger().info("Set new flag permission '" + flag.getPermission() + "' with contexts " + newContextSet);
                         GriefDefenderPlugin.getInstance().getLogger().info("Successfully migrated flag permission " + currentPermission + " to " + flag.getPermission() + " with contexts " + newContextSet);
                     }
@@ -221,6 +242,14 @@ public class GPSpongeMigrator {
         } catch(Throwable t) {
             t.printStackTrace();
         }
+    }
+
+    private Set<com.griefdefender.api.permission.Context> getGDContexts(Set<Context> spongeContexts) {
+        Set<com.griefdefender.api.permission.Context> gdContexts = new HashSet<>();
+        for (Context context : spongeContexts) {
+            gdContexts.add(new com.griefdefender.api.permission.Context(context.getKey(), context.getValue()));
+        }
+        return gdContexts;
     }
 
     private void applyContexts(String flagBase, String currentPermission, Set<Context> contexts) {
