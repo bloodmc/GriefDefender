@@ -37,6 +37,7 @@ import com.griefdefender.api.GriefDefender;
 import com.griefdefender.api.Tristate;
 import com.griefdefender.api.claim.Claim;
 import com.griefdefender.api.claim.ClaimBlockSystem;
+import com.griefdefender.api.claim.ClaimSchematic;
 import com.griefdefender.api.claim.ClaimType;
 import com.griefdefender.api.claim.TrustType;
 import com.griefdefender.api.economy.BankTransaction;
@@ -50,6 +51,7 @@ import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.ClaimContextCalculator;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.claim.GDClaimManager;
+import com.griefdefender.claim.GDClaimSchematic.ClaimSchematicBuilder;
 import com.griefdefender.command.CommandAdjustBonusClaimBlocks;
 import com.griefdefender.command.CommandCallback;
 import com.griefdefender.command.CommandClaimAbandon;
@@ -463,7 +465,7 @@ public class GriefDefenderPlugin {
         this.permissionProvider = new LuckPermsProvider();
 
         instance = this;
-        this.getLogger().info("Grief Prevention boot start.");
+        this.getLogger().info("GriefDefender boot start.");
         this.getLogger().info("Finished loading configuration.");
         DEFAULT_HOLDER = new GDPermissionHolder("default");
         PUBLIC_USER = new GDPermissionUser(PUBLIC_UUID, PUBLIC_NAME);
@@ -485,6 +487,7 @@ public class GriefDefenderPlugin {
         WeatherTypeRegistryModule.getInstance().registerDefaults();
         OptionRegistryModule.getInstance().registerDefaults();
         GriefDefender.getRegistry().registerBuilderSupplier(Claim.Builder.class, GDClaim.ClaimBuilder::new);
+        GriefDefender.getRegistry().registerBuilderSupplier(ClaimSchematic.Builder.class, ClaimSchematicBuilder::new);
         GriefDefender.getRegistry().registerBuilderSupplier(BankTransaction.Builder.class, GDBankTransaction.BankTransactionBuilder::new);
         Sponge.getEventManager().registerListeners(GDBootstrap.getInstance(), GriefDefenderPlugin.getInstance());
     }

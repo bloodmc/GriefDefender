@@ -29,7 +29,6 @@ import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.claim.Claim;
 import com.griefdefender.api.claim.ClaimSchematic;
 import com.griefdefender.internal.util.VecHelper;
-import com.griefdefender.storage.FileStorage;
 import org.spongepowered.api.data.DataContainer;
 import org.spongepowered.api.data.persistence.DataFormats;
 import org.spongepowered.api.data.persistence.DataTranslators;
@@ -107,11 +106,11 @@ public class GDClaimSchematic implements ClaimSchematic {
      * @return If schematic apply was successful, false if not
      */
     public boolean apply() {
-        if (!this.schematic.containsBlock(this.claim.getLesserBoundaryCorner()) && !schematic.containsBlock(this.claim.getGreaterBoundaryCorner())) {
+        if (!this.schematic.containsBlock(this.claim.getLesserBoundaryCorner()) && !this.schematic.containsBlock(this.claim.getGreaterBoundaryCorner())) {
             return false;
         }
 
-        this.schematic.apply(VecHelper.toLocation(((GDClaim)(this.claim)).getWorld(), this.claim.getLesserBoundaryCorner()), BlockChangeFlags.ALL);
+        this.schematic.apply(VecHelper.toLocation(((GDClaim)(this.claim)).getWorld(), this.origin), BlockChangeFlags.ALL);
         return true;
     }
 
@@ -124,16 +123,7 @@ public class GDClaimSchematic implements ClaimSchematic {
 
         @Override
         public Builder claim(Claim claim) {
-            final World world = ((GDClaim) claim).getWorld();
-            final ArchetypeVolume volume = world.createArchetypeVolume(this.claim.getLesserBoundaryCorner(), this.claim.getGreaterBoundaryCorner(), new Vector3i(0, 0, 0));
-            final Schematic schematic = Schematic.builder()
-                    .metaValue(Schematic.METADATA_NAME, name)
-                    .metaValue(Schematic.METADATA_DATE, Instant.now().toString())
-                    .metaValue("UUID", this.claim.getUniqueId().toString())
-                    .volume(volume)
-                    .build();
             this.claim = claim;
-            this.schematic = schematic;
             return this;
         }
 
@@ -160,10 +150,18 @@ public class GDClaimSchematic implements ClaimSchematic {
         @Override
         public Optional<ClaimSchematic> build() {
             if (this.origin == null) {
-                //this.origin = new Vector3i(0, 0, 0);
-                this.origin = this.claim.getLesserBoundaryCorner();
+                this.origin = new Vector3i(0, 0, 0);
             }
+
             final World world = ((GDClaim) this.claim).getWorld();
+            final ArchetypeVolume volume = world.createArchetypeVolume(this.claim.getLesserBoundaryCorner(), this.claim.getGreaterBoundaryCorner(), this.origin);
+            final Schematic schematic = Schematic.builder()
+                    .metaValue(Schematic.METADATA_NAME, this.name)
+                    .metaValue(Schematic.METADATA_DATE, Instant.now().toString())
+                    .metaValue("UUID", this.claim.getUniqueId().toString())
+                    .volume(volume)
+                    .build();
+            this.schematic = schematic;
             DataContainer schematicData = DataTranslators.SCHEMATIC.translate(schematic);
             final Path schematicPath = GriefDefenderPlugin.getInstance().getWorldEditProvider().getSchematicWorldMap().get(world.getUniqueId()).resolve(this.claim.getUniqueId().toString());
             try {
@@ -179,9 +177,9 @@ public class GDClaimSchematic implements ClaimSchematic {
                 return Optional.empty();
             }
 
-            final GDClaimSchematic schematic = new GDClaimSchematic(this.claim, this.schematic, this.name, this.origin);
-            ((GDClaim) this.claim).schematics.put(this.name, schematic);
-            return Optional.of(schematic);
+            final GDClaimSchematic claimSchematic = new GDClaimSchematic(this.claim, this.schematic, this.name, this.origin);
+            ((GDClaim) this.claim).schematics.put(this.name, claimSchematic);
+            return Optional.of(claimSchematic);
         }
     }
 }
