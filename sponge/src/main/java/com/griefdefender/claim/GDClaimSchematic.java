@@ -30,6 +30,7 @@ import com.griefdefender.api.claim.Claim;
 import com.griefdefender.api.claim.ClaimSchematic;
 import com.griefdefender.internal.util.VecHelper;
 import org.spongepowered.api.data.DataContainer;
+import org.spongepowered.api.data.DataQuery;
 import org.spongepowered.api.data.persistence.DataFormats;
 import org.spongepowered.api.data.persistence.DataTranslators;
 import org.spongepowered.api.world.BlockChangeFlags;
@@ -55,10 +56,10 @@ public class GDClaimSchematic implements ClaimSchematic {
     private final Instant dateCreated;
 
     // Used during server startup to load schematic
-    public GDClaimSchematic(Claim claim, Schematic schematic, String name) {
+    public GDClaimSchematic(Claim claim, Schematic schematic, String fileName) {
         this.claim = claim;
         this.schematic = schematic;
-        this.name = name;
+        this.name = schematic.getMetadata().getString(DataQuery.of(".", Schematic.METADATA_NAME)).orElse(fileName);
         this.origin = claim.getLesserBoundaryCorner();
         this.dateCreated = Instant.now();
     }
@@ -169,7 +170,7 @@ public class GDClaimSchematic implements ClaimSchematic {
             } catch (IOException e1) {
                 e1.printStackTrace();
             }
-            File outputFile = schematicPath.resolve(name + ".schematic").toFile();
+            File outputFile = schematicPath.resolve(this.name + ".schematic").toFile();
             try {
                 DataFormats.NBT.writeTo(new GZIPOutputStream(new FileOutputStream(outputFile)), schematicData);
             } catch (Exception e) {

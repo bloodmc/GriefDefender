@@ -33,7 +33,6 @@ import com.griefdefender.api.GriefDefender;
 import com.griefdefender.api.claim.Claim;
 import com.griefdefender.api.claim.ClaimResult;
 import com.griefdefender.api.claim.ClaimResultType;
-import com.griefdefender.api.permission.option.type.CreateModeType;
 import com.griefdefender.api.permission.option.type.CreateModeTypes;
 import com.griefdefender.cache.MessageCache;
 import com.griefdefender.claim.GDClaim;
@@ -49,7 +48,6 @@ import com.griefdefender.internal.provider.worldedit.cui.event.MultiSelectionCub
 import com.griefdefender.internal.provider.worldedit.cui.event.MultiSelectionGridEvent;
 import com.griefdefender.internal.provider.worldedit.cui.event.MultiSelectionPointEvent;
 import com.griefdefender.internal.util.BlockUtil;
-import com.griefdefender.storage.FileStorage;
 import com.griefdefender.util.PlayerUtil;
 import com.sk89q.worldedit.IncompleteRegionException;
 import com.sk89q.worldedit.LocalSession;
@@ -72,7 +70,6 @@ import org.spongepowered.api.world.schematic.Schematic;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -331,18 +328,14 @@ public class WorldEditProvider {
             for (Claim claim : claimWorldManager.getWorldClaims()) {
                 Path path = this.schematicWorldMap.get(claim.getWorldUniqueId()).resolve(claim.getUniqueId().toString());
                 if (!Files.exists(path)) {
-                    try {
-                        Files.createDirectories(path);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    return;
+                    continue;
                 }
         
                 File files[] = path.toFile().listFiles();
                 for (File file : files) {
                     DataContainer schematicData = null;
                     Schematic schematic = null;
+                    final String fileName = file.getName().replaceFirst("[.][^.]+$", "");
                     try {
                         schematicData = DataFormats.NBT.readFrom(new GZIPInputStream(new FileInputStream(file)));
                         schematic = DataTranslators.SCHEMATIC.translate(schematicData);
@@ -350,8 +343,8 @@ public class WorldEditProvider {
                         e.printStackTrace();
                         continue;
                     }
-                    GDClaimSchematic claimSchematic = new GDClaimSchematic(claim, schematic, schematic.METADATA_NAME);
-                    ((GDClaim) claim).schematics.put(file.getName(), claimSchematic);
+                    final GDClaimSchematic claimSchematic = new GDClaimSchematic(claim, schematic, fileName);
+                    ((GDClaim) claim).schematics.put(fileName, claimSchematic);
                 }
             }
         });
