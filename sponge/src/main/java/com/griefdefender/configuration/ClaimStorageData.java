@@ -165,6 +165,7 @@ public class ClaimStorageData {
             try {
                 this.root = this.loader.load(ConfigurationOptions.defaults());
                 CommentedConfigurationNode rootNode = this.root.getNode(GriefDefenderPlugin.MOD_ID);
+                boolean requiresSave = false;
                 // Check if server is using existing Sponge GP data
                 if (rootNode.isVirtual()) {
                     // check GriefPrevention
@@ -172,9 +173,13 @@ public class ClaimStorageData {
                     if (!gpRootNode.isVirtual()) {
                         rootNode.setValue(gpRootNode.getValue());
                         gpRootNode.setValue(null);
+                        requiresSave = true;
                     }
                 }
                 this.configBase = this.configMapper.populate(rootNode);
+                if (requiresSave) {
+                    this.save();
+                }
             } catch (Exception e) {
                 GriefDefenderPlugin.getInstance().getLogger().error("Failed to load configuration", e);
             }

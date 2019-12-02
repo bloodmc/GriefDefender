@@ -429,7 +429,7 @@ public class FileStorage extends BaseStorage {
                 t.printStackTrace();
             }
             if (parentClaim == null) {
-                throw new Exception("Required parent claim '" + parent + " no longer exists. Skipping...");
+                throw new Exception("Unable to load claim file '" + claimFile.getAbsolutePath() + "'. Required parent claim '" + parent + "' no longer exists. Skipping...");
             }
             claim.parent = parentClaim;
         }

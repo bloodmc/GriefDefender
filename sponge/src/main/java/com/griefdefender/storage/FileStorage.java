@@ -37,7 +37,6 @@ import com.griefdefender.api.claim.ClaimType;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.claim.GDClaimManager;
 import com.griefdefender.claim.GDClaimResult;
-import com.griefdefender.claim.GDClaimSchematic;
 import com.griefdefender.configuration.ClaimStorageData;
 import com.griefdefender.configuration.ClaimTemplateStorage;
 import com.griefdefender.configuration.GriefDefenderConfig;
@@ -48,16 +47,11 @@ import com.griefdefender.migrator.GPBukkitMigrator;
 import com.griefdefender.migrator.WorldGuardMigrator;
 import org.apache.commons.io.FileUtils;
 import org.spongepowered.api.Sponge;
-import org.spongepowered.api.data.DataContainer;
-import org.spongepowered.api.data.persistence.DataFormats;
-import org.spongepowered.api.data.persistence.DataTranslators;
 import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.world.DimensionType;
 import org.spongepowered.api.world.World;
-import org.spongepowered.api.world.schematic.Schematic;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -66,7 +60,6 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.zip.GZIPInputStream;
 
 public class FileStorage extends BaseStorage {
 
@@ -443,7 +436,7 @@ public class FileStorage extends BaseStorage {
                 t.printStackTrace();
             }
             if (parentClaim == null) {
-                throw new Exception("Required parent claim '" + parent + " no longer exists. Skipping...");
+                throw new Exception("Unable to load claim file '" + claimFile.getAbsolutePath() + "'. Required parent claim '" + parent + "' no longer exists. Skipping...");
             }
             claim.parent = parentClaim;
         }
