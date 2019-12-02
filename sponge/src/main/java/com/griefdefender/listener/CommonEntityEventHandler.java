@@ -168,7 +168,7 @@ public class CommonEntityEventHandler {
             fromClaim = this.storage.getClaimAt(fromLocation);
         }
 
-        if (GDFlags.ENTER_CLAIM && !enterBlacklisted && user != null && user.getInternalPlayerData().lastClaim != null) {
+        if (player != null && GDFlags.ENTER_CLAIM && !enterBlacklisted && user.getInternalPlayerData().lastClaim != null) {
             final GDClaim lastClaim = (GDClaim) user.getInternalPlayerData().lastClaim.get();
             if (lastClaim != null && lastClaim != fromClaim) {
                 if (GDPermissionManager.getInstance().getFinalPermission(event, toLocation, toClaim, GDPermissions.ENTER_CLAIM, targetEntity, targetEntity, player, TrustTypes.ACCESSOR, false) == Tristate.FALSE) {
@@ -220,28 +220,30 @@ public class CommonEntityEventHandler {
             } else {
                     final boolean showGpPrefix = GriefDefenderPlugin.getGlobalConfig().getConfig().message.enterExitShowGdPrefix;
                     user.getInternalPlayerData().lastClaim = new WeakReference<>(toClaim);
-                    TextComponent welcomeMessage = (TextComponent) gpEvent.getEnterMessage().orElse(null);
-                    if (welcomeMessage != null && !welcomeMessage.equals(TextComponent.empty()) && !welcomeMessage.content().equals("")) {
-                        ChatType chatType = gpEvent.getEnterMessageChatType();
-                        if (showGpPrefix) {
-                            TextAdapter.sendComponent(player, TextComponent.builder("")
-                                    .append(enterClanTag != null ? enterClanTag : GriefDefenderPlugin.GD_TEXT)
-                                    .append(welcomeMessage).build(), SpongeUtil.getSpongeChatType(chatType));
-                        } else {
-                            TextAdapter.sendComponent(player, enterClanTag != null ? enterClanTag : welcomeMessage, SpongeUtil.getSpongeChatType(chatType));
+                    if (player != null) {
+                        TextComponent welcomeMessage = (TextComponent) gpEvent.getEnterMessage().orElse(null);
+                        if (welcomeMessage != null && !welcomeMessage.equals(TextComponent.empty()) && !welcomeMessage.content().equals("")) {
+                            ChatType chatType = gpEvent.getEnterMessageChatType();
+                            if (showGpPrefix) {
+                                TextAdapter.sendComponent(player, TextComponent.builder("")
+                                        .append(enterClanTag != null ? enterClanTag : GriefDefenderPlugin.GD_TEXT)
+                                        .append(welcomeMessage).build(), SpongeUtil.getSpongeChatType(chatType));
+                            } else {
+                                TextAdapter.sendComponent(player, enterClanTag != null ? enterClanTag : welcomeMessage, SpongeUtil.getSpongeChatType(chatType));
+                            }
                         }
-                    }
-
-                    Component farewellMessage = gpEvent.getExitMessage().orElse(null);
-                    if (farewellMessage != null && !farewellMessage.equals(Text.of())) {
-                        ChatType chatType = gpEvent.getExitMessageChatType();
-                        if (showGpPrefix) {
-                            TextAdapter.sendComponent(player, TextComponent.builder("")
-                                    .append(exitClanTag != null ? exitClanTag : GriefDefenderPlugin.GD_TEXT)
-                                    .append(farewellMessage)
-                                    .build(), SpongeUtil.getSpongeChatType(chatType));
-                        } else {
-                            TextAdapter.sendComponent(player, exitClanTag != null ? exitClanTag : farewellMessage, SpongeUtil.getSpongeChatType(chatType));
+    
+                        Component farewellMessage = gpEvent.getExitMessage().orElse(null);
+                        if (farewellMessage != null && !farewellMessage.equals(Text.of())) {
+                            ChatType chatType = gpEvent.getExitMessageChatType();
+                            if (showGpPrefix) {
+                                TextAdapter.sendComponent(player, TextComponent.builder("")
+                                        .append(exitClanTag != null ? exitClanTag : GriefDefenderPlugin.GD_TEXT)
+                                        .append(farewellMessage)
+                                        .build(), SpongeUtil.getSpongeChatType(chatType));
+                            } else {
+                                TextAdapter.sendComponent(player, exitClanTag != null ? exitClanTag : farewellMessage, SpongeUtil.getSpongeChatType(chatType));
+                            }
                         }
                     }
 

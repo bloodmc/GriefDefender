@@ -83,6 +83,10 @@ public final class EntityTypeRegistryModule {
         SPAWN_TYPES.put("monster", EnumCreatureType.MONSTER);
     }
 
+    public void registerAdditionalCatalog(EntityType type) {
+        this.entityTypeMappings.put(type.getId(), new GDEntityType(type));
+    }
+
     private static final class Holder {
 
         static final EntityTypeRegistryModule INSTANCE = new EntityTypeRegistryModule();

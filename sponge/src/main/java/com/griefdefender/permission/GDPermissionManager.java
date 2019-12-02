@@ -57,6 +57,7 @@ import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.configuration.category.BanCategory;
 import com.griefdefender.event.GDCauseStackManager;
 import com.griefdefender.event.GDFlagPermissionEvent;
+import com.griefdefender.internal.registry.EntityTypeRegistryModule;
 import com.griefdefender.internal.registry.GDEntityType;
 import com.griefdefender.internal.util.BlockUtil;
 import com.griefdefender.internal.util.NMSUtil;
@@ -106,7 +107,6 @@ import org.spongepowered.api.world.LocatableBlock;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 import org.spongepowered.common.SpongeImplHooks;
-import org.spongepowered.common.registry.type.entity.EntityTypeRegistryModule;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -630,6 +630,16 @@ public class GDPermissionManager implements PermissionManager {
                             id = modId + ":" + name;
                         }
                     }
+                }
+
+                GDEntityType type = EntityTypeRegistryModule.getInstance().getById(targetEntity.getType().getId()).orElse(null);
+                if (type == null) {
+                    EntityTypeRegistryModule.getInstance().registerAdditionalCatalog(targetEntity.getType());
+                    type = EntityTypeRegistryModule.getInstance().getById(targetEntity.getType().getId()).orElse(null);
+                }
+
+                if (type != null && !(targetEntity instanceof Player)) {
+                    addCustomEntityTypeContexts(targetEntity, contexts, type, isSource);
                 }
 
                 if (this.isObjectIdBanned(claim, id, BanType.ENTITY)) {

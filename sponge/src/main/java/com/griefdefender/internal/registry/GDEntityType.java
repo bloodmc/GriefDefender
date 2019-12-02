@@ -27,6 +27,7 @@ package com.griefdefender.internal.registry;
 import com.griefdefender.api.CatalogType;
 import com.griefdefender.api.permission.Context;
 import net.minecraft.entity.EnumCreatureType;
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.EntityType;
 import org.spongepowered.common.entity.SpongeEntityType;
 
@@ -61,7 +62,7 @@ public class GDEntityType implements CatalogType {
 
     @Nullable
     public String getEnumCreatureTypeId() {
-        if (this.creatureType == null) {
+        if (this.getEnumCreatureType() == null) {
             return null;
         }
         switch (this.creatureType) {
@@ -95,6 +96,12 @@ public class GDEntityType implements CatalogType {
 
     @Nullable
     public EnumCreatureType getEnumCreatureType() {
+        if (this.creatureType == null) {
+            final SpongeEntityType spongeEntityType = ((SpongeEntityType) Sponge.getRegistry().getType(EntityType.class, this.getId()).orElse(null));
+            if (spongeEntityType != null) {
+                this.creatureType = spongeEntityType.getEnumCreatureType();
+            }
+        }
         return this.creatureType;
     }
 
