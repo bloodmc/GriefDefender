@@ -204,12 +204,12 @@ public class GPSpongeMigrator {
                         }
                         GriefDefenderPlugin.getInstance().getLogger().info("Removed legacy permission '" + originalPermission + "'.");
                         if (isDefault) {
-                            PermissionUtil.getInstance().setPermissionValue(GriefDefenderPlugin.DEFAULT_HOLDER, currentPermission, com.griefdefender.api.Tristate.fromBoolean(entry.getValue()), this.getGDContexts(originalContexts));
+                            PermissionUtil.getInstance().setPermissionValue(GriefDefenderPlugin.DEFAULT_HOLDER, currentPermission, com.griefdefender.api.Tristate.fromBoolean(entry.getValue()), this.getGDContexts(gdContexts));
                         } else {
-                            subject.getSubjectData().setPermission(originalContexts, currentPermission, Tristate.fromBoolean(entry.getValue()));
+                            subject.getSubjectData().setPermission(gdContexts, currentPermission, Tristate.fromBoolean(entry.getValue()));
                         }
-                        GriefDefenderPlugin.getInstance().getLogger().info("Set new permission '" + currentPermission + "' with contexts " + originalContexts);
-                        GriefDefenderPlugin.getInstance().getLogger().info("Successfully migrated permission " + currentPermission + " to " + currentPermission + " with contexts " + originalContexts);
+                        GriefDefenderPlugin.getInstance().getLogger().info("Set new permission '" + currentPermission + "' with contexts " + gdContexts);
+                        GriefDefenderPlugin.getInstance().getLogger().info("Successfully migrated permission " + currentPermission + " to " + currentPermission + " with contexts " + gdContexts);
                     } else {
                         GriefDefenderPlugin.getInstance().getLogger().info("Detected legacy flag permission '" + originalPermission + "' on subject " + subject.getFriendlyIdentifier().orElse(subject.getIdentifier()) + "'. Migrating...");
                         if (isDefault) {
@@ -228,6 +228,72 @@ public class GPSpongeMigrator {
                         GriefDefenderPlugin.getInstance().getLogger().info("Set new flag permission '" + flag.getPermission() + "' with contexts " + newContextSet);
                         GriefDefenderPlugin.getInstance().getLogger().info("Successfully migrated flag permission " + currentPermission + " to " + flag.getPermission() + " with contexts " + newContextSet);
                     }
+                    migrated = true;
+                }
+            }
+            for (Map.Entry<Set<Context>, Map<String, String>> mapEntry : subject.getSubjectData().getAllOptions().entrySet()) {
+                final Set<Context> originalContexts = mapEntry.getKey();
+                Iterator<Map.Entry<String, String>> iterator = mapEntry.getValue().entrySet().iterator();
+                Set<Context> gdContexts = new HashSet<>();
+                boolean hasClaimContext = false;
+                for (Context context : originalContexts) {
+                    if (context.getKey().equalsIgnoreCase("gp_claim_overrides")) {
+                        gdContexts.add(new Context("gd_claim_override", context.getValue()));
+                    } else if (context.getKey().equalsIgnoreCase("gp_claim_defaults")) {
+                        gdContexts.add(new Context("gd_claim_default", context.getValue()));
+                    } else if (context.getKey().equalsIgnoreCase("gp_claim")) {
+                        gdContexts.add(new Context("gd_claim", context.getValue()));
+                        hasClaimContext = true;
+                    } else {
+                        gdContexts.add(context);
+                    }
+                }
+                while (iterator.hasNext()) {
+                    final Set<Context> optionContexts = new HashSet<>(gdContexts);
+                    final Map.Entry<String, String> entry = iterator.next();
+                    final String originalPermission = entry.getKey();
+                    if (!originalPermission.startsWith("griefprevention")) {
+                        continue;
+                    }
+                    String currentPermission = originalPermission
+                            .replace("griefprevention", "griefdefender")
+                            .replace("claim-expiration-chest", "chest-expiration")
+                            .replace("claim-expiration", "expiration")
+                            .replace("claim-create-mode", "create-mode")
+                            .replace("create-claim-limit", "create-limit")
+                            .replace("min-claim-level", "min-level")
+                            .replace("max-claim-level", "max-level")
+                            .replace("min-claim-size", "min-size")
+                            .replace("max-claim-size", "max-size")
+                            .replaceAll("\\-basic[^-]*", "")
+                            .replaceAll("\\-subdivision[^-]*", "")
+                            .replaceAll("\\-town[^-]*", "");
+                    if (!hasClaimContext) {
+                        if (originalPermission.contains("-basic")) {
+                            optionContexts.add(new Context("gd_claim_default", "basic"));
+                        } else if (originalPermission.contains("-subdivision")) {
+                            optionContexts.add(new Context("gd_claim_default", "subdivision"));
+                        } else if (originalPermission.contains("-town")) {
+                            optionContexts.add(new Context("gd_claim_default", "town"));
+                        } else {
+                            optionContexts.add(new Context("gd_claim_default", "global"));
+                        }
+                    }
+                    GriefDefenderPlugin.getInstance().getLogger().info("Detected legacy option '" + originalPermission + "' on subject " + subject.getFriendlyIdentifier().orElse(subject.getIdentifier()) + "'. Migrating...");
+                    if (isDefault) {
+                        PermissionUtil.getInstance().setOptionValue(GriefDefenderPlugin.DEFAULT_HOLDER, originalPermission, "undefined", this.getGDContexts(originalContexts));
+                    } else {
+                        subject.getSubjectData().setOption(originalContexts, originalPermission, null);
+                    }
+                    GriefDefenderPlugin.getInstance().getLogger().info("Removed legacy option '" + originalPermission + "'.");
+                    if (isDefault) {
+                        PermissionUtil.getInstance().setOptionValue(GriefDefenderPlugin.DEFAULT_HOLDER, currentPermission, entry.getValue(), this.getGDContexts(optionContexts));
+                    } else {
+                        subject.getSubjectData().setOption(optionContexts, currentPermission, entry.getValue());
+                    }
+                    GriefDefenderPlugin.getInstance().getLogger().info("Removed legacy option '" + originalPermission + "'.");
+                    GriefDefenderPlugin.getInstance().getLogger().info("Set new option '" + currentPermission + "' with contexts " + gdContexts);
+                    GriefDefenderPlugin.getInstance().getLogger().info("Successfully migrated option " + currentPermission + " to " + currentPermission + " with contexts " + gdContexts);
                     migrated = true;
                 }
             }
