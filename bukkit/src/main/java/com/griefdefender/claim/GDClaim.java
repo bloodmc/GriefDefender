@@ -126,6 +126,7 @@ public class GDClaim implements Claim {
     // Permission Context
     private final Context context;
     private final Context overrideClaimContext;
+    private final Context worldContext;
 
     private UUID id = null;
     private UUID ownerUniqueId;
@@ -167,6 +168,7 @@ public class GDClaim implements Claim {
         this.type = type;
         this.id = UUID.randomUUID();
         this.context = new Context("gd_claim", this.id.toString());
+        this.worldContext = new Context("world", world.getName().toLowerCase());
         this.overrideClaimContext = new Context("gd_claim_override", this.id.toString());
         this.cuboid = cuboid;
         this.parent = parent;
@@ -198,6 +200,7 @@ public class GDClaim implements Claim {
         this.type = type;
         this.cuboid = cuboid;
         this.context = new Context("gd_claim", this.id.toString());
+        this.worldContext = new Context("world", world.getName().toLowerCase());
         this.hashCode = this.id.hashCode();
         this.worldClaimManager = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(this.world.getUID());
         if (this.type == ClaimTypes.WILDERNESS) {
@@ -3017,6 +3020,10 @@ public class GDClaim implements Claim {
     @Override
     public Context getOverrideClaimContext() {
         return this.overrideClaimContext;
+    }
+
+    public Context getWorldContext() {
+        return this.worldContext;
     }
 
     @Override

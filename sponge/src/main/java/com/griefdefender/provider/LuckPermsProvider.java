@@ -353,29 +353,24 @@ public class LuckPermsProvider implements PermissionProvider {
 
         final ImmutableCollection<Node> nodes = permissionHolder.getNodes().values();
         Map<Set<Context>, Map<String, Boolean>> permanentPermissionMap = new TreeMap<Set<Context>, Map<String, Boolean>>(CONTEXT_COMPARATOR);
-        Map<ContextSet, Set<Context>> contextMap = new HashMap<>();
         for (Node node : nodes) {
             if (node.isMeta()) {
                 continue;
             }
 
             String serverName = node.getServer().orElse(null);
+            final String worldName = node.getWorld().orElse(null);
             if (serverName != null && serverName.equalsIgnoreCase("global")) {
                 serverName = null;
             }
-            Set<Context> contexts = null;
-            if (contextMap.get(node.getContexts()) == null) {
-                contexts = getGPContexts(node.getContexts());
-                if (serverName != null && !serverName.equalsIgnoreCase("undefined")) {
-                    contexts.add(new Context("server", serverName));
-                }
-                contextMap.put(node.getContexts(), contexts);
-            } else {
-                contexts = contextMap.get(node.getContexts());
-                if (serverName != null && !serverName.equalsIgnoreCase("undefined")) {
-                    contexts.add(new Context("server", serverName));
-                }
+            Set<Context> contexts = getGPContexts(node.getContexts());
+            if (serverName != null && !serverName.equalsIgnoreCase("undefined")) {
+                contexts.add(new Context("server", serverName));
             }
+            if (worldName != null) {
+                contexts.add(new Context("world", worldName.toLowerCase()));
+            }
+
             Map<String, Boolean> permissionEntry = permanentPermissionMap.get(contexts);
             if (permissionEntry == null) {
                 permissionEntry = new HashMap<>();
@@ -397,29 +392,24 @@ public class LuckPermsProvider implements PermissionProvider {
 
         final Set<? extends Node> nodes = permissionHolder.getTransientPermissions();
         Map<Set<Context>, Map<String, Boolean>> transientPermissionMap = new TreeMap<Set<Context>, Map<String, Boolean>>(CONTEXT_COMPARATOR);
-        Map<ContextSet, Set<Context>> contextMap = new HashMap<>();
         for (Node node : nodes) {
             if (node.isMeta()) {
                 continue;
             }
 
             String serverName = node.getServer().orElse(null);
+            final String worldName = node.getWorld().orElse(null);
             if (serverName != null && serverName.equalsIgnoreCase("global")) {
                 serverName = null;
             }
-            Set<Context> contexts = null;
-            if (contextMap.get(node.getContexts()) == null) {
-                contexts = getGPContexts(node.getContexts());
-                if (serverName != null && !serverName.equalsIgnoreCase("undefined")) {
-                    contexts.add(new Context("server", serverName));
-                }
-                contextMap.put(node.getContexts(), contexts);
-            } else {
-                contexts = contextMap.get(node.getContexts());
-                if (serverName != null && !serverName.equalsIgnoreCase("undefined")) {
-                    contexts.add(new Context("server", serverName));
-                }
+            Set<Context> contexts = getGPContexts(node.getContexts());
+            if (serverName != null && !serverName.equalsIgnoreCase("undefined")) {
+                contexts.add(new Context("server", serverName));
             }
+            if (worldName != null) {
+                contexts.add(new Context("world", worldName.toLowerCase()));
+            }
+
             Map<String, Boolean> permissionEntry = transientPermissionMap.get(contexts);
             if (permissionEntry == null) {
                 permissionEntry = new HashMap<>();
@@ -440,28 +430,23 @@ public class LuckPermsProvider implements PermissionProvider {
 
         final ImmutableCollection<Node> nodes = permissionHolder.getNodes().values();
         Map<Set<Context>, Map<String, String>> permanentPermissionMap = new TreeMap<Set<Context>, Map<String, String>>(CONTEXT_COMPARATOR);
-        Map<ContextSet, Set<Context>> contextMap = new HashMap<>();
         for (Node node : nodes) {
             if (!node.isMeta()) {
                 continue;
             }
             String serverName = node.getServer().orElse(null);
+            final String worldName = node.getWorld().orElse(null);
             if (serverName != null && serverName.equalsIgnoreCase("global")) {
                 serverName = null;
             }
-            Set<Context> contexts = null;
-            if (contextMap.get(node.getContexts()) == null) {
-                contexts = getGPContexts(node.getContexts());
-                if (serverName != null && !serverName.equalsIgnoreCase("undefined")) {
-                    contexts.add(new Context("server", serverName));
-                }
-                contextMap.put(node.getContexts(), contexts);
-            } else {
-                contexts = contextMap.get(node.getContexts());
-                if (serverName != null && !serverName.equalsIgnoreCase("undefined")) {
-                    contexts.add(new Context("server", serverName));
-                }
+            Set<Context> contexts = getGPContexts(node.getContexts());
+            if (serverName != null && !serverName.equalsIgnoreCase("undefined")) {
+                contexts.add(new Context("server", serverName));
             }
+            if (worldName != null) {
+                contexts.add(new Context("world", worldName.toLowerCase()));
+            }
+
             Map<String, String> metaEntry = permanentPermissionMap.get(contexts);
             if (metaEntry == null) {
                 metaEntry = new HashMap<>();
@@ -482,28 +467,23 @@ public class LuckPermsProvider implements PermissionProvider {
 
         final Set<? extends Node> nodes = permissionHolder.getTransientPermissions();
         Map<Set<Context>, Map<String, String>> permanentPermissionMap = new TreeMap<Set<Context>, Map<String, String>>(CONTEXT_COMPARATOR);
-        Map<ContextSet, Set<Context>> contextMap = new HashMap<>();
         for (Node node : nodes) {
             if (!node.isMeta()) {
                 continue;
             }
             String serverName = node.getServer().orElse(null);
+            final String worldName = node.getWorld().orElse(null);
             if (serverName != null && serverName.equalsIgnoreCase("global")) {
                 serverName = null;
             }
-            Set<Context> contexts = null;
-            if (contextMap.get(node.getContexts()) == null) {
-                contexts = getGPContexts(node.getContexts());
-                if (serverName != null && !serverName.equalsIgnoreCase("undefined")) {
-                    contexts.add(new Context("server", serverName));
-                }
-                contextMap.put(node.getContexts(), contexts);
-            } else {
-                contexts = contextMap.get(node.getContexts());
-                if (serverName != null && !serverName.equalsIgnoreCase("undefined")) {
-                    contexts.add(new Context("server", serverName));
-                }
+            Set<Context> contexts = getGPContexts(node.getContexts());
+            if (serverName != null && !serverName.equalsIgnoreCase("undefined")) {
+                contexts.add(new Context("server", serverName));
             }
+            if (worldName != null) {
+                contexts.add(new Context("world", worldName.toLowerCase()));
+            }
+
             Map<String, String> metaEntry = permanentPermissionMap.get(contexts);
             if (metaEntry == null) {
                 metaEntry = new HashMap<>();

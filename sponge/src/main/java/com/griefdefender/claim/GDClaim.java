@@ -133,6 +133,7 @@ public class GDClaim implements Claim {
     // Permission Context
     private final Context context;
     private final Context overrideClaimContext;
+    private final Context worldContext;
     private final org.spongepowered.api.service.context.Context spongeContext;
     private final org.spongepowered.api.service.context.Context spongeOverrideClaimContext;
 
@@ -176,6 +177,7 @@ public class GDClaim implements Claim {
         this.type = type;
         this.id = UUID.randomUUID();
         this.context = new Context("gd_claim", this.id.toString());
+        this.worldContext = new Context(world.getContext().getKey(), world.getContext().getValue().toLowerCase());
         this.overrideClaimContext = new Context("gd_claim_override", this.id.toString());
         this.spongeContext = SpongeUtil.getSpongeContext(this.context);
         this.spongeOverrideClaimContext = SpongeUtil.getSpongeContext(this.overrideClaimContext);
@@ -209,6 +211,7 @@ public class GDClaim implements Claim {
         this.type = type;
         this.cuboid = cuboid;
         this.context = new Context("gd_claim", this.id.toString());
+        this.worldContext = new Context(world.getContext().getKey(), world.getContext().getValue().toLowerCase());
         this.spongeContext = SpongeUtil.getSpongeContext(this.context);
         this.spongeOverrideClaimContext = SpongeUtil.getSpongeContext(this.overrideClaimContext);
         this.hashCode = this.id.hashCode();
@@ -3067,6 +3070,10 @@ public class GDClaim implements Claim {
     @Override
     public Context getOverrideClaimContext() {
         return this.overrideClaimContext;
+    }
+
+    public Context getWorldContext() {
+        return this.worldContext;
     }
 
     public org.spongepowered.api.service.context.Context getSpongeOverrideTypeContext() {

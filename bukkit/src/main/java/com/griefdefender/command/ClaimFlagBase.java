@@ -382,7 +382,9 @@ public abstract class ClaimFlagBase extends BaseCommand {
             defaultContexts.add(ClaimContexts.WILDERNESS_DEFAULT_CONTEXT);
             overrideContexts.add(ClaimContexts.WILDERNESS_OVERRIDE_CONTEXT);
         }
+        defaultContexts.add(claim.getWorldContext());
         defaultContexts.add(ClaimContexts.GLOBAL_DEFAULT_CONTEXT);
+        overrideContexts.add(claim.getWorldContext());
         overrideContexts.add(ClaimContexts.GLOBAL_OVERRIDE_CONTEXT);
         overrideContexts.add(claim.getOverrideClaimContext());
 
@@ -622,6 +624,7 @@ public abstract class ClaimFlagBase extends BaseCommand {
             filteredContexts.addAll(flagData.getContexts());
             Set<Context> newContexts = new HashSet<>(filteredContexts);
             newContexts.add(ClaimContexts.GLOBAL_OVERRIDE_CONTEXT);
+            newContexts.add(claim.getWorldContext());
             newContexts.add(claim.getOverrideTypeContext());
             newContexts.add(claim.getOverrideClaimContext());
             Tristate result = PermissionUtil.getInstance().getPermissionValueWithRequiredContexts(claim, GriefDefenderPlugin.DEFAULT_HOLDER, flagData.getFlag().getPermission(), newContexts, "gd_claim");
@@ -632,6 +635,7 @@ public abstract class ClaimFlagBase extends BaseCommand {
 
             // Check claim
             newContexts = new HashSet<>(filteredContexts);
+            newContexts.add(claim.getWorldContext());
             newContexts.add(claim.getContext());
             result = PermissionUtil.getInstance().getPermissionValueWithRequiredContexts(claim, GriefDefenderPlugin.DEFAULT_HOLDER, flagData.getFlag().getPermission(), newContexts, "gd_claim");
             if (result != Tristate.UNDEFINED) {
@@ -641,6 +645,7 @@ public abstract class ClaimFlagBase extends BaseCommand {
 
             // Check default
             newContexts = new HashSet<>(filteredContexts);
+            newContexts.add(claim.getWorldContext());
             newContexts.add(ClaimContexts.GLOBAL_DEFAULT_CONTEXT);
             newContexts.add(claim.getDefaultTypeContext());
             result = PermissionUtil.getInstance().getPermissionValueWithRequiredContexts(claim, GriefDefenderPlugin.DEFAULT_HOLDER, flagData.getFlag().getPermission(), newContexts, "gd_claim");

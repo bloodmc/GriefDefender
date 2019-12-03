@@ -272,6 +272,7 @@ public class GDPermissionManager implements PermissionManager {
         }
         contexts.addAll(sourceContexts);
         contexts.addAll(targetContexts);
+        contexts.add(((GDClaim) claim).getWorldContext());
         this.eventContexts = contexts;
         this.eventPlayerData = playerData;
 
@@ -428,6 +429,7 @@ public class GDPermissionManager implements PermissionManager {
             player = permissionHolder instanceof GDPermissionUser ? ((GDPermissionUser) permissionHolder).getOnlinePlayer() : null;
         }
 
+        contexts.add(((GDClaim) claim).getWorldContext());
         contexts.add(claim.getOverrideClaimContext());
         contexts.add(ClaimContexts.GLOBAL_OVERRIDE_CONTEXT);
         contexts.addAll(this.eventContexts);

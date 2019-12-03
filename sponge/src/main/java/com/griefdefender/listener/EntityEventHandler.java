@@ -350,6 +350,10 @@ public class EntityEventHandler {
                     if (GriefDefenderPlugin.isTargetIdBlacklisted(Flags.ENTITY_CHUNK_SPAWN.getName(), entity, world.getProperties())) {
                         return true;
                     }
+                    // Always allow item frames in chunks to spawn
+                    if (entity instanceof ItemFrame) {
+                        return true;
+                    }
                     permission = GDPermissions.ENTITY_CHUNK_SPAWN;
                 }
 
