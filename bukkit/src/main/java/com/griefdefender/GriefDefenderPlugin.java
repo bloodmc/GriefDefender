@@ -185,9 +185,11 @@ import com.griefdefender.permission.GDPermissionManager;
 import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.permission.flag.GDCustomFlagDefinition;
 import com.griefdefender.permission.flag.GDFlags;
+import com.griefdefender.provider.DynmapProvider;
 import com.griefdefender.provider.EssentialsProvider;
 import com.griefdefender.provider.LuckPermsProvider;
 import com.griefdefender.provider.PermissionProvider;
+import com.griefdefender.provider.PlaceholderProvider;
 import com.griefdefender.provider.VaultProvider;
 import com.griefdefender.registry.ChatTypeRegistryModule;
 import com.griefdefender.registry.ClaimTypeRegistryModule;
@@ -255,6 +257,7 @@ public class GriefDefenderPlugin {
 
     public BaseStorage dataStore;
 
+    private DynmapProvider dynmapProvider;
     private EssentialsProvider essentialsProvider;
     private WorldEditProvider worldEditProvider;
     private WorldGuardProvider worldGuardProvider;
@@ -453,6 +456,17 @@ public class GriefDefenderPlugin {
         if (Bukkit.getPluginManager().getPlugin("Essentials") != null) {
             this.essentialsProvider = new EssentialsProvider();
         }
+
+        if (Bukkit.getPluginManager().getPlugin("dynmap") != null) {
+            this.dynmapProvider = new DynmapProvider();
+        }
+
+        if(Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null){
+            this.getLogger().info("Detected PlaceholderAPI. Enabling GD PlaceholderAPI expansion...");
+            new PlaceholderProvider();
+            this.getLogger().info("GriefDefender PlaceholderAPI expansion enabled!");
+        }
+
         if (this.dataStore == null) {
             try {
                 this.dataStore = new FileStorage();
@@ -1069,6 +1083,9 @@ public class GriefDefenderPlugin {
         return false;
     }
 
+    public DynmapProvider getDynmapProvider() {
+        return this.dynmapProvider;
+    }
 
     public EssentialsProvider getEssentialsProvider() {
         return this.essentialsProvider;

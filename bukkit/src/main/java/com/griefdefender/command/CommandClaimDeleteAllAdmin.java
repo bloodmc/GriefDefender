@@ -86,7 +86,8 @@ public class CommandClaimDeleteAllAdmin extends BaseCommand {
 
             GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.DELETE_ALL_TYPE_SUCCESS,
                     ImmutableMap.of("type", TextComponent.of("ADMIN").color(TextColor.RED))));
-            GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
+            final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
+            playerData.onClaimDelete();
             playerData.revertActiveVisual(player);
         };
     }

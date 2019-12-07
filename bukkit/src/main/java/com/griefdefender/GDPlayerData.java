@@ -684,6 +684,13 @@ public class GDPlayerData implements PlayerData {
         return true;
     }
 
+    public void onClaimDelete() {
+        this.lastShovelLocation = null;
+        this.eventResultCache = null;
+        this.claimResizing = null;
+        this.claimSubdividing = null;
+    }
+
     public void onDisconnect() {
         this.visualBlocks.clear();
         this.claimMode = false;

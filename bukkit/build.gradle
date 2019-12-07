@@ -45,6 +45,10 @@ repositories {
         url = 'https://repo.codemc.org/repository/maven-public'
     }
     maven {
+        name = 'dynmap-repo'
+        url = 'http://repo.mikeprimm.com'
+    }
+    maven {
         name = 'essentials'
         url = 'https://ci.ender.zone/plugin/repository/everything/'
     }
@@ -59,6 +63,10 @@ repositories {
     maven {
         name = 'permissionsex'
         url = 'https://repo.glaremasters.me/repository/permissionsex'
+    }
+    maven {
+        name = 'placeholderapi'
+        url = 'http://repo.extendedclip.com/content/repositories/placeholderapi'
     }
     maven {
         name = 'sk89q'
@@ -102,9 +110,11 @@ dependencies {
     compileOnly "org.bukkit:bukkit:$spigotVersion"
     compileOnly "org.spigotmc:spigot:$spigotVersion"
     // Plugins
+    compileOnly "ca.stellardrift.permissionsex:permissionsex-bukkit:2.0-SNAPSHOT"
+    compileOnly "me.clip:placeholderapi:2.10.4"
     compileOnly "net.ess3:EssentialsX:2.17.1"
     compileOnly "net.milkbowl.vault:VaultAPI:1.7"
-    compileOnly "ca.stellardrift.permissionsex:permissionsex-bukkit:2.0-SNAPSHOT"
+    compileOnly "us.dynmap:dynmap-api:3.0-SNAPSHOT"
     // Libs
     compileOnly "aopalliance:aopalliance:1.0"
     compileOnly "co.aikar:acf-core:0.5.0-SNAPSHOT"

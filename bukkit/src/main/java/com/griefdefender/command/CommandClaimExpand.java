@@ -111,6 +111,12 @@ public class CommandClaimExpand extends BaseCommand {
             } else if (face == BlockFace.SOUTH) {
                 point1 = new Vector3i(lesser.getX(), lesser.getY(), lesser.getZ());
                 point2 = new Vector3i(greater.getX(), greater.getY(), greater.getZ() + amount);
+            } else if (face == BlockFace.UP) {
+                point1 = new Vector3i(lesser.getX(), lesser.getY(), lesser.getZ());
+                point2 = new Vector3i(greater.getX(), greater.getY() + amount, greater.getZ() + amount);
+            }  else if (face == BlockFace.DOWN) {
+                point1 = new Vector3i(lesser.getX(), lesser.getY() - amount, lesser.getZ());
+                point2 = new Vector3i(greater.getX(), greater.getY(), greater.getZ() + amount);
             }
         } else {
             point1 = new Vector3i(

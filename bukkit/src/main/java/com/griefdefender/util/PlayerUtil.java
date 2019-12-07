@@ -25,12 +25,16 @@
 package com.griefdefender.util;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.reflect.TypeToken;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
+import com.griefdefender.api.Tristate;
 import com.griefdefender.api.claim.ClaimType;
 import com.griefdefender.api.claim.ClaimTypes;
 import com.griefdefender.api.claim.ShovelType;
 import com.griefdefender.api.claim.ShovelTypes;
+import com.griefdefender.api.permission.flag.Flags;
+import com.griefdefender.api.permission.option.Options;
 import com.griefdefender.api.permission.option.type.CreateModeTypes;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
@@ -38,6 +42,7 @@ import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.internal.util.NMSUtil;
 import com.griefdefender.internal.visual.ClaimVisual;
 import com.griefdefender.internal.visual.GDClaimVisualType;
+import com.griefdefender.permission.GDPermissionManager;
 import com.griefdefender.permission.GDPermissionUser;
 
 import net.kyori.text.Component;
@@ -54,6 +59,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.HashSet;
 import java.util.UUID;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -216,5 +222,29 @@ public class PlayerUtil {
             return false;
         }
         return true;
+    }
+
+    public boolean canPlayerPvP(GDClaim claim, GDPermissionUser source) {
+        final Player sourcePlayer = source.getOnlinePlayer();
+
+        Tristate sourceResult = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Tristate.class), source, Options.PVP, claim);
+        if (sourceResult == Tristate.UNDEFINED) {
+            sourceResult = Tristate.fromBoolean(claim.getWorld().getPVP());
+        }
+
+        if (sourceResult == Tristate.FALSE) {
+            return false;
+        }
+
+        final GDClaim sourceClaim = GriefDefenderPlugin.getInstance().dataStore.getClaimAtPlayer(source.getInternalPlayerData(), sourcePlayer.getLocation());
+        if (!sourceClaim.isPvpEnabled()) {
+            return false;
+        }
+        if (!claim.isPvpEnabled()) {
+            return false;
+        }
+
+        final Tristate flagResult = GDPermissionManager.getInstance().getActiveFlagPermissionValue(claim, source, Flags.ENTITY_DAMAGE, source, "minecraft:player", new HashSet<>());
+        return flagResult.asBoolean();
     }
 }

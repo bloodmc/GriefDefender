@@ -27,6 +27,7 @@ package com.griefdefender;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
@@ -44,6 +45,8 @@ import com.griefdefender.api.claim.ClaimManager;
 import com.griefdefender.api.data.PlayerData;
 import com.griefdefender.api.permission.flag.Flag;
 import com.griefdefender.cache.PermissionHolderCache;
+import com.griefdefender.claim.GDClaim;
+import com.griefdefender.storage.BaseStorage;
 
 @Singleton
 public class GDCore implements Core {
@@ -81,6 +84,13 @@ public class GDCore implements Core {
     @Override
     public List<Claim> getAllPlayerClaims(UUID playerUniqueId) {
         List<Claim> claimList = new ArrayList<>();
+        if (BaseStorage.USE_GLOBAL_PLAYER_STORAGE) {
+            final World world = Bukkit.getWorlds().get(0);
+            final ClaimManager claimManager = this.getClaimManager(world.getUID());
+            claimList.addAll(claimManager.getPlayerClaims(playerUniqueId));
+            return ImmutableList.copyOf(claimList);
+        }
+
         for (World world : Bukkit.getServer().getWorlds()) {
             claimList.addAll(this.getClaimManager(world.getUID()).getPlayerClaims(playerUniqueId));
         }

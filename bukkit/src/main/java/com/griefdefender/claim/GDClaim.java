@@ -84,6 +84,7 @@ import com.griefdefender.util.PermissionUtil;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextColor;
+import net.kyori.text.serializer.plain.PlainComponentSerializer;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
@@ -365,6 +366,14 @@ public class GDClaim implements Claim {
         return this.claimData.getName();
     }
 
+    public String getFriendlyName() {
+        final Component claimName = this.claimData.getName().orElse(null);
+        if (claimName == null) {
+            return "none";
+        }
+        return PlainComponentSerializer.INSTANCE.serialize(claimName);
+    }
+
     public Component getFriendlyNameType() {
         return this.getFriendlyNameType(false);
     }
@@ -516,6 +525,20 @@ public class GDClaim implements Claim {
         }
 
         return TextComponent.of(this.getOwnerPlayerData().getPlayerName());
+    }
+
+    public String getOwnerFriendlyName() {
+        if (this.isAdminClaim()) {
+            return "administrator";
+        }
+        if (this.isWilderness()) {
+            return "wilderness";
+        }
+        final GDPlayerData playerData = this.ownerPlayerData;
+        if (playerData == null) {
+            return "[unknown]";
+        }
+        return playerData.getPlayerName();
     }
 
     @Override

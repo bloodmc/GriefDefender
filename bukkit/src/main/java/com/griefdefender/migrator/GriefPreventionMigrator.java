@@ -528,6 +528,10 @@ public class GriefPreventionMigrator {
             e1.printStackTrace();
             return;
         }
+        if (region.getChildrenMap().isEmpty()) {
+            GriefDefenderPlugin.getInstance().getLogger().info("Detected corrupted claim file '" + file + "'. Skipping...");
+            return;
+        }
         if (parentsOnly && region.getChildrenMap().get("Parent Claim ID").getInt() != -1) {
             return;
         }

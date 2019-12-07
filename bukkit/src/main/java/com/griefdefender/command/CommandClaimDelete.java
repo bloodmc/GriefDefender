@@ -106,6 +106,7 @@ public class CommandClaimDelete extends BaseCommand {
                 return;
             }
 
+            playerData.onClaimDelete();
             PermissionUtil.getInstance().clearPermissions((GDClaim) claim);
             playerData.revertActiveVisual(player);
 
