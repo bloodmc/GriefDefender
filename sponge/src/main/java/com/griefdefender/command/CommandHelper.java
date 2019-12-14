@@ -228,7 +228,7 @@ public class CommandHelper {
         String flagPermission = GDPermissions.FLAG_BASE + "." + baseFlag;
         // special handling for commands
         target = adjustTargetForTypes(target, claimFlag);
-        if (baseFlag.equals(Flags.COMMAND_EXECUTE.getName()) || baseFlag.equals(Flags.COMMAND_EXECUTE_PVP.getName())) {
+        if (baseFlag.equals(Flags.COMMAND_EXECUTE.toString().toLowerCase()) || baseFlag.equals(Flags.COMMAND_EXECUTE_PVP.toString().toLowerCase())) {
             target = handleCommandFlag(src, target);
             if (target == null) {
                 // failed
