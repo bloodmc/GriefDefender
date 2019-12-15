@@ -90,8 +90,8 @@ public class PlayerTickTask extends BukkitRunnable {
                     if (playerData.teleportDelay > 0) {
                         final int delay = playerData.teleportDelay - 1;
                         if (delay == 0) {
-                            player.teleport(playerData.teleportLocation);
                             playerData.teleportDelay = 0;
+                            player.teleport(playerData.teleportLocation);
                             playerData.teleportLocation = null;
                             playerData.teleportSourceLocation = null;
                             continue;
