@@ -281,16 +281,18 @@ public class PlayerEventHandler {
             GDTimings.PLAYER_COMMAND_EVENT.stopTimingIfSync();
             return;
         }
-        String commandPermission = pluginId + "." + command;
+
+        String commandTarget = pluginId + ":" + command;
 
         // first check the args
-        String argument = "";
         for (String arg : args) {
-            argument = argument + "." + arg;
+            if (!arg.isEmpty()) {
+                commandTarget = commandTarget + "." + arg;
+            }
         }
 
-        if (GDFlags.COMMAND_EXECUTE && !commandExecuteSourceBlacklisted && !GriefDefenderPlugin.isTargetIdBlacklisted(Flags.COMMAND_EXECUTE.getName(), commandPermission + argument, player.getWorld().getProperties())) {
-            final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, player.getLocation(), claim, GDPermissions.COMMAND_EXECUTE, event.getSource(), commandPermission + argument, player);
+        if (GDFlags.COMMAND_EXECUTE && !commandExecuteSourceBlacklisted) {
+            final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, player.getLocation(), claim, GDPermissions.COMMAND_EXECUTE, event.getSource(), commandTarget, player);
             if (result == Tristate.TRUE) {
                 GDTimings.PLAYER_COMMAND_EVENT.stopTimingIfSync();
                 return;
