@@ -282,20 +282,28 @@ public class PlayerEventHandler {
             return;
         }
 
-        String commandTarget = pluginId + ":" + command;
-
+        String commandBaseTarget = pluginId + ":" + command;
+        String commandTargetWithArgs = commandBaseTarget;
         // first check the args
         for (String arg : args) {
             if (!arg.isEmpty()) {
-                commandTarget = commandTarget + "." + arg;
+                commandTargetWithArgs = commandTargetWithArgs + "." + arg;
             }
         }
 
-        if (GDFlags.COMMAND_EXECUTE && !commandExecuteSourceBlacklisted) {
-            final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, player.getLocation(), claim, GDPermissions.COMMAND_EXECUTE, event.getSource(), commandTarget, player);
-            if (result == Tristate.TRUE) {
-                GDTimings.PLAYER_COMMAND_EVENT.stopTimingIfSync();
-                return;
+        boolean commandExecuteTargetBlacklisted = false;
+        if (GriefDefenderPlugin.isTargetIdBlacklisted(Flags.COMMAND_EXECUTE.getName(), commandBaseTarget, player.getWorld().getProperties())) {
+            commandExecuteTargetBlacklisted = true;
+        } else if (GriefDefenderPlugin.isTargetIdBlacklisted(Flags.COMMAND_EXECUTE.getName(), commandTargetWithArgs, player.getWorld().getProperties())) {
+            commandExecuteTargetBlacklisted = true;
+        }
+
+        if (GDFlags.COMMAND_EXECUTE && !commandExecuteSourceBlacklisted && !commandExecuteTargetBlacklisted) {
+            // First check base command
+            Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, player.getLocation(), claim, GDPermissions.COMMAND_EXECUTE, event.getSource(), commandBaseTarget, player);
+            if (result != Tristate.FALSE) {
+                // check with args
+                result = GDPermissionManager.getInstance().getFinalPermission(event, player.getLocation(), claim, GDPermissions.COMMAND_EXECUTE, event.getSource(), commandTargetWithArgs, player);
             }
             if (result == Tristate.FALSE) {
                 final Component denyMessage = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.COMMAND_BLOCKED,
