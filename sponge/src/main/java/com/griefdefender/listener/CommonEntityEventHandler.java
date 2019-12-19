@@ -110,8 +110,10 @@ public class CommonEntityEventHandler {
             final Entity controller = EntityUtils.getControllingPassenger(targetEntity);
             if (controller != null && controller instanceof Player) {
                 player = (Player) controller;
+                user = PermissionHolderCache.getInstance().getOrCreateUser(player);
+            } else {
+                user = PermissionHolderCache.getInstance().getOrCreateUser(targetEntity.getCreator().orElse(null));
             }
-            user = PermissionHolderCache.getInstance().getOrCreateUser(targetEntity.getCreator().orElse(null));
         }
 
         if (user != null) {
@@ -168,7 +170,7 @@ public class CommonEntityEventHandler {
             fromClaim = this.storage.getClaimAt(fromLocation);
         }
 
-        if (player != null && GDFlags.ENTER_CLAIM && !enterBlacklisted && user.getInternalPlayerData().lastClaim != null) {
+        if (player != null && GDFlags.ENTER_CLAIM && !enterBlacklisted && user != null && user.getInternalPlayerData().lastClaim != null) {
             final GDClaim lastClaim = (GDClaim) user.getInternalPlayerData().lastClaim.get();
             if (lastClaim != null && lastClaim != fromClaim) {
                 if (GDPermissionManager.getInstance().getFinalPermission(event, toLocation, toClaim, GDPermissions.ENTER_CLAIM, targetEntity, targetEntity, player, TrustTypes.ACCESSOR, false) == Tristate.FALSE) {
