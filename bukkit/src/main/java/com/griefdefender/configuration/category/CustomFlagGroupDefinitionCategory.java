@@ -27,9 +27,8 @@ package com.griefdefender.configuration.category;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.griefdefender.api.claim.ClaimContexts;
-import com.griefdefender.permission.flag.GDCustomFlagDefinition;
-import com.griefdefender.permission.flag.GDCustomFlagDefinitions;
+import com.griefdefender.permission.flag.GDFlagDefinition;
+import com.griefdefender.permission.flag.GDFlagDefinitions;
 
 import ninja.leaping.configurate.objectmapping.Setting;
 import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
@@ -51,8 +50,8 @@ public class CustomFlagGroupDefinitionCategory extends ConfigCategory {
             userGroup = new CustomFlagGroupCategory();
         }
         if (userGroup.isEnabled() && userGroup.getFlagDefinitions().isEmpty()) {
-            for (GDCustomFlagDefinition definition : GDCustomFlagDefinitions.USER_FLAGS) {
-                userGroup.getFlagDefinitions().put(definition.getDisplayName(), definition);
+            for (GDFlagDefinition definition : GDFlagDefinitions.USER_FLAGS) {
+                userGroup.getFlagDefinitions().put(definition.getName(), definition);
             }
             this.groups.put("user", userGroup);
         }
@@ -60,8 +59,8 @@ public class CustomFlagGroupDefinitionCategory extends ConfigCategory {
             adminGroup = new CustomFlagGroupCategory();
         }
         if (adminGroup.isEnabled() && adminGroup.getFlagDefinitions().isEmpty()) {
-            for (GDCustomFlagDefinition definition : GDCustomFlagDefinitions.ADMIN_FLAGS) {
-                adminGroup.getFlagDefinitions().put(definition.getDisplayName(), definition);
+            for (GDFlagDefinition definition : GDFlagDefinitions.ADMIN_FLAGS) {
+                adminGroup.getFlagDefinitions().put(definition.getName(), definition);
             }
             adminGroup.isAdmin = true;
             this.groups.put("admin", adminGroup);

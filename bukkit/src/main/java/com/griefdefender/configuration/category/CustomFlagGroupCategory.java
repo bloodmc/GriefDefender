@@ -27,7 +27,7 @@ package com.griefdefender.configuration.category;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.griefdefender.permission.flag.GDCustomFlagDefinition;
+import com.griefdefender.permission.flag.GDFlagDefinition;
 
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
@@ -48,9 +48,9 @@ public class CustomFlagGroupCategory extends ConfigCategory {
     @Setting(value = "hover", comment = "The hover text to be displayed when hovering over group name in GUI.")
     Component hoverText = TextComponent.empty();
     @Setting
-    Map<String, GDCustomFlagDefinition> definitions = new HashMap<>();
+    Map<String, GDFlagDefinition> definitions = new HashMap<>();
 
-    public Map<String, GDCustomFlagDefinition> getFlagDefinitions() {
+    public Map<String, GDFlagDefinition> getFlagDefinitions() {
         return this.definitions;
     }
 

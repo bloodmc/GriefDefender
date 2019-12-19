@@ -29,7 +29,6 @@ import co.aikar.commands.InvalidCommandArgument;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.GriefDefender;
@@ -41,7 +40,7 @@ import com.griefdefender.api.permission.ContextKeys;
 import com.griefdefender.api.permission.PermissionResult;
 import com.griefdefender.api.permission.ResultTypes;
 import com.griefdefender.api.permission.flag.Flag;
-import com.griefdefender.api.permission.flag.Flags;
+import com.griefdefender.api.permission.flag.FlagData;
 import com.griefdefender.cache.MessageCache;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
@@ -55,14 +54,12 @@ import com.griefdefender.permission.GDPermissionHolder;
 import com.griefdefender.permission.GDPermissionManager;
 import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.permission.GDPermissions;
-import com.griefdefender.permission.flag.CustomFlagData;
 import com.griefdefender.permission.flag.GDActiveFlagData;
-import com.griefdefender.permission.flag.GDCustomFlagDefinition;
-import com.griefdefender.permission.ui.ClaimClickData;
-import com.griefdefender.permission.ui.FlagData;
+import com.griefdefender.permission.flag.GDFlagDefinition;
+import com.griefdefender.permission.ui.UIFlagData;
 import com.griefdefender.permission.ui.MenuType;
 import com.griefdefender.permission.ui.UIHelper;
-import com.griefdefender.permission.ui.FlagData.FlagContextHolder;
+import com.griefdefender.permission.ui.UIFlagData.FlagContextHolder;
 import com.griefdefender.registry.FlagRegistryModule;
 import com.griefdefender.text.action.GDCallbackHolder;
 import com.griefdefender.util.CauseContextHelper;
@@ -239,7 +236,7 @@ public abstract class ClaimFlagBase extends BaseCommand {
         }
 
         List<Component> textComponents = new ArrayList<>();
-        for (GDCustomFlagDefinition customFlag : flagGroupCat.getFlagDefinitions().values()) {
+        for (GDFlagDefinition customFlag : flagGroupCat.getFlagDefinitions().values()) {
             Component flagText = TextComponent.builder()
                 .append(getCustomFlagText(customFlag))
                 .append(" ")
@@ -388,7 +385,7 @@ public abstract class ClaimFlagBase extends BaseCommand {
         overrideContexts.add(ClaimContexts.GLOBAL_OVERRIDE_CONTEXT);
         overrideContexts.add(claim.getOverrideClaimContext());
 
-        Map<String, FlagData> filteredContextMap = new HashMap<>();
+        Map<String, UIFlagData> filteredContextMap = new HashMap<>();
         for (Map.Entry<Set<Context>, Map<String, Boolean>> mapEntry : PermissionUtil.getInstance().getTransientPermissions(this.subject).entrySet()) {
             final Set<Context> contextSet = mapEntry.getKey();
             if (contextSet.contains(claim.getDefaultTypeContext())) {
@@ -429,8 +426,8 @@ public abstract class ClaimFlagBase extends BaseCommand {
         }
 
         final Map<String, Map<Integer, Component>> textMap = new TreeMap<>();
-        for (Entry<String, FlagData> mapEntry : filteredContextMap.entrySet()) {
-            final FlagData flagData = mapEntry.getValue();
+        for (Entry<String, UIFlagData> mapEntry : filteredContextMap.entrySet()) {
+            final UIFlagData flagData = mapEntry.getValue();
             final Flag flag = flagData.flag;
             for (FlagContextHolder flagHolder : flagData.flagContextMap.values()) {
                 if (displayType != MenuType.CLAIM && flagHolder.getType() != displayType) {
@@ -494,25 +491,25 @@ public abstract class ClaimFlagBase extends BaseCommand {
         paginationList.sendTo(player, activePage);
     }
 
-    private void addFilteredContexts(Map<String, FlagData> filteredContextMap, Set<Context> contexts, MenuType type, Map<String, Boolean> permissions) {
+    private void addFilteredContexts(Map<String, UIFlagData> filteredContextMap, Set<Context> contexts, MenuType type, Map<String, Boolean> permissions) {
         for (Map.Entry<String, Boolean> permissionEntry : permissions.entrySet()) {
             final Flag flag = FlagRegistryModule.getInstance().getById(permissionEntry.getKey()).orElse(null);
             if (flag == null) {
                 continue;
             }
-            final FlagData flagData = filteredContextMap.get(permissionEntry.getKey());
+            final UIFlagData flagData = filteredContextMap.get(permissionEntry.getKey());
             if (flagData != null) {
                 flagData.addContexts(flag, permissionEntry.getValue(), type, contexts);
             } else {
-                filteredContextMap.put(permissionEntry.getKey(), new FlagData(flag, permissionEntry.getValue(), type, contexts));
+                filteredContextMap.put(permissionEntry.getKey(), new UIFlagData(flag, permissionEntry.getValue(), type, contexts));
             }
         }
     }
 
-    private Component getCustomFlagText(GDCustomFlagDefinition customFlag) {
+    private Component getCustomFlagText(GDFlagDefinition customFlag) {
         TextComponent definitionType = TextComponent.empty();
         TextColor flagColor = TextColor.GREEN;
-        for (Context context : customFlag.getDefinitionContexts()) {
+        for (Context context : customFlag.getContexts()) {
             if (context.getKey().contains("default")) {
                 definitionType = TextComponent.builder()
                         .append("\n")
@@ -544,7 +541,7 @@ public abstract class ClaimFlagBase extends BaseCommand {
                     .build();
         }
         final Component baseFlagText = TextComponent.builder()
-                .append(customFlag.getDisplayName(), flagColor)
+                .append(customFlag.getName(), flagColor)
                 .append(" ")
                 .hoverEvent(HoverEvent.showText(TextComponent.builder()
                         .append(customFlag.getDescription())
@@ -553,9 +550,9 @@ public abstract class ClaimFlagBase extends BaseCommand {
         return baseFlagText;
     }
 
-    private TextColor getCustomFlagColor(GDCustomFlagDefinition customFlag) {
+    private TextColor getCustomFlagColor(GDFlagDefinition customFlag) {
         TextColor flagColor = TextColor.GREEN;
-        for (Context context : customFlag.getDefinitionContexts()) {
+        for (Context context : customFlag.getContexts()) {
             if (context.getKey().contains("default")) {
                 flagColor = TextColor.LIGHT_PURPLE;
                 break;
@@ -577,7 +574,7 @@ public abstract class ClaimFlagBase extends BaseCommand {
         return baseFlagText;
     }
 
-    private Component getCustomClickableText(GDPermissionUser src, GDClaim claim, GDCustomFlagDefinition customFlag, String flagGroup) {
+    private Component getCustomClickableText(GDPermissionUser src, GDClaim claim, GDFlagDefinition customFlag, String flagGroup) {
         boolean hasHover = false;
         TextComponent.Builder hoverBuilder = TextComponent.builder();
         final Player player = src.getOnlinePlayer();
@@ -592,7 +589,7 @@ public abstract class ClaimFlagBase extends BaseCommand {
         final boolean isAdminGroup = GriefDefenderPlugin.getGlobalConfig().getConfig().customFlags.getGroups().get(flagGroup).isAdminGroup();
         final String permission = isAdminGroup ? GDPermissions.FLAG_CUSTOM_ADMIN_BASE : GDPermissions.FLAG_CUSTOM_USER_BASE;
          // check flag perm
-        if (!player.hasPermission(permission + "." + flagGroup + "." + customFlag.getDisplayName())) {
+        if (!player.hasPermission(permission + "." + flagGroup + "." + customFlag.getName())) {
             hoverBuilder.append(MessageCache.getInstance().PERMISSION_FLAG_USE).append("\n");
             hasEditPermission = false;
             hasHover = true;
@@ -600,8 +597,8 @@ public abstract class ClaimFlagBase extends BaseCommand {
 
         List<GDActiveFlagData> dataResults = new ArrayList<>();
         boolean hasGDContext = false;
-        Set<Context> definitionContexts = new HashSet<>(customFlag.getDefinitionContexts());
-        for (Context context : customFlag.getDefinitionContexts()) {
+        Set<Context> definitionContexts = new HashSet<>(customFlag.getContexts());
+        for (Context context : customFlag.getContexts()) {
             if (context.getKey().contains("gd_claim")) {
                 hasGDContext = true;
                 break;
@@ -610,7 +607,7 @@ public abstract class ClaimFlagBase extends BaseCommand {
         if (!hasGDContext) {
             definitionContexts.add(claim.getContext());
         }
-        for (CustomFlagData flagData : customFlag.getFlagData()) {
+        for (FlagData flagData : customFlag.getFlagData()) {
             final Set<Context> filteredContexts = new HashSet<>();
             for (Context context : definitionContexts) {
                 if (context.getKey().contains("gd_claim")) {
@@ -698,11 +695,11 @@ public abstract class ClaimFlagBase extends BaseCommand {
                 hoverBuilder.append(MessageCache.getInstance().FLAG_UI_CLICK_REMOVE);
             }
 
-            if (!customFlag.getDefinitionContexts().isEmpty()) {
+            if (!customFlag.getContexts().isEmpty()) {
                 hoverBuilder.append("\nContexts: ");
             }
 
-            for (Context context : customFlag.getDefinitionContexts()) {
+            for (Context context : customFlag.getContexts()) {
                 hoverBuilder.append("\n");
                 final String key = context.getKey();
                 final String value = context.getValue();
@@ -887,13 +884,13 @@ public abstract class ClaimFlagBase extends BaseCommand {
         return textBuilder.build();
     }
 
-    private Consumer<CommandSender> createCustomFlagConsumer(GDPermissionUser src, GDClaim claim, GDCustomFlagDefinition customFlag, Tristate currentValue, String displayType) {
+    private Consumer<CommandSender> createCustomFlagConsumer(GDPermissionUser src, GDClaim claim, GDFlagDefinition customFlag, Tristate currentValue, String displayType) {
         final Player player = src.getOnlinePlayer();
         return consumer -> {
             GDCauseStackManager.getInstance().pushCause(player);
             boolean hasGDContext = false;
-            Set<Context> definitionContexts = new HashSet<>(customFlag.getDefinitionContexts());
-            for (Context context : customFlag.getDefinitionContexts()) {
+            Set<Context> definitionContexts = new HashSet<>(customFlag.getContexts());
+            for (Context context : customFlag.getContexts()) {
                 if (context.getKey().contains("gd_claim")) {
                     hasGDContext = true;
                     break;
@@ -902,7 +899,7 @@ public abstract class ClaimFlagBase extends BaseCommand {
             if (!hasGDContext) {
                 definitionContexts.add(claim.getContext());
             }
-            for (CustomFlagData flagData : customFlag.getFlagData()) {
+            for (FlagData flagData : customFlag.getFlagData()) {
                 final Set<Context> newContexts = new HashSet<>(definitionContexts);
                 newContexts.addAll(flagData.getContexts());
                 Tristate newValue = Tristate.UNDEFINED;

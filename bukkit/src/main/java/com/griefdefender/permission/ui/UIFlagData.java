@@ -37,12 +37,12 @@ import com.griefdefender.api.permission.flag.Flags;
 
 import net.kyori.text.format.TextColor;
 
-public class FlagData {
+public class UIFlagData {
 
     public Flag flag;
     public Map<Integer, FlagContextHolder> flagContextMap = new HashMap<>();
 
-    public FlagData(Flag flag, Boolean value, MenuType type, Set<Context> contexts) {
+    public UIFlagData(Flag flag, Boolean value, MenuType type, Set<Context> contexts) {
         this.flag = flag;
         this.addContexts(flag, value, type, contexts);
     }

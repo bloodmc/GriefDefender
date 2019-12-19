@@ -34,8 +34,10 @@ import com.google.common.reflect.TypeToken;
 import com.griefdefender.api.permission.Context;
 import com.griefdefender.api.permission.ContextKeys;
 import com.griefdefender.api.permission.flag.Flag;
-import com.griefdefender.permission.flag.CustomFlagData;
-import com.griefdefender.permission.flag.GDCustomFlagDefinition;
+import com.griefdefender.api.permission.flag.FlagData;
+import com.griefdefender.api.permission.flag.FlagDefinition;
+import com.griefdefender.permission.flag.GDFlagData;
+import com.griefdefender.permission.flag.GDFlagDefinition;
 import com.griefdefender.registry.FlagRegistryModule;
 
 import net.kyori.text.Component;
@@ -45,10 +47,10 @@ import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import ninja.leaping.configurate.objectmapping.serialize.TypeSerializer;
 
-public class CustomFlagSerializer implements TypeSerializer<GDCustomFlagDefinition> {
+public class FlagDefinitionSerializer implements TypeSerializer<FlagDefinition> {
 
     @Override
-    public GDCustomFlagDefinition deserialize(TypeToken<?> type, ConfigurationNode node) throws ObjectMappingException {
+    public FlagDefinition deserialize(TypeToken<?> type, ConfigurationNode node) throws ObjectMappingException {
         final String flagDisplayName = node.getKey().toString();
         final boolean enabled = node.getNode("enabled").getBoolean();
         final String descr = node.getNode("description").getString();
@@ -63,7 +65,7 @@ public class CustomFlagSerializer implements TypeSerializer<GDCustomFlagDefiniti
             throw new ObjectMappingException("No permissions found for flag definition '" + flagDisplayName + "'. You must specify at least 1 or more permissions.");
         }
 
-        List<CustomFlagData> flagDataList = new ArrayList<>();
+        List<FlagData> flagDataList = new ArrayList<>();
         for (String permissionEntry : permissionList) {
             String permission = permissionEntry.replace(" ", "");
             String[] parts = permission.split(",");
@@ -106,9 +108,9 @@ public class CustomFlagSerializer implements TypeSerializer<GDCustomFlagDefiniti
                 throw new ObjectMappingException("No linked flag specified. You need to specify 'flag=<flagname>'.");
             }
 
-            flagDataList.add(new CustomFlagData(linkedFlag, flagContexts));
+            flagDataList.add(new GDFlagData(linkedFlag, flagContexts));
         }
-        final GDCustomFlagDefinition flagDefinition = new GDCustomFlagDefinition(flagDataList, flagDisplayName, description);
+        final GDFlagDefinition flagDefinition = new GDFlagDefinition(flagDataList, flagDisplayName, description);
         flagDefinition.setIsEnabled(enabled);
         Set<Context> contexts = new HashSet<>();
         if (contextList != null) {
@@ -130,9 +132,8 @@ public class CustomFlagSerializer implements TypeSerializer<GDCustomFlagDefiniti
                             && !value.equalsIgnoreCase("subdivision") && !value.equalsIgnoreCase("town")) {
                         // try UUID
                         if (value.length() == 36) {
-                            UUID uuid = null;
                             try {
-                                uuid = UUID.fromString(value);
+                                UUID.fromString(value);
                             } catch (IllegalArgumentException e) {
                                 throw new ObjectMappingException("Invalid context '" + key + "' with value '" + value + "'.");
                             }
@@ -145,13 +146,13 @@ public class CustomFlagSerializer implements TypeSerializer<GDCustomFlagDefiniti
                     contexts.add(new Context(key, value));
                 }
             }
-            flagDefinition.setDefinitionContexts(contexts);
+            flagDefinition.setContexts(contexts);
         }
         return flagDefinition;
     }
 
     @Override
-    public void serialize(TypeToken<?> type, GDCustomFlagDefinition obj, ConfigurationNode node) throws ObjectMappingException {
+    public void serialize(TypeToken<?> type, FlagDefinition obj, ConfigurationNode node) throws ObjectMappingException {
         node.getNode("enabled").setValue(obj.isEnabled());
         String description = "";
         if (obj.getDescription() != TextComponent.empty()) {
@@ -159,17 +160,17 @@ public class CustomFlagSerializer implements TypeSerializer<GDCustomFlagDefiniti
             node.getNode("description").setValue(description);
         }
 
-        if (!obj.getDefinitionContexts().isEmpty()) {
+        if (!obj.getContexts().isEmpty()) {
             List<String> contextList = new ArrayList<>();
             ConfigurationNode contextNode = node.getNode("contexts");
-            for (Context context : obj.getDefinitionContexts()) {
+            for (Context context : obj.getContexts()) {
                 contextList.add(context.getKey().toLowerCase() + "=" + context.getValue().toLowerCase());
             }
             contextNode.setValue(contextList);
         }
         ConfigurationNode permissionNode = node.getNode("permissions");
         List<String> permissions = new ArrayList<>();
-        for (CustomFlagData flagData : obj.getFlagData()) {
+        for (FlagData flagData : obj.getFlagData()) {
             int count = 0;
             final Flag flag = flagData.getFlag();
             final Set<Context> dataContexts = flagData.getContexts();

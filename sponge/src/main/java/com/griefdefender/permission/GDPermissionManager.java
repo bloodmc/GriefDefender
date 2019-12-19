@@ -44,6 +44,8 @@ import com.griefdefender.api.permission.PermissionManager;
 import com.griefdefender.api.permission.PermissionResult;
 import com.griefdefender.api.permission.ResultTypes;
 import com.griefdefender.api.permission.flag.Flag;
+import com.griefdefender.api.permission.flag.FlagData;
+import com.griefdefender.api.permission.flag.FlagDefinition;
 import com.griefdefender.api.permission.flag.Flags;
 import com.griefdefender.api.permission.option.Option;
 import com.griefdefender.api.permission.option.type.CreateModeType;
@@ -1437,5 +1439,25 @@ public class GDPermissionManager implements PermissionManager {
     public <T> T getActiveOptionValue(TypeToken<T> type, Option<T> option, Subject subject, Claim claim,
             Set<Context> contexts) {
         return this.getInternalOptionValue(type, (GDPermissionHolder) subject, option, claim, claim.getType(), contexts);
+    }
+
+    @Override
+    public CompletableFuture<PermissionResult> setFlagDefinition(Subject subject, FlagDefinition flagDefinition, Tristate value) {
+        final Set<Context> contexts = new HashSet<>();
+        contexts.addAll(flagDefinition.getContexts());
+        PermissionResult result = null;
+        CompletableFuture<PermissionResult> future = new CompletableFuture<>();
+        for (FlagData flagData : flagDefinition.getFlagData()) {
+            final Set<Context> flagContexts = new HashSet<>(contexts);
+            flagContexts.addAll(flagData.getContexts());
+            result = PermissionUtil.getInstance().setPermissionValue((GDPermissionHolder) subject, flagData.getFlag(), value, flagContexts);
+            if (!result.successful()) {
+                future.complete(result);
+                return future;
+            }
+        }
+
+        future.complete(result);
+        return future;
     }
 }

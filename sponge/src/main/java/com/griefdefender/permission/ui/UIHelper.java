@@ -40,7 +40,7 @@ import com.griefdefender.api.permission.option.Option;
 import com.griefdefender.cache.MessageCache;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.permission.GDPermissions;
-import com.griefdefender.permission.ui.FlagData.FlagContextHolder;
+import com.griefdefender.permission.ui.UIFlagData.FlagContextHolder;
 
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;

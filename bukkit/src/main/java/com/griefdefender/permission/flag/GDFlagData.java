@@ -24,29 +24,36 @@
  */
 package com.griefdefender.permission.flag;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
+import java.util.HashSet;
 import java.util.Set;
 
 import com.griefdefender.api.permission.Context;
 import com.griefdefender.api.permission.flag.Flag;
+import com.griefdefender.api.permission.flag.FlagData;
 
-public class CustomFlagData {
+public class GDFlagData implements FlagData {
 
     private Flag flag;
     private Set<Context> contexts;
 
-    public CustomFlagData(Flag flag, Set<Context> contexts) {
+    public GDFlagData(Flag flag, Set<Context> contexts) {
         this.flag = flag;
         this.contexts = contexts;
     }
 
+    @Override
     public Set<Context> getContexts() {
         return this.contexts;
     }
 
+    @Override
     public Flag getFlag() {
         return this.flag;
     }
 
+    @Override
     public boolean matches(Flag otherFlag, Set<Context> otherContexts) {
         for (Context context : this.contexts) {
             boolean found = false;
@@ -61,5 +68,37 @@ public class CustomFlagData {
             }
         }
         return true;
+    }
+
+    public static class FlagDataBuilder implements Builder {
+
+        private Flag flag;
+        private Set<Context> contexts = new HashSet<>();
+
+        @Override
+        public Builder flag(Flag flag) {
+            this.flag = flag;
+            return this;
+        }
+
+        @Override
+        public Builder contexts(Set<Context> contexts) {
+            this.contexts = contexts;
+            return this;
+        }
+
+        @Override
+        public Builder reset() {
+            this.flag = null;
+            this.contexts = new HashSet<>();
+            return this;
+        }
+
+        @Override
+        public FlagData build() {
+            checkNotNull(this.flag);
+            return new GDFlagData(this.flag, this.contexts);
+        }
+        
     }
 }

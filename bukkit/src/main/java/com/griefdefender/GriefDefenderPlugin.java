@@ -68,6 +68,8 @@ import com.griefdefender.api.claim.ClaimType;
 import com.griefdefender.api.claim.TrustType;
 import com.griefdefender.api.economy.BankTransaction;
 import com.griefdefender.api.permission.flag.Flag;
+import com.griefdefender.api.permission.flag.FlagData;
+import com.griefdefender.api.permission.flag.FlagDefinition;
 import com.griefdefender.api.permission.option.Option;
 import com.griefdefender.api.permission.option.type.CreateModeType;
 import com.griefdefender.api.permission.option.type.GameModeType;
@@ -155,7 +157,7 @@ import com.griefdefender.configuration.category.BlacklistCategory;
 import com.griefdefender.configuration.serializer.ClaimTypeSerializer;
 import com.griefdefender.configuration.serializer.ComponentConfigSerializer;
 import com.griefdefender.configuration.serializer.CreateModeTypeSerializer;
-import com.griefdefender.configuration.serializer.CustomFlagSerializer;
+import com.griefdefender.configuration.serializer.FlagDefinitionSerializer;
 import com.griefdefender.configuration.serializer.GameModeTypeSerializer;
 import com.griefdefender.configuration.serializer.WeatherTypeSerializer;
 import com.griefdefender.configuration.type.ConfigBase;
@@ -183,7 +185,8 @@ import com.griefdefender.permission.ContextGroupKeys;
 import com.griefdefender.permission.GDPermissionHolder;
 import com.griefdefender.permission.GDPermissionManager;
 import com.griefdefender.permission.GDPermissionUser;
-import com.griefdefender.permission.flag.GDCustomFlagDefinition;
+import com.griefdefender.permission.flag.GDFlagData;
+import com.griefdefender.permission.flag.GDFlagDefinition;
 import com.griefdefender.permission.flag.GDFlags;
 import com.griefdefender.provider.DynmapProvider;
 import com.griefdefender.provider.EssentialsProvider;
@@ -194,6 +197,7 @@ import com.griefdefender.provider.VaultProvider;
 import com.griefdefender.registry.ChatTypeRegistryModule;
 import com.griefdefender.registry.ClaimTypeRegistryModule;
 import com.griefdefender.registry.CreateModeTypeRegistryModule;
+import com.griefdefender.registry.FlagDefinitionRegistryModule;
 import com.griefdefender.registry.FlagRegistryModule;
 import com.griefdefender.registry.GameModeTypeRegistryModule;
 import com.griefdefender.registry.OptionRegistryModule;
@@ -413,6 +417,7 @@ public class GriefDefenderPlugin {
         ShovelTypeRegistryModule.getInstance().registerDefaults();
         TrustTypeRegistryModule.getInstance().registerDefaults();
         FlagRegistryModule.getInstance().registerDefaults();
+        FlagDefinitionRegistryModule.getInstance().registerDefaults();
         ResultTypeRegistryModule.getInstance().registerDefaults();
         EntityTypeRegistryModule.getInstance().registerDefaults();
         BlockTypeRegistryModule.getInstance().registerDefaults();
@@ -421,8 +426,10 @@ public class GriefDefenderPlugin {
         GameModeTypeRegistryModule.getInstance().registerDefaults();
         WeatherTypeRegistryModule.getInstance().registerDefaults();
         OptionRegistryModule.getInstance().registerDefaults();
-        GriefDefender.getRegistry().registerBuilderSupplier(Claim.Builder.class, GDClaim.ClaimBuilder::new);
         GriefDefender.getRegistry().registerBuilderSupplier(BankTransaction.Builder.class, GDBankTransaction.BankTransactionBuilder::new);
+        GriefDefender.getRegistry().registerBuilderSupplier(Claim.Builder.class, GDClaim.ClaimBuilder::new);
+        GriefDefender.getRegistry().registerBuilderSupplier(FlagData.Builder.class, GDFlagData.FlagDataBuilder::new);
+        GriefDefender.getRegistry().registerBuilderSupplier(FlagDefinition.Builder.class, GDFlagDefinition.FlagDefinitionBuilder::new);
 
         this.loadConfig();
 
@@ -821,9 +828,9 @@ public class GriefDefenderPlugin {
             TypeSerializers.getDefaultSerializers().registerType(TypeToken.of(Component.class), new ComponentConfigSerializer());
             TypeSerializers.getDefaultSerializers().registerType(TypeToken.of(ClaimType.class), new ClaimTypeSerializer());
             TypeSerializers.getDefaultSerializers().registerType(TypeToken.of(CreateModeType.class), new CreateModeTypeSerializer());
+            TypeSerializers.getDefaultSerializers().registerType(TypeToken.of(FlagDefinition.class), new FlagDefinitionSerializer());
             TypeSerializers.getDefaultSerializers().registerType(TypeToken.of(GameModeType.class), new GameModeTypeSerializer());
             TypeSerializers.getDefaultSerializers().registerType(TypeToken.of(WeatherType.class), new WeatherTypeSerializer());
-            TypeSerializers.getDefaultSerializers().registerType(TypeToken.of(GDCustomFlagDefinition.class), new CustomFlagSerializer());
 
             if (Files.notExists(BaseStorage.dataLayerFolderPath)) {
                 Files.createDirectories(BaseStorage.dataLayerFolderPath);

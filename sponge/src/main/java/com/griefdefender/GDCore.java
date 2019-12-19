@@ -36,6 +36,7 @@ import com.griefdefender.api.claim.ClaimManager;
 import com.griefdefender.api.data.PlayerData;
 import com.griefdefender.api.permission.flag.Flag;
 import com.griefdefender.cache.PermissionHolderCache;
+import com.griefdefender.storage.BaseStorage;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.world.World;
 
@@ -80,6 +81,12 @@ public class GDCore implements Core {
     @Override
     public List<Claim> getAllPlayerClaims(UUID playerUniqueId) {
         List<Claim> claimList = new ArrayList<>();
+        if (BaseStorage.USE_GLOBAL_PLAYER_STORAGE) {
+            final ClaimManager claimManager = this.getClaimManager(Sponge.getServer().getDefaultWorld().get().getUniqueId());
+            claimList.addAll(claimManager.getPlayerClaims(playerUniqueId));
+            return ImmutableList.copyOf(claimList);
+        }
+
         for (World world : Sponge.getServer().getWorlds()) {
             claimList.addAll(this.getClaimManager(world.getUniqueId()).getPlayerClaims(playerUniqueId));
         }

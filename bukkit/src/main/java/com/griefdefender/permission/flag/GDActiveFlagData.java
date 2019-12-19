@@ -26,6 +26,7 @@ package com.griefdefender.permission.flag;
 
 import com.griefdefender.api.Tristate;
 import com.griefdefender.api.permission.Context;
+import com.griefdefender.api.permission.flag.FlagData;
 
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
@@ -40,17 +41,17 @@ public class GDActiveFlagData {
         UNDEFINED
     }
 
-    private final CustomFlagData flagData;
+    private final FlagData flagData;
     private final Tristate value;
     private final Type type;
 
-    public GDActiveFlagData(CustomFlagData flagData, Tristate value, Type type) {
+    public GDActiveFlagData(FlagData flagData, Tristate value, Type type) {
         this.flagData = flagData;
         this.value = value;
         this.type = type;
     }
 
-    public CustomFlagData getFlagData() {
+    public FlagData getFlagData() {
         return this.flagData;
     }
 
