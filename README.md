@@ -11,7 +11,7 @@ For more information on how to install, see [Getting Started](https://github.com
 ### Bukkit
 * [Java 8], [LuckPerms], [Paper] or [Spigot]
 
-### Sponge (Not currently supported)
+### Sponge
 * [Java 8], [LuckPerms], [SpongeForge] or [SpongeVanilla]
 
 
