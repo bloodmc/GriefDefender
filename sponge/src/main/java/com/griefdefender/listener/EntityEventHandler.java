@@ -693,7 +693,7 @@ public class EntityEventHandler {
         final Location<World> sourceLocation = event.getFromTransform().getLocation();
         final Location<World> destination = event.getToTransform().getLocation();
         // Handle BorderClaimEvent
-        if (!CommonEntityEventHandler.getInstance().onEntityMove(event, sourceLocation, destination, player)) {
+        if (!CommonEntityEventHandler.getInstance().onEntityMove(event, sourceLocation, destination, entity)) {
             event.setCancelled(true);
             GDTimings.ENTITY_TELEPORT_EVENT.stopTiming();
             return;
