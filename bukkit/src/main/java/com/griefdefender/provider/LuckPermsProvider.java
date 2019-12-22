@@ -691,7 +691,7 @@ public class LuckPermsProvider implements PermissionProvider {
 
             // Check for required contexts
             for (Context context : contexts) {
-                if (!context.getKey().contains(contextFilter)) {
+                if (!context.getKey().contains(contextFilter) && !context.getKey().equalsIgnoreCase("world")) {
                     if (!entry.getKey().contains(context)) {
                         match = false;
                         break;
