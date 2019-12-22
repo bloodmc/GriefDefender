@@ -763,6 +763,11 @@ public class PlayerEventHandler implements Listener {
     @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerTeleport(PlayerTeleportEvent event) {
         final Player player = event.getPlayer();
+        if (VecHelper.toBlockPos(event.getFrom()).equals(VecHelper.toBlockPos(event.getTo()))) {
+            // Ignore teleports that have the same block position
+            // This prevents players from getting through doors without permission
+            return;
+        }
         GDCauseStackManager.getInstance().pushCause(player);
         if (!GDFlags.ENTITY_TELEPORT_FROM && !GDFlags.ENTITY_TELEPORT_TO) {
             return;
