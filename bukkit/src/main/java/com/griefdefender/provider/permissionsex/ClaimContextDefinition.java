@@ -5,14 +5,9 @@ import ca.stellardrift.permissionsex.context.ContextValue;
 import ca.stellardrift.permissionsex.subject.CalculatedSubject;
 import ca.stellardrift.permissionsex.util.Util;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import com.griefdefender.GDPlayerData;
-import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.GriefDefender;
 import com.griefdefender.api.claim.Claim;
 import com.griefdefender.api.permission.ContextKeys;
-import com.griefdefender.claim.GDClaim;
 import kotlin.Unit;
 import kotlin.jvm.functions.Function1;
 import org.bukkit.entity.Player;
@@ -54,6 +49,11 @@ class ClaimContextDefinition extends ContextDefinition<UUID> {
     @Override
     public boolean matches(@NotNull ContextValue<UUID> contextValue, UUID claim) {
         return contextValue.getParsedValue(this).equals(claim);
+    }
+
+    @Override
+    public boolean matches(UUID uuid, UUID uuid2) {
+        return uuid.equals(uuid2);
     }
 
     @Override

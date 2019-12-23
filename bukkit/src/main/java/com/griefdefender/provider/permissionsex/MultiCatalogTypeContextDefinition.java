@@ -43,6 +43,11 @@ public class MultiCatalogTypeContextDefinition extends ContextDefinition<Catalog
         return contextValue.getParsedValue(this).equals(t);
     }
 
+    @Override
+    public boolean matches(CatalogType t, CatalogType t2) {
+        return t.getId().equalsIgnoreCase(t2.getId());
+    }
+
     @NotNull
     @Override
     public String serialize(CatalogType t) {

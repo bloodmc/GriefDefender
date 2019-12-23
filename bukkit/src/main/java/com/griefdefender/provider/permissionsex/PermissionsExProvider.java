@@ -41,7 +41,6 @@ import net.kyori.text.TextComponent;
 import net.kyori.text.event.HoverEvent;
 import net.kyori.text.format.TextColor;
 import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -67,9 +66,9 @@ public class PermissionsExProvider implements PermissionProvider {
     private static final ContextDefinition<CatalogType> CTX_STATE = new MultiCatalogTypeContextDefinition(ContextKeys.STATE);
     private static final ContextDefinition<CatalogType> CTX_TARGET = new MultiCatalogTypeContextDefinition(ContextKeys.TARGET);
 
-    private final PermissionsEx pex;
+    private final PermissionsEx<?> pex;
 
-    public PermissionsExProvider(PermissionsEx engine) {
+    public PermissionsExProvider(PermissionsEx<?> engine) {
         this.pex = engine;
         engine.registerContextDefinition(CTX_CLAIM);
         engine.registerContextDefinition(CTX_CLAIM_DEFAULT);
@@ -422,7 +421,8 @@ public class PermissionsExProvider implements PermissionProvider {
 
     @Override
     public void refreshCachedData(GDPermissionHolder holder) {
-        holderToPEXSubject(holder).accept(null);
+        holderToPEXSubject(holder).data().getCache().invalidate(holder.getIdentifier());
+        holderToPEXSubject(holder).transientData().getCache().invalidate(holder.getIdentifier());
     }
 }
 

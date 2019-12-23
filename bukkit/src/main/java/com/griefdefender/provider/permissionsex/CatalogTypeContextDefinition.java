@@ -43,6 +43,11 @@ public class CatalogTypeContextDefinition<T extends CatalogType> extends Context
         return contextValue.getParsedValue(this).equals(t);
     }
 
+    @Override
+    public boolean matches(T t, T t2) {
+        return t.getId().equalsIgnoreCase(t2.getId());
+    }
+
     @NotNull
     @Override
     public String serialize(T t) {
