@@ -763,7 +763,7 @@ public class PlayerEventHandler implements Listener {
     @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerTeleport(PlayerTeleportEvent event) {
         final Player player = event.getPlayer();
-        if (VecHelper.toBlockPos(event.getFrom()).equals(VecHelper.toBlockPos(event.getTo()))) {
+        if (VecHelper.toVector3i(event.getFrom()).equals(VecHelper.toVector3i(event.getTo()))) {
             // Ignore teleports that have the same block position
             // This prevents players from getting through doors without permission
             return;
