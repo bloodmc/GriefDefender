@@ -752,6 +752,18 @@ public class PlayerEventHandler {
                     GriefDefenderPlugin.sendMessage(player, message);
                 }
 
+            } else if (!playerData.claimMode) {
+                if (playerData.lastShovelLocation != null) {
+                    playerData.revertActiveVisual(player);
+                    // check for any active WECUI visuals
+                    if (this.worldEditProvider != null) {
+                        this.worldEditProvider.revertVisuals(player, playerData, null);
+                    }
+                }
+                playerData.lastShovelLocation = null;
+                playerData.endShovelLocation = null;
+                playerData.claimResizing = null;
+                playerData.shovelMode = ShovelTypes.BASIC;
             }
             count++;
         }
@@ -797,7 +809,7 @@ public class PlayerEventHandler {
             if (handleItemInteract(event, player, player.getWorld(), itemInHand).isCancelled()) {
                 return;
             }
-        } else if (playerData.claimMode) {
+        } else {
             if (investigateClaim(event, player, event.getTargetBlock(), itemInHand)) {
                 event.setCancelled(true);
             }
@@ -955,7 +967,14 @@ public class PlayerEventHandler {
                 return event;
             }
             if (!primaryEvent) {
-                onPlayerHandleClaimCreateAction(event, blockSnapshot, player, itemInHand, playerData);
+                if (playerData.claimMode && event instanceof HandInteractEvent) {
+                    final HandInteractEvent handInteractEvent = (HandInteractEvent) event;
+                    if (handInteractEvent.getHandType() == HandTypes.MAIN_HAND) {
+                        onPlayerHandleClaimCreateAction(event, blockSnapshot, player, itemInHand, playerData);
+                    }
+                } else {
+                    onPlayerHandleClaimCreateAction(event, blockSnapshot, player, itemInHand, playerData);
+                }
             }
             return event;
         }
@@ -1539,9 +1558,6 @@ public class PlayerEventHandler {
             // claim mode inspects with left-click
             return false;
         }
-        if (!playerData.claimMode && (itemInHand.isEmpty() || itemInHand.getType() != GriefDefenderPlugin.getInstance().investigationTool.getType())) {
-            return false;
-        }
 
         if (event instanceof InteractItemEvent.Primary || event instanceof InteractBlockEvent.Primary) {
             if (!playerData.claimMode || !playerData.visualBlocks.isEmpty()) {
@@ -1552,6 +1568,10 @@ public class PlayerEventHandler {
                 GDTimings.PLAYER_INVESTIGATE_CLAIM.stopTiming();
                 return false;
             }
+        }
+
+        if (!playerData.claimMode && (itemInHand.isEmpty() || itemInHand.getType() != GriefDefenderPlugin.getInstance().investigationTool.getType())) {
+            return false;
         }
 
         GDTimings.PLAYER_INVESTIGATE_CLAIM.startTimingIfSync();
