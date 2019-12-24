@@ -811,7 +811,7 @@ public class BlockEventHandler {
                 TileEntity tileEntity = block.getLocation().get().getTileEntity().orElse(null);
                 if (tileEntity == null || !(tileEntity instanceof Chest)) {
                     GDTimings.BLOCK_PLACE_EVENT.stopTimingIfSync();
-                    return;
+                    continue;
                 }
 
                 final int minClaimLevel = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), user, Options.MIN_LEVEL).intValue();
@@ -823,7 +823,7 @@ public class BlockEventHandler {
                             "max-claim-level", maxClaimLevel));
                     GriefDefenderPlugin.sendMessage(player, message);
                     GDTimings.BLOCK_PLACE_EVENT.stopTimingIfSync();
-                    return;
+                    continue;
                 }
 
                 int radius = activeConfig.getConfig().claim.autoChestClaimBlockRadius;
@@ -846,7 +846,7 @@ public class BlockEventHandler {
                             claimManager.addClaim(claim, true);
                             GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().CLAIM_CHEST_CONFIRMATION);
                             GDTimings.BLOCK_PLACE_EVENT.stopTimingIfSync();
-                            return;
+                            continue;
                         }
                     } else {
                         Vector3i lesserBoundary = new Vector3i(
@@ -879,7 +879,7 @@ public class BlockEventHandler {
                                 visualization.apply(player);
 
                                 GDTimings.BLOCK_PLACE_EVENT.stopTimingIfSync();
-                                return;
+                                continue;
                             }
                         }
                     }
