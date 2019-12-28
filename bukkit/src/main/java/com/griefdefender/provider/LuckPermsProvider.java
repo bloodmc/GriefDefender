@@ -26,7 +26,6 @@ package com.griefdefender.provider;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
@@ -44,20 +43,29 @@ import com.griefdefender.permission.GDPermissionHolder;
 import com.griefdefender.permission.GDPermissionResult;
 import com.griefdefender.permission.GDPermissionUser;
 
-import me.lucko.luckperms.api.Contexts;
-import me.lucko.luckperms.api.DataMutateResult;
-import me.lucko.luckperms.api.Group;
-import me.lucko.luckperms.api.LuckPermsApi;
-import me.lucko.luckperms.api.Node;
-import me.lucko.luckperms.api.PermissionHolder;
-import me.lucko.luckperms.api.User;
-import me.lucko.luckperms.api.caching.MetaData;
-import me.lucko.luckperms.api.caching.PermissionData;
-import me.lucko.luckperms.api.context.ContextSet;
-import me.lucko.luckperms.api.context.ImmutableContextSet;
-import me.lucko.luckperms.api.context.MutableContextSet;
+import net.luckperms.api.LuckPerms;
+import net.luckperms.api.cacheddata.CachedMetaData;
+import net.luckperms.api.cacheddata.CachedPermissionData;
+import net.luckperms.api.context.ContextSet;
+import net.luckperms.api.context.ImmutableContextSet;
+import net.luckperms.api.context.MutableContextSet;
+import net.luckperms.api.model.PermissionHolder;
+import net.luckperms.api.model.PermissionHolder.Identifier;
+import net.luckperms.api.model.data.DataMutateResult;
+import net.luckperms.api.model.data.DataType;
+import net.luckperms.api.model.group.Group;
+import net.luckperms.api.model.user.User;
+import net.luckperms.api.node.Node;
+import net.luckperms.api.node.NodeType;
+import net.luckperms.api.node.types.MetaNode;
+import net.luckperms.api.node.types.PermissionNode;
+import net.luckperms.api.query.QueryMode;
+import net.luckperms.api.query.QueryOptions;
+import net.luckperms.api.query.dataorder.DataQueryOrder;
+import net.luckperms.api.query.dataorder.DataQueryOrderFunction;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -95,13 +103,14 @@ public class LuckPermsProvider implements PermissionProvider {
         }
     };
 
-    private final LuckPermsApi luckPermsApi;
+    private final LuckPerms luckPermsApi;
+    private final static DefaultDataQueryOrderFunction DEFAULT_DATA_QUERY_ORDER = new DefaultDataQueryOrderFunction();
 
     public LuckPermsProvider() {
-        this.luckPermsApi = Bukkit.getServicesManager().getRegistration(LuckPermsApi.class).getProvider();
+        this.luckPermsApi = Bukkit.getServicesManager().getRegistration(LuckPerms.class).getProvider();
     }
 
-    public LuckPermsApi getApi() {
+    public LuckPerms getApi() {
         return this.luckPermsApi;
     }
 
@@ -112,7 +121,7 @@ public class LuckPermsProvider implements PermissionProvider {
 
     public PermissionHolder getLuckPermsHolder(GDPermissionHolder holder) {
         if (holder.getIdentifier().equalsIgnoreCase("default")) {
-            return this.luckPermsApi.getGroup("default");
+            return this.luckPermsApi.getGroupManager().getGroup("default");
         }
         if (holder instanceof GDPermissionUser) {
             return this.getLuckPermsUser(holder.getIdentifier());
@@ -140,7 +149,7 @@ public class LuckPermsProvider implements PermissionProvider {
         }
 
         if (user == null) {
-            user = this.luckPermsApi.getUser(identifier);
+            user = this.luckPermsApi.getUserManager().getUser(identifier);
         }
         if (user != null) {
             this.userCache.put(identifier, user);
@@ -151,14 +160,14 @@ public class LuckPermsProvider implements PermissionProvider {
 
     public Group getLuckPermsGroup(String identifier) {
         if (identifier.equalsIgnoreCase("default")) {
-            return this.luckPermsApi.getGroup("default");
+            return this.luckPermsApi.getGroupManager().getGroup("default");
         }
         Group group = this.groupCache.getIfPresent(identifier);
         if (group != null) {
             return group;
         }
 
-        group = this.luckPermsApi.getGroup(identifier);
+        group = this.luckPermsApi.getGroupManager().getGroup(identifier);
         if (group != null) {
             this.groupCache.put(identifier, group);
         }
@@ -202,7 +211,7 @@ public class LuckPermsProvider implements PermissionProvider {
     public UUID lookupUserUniqueId(String name) {
         final User user = this.getLuckPermsUser(name);
         if (user != null) {
-            return user.getUuid();
+            return user.getUniqueId();
         }
         return null;
     }
@@ -229,7 +238,7 @@ public class LuckPermsProvider implements PermissionProvider {
     public List<String> getAllLoadedPlayerNames() {
         List<String> subjectList = new ArrayList<>();
         for (User user : this.luckPermsApi.getUserManager().getLoadedUsers()) {
-            final String name = user.getName();
+            final String name = user.getUsername();
             if (name != null) {
                 subjectList.add(name);
             }
@@ -268,7 +277,7 @@ public class LuckPermsProvider implements PermissionProvider {
             return;
         }
 
-        ImmutableContextSet contextSet = this.luckPermsApi.getContextManager().lookupApplicableContext((User) luckPermsHolder).orElse(null);
+        ImmutableContextSet contextSet = this.luckPermsApi.getContextManager().getContext((User) luckPermsHolder).orElse(null);
         if (contextSet == null) {
             contextSet = this.luckPermsApi.getContextManager().getStaticContext();
         }
@@ -314,8 +323,8 @@ public class LuckPermsProvider implements PermissionProvider {
             return;
         }
 
-        ImmutableContextSet set = ImmutableContextSet.fromEntries(contexts);
-        permissionHolder.clearNodes(set);
+        ImmutableContextSet set = this.getLPContexts(contexts).immutableCopy();
+        permissionHolder.data().clear(set);
         this.savePermissionHolder(permissionHolder);
     }
 
@@ -325,29 +334,37 @@ public class LuckPermsProvider implements PermissionProvider {
             return false;
         }
 
-        return permissionHolder.getCachedData().getPermissionData(Contexts.allowAll()).getPermissionValue(permission) == me.lucko.luckperms.api.Tristate.TRUE;
+        final QueryOptions query = QueryOptions.builder(QueryMode.CONTEXTUAL).option(DataQueryOrderFunction.KEY, DEFAULT_DATA_QUERY_ORDER).build();
+        return permissionHolder.getCachedData().getPermissionData(query).checkPermission(permission).asBoolean();
     }
 
     public Map<String, Boolean> getPermissions(GDPermissionHolder holder, Set<Context> contexts) {
-        ImmutableContextSet set = ImmutableContextSet.fromEntries(contexts);
-        Contexts context = Contexts.global().setContexts(set);
+        ImmutableContextSet set = this.getLPContexts(contexts).immutableCopy();
         final PermissionHolder permissionHolder = this.getLuckPermsHolder(holder);
         if (permissionHolder == null) {
             return new HashMap<>();
         }
-        PermissionData cachedData = permissionHolder.getCachedData().getPermissionData(context);
-        return cachedData.getImmutableBacking();
+
+        final QueryOptions query = QueryOptions.builder(QueryMode.CONTEXTUAL).option(DataQueryOrderFunction.KEY, DEFAULT_DATA_QUERY_ORDER).context(set).build();
+        CachedPermissionData cachedData = permissionHolder.getCachedData().getPermissionData(query);
+        return cachedData.getPermissionMap();
     }
 
     public Map<String, String> getOptions(GDPermissionHolder holder, Set<Context> contexts) {
-        ImmutableContextSet set = ImmutableContextSet.fromEntries(contexts);
-        Contexts context = Contexts.global().setContexts(set);
+        ImmutableContextSet set = this.getLPContexts(contexts).immutableCopy();
         final PermissionHolder permissionHolder = this.getLuckPermsHolder(holder);
         if (permissionHolder == null) {
             return new HashMap<>();
         }
-        MetaData cachedData = permissionHolder.getCachedData().getMetaData(context);
-        return cachedData.getMeta();
+
+        final QueryOptions query = QueryOptions.builder(QueryMode.CONTEXTUAL).option(DataQueryOrderFunction.KEY, DEFAULT_DATA_QUERY_ORDER).context(set).build();
+        CachedMetaData cachedData = permissionHolder.getCachedData().getMetaData(query);
+        // TODO
+        Map<String, String> metaMap = new HashMap<>();
+        for (Map.Entry<String, List<String>> mapEntry : cachedData.getMeta().entrySet()) {
+            metaMap.put(mapEntry.getKey(), mapEntry.getValue().get(0));
+        }
+        return metaMap;
     }
 
     public Map<Set<Context>, Map<String, Boolean>> getPermanentPermissions(GDPermissionHolder holder) {
@@ -356,33 +373,23 @@ public class LuckPermsProvider implements PermissionProvider {
             return new HashMap<>();
         }
 
-        final ImmutableCollection<Node> nodes = permissionHolder.getNodes().values();
+        //final @NonNull Collection<Node> nodes = permissionHolder.resolveInheritedNodes(QueryOptions.nonContextual());
+        final Collection<Node> nodes = permissionHolder.data().toCollection();
         Map<Set<Context>, Map<String, Boolean>> permanentPermissionMap = new TreeMap<Set<Context>, Map<String, Boolean>>(CONTEXT_COMPARATOR);
         for (Node node : nodes) {
-            if (node.isMeta()) {
+            if (node.getType() != NodeType.PERMISSION) {
                 continue;
             }
 
-            String serverName = node.getServer().orElse(null);
-            final String worldName = node.getWorld().orElse(null);
-            if (serverName != null && serverName.equalsIgnoreCase("global")) {
-                serverName = null;
-            }
-            Set<Context> contexts = getGPContexts(node.getContexts());
-            if (serverName != null && !serverName.equalsIgnoreCase("undefined")) {
-                contexts.add(new Context("server", serverName));
-            }
-            if (worldName != null) {
-                contexts.add(new Context("world", worldName.toLowerCase()));
-            }
-
+            final PermissionNode permissionNode = (PermissionNode) node;
+            final Set<Context> contexts = getGPContexts(node.getContexts());
             Map<String, Boolean> permissionEntry = permanentPermissionMap.get(contexts);
             if (permissionEntry == null) {
                 permissionEntry = new HashMap<>();
-                permissionEntry.put(node.getPermission(), node.getValue());
+                permissionEntry.put(permissionNode.getPermission(), node.getValue());
                 permanentPermissionMap.put(contexts, permissionEntry);
             } else {
-                permissionEntry.put(node.getPermission(), node.getValue());
+                permissionEntry.put(permissionNode.getPermission(), node.getValue());
             }
         }
 
@@ -395,33 +402,22 @@ public class LuckPermsProvider implements PermissionProvider {
             return new HashMap<>();
         }
 
-        final Set<? extends Node> nodes = permissionHolder.getTransientPermissions();
+        final Collection<Node> nodes = permissionHolder.transientData().toCollection();
         Map<Set<Context>, Map<String, Boolean>> transientPermissionMap = new TreeMap<Set<Context>, Map<String, Boolean>>(CONTEXT_COMPARATOR);
         for (Node node : nodes) {
-            if (node.isMeta()) {
+            if (node.getType() != NodeType.PERMISSION) {
                 continue;
             }
 
-            String serverName = node.getServer().orElse(null);
-            final String worldName = node.getWorld().orElse(null);
-            if (serverName != null && serverName.equalsIgnoreCase("global")) {
-                serverName = null;
-            }
-            Set<Context> contexts = getGPContexts(node.getContexts());
-            if (serverName != null && !serverName.equalsIgnoreCase("undefined")) {
-                contexts.add(new Context("server", serverName));
-            }
-            if (worldName != null) {
-                contexts.add(new Context("world", worldName.toLowerCase()));
-            }
-
+            final PermissionNode permissionNode = (PermissionNode) node;
+            final Set<Context> contexts = getGPContexts(node.getContexts());
             Map<String, Boolean> permissionEntry = transientPermissionMap.get(contexts);
             if (permissionEntry == null) {
                 permissionEntry = new HashMap<>();
-                permissionEntry.put(node.getPermission(), node.getValue());
+                permissionEntry.put(permissionNode.getPermission(), node.getValue());
                 transientPermissionMap.put(contexts, permissionEntry);
             } else {
-                permissionEntry.put(node.getPermission(), node.getValue());
+                permissionEntry.put(permissionNode.getPermission(), node.getValue());
             }
         }
         return transientPermissionMap;
@@ -433,32 +429,22 @@ public class LuckPermsProvider implements PermissionProvider {
             return new HashMap<>();
         }
 
-        final ImmutableCollection<Node> nodes = permissionHolder.getNodes().values();
+        final Collection<Node> nodes = permissionHolder.data().toCollection();
         Map<Set<Context>, Map<String, String>> permanentPermissionMap = new TreeMap<Set<Context>, Map<String, String>>(CONTEXT_COMPARATOR);
         for (Node node : nodes) {
-            if (!node.isMeta()) {
+            if (node.getType() != NodeType.META) {
                 continue;
             }
-            String serverName = node.getServer().orElse(null);
-            final String worldName = node.getWorld().orElse(null);
-            if (serverName != null && serverName.equalsIgnoreCase("global")) {
-                serverName = null;
-            }
-            Set<Context> contexts = getGPContexts(node.getContexts());
-            if (serverName != null && !serverName.equalsIgnoreCase("undefined")) {
-                contexts.add(new Context("server", serverName));
-            }
-            if (worldName != null) {
-                contexts.add(new Context("world", worldName.toLowerCase()));
-            }
 
+            final MetaNode metaNode = (MetaNode) node;
+            final Set<Context> contexts = getGPContexts(node.getContexts());
             Map<String, String> metaEntry = permanentPermissionMap.get(contexts);
             if (metaEntry == null) {
                 metaEntry = new HashMap<>();
-                metaEntry.put(node.getMeta().getKey(), node.getMeta().getValue());
+                metaEntry.put(metaNode.getMetaKey(), metaNode.getMetaValue());
                 permanentPermissionMap.put(contexts, metaEntry);
             } else {
-                metaEntry.put(node.getMeta().getKey(), node.getMeta().getValue());
+                metaEntry.put(metaNode.getMetaKey(), metaNode.getMetaValue());
             }
         }
         return permanentPermissionMap;
@@ -470,32 +456,22 @@ public class LuckPermsProvider implements PermissionProvider {
             return new HashMap<>();
         }
 
-        final Set<? extends Node> nodes = permissionHolder.getTransientPermissions();
+        final Collection<Node> nodes = permissionHolder.transientData().toCollection();
         Map<Set<Context>, Map<String, String>> permanentPermissionMap = new TreeMap<Set<Context>, Map<String, String>>(CONTEXT_COMPARATOR);
         for (Node node : nodes) {
-            if (!node.isMeta()) {
+            if (node.getType() != NodeType.META) {
                 continue;
             }
-            String serverName = node.getServer().orElse(null);
-            final String worldName = node.getWorld().orElse(null);
-            if (serverName != null && serverName.equalsIgnoreCase("global")) {
-                serverName = null;
-            }
-            Set<Context> contexts = getGPContexts(node.getContexts());
-            if (serverName != null && !serverName.equalsIgnoreCase("undefined")) {
-                contexts.add(new Context("server", serverName));
-            }
-            if (worldName != null) {
-                contexts.add(new Context("world", worldName.toLowerCase()));
-            }
 
+            final MetaNode metaNode = (MetaNode) node;
+            final Set<Context> contexts = getGPContexts(node.getContexts());
             Map<String, String> metaEntry = permanentPermissionMap.get(contexts);
             if (metaEntry == null) {
                 metaEntry = new HashMap<>();
-                metaEntry.put(node.getMeta().getKey(), node.getMeta().getValue());
+                metaEntry.put(metaNode.getMetaKey(), metaNode.getMetaValue());
                 permanentPermissionMap.put(contexts, metaEntry);
             } else {
-                metaEntry.put(node.getMeta().getKey(), node.getMeta().getValue());
+                metaEntry.put(metaNode.getMetaKey(), metaNode.getMetaValue());
             }
         }
         return permanentPermissionMap;
@@ -507,17 +483,18 @@ public class LuckPermsProvider implements PermissionProvider {
             return new HashMap<>();
         }
 
-        final Set<? extends Node> nodes = permissionHolder.getPermissions();
+        final Collection<Node> nodes = permissionHolder.data().toCollection();
         final Map<String, String> options = new HashMap<>();
         for (Node node : nodes) {
-            if (!node.isMeta()) {
+            if (node.getType() != NodeType.META) {
                 continue;
             }
 
+            final MetaNode metaNode = (MetaNode) node;
             if (contexts == null) {
-                options.put(node.getMeta().getKey(), node.getMeta().getValue());
+                options.put(metaNode.getMetaKey(), metaNode.getMetaValue());
             } else if (getGPContexts(node.getContexts()).containsAll(contexts)) {
-                options.put(node.getMeta().getKey(), node.getMeta().getValue());
+                options.put(metaNode.getMetaKey(), metaNode.getMetaValue());
             }
         }
         return options;
@@ -529,17 +506,18 @@ public class LuckPermsProvider implements PermissionProvider {
             return new HashMap<>();
         }
 
-        final Set<? extends Node> nodes = permissionHolder.getTransientPermissions();
+        final Collection<Node> nodes = permissionHolder.transientData().toCollection();
         final Map<String, String> options = new HashMap<>();
         for (Node node : nodes) {
-            if (!node.isMeta()) {
+            if (node.getType() != NodeType.META) {
                 continue;
             }
 
+            final MetaNode metaNode = (MetaNode) node;
             if (contexts == null) {
-                options.put(node.getMeta().getKey(), node.getMeta().getValue());
+                options.put(metaNode.getMetaKey(), metaNode.getMetaValue());
             } else if (getGPContexts(node.getContexts()).containsAll(contexts)) {
-                options.put(node.getMeta().getKey(), node.getMeta().getValue());
+                options.put(metaNode.getMetaKey(), metaNode.getMetaValue());
             }
         }
         return options;
@@ -551,7 +529,7 @@ public class LuckPermsProvider implements PermissionProvider {
             return new HashMap<>();
         }
 
-        final Set<? extends Node> nodes = permissionHolder.getAllNodes();
+        final Collection<Node> nodes = permissionHolder.getNodes();
         Map<Set<Context>, Map<String, Boolean>> permissionMap = new HashMap<>();
         Map<ContextSet, Set<Context>> contextMap = new HashMap<>();
         for (Node node : nodes) {
@@ -565,10 +543,10 @@ public class LuckPermsProvider implements PermissionProvider {
             Map<String, Boolean> permissionEntry = permissionMap.get(contexts);
             if (permissionEntry == null) {
                 permissionEntry = new HashMap<>();
-                permissionEntry.put(node.getPermission(), node.getValue());
+                permissionEntry.put(node.getKey(), node.getValue());
                 permissionMap.put(contexts, permissionEntry);
             } else {
-                permissionEntry.put(node.getPermission(), node.getValue());
+                permissionEntry.put(node.getKey(), node.getValue());
             }
         }
         return permissionMap;
@@ -576,16 +554,16 @@ public class LuckPermsProvider implements PermissionProvider {
 
     public Set<Context> getGPContexts(ContextSet contextSet) {
         final Set<Context> gpContexts = new HashSet<>();
-        for (Map.Entry<String, String> mapEntry : contextSet.toSet()) {
-            if (mapEntry.getKey().startsWith("gd_") || mapEntry.getKey().equals("used_item") 
-                    || mapEntry.getKey().equals("source") || mapEntry.getKey().equals("target")
-                    || mapEntry.getKey().equals("world") || mapEntry.getKey().equals("server")
-                    || mapEntry.getKey().equals("state")) {
-                if (contextSet.containsKey(ContextKeys.CLAIM) && mapEntry.getKey().equals("server")) {
+        for (net.luckperms.api.context.Context context : contextSet.toSet()) {
+            if (context.getKey().startsWith("gd_") || context.getKey().equals("used_item") 
+                    || context.getKey().equals("source") || context.getKey().equals("target")
+                    || context.getKey().equals("world") || context.getKey().equals("server")
+                    || context.getKey().equals("state")) {
+                if (contextSet.containsKey(ContextKeys.CLAIM) && context.getKey().equals("server")) {
                     continue;
                 }
 
-                gpContexts.add(new Context(mapEntry.getKey(), mapEntry.getValue()));
+                gpContexts.add(new Context(context.getKey(), context.getValue()));
             }
         }
         return gpContexts;
@@ -598,11 +576,11 @@ public class LuckPermsProvider implements PermissionProvider {
 
     
     public Tristate getPermissionValue(GDClaim claim, GDPermissionHolder holder, String permission, MutableContextSet contexts) {
-        return getPermissionValue(claim, holder, permission, this.getGDContexts(contexts));
+        return this.getPermissionValue(claim, holder, permission, this.getGDContexts(contexts));
     }
 
     public Tristate getPermissionValue(GDClaim claim, GDPermissionHolder holder, String permission, Set<Context> contexts) {
-        return getPermissionValue(claim, holder, permission, contexts, true);
+        return this.getPermissionValue(holder, permission, contexts);
     }
 
     public Tristate getPermissionValue(GDClaim claim, GDPermissionHolder holder, String permission, Set<Context> contexts, boolean checkTransient) {
@@ -711,58 +689,52 @@ public class LuckPermsProvider implements PermissionProvider {
     }
 
     public Tristate getPermissionValue(GDPermissionHolder holder, String permission, Set<Context> contexts) {
-        ImmutableContextSet contextSet = ImmutableContextSet.fromEntries(contexts);
+        ImmutableContextSet contextSet = this.getLPContexts(contexts).immutableCopy();
         return this.getPermissionValue(holder, permission, contextSet);
     }
 
     public Tristate getPermissionValue(GDPermissionHolder holder, String permission, ContextSet contexts) {
-        Contexts context = Contexts.global().setContexts(contexts);
         final PermissionHolder permissionHolder = this.getLuckPermsHolder(holder);
         if (permissionHolder == null) {
             return Tristate.UNDEFINED;
         }
 
-        PermissionData cachedData = permissionHolder.getCachedData().getPermissionData(context);
-        return getGDTristate(cachedData.getPermissionValue(permission));
+        final QueryOptions query = QueryOptions.builder(QueryMode.CONTEXTUAL).option(DataQueryOrderFunction.KEY, DEFAULT_DATA_QUERY_ORDER).context(contexts).build();
+        CachedPermissionData cachedData = permissionHolder.getCachedData().getPermissionData(query);
+        return getGDTristate(cachedData.checkPermission(permission));
     }
 
     // To set options, pass "meta.option".
     @Override
     public String getOptionValue(GDPermissionHolder holder, Option option, Set<Context> contexts) {
-        ImmutableContextSet set = ImmutableContextSet.fromEntries(contexts);
-        Contexts context = Contexts.global().setContexts(set);
+        ImmutableContextSet set = this.getLPContexts(contexts).immutableCopy();
         final PermissionHolder permissionHolder = this.getLuckPermsHolder(holder);
         if (permissionHolder == null) {
             return null;
         }
 
-        MetaData metaData = permissionHolder.getCachedData().getMetaData(context);
-        return metaData.getMeta().get(option.getPermission());
+        final QueryOptions query = QueryOptions.builder(QueryMode.CONTEXTUAL).option(DataQueryOrderFunction.KEY, DEFAULT_DATA_QUERY_ORDER).context(set).build();
+        CachedMetaData metaData = permissionHolder.getCachedData().getMetaData(query);
+        return metaData.getMetaValue(option.getPermission());
     }
 
     public PermissionResult setOptionValue(GDPermissionHolder holder, String permission, String value, Set<Context> contexts) {
         DataMutateResult result = null;
-        ImmutableContextSet set = ImmutableContextSet.fromEntries(contexts);
-        Contexts context = Contexts.global().setContexts(set);
+        ImmutableContextSet set = this.getLPContexts(contexts).immutableCopy();
         final PermissionHolder permissionHolder = this.getLuckPermsHolder(holder);
         if (permissionHolder == null) {
             return new GDPermissionResult(ResultTypes.FAILURE);
         }
 
-        MetaData metaData = permissionHolder.getCachedData().getMetaData(context);
-        for (Map.Entry<String, String> mapEntry : metaData.getMeta().entrySet()) {
-            if (mapEntry.getKey().equalsIgnoreCase(permission)) {
-                // Always unset existing meta first
-                final Node node = this.luckPermsApi.getNodeFactory().makeMetaNode(permission, mapEntry.getValue()).withExtraContext(set).build();
-                result = permissionHolder.unsetPermission(node);
-            }
-        }
+        // Always unset existing meta first
+        final Node currentNode = this.luckPermsApi.getNodeBuilderRegistry().forMeta().key(permission).context(set).build();
+        result = permissionHolder.data().remove(currentNode);
 
-        final Node node = this.luckPermsApi.getNodeFactory().makeMetaNode(permission, value).withExtraContext(set).build();
+        final Node node = this.luckPermsApi.getNodeBuilderRegistry().forMeta().key(permission).value(value).context(set).build();
         if (!value.equalsIgnoreCase("undefined")) {
-            result = permissionHolder.setPermission(node);
+            result = permissionHolder.data().add(node);
         }
-        if (result != null && result.wasSuccess()) {
+        if (result != null && result.wasSuccessful()) {
             this.savePermissionHolder(permissionHolder);
             return new GDPermissionResult(ResultTypes.SUCCESS);
         }
@@ -779,25 +751,25 @@ public class LuckPermsProvider implements PermissionProvider {
 
     public boolean setPermissionValue(GDPermissionHolder holder, String permission, Tristate value, Set<Context> contexts) {
         DataMutateResult result = null;
-        ImmutableContextSet set = ImmutableContextSet.fromEntries(contexts);
-        final Node node = this.luckPermsApi.getNodeFactory().newBuilder(permission).setValue(value.asBoolean()).withExtraContext(set).build();
+        ImmutableContextSet set = this.getLPContexts(contexts).immutableCopy();
+        final Node node = this.luckPermsApi.getNodeBuilderRegistry().forPermission().permission(permission).value(value.asBoolean()).context(set).build();
         final PermissionHolder permissionHolder = this.getLuckPermsHolder(holder);
         if (permissionHolder == null) {
             return false;
         }
 
         if (value == Tristate.UNDEFINED) {
-            result = permissionHolder.unsetPermission(node);
+            result = permissionHolder.data().remove(node);
         } else {
-            result = permissionHolder.setPermission(node);
+            result = permissionHolder.data().add(node);
         }
 
-        if (result.wasSuccess()) {
+        if (result.wasSuccessful()) {
             if (permissionHolder instanceof Group) {
                 final Group group = (Group) permissionHolder;
-                group.refreshCachedData();
+                group.getCachedData().invalidate();
                 for (User user :this.luckPermsApi.getUserManager().getLoadedUsers()) {
-                    user.refreshCachedData();
+                    user.getCachedData().invalidate();
                 }
                 // If a group is changed, we invalidate all cache
                 PermissionHolderCache.getInstance().invalidateAllPermissionCache();
@@ -808,29 +780,29 @@ public class LuckPermsProvider implements PermissionProvider {
 
             this.savePermissionHolder(permissionHolder);
         }
-        return result.wasSuccess();
+        return result.wasSuccessful();
     }
 
     public void setTransientOption(GDPermissionHolder holder, String permission, String value, Set<Context> contexts) {
-        MutableContextSet contextSet = MutableContextSet.fromEntries(contexts);
+        MutableContextSet contextSet = this.getLPContexts(contexts);
         final PermissionHolder permissionHolder = this.getLuckPermsHolder(holder);
         if (permissionHolder == null) {
             return;
         }
 
-        final Node node = this.luckPermsApi.getNodeFactory().makeMetaNode(permission, value).withExtraContext(contextSet).build();
-        permissionHolder.setTransientPermission(node);
+        final Node node = this.luckPermsApi.getNodeBuilderRegistry().forMeta().key(permission).value(value).context(contextSet).build();
+        permissionHolder.transientData().add(node);
     }
 
     public void setTransientPermission(GDPermissionHolder holder, String permission, Boolean value, Set<Context> contexts) {
-        MutableContextSet contextSet = MutableContextSet.fromEntries(contexts);
+        MutableContextSet contextSet = this.getLPContexts(contexts);
         final PermissionHolder permissionHolder = this.getLuckPermsHolder(holder);
         if (permissionHolder == null) {
             return;
         }
 
-        final Node node = this.luckPermsApi.getNodeFactory().newBuilder(permission).setValue(value).withExtraContext(contextSet).build();
-        permissionHolder.setTransientPermission(node);
+        final Node node = this.luckPermsApi.getNodeBuilderRegistry().forPermission().permission(permission).value(value).context(contextSet).build();
+        permissionHolder.transientData().add(node);
     }
 
     public void savePermissionHolder(PermissionHolder holder) {
@@ -846,25 +818,46 @@ public class LuckPermsProvider implements PermissionProvider {
         if (permissionHolder == null) {
             return;
         }
-        permissionHolder.refreshCachedData();
+        permissionHolder.getCachedData().invalidate();
     }
 
-    public Set<Context> getGDContexts(ContextSet contextSet) {
+    public Set<Context> getGDContexts(ContextSet contexts) {
         final Set<Context> gdContexts = new HashSet<>();
-        contextSet.forEach(entry -> {
+        contexts.forEach(entry -> {
             gdContexts.add(new Context(entry.getKey(), entry.getValue()));
         });
 
         return gdContexts;
     }
 
-    public Tristate getGDTristate(me.lucko.luckperms.api.Tristate state) {
-        if (state == me.lucko.luckperms.api.Tristate.TRUE) {
+    public MutableContextSet getLPContexts(Set<Context> contexts) {
+        MutableContextSet lpContexts = MutableContextSet.create();
+        contexts.forEach(entry -> {
+            lpContexts.add(entry.getKey(), entry.getValue());
+        });
+
+        return lpContexts;
+    }
+
+    public Tristate getGDTristate(net.luckperms.api.util.Tristate state) {
+        if (state == net.luckperms.api.util.Tristate.TRUE) {
             return Tristate.TRUE;
         }
-        if (state == me.lucko.luckperms.api.Tristate.FALSE) {
+        if (state == net.luckperms.api.util.Tristate.FALSE) {
             return Tristate.FALSE;
         }
         return Tristate.UNDEFINED;
+    }
+
+    private static class DefaultDataQueryOrderFunction implements DataQueryOrderFunction {
+
+        @Override
+        public Comparator<DataType> getOrderComparator(Identifier identifier) {
+            if (identifier.getType() == Identifier.GROUP_TYPE && identifier.getName().equalsIgnoreCase("default")) {
+                return DataQueryOrder.TRANSIENT_LAST;
+            }
+
+            return DataQueryOrder.TRANSIENT_FIRST;
+        }
     }
 }

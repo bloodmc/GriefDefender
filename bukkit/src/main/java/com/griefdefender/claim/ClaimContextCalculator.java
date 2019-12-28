@@ -29,47 +29,31 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
-import com.griefdefender.cache.PermissionHolderCache;
-import com.griefdefender.permission.GDPermissionUser;
 
-import me.lucko.luckperms.api.PermissionHolder;
-import me.lucko.luckperms.api.User;
-import me.lucko.luckperms.api.context.ContextCalculator;
-import me.lucko.luckperms.api.context.MutableContextSet;
+import net.luckperms.api.context.ContextCalculator;
+import net.luckperms.api.context.ContextConsumer;
 
-public class ClaimContextCalculator implements ContextCalculator<PermissionHolder> {
+public class ClaimContextCalculator implements ContextCalculator<Player> {
 
     @Override
-    public @NonNull MutableContextSet giveApplicableContext(@NonNull PermissionHolder holder, @NonNull MutableContextSet contextSet) {
-        if (!(holder instanceof User)) {
-            return contextSet;
-        }
-
-        final GDPermissionUser user = PermissionHolderCache.getInstance().getOrCreateUser(holder.getObjectName());
-        if (user == null || user.getOnlinePlayer() == null) {
-            return contextSet;
-        }
-
-        final Player player = user.getOnlinePlayer();
-        GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getPlayerData(player.getWorld(), player.getUniqueId());
+    public void calculate(@NonNull Player player, @NonNull ContextConsumer contextSet) {
+        final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getPlayerData(player.getWorld(), player.getUniqueId());
         if (playerData.ignoreActiveContexts) {
             playerData.ignoreActiveContexts = false;
-            return contextSet;
+            return;
         }
 
         GDClaim sourceClaim = GriefDefenderPlugin.getInstance().dataStore.getClaimAtPlayer(playerData, player.getLocation());
         if (sourceClaim != null) {
             if (playerData == null || playerData.canIgnoreClaim(sourceClaim)) {
-                return contextSet;
+                return;
             }
 
             if (sourceClaim.parent != null && sourceClaim.getData().doesInheritParent()) {
-                contextSet.add(sourceClaim.parent.getContext());
+                contextSet.accept(sourceClaim.parent.getContext().getKey(), sourceClaim.parent.getContext().getValue());
             } else {
-                contextSet.add(sourceClaim.getContext());
+                contextSet.accept(sourceClaim.getContext().getKey(), sourceClaim.getContext().getValue());
             }
         }
-
-        return contextSet;
     }
 }

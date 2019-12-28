@@ -108,6 +108,7 @@ dependencies {
     }
     compile "com.github.bloodmc:mcclans-api:develop-SNAPSHOT"
     compileOnly "com.sk89q.worldedit:worldedit-core:6.1.4-SNAPSHOT"
+    compileOnly "net.luckperms:api:5.0"
 
     // required for bootstrap
     compile "com.googlecode.json-simple:json-simple:1.1.1"
@@ -125,7 +126,6 @@ dependencies {
     compileOnly "it.unimi.dsi:fastutil:8.2.3"
     compileOnly "javax.inject:javax.inject:1"
     compileOnly "me.lucko:jar-relocator:1.3"
-    compileOnly "me.lucko.luckperms:luckperms-api:4.4"
     compileOnly "net.jodah:expiringmap:0.5.9"
     compileOnly "org.apache.commons:commons-lang3:3.9"
     compileOnly "org.checkerframework:checker:2.8.2"

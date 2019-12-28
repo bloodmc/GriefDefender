@@ -1,9 +1,9 @@
 package com.griefdefender.util;
 
 import com.griefdefender.api.Tristate;
-import me.lucko.luckperms.api.context.ContextSet;
 import net.kyori.text.Component;
 import net.kyori.text.serializer.gson.GsonComponentSerializer;
+import net.luckperms.api.context.ContextSet;
 import org.spongepowered.api.service.context.Context;
 import org.spongepowered.api.service.permission.Subject;
 import org.spongepowered.api.text.Text;
@@ -12,7 +12,6 @@ import org.spongepowered.api.text.chat.ChatTypes;
 import org.spongepowered.api.text.serializer.TextSerializers;
 
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 public class SpongeUtil {
@@ -23,7 +22,7 @@ public class SpongeUtil {
 
     public static org.spongepowered.api.service.context.Context getSpongeContext(ContextSet context) {
         Context spongeContext = null;
-        for (Map.Entry<String, String> mapEntry : context) {
+        for (net.luckperms.api.context.Context mapEntry : context) {
             spongeContext = new Context(mapEntry.getKey(), mapEntry.getValue());
             break;
         }
@@ -55,7 +54,7 @@ public class SpongeUtil {
 
     public static Set<Context> getSpongeContexts(ContextSet contexts) {
         final Set<Context> spongeContexts = new HashSet<>();
-        for (Map.Entry<String, String> mapEntry : contexts) {
+        for (net.luckperms.api.context.Context mapEntry : contexts) {
             spongeContexts.add(new Context(mapEntry.getKey(), mapEntry.getValue()));
         }
 

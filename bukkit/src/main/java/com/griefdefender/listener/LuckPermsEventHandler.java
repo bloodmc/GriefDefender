@@ -27,15 +27,16 @@ package com.griefdefender.listener;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.permission.GDPermissionHolder;
-import me.lucko.luckperms.api.LuckPermsApi;
-import me.lucko.luckperms.api.event.group.GroupDataRecalculateEvent;
-import me.lucko.luckperms.api.event.user.UserDataRecalculateEvent;
+
+import net.luckperms.api.LuckPerms;
+import net.luckperms.api.event.group.GroupDataRecalculateEvent;
+import net.luckperms.api.event.user.UserDataRecalculateEvent;
 
 public class LuckPermsEventHandler {
 
-    private final LuckPermsApi luckPermsApi;
+    private final LuckPerms luckPermsApi;
 
-    public LuckPermsEventHandler(LuckPermsApi luckPermsApi) {
+    public LuckPermsEventHandler(LuckPerms luckPermsApi) {
         this.luckPermsApi = luckPermsApi;
         this.luckPermsApi.getEventBus().subscribe(GroupDataRecalculateEvent.class, this::onGroupDataRecalculate);
         this.luckPermsApi.getEventBus().subscribe(UserDataRecalculateEvent.class, this::onUserDataRecalculate);
@@ -47,7 +48,7 @@ public class LuckPermsEventHandler {
     }
 
     public void onUserDataRecalculate(UserDataRecalculateEvent event) {
-        final GDPermissionHolder holder = PermissionHolderCache.getInstance().getOrCreateUser(event.getUser().getUuid());
+        final GDPermissionHolder holder = PermissionHolderCache.getInstance().getOrCreateUser(event.getUser().getUniqueId());
         PermissionHolderCache.getInstance().getOrCreatePermissionCache(holder).invalidateAll();
         PermissionHolderCache.getInstance().getOrCreatePermissionCache(GriefDefenderPlugin.DEFAULT_HOLDER).invalidateAll();
     }

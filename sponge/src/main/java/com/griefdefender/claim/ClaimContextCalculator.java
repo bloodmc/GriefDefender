@@ -67,7 +67,7 @@ public class ClaimContextCalculator implements ContextCalculator<Subject> {
 
     @Override
     public boolean matches(Context context, Subject subject) {
-        if (context.equals("gd_claim")) {
+        if (context.getKey().equals("gd_claim")) {
             if (subject.getCommandSource().isPresent() && subject.getCommandSource().get() instanceof Player) {
                 Player player = (Player) subject.getCommandSource().get();
                 GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getPlayerData(player.getWorld(), player.getUniqueId());

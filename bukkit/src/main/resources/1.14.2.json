@@ -131,13 +131,6 @@
             "url": "https://repo1.maven.org/maven2/com/squareup/okio/okio/2.2.2/okio-2.2.2.jar"
         },
         {
-            "name": "me.lucko.luckperms:luckperms-api:4.4",
-            "sha1": "e0356ab83e426ff5e51b3c596ffac8750905af64",
-            "path": "me/lucko/luckperms/luckperms-api/4.4/luckperms-api-4.4.jar",
-            "relocate": "me.lucko:lucko",
-            "url": "https://repo1.maven.org/maven2/me/lucko/luckperms/luckperms-api/4.4/luckperms-api-4.4.jar"
-        },
-        {
             "name": "com.github.ben-manes.caffeine:caffeine:2.7.0",
             "sha1": "c3af06be4a7d4e769fce2cef5e77d3becad9818a",
             "path": "com/github/ben-manes/caffeine/caffeine/2.7.0/caffeine-2.7.0.jar",

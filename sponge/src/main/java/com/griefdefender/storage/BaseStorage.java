@@ -376,7 +376,8 @@ public abstract class BaseStorage {
         this.setDefaultFlags(contexts, globalDefaultFlags);
         final Map<String, String> globalDefaultOptions = activeConfig.getConfig().permissionCategory.getUserOptionDefaults();
         this.setDefaultOptions(ClaimContexts.GLOBAL_DEFAULT_CONTEXT.getName(), contexts, new HashMap<>(globalDefaultOptions));
-        GriefDefenderPlugin.getInstance().getPermissionProvider().setTransientPermission(GriefDefenderPlugin.DEFAULT_HOLDER, "griefdefender", false, new HashSet<>());
+        // TODO - does not work with LP v5
+        //GriefDefenderPlugin.getInstance().getPermissionProvider().setTransientPermission(GriefDefenderPlugin.DEFAULT_HOLDER, "griefdefender", false, new HashSet<>());
         activeConfig.save();
     }
 
