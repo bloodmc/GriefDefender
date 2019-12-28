@@ -24,6 +24,22 @@ plugins {
 
 compileJava.options.encoding = 'UTF-8'
 
+group = 'com.griefdefender'
+
+sponge {
+    plugin {
+        id = "griefdefender"
+        meta {
+            name = "GriefDefender"
+            version = "$version"
+            description = "This plugin is designed to prevent all forms of grief."
+            url = "$url"
+            authors = ["bloodmc"]
+        }
+    }
+}
+
+
 // Environment variables for the build set by the build server
 ext.buildNumber = System.env.BUILD_NUMBER ?: '0'
 
@@ -32,7 +48,7 @@ defaultTasks 'clean', 'build'
 sourceCompatibility = '1.8'
 targetCompatibility = '1.8'
 
-archivesBaseName = project.name.toLowerCase()
+archivesBaseName = 'griefdefender'
 
 project.ext.getGitHash = {
     def command = Runtime.getRuntime().exec("git rev-parse --short HEAD")

@@ -26,7 +26,7 @@ defaultTasks 'clean', 'build'
 sourceCompatibility = '1.8'
 targetCompatibility = '1.8'
 
-archivesBaseName = project.name.toLowerCase()
+archivesBaseName = 'griefdefender'
 
 project.ext.getGitHash = {
     def command = Runtime.getRuntime().exec("git rev-parse --short HEAD")

@@ -36,6 +36,7 @@ import org.spongepowered.api.config.ConfigDir;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.Order;
 import org.spongepowered.api.event.game.state.GamePreInitializationEvent;
+import org.spongepowered.api.plugin.Dependency;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.plugin.PluginContainer;
 
@@ -59,7 +60,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-@Plugin(id = "griefdefender", name = "GriefDefender", version = "1.0.0", description = "Designed to defend world from all types of grief.")
+@Plugin(id = "griefdefender", name = "GriefDefender", version = "1.2.4", description = "Designed to defend world from all types of grief.",
+    authors = {"bloodmc"}, dependencies = {@Dependency(id = "luckperms", optional = true)})
 public class GDBootstrap {
 
     @Inject public PluginContainer pluginContainer;
