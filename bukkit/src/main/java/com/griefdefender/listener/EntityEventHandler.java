@@ -58,7 +58,6 @@ import org.bukkit.block.Block;
 import org.bukkit.block.CreatureSpawner;
 import org.bukkit.entity.Creeper;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.ExperienceOrb;
 import org.bukkit.entity.FallingBlock;
 import org.bukkit.entity.Item;
@@ -376,10 +375,10 @@ public class EntityEventHandler implements Listener {
         final GDClaim claim = this.baseStorage.getClaimAt(targetEntity.getLocation());
         final GDPermissionUser targetUser = targetEntity instanceof Player ? PermissionHolderCache.getInstance().getOrCreateUser((Player) targetEntity) : null;
         GDPermissionUser user = null;
-        if (source instanceof Player) {
+        if (source instanceof Player && targetUser != null) {
             user = PermissionHolderCache.getInstance().getOrCreateUser(((Player) source).getUniqueId());
-            if (targetUser != null && user.getOnlinePlayer() != null) {
-                return this.getPvpProtectResult(claim, user, targetUser);
+            if (user.getOnlinePlayer() != null) {
+                return this.getPvpProtectResult(event, claim, user, targetUser);
             }
         }
 
@@ -402,7 +401,7 @@ public class EntityEventHandler implements Listener {
         if (owner != null && targetUser != null && !owner.equals(targetUser.getUniqueId())) {
             final GDPermissionUser sourceUser = PermissionHolderCache.getInstance().getOrCreateUser(owner);
             if (sourceUser.getOnlinePlayer() != null) {
-                return this.getPvpProtectResult(claim, sourceUser, targetUser);
+                return this.getPvpProtectResult(event, claim, sourceUser, targetUser);
             }
         }
 
@@ -484,7 +483,7 @@ public class EntityEventHandler implements Listener {
         return false;
     }
 
-    private boolean getPvpProtectResult(GDClaim claim, GDPermissionUser source, GDPermissionUser target) {
+    private boolean getPvpProtectResult(Event event, GDClaim claim, GDPermissionUser source, GDPermissionUser target) {
         final Player sourcePlayer = source.getOnlinePlayer();
         final Player targetPlayer = target.getOnlinePlayer();
         final boolean sourceInCombat = source.getInternalPlayerData().inPvpCombat(claim.getWorld());
@@ -495,8 +494,21 @@ public class EntityEventHandler implements Listener {
             return false;
         }
 
-        Tristate sourceResult = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Tristate.class), source, Options.PVP, claim);
-        Tristate targetResult = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Tristate.class), target, Options.PVP, claim);
+        // Check flags
+        Tristate sourceResult = GDPermissionManager.getInstance().getFinalPermission(event, targetPlayer.getLocation(), claim, GDPermissions.ENTITY_DAMAGE, sourcePlayer, targetPlayer, sourcePlayer, true);
+        Tristate targetResult = GDPermissionManager.getInstance().getFinalPermission(event, sourcePlayer.getLocation(), claim, GDPermissions.ENTITY_DAMAGE, targetPlayer, sourcePlayer, targetPlayer, true);
+        if (sourceResult == Tristate.FALSE) {
+            GriefDefenderPlugin.sendMessage(sourcePlayer, MessageCache.getInstance().PVP_SOURCE_NOT_ALLOWED);
+            return true;
+        }
+        if (targetResult == Tristate.FALSE) {
+            GriefDefenderPlugin.sendMessage(sourcePlayer, MessageCache.getInstance().PVP_TARGET_NOT_ALLOWED);
+            return true;
+        }
+
+        // Check options
+        sourceResult = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Tristate.class), source, Options.PVP, claim);
+        targetResult = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Tristate.class), target, Options.PVP, claim);
         if (sourceResult == Tristate.UNDEFINED) {
             sourceResult = Tristate.fromBoolean(claim.getWorld().getPVP());
         }

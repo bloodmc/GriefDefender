@@ -612,6 +612,10 @@ public class PlayerEventHandler {
         }
 
         final Entity targetEntity = event.getTargetEntity();
+        if (targetEntity instanceof Player) {
+            // PvP is handled during entity damage
+            return;
+        }
         final HandType handType = event.getHandType();
         final ItemStack itemInHand = player.getItemInHand(handType).orElse(ItemStack.empty());
         final Object source = player;

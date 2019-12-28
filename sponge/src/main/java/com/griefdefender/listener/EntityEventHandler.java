@@ -25,38 +25,29 @@
 package com.griefdefender.listener;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.reflect.TypeToken;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GDTimings;
 import com.griefdefender.GriefDefenderPlugin;
-import com.griefdefender.api.ChatType;
-import com.griefdefender.api.GriefDefender;
 import com.griefdefender.api.Tristate;
 import com.griefdefender.api.claim.Claim;
 import com.griefdefender.api.claim.TrustType;
 import com.griefdefender.api.claim.TrustTypes;
 import com.griefdefender.api.permission.flag.Flags;
+import com.griefdefender.api.permission.option.Options;
 import com.griefdefender.cache.MessageCache;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.claim.GDClaimManager;
 import com.griefdefender.configuration.MessageStorage;
-import com.griefdefender.event.GDBorderClaimEvent;
 import com.griefdefender.internal.util.NMSUtil;
-import com.griefdefender.internal.util.VecHelper;
 import com.griefdefender.permission.GDPermissionManager;
 import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.permission.GDPermissions;
 import com.griefdefender.permission.flag.GDFlags;
-import com.griefdefender.provider.MCClansProvider;
 import com.griefdefender.storage.BaseStorage;
 import com.griefdefender.util.CauseContextHelper;
-import com.griefdefender.util.EntityUtils;
-import com.griefdefender.util.PlayerUtil;
-import com.griefdefender.util.SpongeUtil;
 import net.kyori.text.Component;
-import net.kyori.text.TextComponent;
-import net.kyori.text.adapter.spongeapi.TextAdapter;
-import nl.riebie.mcclans.api.ClanPlayer;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.block.tileentity.TileEntity;
@@ -96,13 +87,11 @@ import org.spongepowered.api.event.world.ExplosionEvent;
 import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.service.user.UserStorageService;
-import org.spongepowered.api.text.Text;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 import org.spongepowered.api.world.explosion.Explosion;
 import org.spongepowered.api.world.storage.WorldProperties;
 
-import java.lang.ref.WeakReference;
 import java.time.Instant;
 import java.util.Iterator;
 import java.util.Optional;
@@ -469,6 +458,14 @@ public class EntityEventHandler {
         }
 
         final GDClaim claim = this.dataStore.getClaimAt(targetEntity.getLocation(), playerData != null ? playerData.lastClaim.get() : null);
+        final GDPermissionUser targetUser = targetEntity instanceof Player ? PermissionHolderCache.getInstance().getOrCreateUser((Player) targetEntity) : null;
+        if (source instanceof Player && targetUser != null) {
+            final GDPermissionUser sourceUser = PermissionHolderCache.getInstance().getOrCreateUser(((Player) source).getUniqueId());
+            if (sourceUser.getOnlinePlayer() != null) {
+                return this.getPvpProtectResult(event, claim, sourceUser, targetUser);
+            }
+        }
+
         final TrustType trustType = TrustTypes.BUILDER;
         if (GDPermissionManager.getInstance().getFinalPermission(event, targetEntity.getLocation(), claim, GDPermissions.ENTITY_DAMAGE, source, targetEntity, user, trustType, true) == Tristate.FALSE) {
             return true;
@@ -899,5 +896,56 @@ public class EntityEventHandler {
         }
 
         GDTimings.ENTITY_MOUNT_EVENT.stopTiming();
+    }
+
+    private boolean getPvpProtectResult(Event event, GDClaim claim, GDPermissionUser source, GDPermissionUser target) {
+        final Player sourcePlayer = source.getOnlinePlayer();
+        final Player targetPlayer = target.getOnlinePlayer();
+        final boolean sourceInCombat = source.getInternalPlayerData().inPvpCombat(claim.getWorld());
+        final boolean targetInCombat = target.getInternalPlayerData().inPvpCombat(claim.getWorld());
+        if (sourceInCombat && targetInCombat) {
+            source.getInternalPlayerData().lastPvpTimestamp = Instant.now();
+            target.getInternalPlayerData().lastPvpTimestamp = Instant.now();
+            return false;
+        }
+
+        // Check flags
+        Tristate sourceResult = GDPermissionManager.getInstance().getFinalPermission(event, targetPlayer.getLocation(), claim, GDPermissions.ENTITY_DAMAGE, sourcePlayer, targetPlayer, sourcePlayer, true);
+        Tristate targetResult = GDPermissionManager.getInstance().getFinalPermission(event, sourcePlayer.getLocation(), claim, GDPermissions.ENTITY_DAMAGE, targetPlayer, sourcePlayer, targetPlayer, true);
+        if (sourceResult == Tristate.FALSE) {
+            GriefDefenderPlugin.sendMessage(sourcePlayer, MessageCache.getInstance().PVP_SOURCE_NOT_ALLOWED);
+            return true;
+        }
+        if (targetResult == Tristate.FALSE) {
+            GriefDefenderPlugin.sendMessage(sourcePlayer, MessageCache.getInstance().PVP_TARGET_NOT_ALLOWED);
+            return true;
+        }
+
+        // Check options
+        sourceResult = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Tristate.class), source, Options.PVP, claim);
+        targetResult = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Tristate.class), target, Options.PVP, claim);
+        if (sourceResult == Tristate.UNDEFINED) {
+            sourceResult = Tristate.fromBoolean(claim.getWorld().getProperties().isPVPEnabled());
+        }
+        if (targetResult == Tristate.UNDEFINED) {
+            targetResult = Tristate.fromBoolean(claim.getWorld().getProperties().isPVPEnabled());
+        }
+        if (sourceResult == Tristate.FALSE) {
+            GriefDefenderPlugin.sendMessage(sourcePlayer, MessageCache.getInstance().PVP_SOURCE_NOT_ALLOWED);
+            return true;
+        }
+        if (targetResult == Tristate.FALSE) {
+            GriefDefenderPlugin.sendMessage(sourcePlayer, MessageCache.getInstance().PVP_TARGET_NOT_ALLOWED);
+            return true;
+        }
+
+        final GDClaim sourceClaim = GriefDefenderPlugin.getInstance().dataStore.getClaimAtPlayer(source.getInternalPlayerData(), sourcePlayer.getLocation());
+        if (!sourceClaim.isPvpEnabled()) {
+            GriefDefenderPlugin.sendMessage(sourcePlayer, MessageCache.getInstance().PVP_CLAIM_NOT_ALLOWED);
+            return true;
+        }
+        source.getInternalPlayerData().lastPvpTimestamp = Instant.now();
+        target.getInternalPlayerData().lastPvpTimestamp = Instant.now();
+        return !claim.isPvpEnabled();
     }
 }
