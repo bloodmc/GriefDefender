@@ -304,7 +304,7 @@ public class GriefDefenderPlugin {
                     continue;
                 }
                 // Check event source user
-                if (!permissionSubject.getFriendlyName().equals(debugUser.getName())) {
+                if (!permissionSubject.getIdentifier().equals(debugUser.getUniqueId().toString())) {
                     continue;
                 }
             }
