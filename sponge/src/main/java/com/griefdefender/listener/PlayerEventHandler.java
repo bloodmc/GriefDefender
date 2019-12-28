@@ -300,10 +300,10 @@ public class PlayerEventHandler {
 
         if (GDFlags.COMMAND_EXECUTE && !commandExecuteSourceBlacklisted && !commandExecuteTargetBlacklisted) {
             // First check base command
-            Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, player.getLocation(), claim, GDPermissions.COMMAND_EXECUTE, event.getSource(), commandBaseTarget, player);
+            Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, player.getLocation(), claim, GDPermissions.COMMAND_EXECUTE, event.getSource(), commandBaseTarget, player, true);
             if (result != Tristate.FALSE) {
                 // check with args
-                result = GDPermissionManager.getInstance().getFinalPermission(event, player.getLocation(), claim, GDPermissions.COMMAND_EXECUTE, event.getSource(), commandTargetWithArgs, player);
+                result = GDPermissionManager.getInstance().getFinalPermission(event, player.getLocation(), claim, GDPermissions.COMMAND_EXECUTE, event.getSource(), commandTargetWithArgs, player, true);
             }
             if (result == Tristate.FALSE) {
                 final Component denyMessage = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.COMMAND_BLOCKED,

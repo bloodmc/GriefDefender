@@ -61,7 +61,7 @@ import java.util.List;
 import java.util.Map;
 
 @Plugin(id = "griefdefender", name = "GriefDefender", version = "1.2.4", description = "Designed to defend world from all types of grief.",
-    authors = {"bloodmc"}, dependencies = {@Dependency(id = "luckperms", optional = true)})
+    authors = {"bloodmc"}, dependencies = {@Dependency(id = "luckperms")})
 public class GDBootstrap {
 
     @Inject public PluginContainer pluginContainer;
