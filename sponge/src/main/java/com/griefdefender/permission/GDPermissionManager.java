@@ -983,12 +983,16 @@ public class GDPermissionManager implements PermissionManager {
         if (!id.contains(":")) {
             id = "minecraft:" + id;
         }
+        final String[] parts = id.split(":");
+        final String modId = parts[0];
         if (isSource) {
             this.eventSourceId = id.toLowerCase();
             contexts.add(new Context("source", this.eventSourceId));
+            contexts.add(new Context("source", modId + ":any"));
         } else {
             this.eventTargetId = id.toLowerCase();
             contexts.add(new Context("target", this.eventTargetId));
+            contexts.add(new Context("target", modId + ":any"));
         }
         return contexts;
     }

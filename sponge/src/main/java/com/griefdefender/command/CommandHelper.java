@@ -242,9 +242,7 @@ public class CommandHelper {
                 }
     
                 String[] parts = target.split(":");
-                if (parts.length > 1 && parts[1].equalsIgnoreCase("any")) {
-                    target = baseFlag + "." + parts[0];
-                } else {
+                if (parts.length <= 1 || !parts[1].equalsIgnoreCase("any")) {
                     // check for meta
                     parts = target.split("\\.");
                     String targetFlag = parts[0];

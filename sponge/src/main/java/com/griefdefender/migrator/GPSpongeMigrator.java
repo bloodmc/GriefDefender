@@ -37,6 +37,7 @@ import org.spongepowered.api.util.Tristate;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashSet;
@@ -63,9 +64,15 @@ public class GPSpongeMigrator {
 
     public void migrateData() {
         try {
-            FileUtils.copyDirectory(GP_GLOBAL_PLAYER_DATA_PATH.toFile(), GD_DATA_ROOT_PATH.resolve("GlobalPlayerData").toFile(), true);
+            if (Files.exists(GP_GLOBAL_PLAYER_DATA_PATH)) {
+                if (Files.isDirectory(GP_GLOBAL_PLAYER_DATA_PATH)) {
+                    FileUtils.copyDirectory(GP_GLOBAL_PLAYER_DATA_PATH.toFile(), GD_DATA_ROOT_PATH.resolve("GlobalPlayerData").toFile(), true);
+                } else {
+                    // Support symlinks
+                    FileUtils.copyFile(GP_GLOBAL_PLAYER_DATA_PATH.toFile(), GD_DATA_ROOT_PATH.resolve("GlobalPlayerData").toFile(), true);
+                }
+            }
             FileUtils.copyDirectory(GP_CLAIM_DATA_PATH.toFile(), GD_DATA_ROOT_PATH.resolve("worlds").toFile(), true);
-            //FileUtils.copyFile(GP_GLOBAL_CONFIG.toFile(), GD_DATA_ROOT_PATH.resolve("global.conf").toFile());
         } catch (IOException e1) {
             e1.printStackTrace();
         }
