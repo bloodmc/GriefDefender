@@ -181,7 +181,8 @@ public abstract class ClaimOptionBase extends BaseCommand {
             }
         }
 
-        final Set<Context> contextSet = CauseContextHelper.generateContexts(option.getPermission(), player, claim, contexts);
+        String optionPermission = option != null ? option.getPermission() : "";
+        final Set<Context> contextSet = CauseContextHelper.generateContexts(optionPermission, player, claim, contexts);
         if (contextSet == null) {
             return;
         }

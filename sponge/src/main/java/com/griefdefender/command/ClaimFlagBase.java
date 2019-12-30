@@ -160,7 +160,8 @@ public abstract class ClaimFlagBase extends BaseCommand {
             }
         }
 
-        final Set<Context> contextSet = CauseContextHelper.generateContexts(flag.getPermission(), player, claim, contexts);
+        String flagPermission = flag != null ? flag.getPermission() : "";
+        final Set<Context> contextSet = CauseContextHelper.generateContexts(flagPermission, player, claim, contexts);
         if (contextSet == null) {
             return;
         }
