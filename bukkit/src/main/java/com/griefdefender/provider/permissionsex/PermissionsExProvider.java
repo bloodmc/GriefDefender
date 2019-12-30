@@ -45,6 +45,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -218,6 +219,11 @@ public class PermissionsExProvider implements PermissionProvider {
     }
 
     // - Implement API
+
+    @Override
+    public String getServerName() {
+        return pex.getConfig().getServerTags().get(0);
+    }
 
     @Override
     public boolean hasGroupSubject(String identifier) {
@@ -394,19 +400,15 @@ public class PermissionsExProvider implements PermissionProvider {
     }
 
     @Override
+    public List<String> getOptionValueList(GDPermissionHolder holder, Option option, Set<Context> contexts) {
+        final List<String> valueList = new ArrayList<>();
+        valueList.add(holderToPEXSubject(holder).getOption(contextsGDToPEX(contexts), option.getPermission()).orElse(null));
+        return valueList;
+    }
+
+    @Override
     public PermissionResult setOptionValue(GDPermissionHolder holder, String permission, String value, Set<Context> contexts) {
         return convertResult(holderToPEXSubject(holder).data().update(data -> data.setOption(contextsGDToPEX(contexts), permission, value))).join();
-    }
-
-    @Override
-    public PermissionResult setPermissionValue(GDPermissionHolder holder, Flag flag, Tristate value, Set<Context> contexts) {
-        return convertResult(holderToPEXSubject(holder).data().update(data -> data.setPermission(contextsGDToPEX(contexts), flag.getPermission(), intFromTristate(value)))).join();
-    }
-
-    @Override
-    public boolean setPermissionValue(GDPermissionHolder holder, String permission, Tristate value, Set<Context> contexts) {
-        return holderToPEXSubject(holder).data().update(data -> data.setPermission(contextsGDToPEX(contexts), permission, intFromTristate(value)))
-                .thenApply(chg -> !chg.getNew().equals(chg.getOld())).join();
     }
 
     @Override
@@ -423,6 +425,17 @@ public class PermissionsExProvider implements PermissionProvider {
     public void refreshCachedData(GDPermissionHolder holder) {
         holderToPEXSubject(holder).data().getCache().invalidate(holder.getIdentifier());
         holderToPEXSubject(holder).transientData().getCache().invalidate(holder.getIdentifier());
+    }
+
+    @Override
+    public PermissionResult setPermissionValue(GDPermissionHolder holder, String permission, Tristate value, Set<Context> contexts, boolean save) {
+        return convertResult(holderToPEXSubject(holder).data().update(data -> data.setPermission(contextsGDToPEX(contexts), permission, intFromTristate(value)))).join();
+    }
+
+    @Override
+    public CompletableFuture<Void> save(GDPermissionHolder holder) {
+        // TODO
+        return new CompletableFuture<>();
     }
 }
 

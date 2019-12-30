@@ -204,12 +204,17 @@ public class MessageStorage {
     public static final String FLAG_UI_CLICK_TOGGLE = "flag-ui-click-toggle";
     public static final String FLAG_UI_INHERIT_PARENT = "flag-ui-inherit-parent";
     public static final String FLAG_UI_OVERRIDE_PERMISSION = "flag-ui-override-permission";
+    public static final String OPTION_APPLY_PLAYER_GAMEMODE = "option-apply-player-gamemode";
+    public static final String OPTION_APPLY_PLAYER_WALK_SPEED = "option-apply-player-walk-speed";
+    public static final String OPTION_APPLY_PLAYER_WEATHER = "option-apply-player-weather";
+    public static final String OPTION_APPLY_SPAWN_LIMIT = "option-apply-spawn-limit";
     public static final String OPTION_INVALID_CONTEXT = "option-invalid-context";
     public static final String OPTION_INVALID_TARGET = "option-invalid-target";
     public static final String OPTION_INVALID_VALUE = "option-invalid-value";
     public static final String OPTION_NOT_FOUND = "option-not-found";
     public static final String OPTION_NOT_SET = "option-not-set";
     public static final String OPTION_OVERRIDE_NOT_SUPPORTED = "option-override-not-supported";
+    public static final String OPTION_REQUIRES_CONTEXTS = "option-requires-contexts";
     public static final String OPTION_RESET_SUCCESS = "option-reset-success";
     public static final String OPTION_SET_TARGET = "option-set-target";
     public static final String OPTION_UI_CLICK_TOGGLE = "option-ui-click-toggle";
@@ -263,6 +268,7 @@ public class MessageStorage {
     public static final String PLAYERINFO_UI_WORLD = "playerinfo-ui-world";
     public static final String PLUGIN_COMMAND_NOT_FOUND = "plugin-command-not-found";
     public static final String PLUGIN_NOT_FOUND = "plugin-not-found";
+    public static final String PVP_IN_COMBAT_NOT_ALLOWED = "pvp-in-combat-not-allowed";
     public static final String REGISTRY_BLOCK_NOT_FOUND = "registry-type-not-found";
     public static final String REGISTRY_ENTITY_NOT_FOUND = "registry-entity-not-found";
     public static final String REGISTRY_ITEM_NOT_FOUND = "registry-item-not-found";

@@ -97,6 +97,8 @@ public class GDPermissions {
     // flags
     public static final String USER_CLAIM_FLAGS = "griefdefender.user.claim.flag";
     public static final String COMMAND_FLAGS_CLAIM = "griefdefender.user.claim.command.flag.base";
+    public static final String COMMAND_FLAGS_CLAIM_ARG = "griefdefender.user.claim.command.flag.arg";
+    public static final String COMMAND_FLAGS_CLAIM_GUI = "griefdefender.user.claim.command.flag.gui";
     public static final String COMMAND_FLAGS_DEBUG = "griefdefender.user.claim.command.flag.debug";
     public static final String COMMAND_FLAGS_PLAYER = "griefdefender.user.claim.command.flag.player";
     public static final String COMMAND_FLAGS_GROUP = "griefdefender.user.claim.command.flag.group";
@@ -136,16 +138,6 @@ public class GDPermissions {
     public static final String COMMAND_CLAIM_PERMISSION_GROUP = "griefdefender.admin.claim.command.permission-group";
     public static final String COMMAND_CLAIM_PERMISSION_PLAYER = "griefdefender.admin.claim.command.permission-player";
     public static final String COMMAND_CLAIM_SCHEMATIC = "griefdefender.admin.claim.command.schematic";
-    public static final String COMMAND_CLAIM_OPTIONS_GROUP_BASE = "griefdefender.admin.claim.command.option.group.base";
-    public static final String COMMAND_CLAIM_OPTIONS_GROUP_ADMIN = "griefdefender.admin.claim.command.option.group.admin";
-    public static final String COMMAND_CLAIM_OPTIONS_GROUP_BASIC = "griefdefender.admin.claim.command.option.group.basic";
-    public static final String COMMAND_CLAIM_OPTIONS_GROUP_SUBDIVISION = "griefdefender.admin.claim.command.option.group.subdivision";
-    public static final String COMMAND_CLAIM_OPTIONS_GROUP_TOWN = "griefdefender.admin.claim.command.option.group.town";
-    public static final String COMMAND_CLAIM_OPTIONS_PLAYER_BASE = "griefdefender.admin.claim.command.option.player.base";
-    public static final String COMMAND_CLAIM_OPTIONS_PLAYER_ADMIN = "griefdefender.admin.claim.command.option.player.admin";
-    public static final String COMMAND_CLAIM_OPTIONS_PLAYER_BASIC = "griefdefender.admin.claim.command.option.player.basic";
-    public static final String COMMAND_CLAIM_OPTIONS_PLAYER_SUBDIVISION = "griefdefender.admin.claim.command.option.player.subdivision";
-    public static final String COMMAND_CLAIM_OPTIONS_PLAYER_TOWN = "griefdefender.admin.claim.command.option.player.town";
     public static final String COMMAND_IGNORE_CLAIMS = "griefdefender.admin.claim.command.ignore.base";
     public static final String COMMAND_DELETE_CLAIM_BASE = "griefdefender.admin.claim.command.delete.base";
     public static final String COMMAND_DELETE_CLAIMS = "griefdefender.admin.claim.command.delete-claims";
@@ -194,45 +186,6 @@ public class GDPermissions {
     public static final String TRUST_CONTAINER = "griefdefender.trust.1.2.3";
     public static final String TRUST_BUILDER = "griefdefender.trust.1.2";
     public static final String TRUST_MANAGER = "griefdefender.trust.1";
-
-    // Flags
-    public static final String BLOCK_BREAK = "griefdefender.flag.block-break";
-    public static final String BLOCK_GROW = "griefdefender.flag.block-grow";
-    public static final String BLOCK_MODIFY = "griefdefender.flag.block-modify";
-    public static final String BLOCK_PLACE = "griefdefender.flag.block-place";
-    public static final String BLOCK_SPREAD = "griefdefender.flag.block-spread";
-    public static final String COLLIDE_BLOCK = "griefdefender.flag.collide-block";
-    public static final String COLLIDE_ENTITY = "griefdefender.flag.collide-entity";
-    public static final String COMMAND_EXECUTE = "griefdefender.flag.command-execute";
-    public static final String COMMAND_EXECUTE_PVP = "griefdefender.flag.command-execute-pvp";
-    public static final String ENTER_CLAIM = "griefdefender.flag.enter-claim";
-    public static final String ENTITY_CHUNK_SPAWN = "griefdefender.flag.entity-chunk-spawn";
-    public static final String ENTITY_DAMAGE = "griefdefender.flag.entity-damage";
-    public static final String ENTITY_RIDING = "griefdefender.flag.entity-riding";
-    public static final String ENTITY_SPAWN = "griefdefender.flag.entity-spawn";
-    public static final String ENTITY_TELEPORT_FROM = "griefdefender.flag.entity-teleport-from";
-    public static final String ENTITY_TELEPORT_TO = "griefdefender.flag.entity-teleport-to";
-    public static final String EXIT_CLAIM = "griefdefender.flag.exit-claim";
-    public static final String EXPLOSION_BLOCK = "griefdefender.flag.explosion-block";
-    public static final String EXPLOSION_ENTITY = "griefdefender.flag.explosion-entity";
-    public static final String FLAG_BASE = "griefdefender.flag";
-    public static final String INTERACT_BLOCK_PRIMARY = "griefdefender.flag.interact-block-primary";
-    public static final String INTERACT_BLOCK_SECONDARY = "griefdefender.flag.interact-block-secondary";
-    public static final String INTERACT_ENTITY_PRIMARY = "griefdefender.flag.interact-entity-primary";
-    public static final String INTERACT_ENTITY_SECONDARY = "griefdefender.flag.interact-entity-secondary";
-    public static final String INTERACT_ITEM_PRIMARY = "griefdefender.flag.interact-item-primary";
-    public static final String INTERACT_ITEM_SECONDARY = "griefdefender.flag.interact-item-secondary";
-    public static final String INVENTORY_CLICK = "griefdefender.flag.interact-inventory-click";
-    public static final String INVENTORY_OPEN = "griefdefender.flag.interact-inventory";
-    public static final String ITEM_DROP = "griefdefender.flag.item-drop";
-    public static final String ITEM_PICKUP = "griefdefender.flag.item-pickup";
-    public static final String ITEM_SPAWN = "griefdefender.flag.item-spawn";
-    public static final String ITEM_USE = "griefdefender.flag.item-use";
-    public static final String LEAF_DECAY = "griefdefender.flag.leaf-decay";
-    public static final String LIQUID_FLOW = "griefdefender.flag.liquid-flow";
-    public static final String PORTAL_USE = "griefdefender.flag.portal-use";
-    public static final String PROJECTILE_IMPACT_BLOCK = "griefdefender.flag.projectile-impact-block";
-    public static final String PROJECTILE_IMPACT_ENTITY = "griefdefender.flag.projectile-impact-entity";
 
     public static String getTrustPermission(TrustType type) {
         if (type == TrustTypes.ACCESSOR) {

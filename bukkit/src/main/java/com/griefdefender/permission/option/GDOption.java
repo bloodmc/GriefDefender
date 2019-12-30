@@ -26,6 +26,7 @@ package com.griefdefender.permission.option;
 
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.Tristate;
+import com.griefdefender.api.permission.Context;
 import com.griefdefender.api.permission.option.Option;
 import com.griefdefender.api.permission.option.type.CreateModeType;
 import com.griefdefender.api.permission.option.type.CreateModeTypes;
@@ -38,7 +39,9 @@ import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -56,18 +59,23 @@ public class GDOption<T> implements Option<T> {
     private final String id;
     private final String name;
     private final Class<T> allowed;
+    private Set<String> requiredContextKeys = new HashSet<>();
     private Component description;
+    private boolean multiValued;
     private Boolean isGlobal;
     private Boolean isAdmin;
 
     GDOption(OptionBuilder<T> builder) {
-        this(builder.id, builder.name, builder.typeClass);
+        this(builder.id, builder.name, builder.description, builder.multiValued, builder.requiredContextKeys, builder.typeClass);
     }
 
-    public GDOption(String id, String name, Class<T> allowed) {
+    public GDOption(String id, String name, Component description, boolean multiValued, Set<String> requiredContexts, Class<T> allowed) {
         this.id = id;
         this.name = name;
         this.allowed = allowed;
+        this.description = description;
+        this.multiValued = multiValued;
+        this.requiredContextKeys = requiredContexts;
         this.isAdmin = ADMIN_OPTIONS.contains(name);
         this.isGlobal = GLOBAL_OPTIONS.contains(name);
     }
@@ -91,6 +99,16 @@ public class GDOption<T> implements Option<T> {
 
     public boolean isAdmin() {
         return this.isAdmin;
+    }
+
+    @Override
+    public boolean multiValued() {
+        return this.multiValued;
+    }
+
+    @Override
+    public Set<String> getRequiredContextKeys() {
+        return this.requiredContextKeys;
     }
 
     @Override
@@ -172,6 +190,8 @@ public class GDOption<T> implements Option<T> {
     public boolean validateStringValue(String value, boolean log) {
         if (value.equalsIgnoreCase("undefined")) {
             return false;
+        } else if (this.allowed == List.class) {
+            return true;
         } else if (this.allowed == Integer.class) {
             try {
                 Integer.parseInt(value);
@@ -229,12 +249,12 @@ public class GDOption<T> implements Option<T> {
                     + ".\nAcceptable values are : adventure, creative, survival, spectator, or undefined. Skipping...");
             }
         } else if (this.allowed == WeatherType.class) {
-            if (value.equalsIgnoreCase("clear") || value.equalsIgnoreCase("rain")) {
+            if (value.equalsIgnoreCase("clear") || value.equalsIgnoreCase("downfall")) {
                 return true;
             }
             if (log) {
                 GriefDefenderPlugin.getInstance().getLogger().warning("Invalid WeatherType value '" + value + "', entered for option " + this.getName() 
-                    + ".\nAcceptable values are : clear, rain, or undefined. Skipping...");
+                    + ".\nAcceptable values are : clear, downfall, or undefined. Skipping...");
             }
         }
  

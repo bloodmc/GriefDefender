@@ -41,6 +41,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 public class PermissionUtil {
 
@@ -58,6 +59,10 @@ public class PermissionUtil {
 
     public PermissionUtil() {
         this.PERMISSION_PROVIDER = GriefDefenderPlugin.getInstance().getPermissionProvider();
+    }
+
+    public String getServerName() {
+        return PERMISSION_PROVIDER.getServerName();
     }
 
     public boolean hasGroupSubject(String identifier) {
@@ -180,16 +185,28 @@ public class PermissionUtil {
         return PERMISSION_PROVIDER.getOptionValue(holder, option, contexts);
     }
 
+    public List<String> getOptionValueList(GDPermissionHolder holder, Option option, Set<Context> contexts) {
+        return PERMISSION_PROVIDER.getOptionValueList(holder, option, contexts);
+    }
+
     public PermissionResult setOptionValue(GDPermissionHolder holder, String permission, String value, Set<Context> contexts) {
         return PERMISSION_PROVIDER.setOptionValue(holder, permission, value, contexts);
     }
 
     public PermissionResult setPermissionValue(GDPermissionHolder holder, Flag flag, Tristate value, Set<Context> contexts) {
-        return PERMISSION_PROVIDER.setPermissionValue(holder, flag, value, contexts);
+        return PERMISSION_PROVIDER.setPermissionValue(holder, flag, value, contexts, true);
     }
 
-    public boolean setPermissionValue(GDPermissionHolder holder, String permission, Tristate value, Set<Context> contexts) {
-        return PERMISSION_PROVIDER.setPermissionValue(holder, permission, value, contexts);
+    public PermissionResult setPermissionValue(GDPermissionHolder holder, String permission, Tristate value, Set<Context> contexts) {
+        return PERMISSION_PROVIDER.setPermissionValue(holder, permission, value, contexts, true);
+    }
+
+    public PermissionResult setPermissionValue(GDPermissionHolder holder, Flag flag, Tristate value, Set<Context> contexts, boolean save) {
+        return PERMISSION_PROVIDER.setPermissionValue(holder, flag, value, contexts, save);
+    }
+
+    public PermissionResult setPermissionValue(GDPermissionHolder holder, String permission, Tristate value, Set<Context> contexts, boolean save) {
+        return PERMISSION_PROVIDER.setPermissionValue(holder, permission, value, contexts, save);
     }
 
     public void setTransientOption(GDPermissionHolder holder, String permission, String value, Set<Context> contexts) {
@@ -202,6 +219,10 @@ public class PermissionUtil {
 
     public void refreshCachedData(GDPermissionHolder holder) {
         PERMISSION_PROVIDER.refreshCachedData(holder);
+    }
+
+    public CompletableFuture<Void> save(GDPermissionHolder holder) {
+        return PERMISSION_PROVIDER.save(holder);
     }
 
     public boolean containsKey(Set<Context> contexts, String key) {

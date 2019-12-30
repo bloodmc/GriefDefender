@@ -30,12 +30,14 @@ import com.griefdefender.api.permission.ContextKeys;
 public class ContextGroups {
 
     // Entity groups
+    public static final Context SOURCE_ALL = new Context(ContextKeys.SOURCE, ContextGroupKeys.ALL);
     public static final Context SOURCE_AMBIENT = new Context(ContextKeys.SOURCE, ContextGroupKeys.AMBIENT);
     public static final Context SOURCE_ANIMAL = new Context(ContextKeys.SOURCE, ContextGroupKeys.ANIMAL);
     public static final Context SOURCE_AQUATIC = new Context(ContextKeys.SOURCE, ContextGroupKeys.AQUATIC);
     public static final Context SOURCE_MISC = new Context(ContextKeys.SOURCE, ContextGroupKeys.MISC);
     public static final Context SOURCE_MONSTER = new Context(ContextKeys.SOURCE, ContextGroupKeys.MONSTER);
     public static final Context SOURCE_VEHICLE = new Context(ContextKeys.SOURCE, ContextGroupKeys.VEHICLE);
+    public static final Context TARGET_ALL = new Context(ContextKeys.TARGET, ContextGroupKeys.ALL);
     public static final Context TARGET_AMBIENT = new Context(ContextKeys.TARGET, ContextGroupKeys.AMBIENT);
     public static final Context TARGET_ANIMAL = new Context(ContextKeys.TARGET, ContextGroupKeys.ANIMAL);
     public static final Context TARGET_AQUATIC = new Context(ContextKeys.TARGET, ContextGroupKeys.AQUATIC);

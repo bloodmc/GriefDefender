@@ -113,6 +113,8 @@ public abstract class ClaimFlagBase extends BaseCommand {
     public void execute(Player player, String[] args) throws InvalidCommandArgument {
         final GDPermissionUser src = PermissionHolderCache.getInstance().getOrCreateUser(player);
         final GDPermissionHolder commandSubject = subject;
+        final GDPlayerData playerData = src.getInternalPlayerData();
+        final GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAtPlayer(playerData, player.getLocation());
         String commandFlag = null;
         String target = null;
         String value = null;
@@ -123,12 +125,21 @@ public abstract class ClaimFlagBase extends BaseCommand {
             contexts = arguments.substring(index, arguments.length());
         }
         if (args.length > 0) {
+            if (!src.getInternalPlayerData().canIgnoreClaim(claim) && !player.hasPermission(GDPermissions.COMMAND_FLAGS_CLAIM_ARG)) {
+                TextAdapter.sendComponent(player, MessageCache.getInstance().PERMISSION_FLAG_ARG);
+                return;
+            }
             if (args.length < 3) {
                 throw new InvalidCommandArgument();
             }
             commandFlag = args[0];
             target = args[1];
             value = args[2];
+        } else {
+            if (!src.getInternalPlayerData().canIgnoreClaim(claim) && !player.hasPermission(GDPermissions.COMMAND_FLAGS_CLAIM_GUI)) {
+                TextAdapter.sendComponent(player, MessageCache.getInstance().PERMISSION_FLAG_GUI);
+                return;
+            }
         }
         final Flag flag = FlagRegistryModule.getInstance().getById(commandFlag).orElse(null);
         if (commandFlag != null && flag == null) {
@@ -149,9 +160,7 @@ public abstract class ClaimFlagBase extends BaseCommand {
             }
         }
 
-        final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
-        GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAtPlayer(playerData, player.getLocation());
-        final Set<Context> contextSet = CauseContextHelper.generateContexts(player, claim, contexts);
+        final Set<Context> contextSet = CauseContextHelper.generateContexts(flag.getPermission(), player, claim, contexts);
         if (contextSet == null) {
             return;
         }
@@ -911,7 +920,6 @@ public abstract class ClaimFlagBase extends BaseCommand {
                     newValue = Tristate.UNDEFINED;
                 }
 
-                PermissionResult result = null;
                 final Flag flag = flagData.getFlag();
                 GDFlagPermissionEvent.Set event = new GDFlagPermissionEvent.Set(this.subject, flagData.getFlag(), newValue, newContexts);
                 GriefDefender.getEventManager().post(event);
@@ -919,8 +927,11 @@ public abstract class ClaimFlagBase extends BaseCommand {
                     return;
                 }
 
-                result = GriefDefenderPlugin.getInstance().getPermissionProvider().setPermissionValue(GriefDefenderPlugin.DEFAULT_HOLDER, flag, newValue, newContexts);
+                PermissionResult result = GriefDefenderPlugin.getInstance().getPermissionProvider().setPermissionValue(GriefDefenderPlugin.DEFAULT_HOLDER, flag, newValue, newContexts);
             }
+
+            // Save after all permission changes have been made
+            GriefDefenderPlugin.getInstance().getPermissionProvider().save(GriefDefenderPlugin.DEFAULT_HOLDER);
             GDCauseStackManager.getInstance().popCause();
             showCustomFlags(src, claim, displayType);
         };

@@ -36,15 +36,14 @@ import com.griefdefender.api.permission.ContextKeys;
 import com.griefdefender.api.permission.PermissionResult;
 import com.griefdefender.api.permission.ResultTypes;
 import com.griefdefender.api.permission.flag.Flag;
-import com.griefdefender.api.permission.flag.Flags;
 import com.griefdefender.api.permission.option.Option;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.permission.GDPermissionHolder;
-import com.griefdefender.permission.GDPermissionManager;
 import com.griefdefender.permission.GDPermissionResult;
 import com.griefdefender.permission.GDPermissionUser;
-
+import com.griefdefender.registry.OptionRegistryModule;
+import net.kyori.text.TextComponent;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.cacheddata.CachedMetaData;
 import net.luckperms.api.cacheddata.CachedPermissionData;
@@ -78,6 +77,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
 import java.util.Map.Entry;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -107,6 +107,8 @@ public class LuckPermsProvider implements PermissionProvider {
 
     private final LuckPerms luckPermsApi;
     private final static DefaultDataQueryOrderFunction DEFAULT_DATA_QUERY_ORDER = new DefaultDataQueryOrderFunction();
+    private final static PermissionResult RESULT_FAILURE = new GDPermissionResult(ResultTypes.FAILURE);
+    private final static PermissionResult RESULT_SUCCESS = new GDPermissionResult(ResultTypes.SUCCESS);
 
     public LuckPermsProvider() {
         final ProviderRegistration<LuckPerms> service = Sponge.getServiceManager().getRegistration(LuckPerms.class).orElse(null);
@@ -115,6 +117,11 @@ public class LuckPermsProvider implements PermissionProvider {
 
     public LuckPerms getApi() {
         return this.luckPermsApi;
+    }
+
+    @Override
+    public String getServerName() {
+        return this.luckPermsApi.getServerName();
     }
 
     @Override
@@ -715,44 +722,65 @@ public class LuckPermsProvider implements PermissionProvider {
         return metaData.getMetaValue(option.getPermission());
     }
 
-    public PermissionResult setOptionValue(GDPermissionHolder holder, String permission, String value, Set<Context> contexts) {
+    @Override
+    public List<String> getOptionValueList(GDPermissionHolder holder, Option option, Set<Context> contexts) {
+        ImmutableContextSet set = this.getLPContexts(contexts).immutableCopy();
+        final PermissionHolder permissionHolder = this.getLuckPermsHolder(holder);
+        if (permissionHolder == null) {
+            return null;
+        }
+
+        final QueryOptions query = QueryOptions.builder(QueryMode.CONTEXTUAL).option(DataQueryOrderFunction.KEY, DEFAULT_DATA_QUERY_ORDER).context(set).build();
+        CachedMetaData metaData = permissionHolder.getCachedData().getMetaData(query);
+        List<String> list = metaData.getMeta().get(option.getPermission());
+        if (list == null) {
+            return new ArrayList<>();
+        }
+        return list;
+    }
+
+    public PermissionResult setOptionValue(GDPermissionHolder holder, String key, String value, Set<Context> contexts) {
         DataMutateResult result = null;
         ImmutableContextSet set = this.getLPContexts(contexts).immutableCopy();
         final PermissionHolder permissionHolder = this.getLuckPermsHolder(holder);
         if (permissionHolder == null) {
-            return new GDPermissionResult(ResultTypes.FAILURE);
+            return RESULT_FAILURE;
         }
 
-        // Always unset existing meta first
-        final Node currentNode = this.luckPermsApi.getNodeBuilderRegistry().forMeta().key(permission).context(set).build();
-        result = permissionHolder.data().remove(currentNode);
+        final Option option = OptionRegistryModule.getInstance().getById(key).orElse(null);
+        if (option == null) {
+            return RESULT_FAILURE;
+        }
 
-        final Node node = this.luckPermsApi.getNodeBuilderRegistry().forMeta().key(permission).value(value).context(set).build();
+        final Node node = MetaNode.builder().key(key).value(value).context(set).build();
         if (!value.equalsIgnoreCase("undefined")) {
+            if (!option.multiValued()) {
+                this.clearMeta(permissionHolder, key, set);
+            }
             result = permissionHolder.data().add(node);
-        }
-        if (result != null && result.wasSuccessful()) {
+        } else {
+            this.clearMeta(permissionHolder, key, set);
             this.savePermissionHolder(permissionHolder);
-            return new GDPermissionResult(ResultTypes.SUCCESS);
+            return RESULT_SUCCESS;
         }
-        return new GDPermissionResult(ResultTypes.FAILURE);
+        if (result != null) {
+            if (result.wasSuccessful()) {
+                this.savePermissionHolder(permissionHolder);
+                return new GDPermissionResult(ResultTypes.SUCCESS, TextComponent.builder().append(result.name()).build());
+            }
+            return new GDPermissionResult(ResultTypes.FAILURE, TextComponent.builder().append(result.name()).build());
+        }
+
+        return RESULT_FAILURE;
     }
 
-    public PermissionResult setPermissionValue(GDPermissionHolder holder, Flag flag, Tristate value, Set<Context> contexts) {
-        final boolean result = setPermissionValue(holder, flag.getPermission(), value, contexts);
-        if (result) {
-            return new GDPermissionResult(ResultTypes.SUCCESS);
-        }
-        return new GDPermissionResult(ResultTypes.FAILURE);
-    }
-
-    public boolean setPermissionValue(GDPermissionHolder holder, String permission, Tristate value, Set<Context> contexts) {
+    public PermissionResult setPermissionValue(GDPermissionHolder holder, String permission, Tristate value, Set<Context> contexts, boolean save) {
         DataMutateResult result = null;
         ImmutableContextSet set = this.getLPContexts(contexts).immutableCopy();
         final Node node = this.luckPermsApi.getNodeBuilderRegistry().forPermission().permission(permission).value(value.asBoolean()).context(set).build();
         final PermissionHolder permissionHolder = this.getLuckPermsHolder(holder);
         if (permissionHolder == null) {
-            return false;
+            return RESULT_FAILURE;
         }
 
         if (value == Tristate.UNDEFINED) {
@@ -763,11 +791,6 @@ public class LuckPermsProvider implements PermissionProvider {
 
         if (result.wasSuccessful()) {
             if (permissionHolder instanceof Group) {
-                final Group group = (Group) permissionHolder;
-                group.getCachedData().invalidate();
-                for (User user :this.luckPermsApi.getUserManager().getLoadedUsers()) {
-                    user.getCachedData().invalidate();
-                }
                 // If a group is changed, we invalidate all cache
                 PermissionHolderCache.getInstance().invalidateAllPermissionCache();
             } else {
@@ -775,9 +798,14 @@ public class LuckPermsProvider implements PermissionProvider {
                 PermissionHolderCache.getInstance().getOrCreatePermissionCache(holder).invalidateAll();
             }
 
-            this.savePermissionHolder(permissionHolder);
+            if (save) {
+                this.savePermissionHolder(permissionHolder);
+            }
+
+            return new GDPermissionResult(ResultTypes.SUCCESS, TextComponent.builder().append(result.name()).build());
         }
-        return result.wasSuccessful();
+
+        return new GDPermissionResult(ResultTypes.FAILURE, TextComponent.builder().append(result.name()).build());
     }
 
     public void setTransientOption(GDPermissionHolder holder, String permission, String value, Set<Context> contexts) {
@@ -798,7 +826,7 @@ public class LuckPermsProvider implements PermissionProvider {
             return;
         }
 
-        final Node node = this.luckPermsApi.getNodeBuilderRegistry().forPermission().permission(permission).value(value).context(contextSet).build();
+        final PermissionNode node = this.luckPermsApi.getNodeBuilderRegistry().forPermission().permission(permission).value(value).context(contextSet).build();
         permissionHolder.transientData().add(node);
     }
 
@@ -816,6 +844,20 @@ public class LuckPermsProvider implements PermissionProvider {
             return;
         }
         permissionHolder.getCachedData().invalidate();
+    }
+
+    @Override
+    public CompletableFuture<Void> save(GDPermissionHolder holder) {
+        final PermissionHolder permissionHolder = this.getLuckPermsHolder(holder);
+        if (permissionHolder == null) {
+            return new CompletableFuture<>();
+        }
+
+        if (permissionHolder instanceof User) {
+            return this.luckPermsApi.getUserManager().saveUser((User) permissionHolder);
+        } else {
+            return this.luckPermsApi.getGroupManager().saveGroup((Group) permissionHolder);
+        }
     }
 
     public Set<Context> getGDContexts(ContextSet contexts) {
@@ -844,6 +886,10 @@ public class LuckPermsProvider implements PermissionProvider {
             return Tristate.FALSE;
         }
         return Tristate.UNDEFINED;
+    }
+
+    private void clearMeta(PermissionHolder holder, String metaKey, ContextSet set) {
+        holder.data().clear(set, NodeType.META.predicate(node -> node.getMetaKey().equals(metaKey)));
     }
 
     private static class DefaultDataQueryOrderFunction implements DataQueryOrderFunction {

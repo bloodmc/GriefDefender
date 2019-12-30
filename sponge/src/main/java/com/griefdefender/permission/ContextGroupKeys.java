@@ -26,6 +26,7 @@ package com.griefdefender.permission;
 
 public class ContextGroupKeys {
 
+    public static final String ALL = "#all";
     public static final String AMBIENT = "#ambient";
     public static final String ANIMAL = "#animal";
     public static final String AQUATIC = "#aquatic";

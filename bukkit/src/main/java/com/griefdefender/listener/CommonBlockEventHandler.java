@@ -36,10 +36,10 @@ import org.bukkit.event.block.BlockBurnEvent;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.Tristate;
 import com.griefdefender.api.claim.TrustTypes;
+import com.griefdefender.api.permission.flag.Flags;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.permission.GDPermissionManager;
 import com.griefdefender.permission.GDPermissionUser;
-import com.griefdefender.permission.GDPermissions;
 import com.griefdefender.permission.flag.GDFlags;
 import com.griefdefender.storage.BaseStorage;
 import com.griefdefender.util.CauseContextHelper;
@@ -78,7 +78,7 @@ public class CommonBlockEventHandler {
         Location location = toBlock.getLocation();
         GDClaim targetClaim = this.storage.getClaimAt(location);
 
-        final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, GDPermissions.BLOCK_SPREAD, fromBlock, toBlock, user, TrustTypes.BUILDER, true);
+        final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, Flags.BLOCK_SPREAD, fromBlock, toBlock, user, TrustTypes.BUILDER, true);
         if (result == Tristate.FALSE) {
             ((Cancellable) event).setCancelled(true);
         }
@@ -113,7 +113,7 @@ public class CommonBlockEventHandler {
         Location location = toBlock.getLocation();
         GDClaim targetClaim = this.storage.getClaimAt(location);
 
-        final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, GDPermissions.BLOCK_MODIFY, source, toBlock, user, TrustTypes.BUILDER, true);
+        final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, Flags.BLOCK_MODIFY, source, toBlock, user, TrustTypes.BUILDER, true);
         if (result == Tristate.FALSE) {
             ((Cancellable) event).setCancelled(true);
         }
@@ -142,7 +142,7 @@ public class CommonBlockEventHandler {
 
         GDClaim targetClaim = this.storage.getClaimAt(location);
 
-        final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, GDPermissions.BLOCK_PLACE, source, block, player, TrustTypes.BUILDER, true);
+        final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, Flags.BLOCK_PLACE, source, block, player, TrustTypes.BUILDER, true);
         if (result == Tristate.FALSE) {
             ((Cancellable) event).setCancelled(true);
         }
@@ -170,7 +170,7 @@ public class CommonBlockEventHandler {
 
         GDClaim targetClaim = this.storage.getClaimAt(location);
 
-        final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, GDPermissions.BLOCK_BREAK, source, block, player, TrustTypes.BUILDER, true);
+        final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, Flags.BLOCK_BREAK, source, block, player, TrustTypes.BUILDER, true);
         if (result == Tristate.FALSE) {
             ((Cancellable) event).setCancelled(true);
         }

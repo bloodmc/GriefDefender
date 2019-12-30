@@ -40,7 +40,7 @@ public class WeatherTypeSerializer implements TypeSerializer<WeatherType> {
         case "clear" :
             return WeatherTypes.CLEAR;
         case "rain" : 
-            return WeatherTypes.RAIN;
+            return WeatherTypes.DOWNFALL;
         default :
             return WeatherTypes.UNDEFINED;
     }

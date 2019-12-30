@@ -104,6 +104,9 @@ public class DefaultPermissionCategory extends ConfigCategory {
         this.defaultUserOptions.put(Options.PLAYER_WALK_SPEED.getName(), "-1");
         this.defaultUserOptions.put(Options.PLAYER_WEATHER.getName(), "undefined");
         this.defaultUserOptions.put(Options.PVP.getName(), "undefined");
+        this.defaultUserOptions.put(Options.PVP_COMBAT_COMMAND.getName(), "false");
+        this.defaultUserOptions.put(Options.PVP_COMBAT_TELEPORT.getName(), "false");
+        this.defaultUserOptions.put(Options.PVP_COMBAT_TIMEOUT.getName(), "15");
 
         this.defaultBasicOptions.put(Options.MIN_SIZE_X.getName(), "5");
         this.defaultBasicOptions.put(Options.MIN_SIZE_Y.getName(), "5");

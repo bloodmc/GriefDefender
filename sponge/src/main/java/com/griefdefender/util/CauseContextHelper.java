@@ -28,9 +28,12 @@ import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.claim.Claim;
 import com.griefdefender.api.claim.ClaimContexts;
 import com.griefdefender.api.permission.Context;
+import com.griefdefender.api.permission.option.Options;
 import com.griefdefender.cache.MessageCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.internal.util.NMSUtil;
+import com.griefdefender.permission.ContextGroupKeys;
+import com.griefdefender.permission.ContextGroups;
 import com.griefdefender.permission.GDPermissions;
 import net.kyori.text.TextComponent;
 import org.spongepowered.api.Sponge;
@@ -46,7 +49,6 @@ import org.spongepowered.api.event.cause.EventContextKeys;
 import org.spongepowered.api.event.world.ExplosionEvent;
 import org.spongepowered.api.item.ItemType;
 import org.spongepowered.api.world.storage.WorldProperties;
-import org.spongepowered.common.SpongeImplHooks;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -119,11 +121,11 @@ public class CauseContextHelper {
     private static final Pattern CONTEXT_SPLIT = Pattern.compile("^context?\\[ *((?:[\\w.-]+:[\\w.-]+:[\\w\\/.-]+(?: *, *(?!\\]$)|(?= *\\]$)))+) *\\]$");
     private static final List<String> VALID_CONTEXTS = Arrays.asList("world", "server", "mode", "player", "group", "source", "used_item", "type");
     //  final String regex = "^context?\\[ *((?:[\\w.-]+:[\\w.-]+:[\\w\\/.-]+(?: *, *(?!\\]$)|(?= *\\]$)))+) *\\]$";
-    public static Set<Context> generateContexts(CommandSource src, Claim claim, String context) {
-        return generateContexts(src, claim, context, false);
+    public static Set<Context> generateContexts(String permission, CommandSource src, Claim claim, String context) {
+        return generateContexts(permission, src, claim, context, false);
     }
 
-    public static Set<Context> generateContexts(CommandSource src, Claim claim, String context, boolean isOption) {
+    public static Set<Context> generateContexts(String permission, CommandSource src, Claim claim, String context, boolean isOption) {
         // verify context is valid
         if (context == null) {
             return new HashSet<>();
@@ -141,6 +143,8 @@ public class CauseContextHelper {
 
         final boolean canManageDefaults = src.hasPermission(GDPermissions.MANAGE_FLAG_DEFAULTS);
         final boolean canManageOverrides = src.hasPermission(GDPermissions.MANAGE_FLAG_OVERRIDES);
+        boolean hasSourceContext = false;
+        boolean hasTargetContext = false;
         final Set<Context> contextSet = new HashSet<>();
         final String contexts = matcher.group(1);
         String[] split = contexts.split(",");
@@ -232,7 +236,12 @@ public class CauseContextHelper {
             } else if (contextName.equals("meta")) {
                 contextSet.add(new Context(contextName, arg1));
             } else if (contextName.equals("source")) {
-                contextSet.add(new Context(contextName, id));
+                hasSourceContext = true;
+                if (!arg1.contains("#") && !arg1.equalsIgnoreCase("any") && !arg1.equalsIgnoreCase("all")) {
+                    contextSet.add(new Context(contextName, id));
+                } else {
+                    contextSet.add(new Context(contextName, arg1));
+                }
             } else if (contextName.contentEquals("state")) {
                 contextSet.add(new Context(contextName, id));
             } else if (contextName.equals("used_item")) {
@@ -243,7 +252,13 @@ public class CauseContextHelper {
                 }
                 contextSet.add(new Context(contextName, type.getId()));
             } else {
-                if (arg2 == null) {
+                if (contextName.equals("target")) {
+                    hasTargetContext = true;
+                    if (permission.equals(Options.SPAWN_LIMIT.getPermission())
+                            && !arg1.contains("#") && !arg1.equalsIgnoreCase("any") && !arg1.equalsIgnoreCase("all")) {
+                        contextSet.add(new Context(contextName, id));
+                    }
+                } else if (arg2 == null) {
                     contextSet.add(new Context(contextName, arg1));
                 } else {
                     contextSet.add(new Context(contextName, id));
@@ -251,6 +266,14 @@ public class CauseContextHelper {
             }
         }
 
+        if (permission.equals(Options.SPAWN_LIMIT.getPermission())) {
+            if (!hasSourceContext) {
+                contextSet.add(ContextGroups.SOURCE_ALL);
+            }
+            if (!hasTargetContext) {
+                contextSet.add(ContextGroups.TARGET_ALL);
+            }
+        }
         return contextSet;
     }
 }

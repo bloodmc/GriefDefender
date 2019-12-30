@@ -31,7 +31,6 @@ import com.google.common.collect.ImmutableSet;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.GriefDefender;
-import com.griefdefender.api.Tristate;
 import com.griefdefender.api.claim.Claim;
 import com.griefdefender.api.claim.ClaimContexts;
 import com.griefdefender.api.claim.ClaimResult;
@@ -54,7 +53,6 @@ import com.griefdefender.event.GDCauseStackManager;
 import com.griefdefender.event.GDRemoveClaimEvent;
 import com.griefdefender.internal.util.VecHelper;
 import com.griefdefender.permission.GDPermissionUser;
-import com.griefdefender.permission.GDPermissions;
 import com.griefdefender.permission.flag.FlagContexts;
 import com.griefdefender.permission.option.GDOption;
 import com.griefdefender.registry.FlagRegistryModule;
@@ -386,11 +384,11 @@ public abstract class BaseStorage {
                 if (flag == null) {
                     continue;
                 }
-                PermissionUtil.getInstance().setTransientPermission(GriefDefenderPlugin.DEFAULT_HOLDER, GDPermissions.FLAG_BASE + "." + mapEntry.getKey(), mapEntry.getValue(), contexts);
+                PermissionUtil.getInstance().setTransientPermission(GriefDefenderPlugin.DEFAULT_HOLDER, flag.getPermission(), mapEntry.getValue(), contexts);
                 if (flag == Flags.ENTITY_DAMAGE) {
                     // allow monsters to be attacked by default
                     contexts.add(FlagContexts.TARGET_TYPE_MONSTER);
-                    PermissionUtil.getInstance().setTransientPermission(GriefDefenderPlugin.DEFAULT_HOLDER, GDPermissions.FLAG_BASE + "." + mapEntry.getKey(), true, contexts);
+                    PermissionUtil.getInstance().setTransientPermission(GriefDefenderPlugin.DEFAULT_HOLDER, flag.getPermission(), true, contexts);
                     contexts.remove(FlagContexts.TARGET_TYPE_MONSTER);
                 }
             }

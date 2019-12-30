@@ -249,6 +249,7 @@ public class MessageCache {
     public Component FLAG_UI_OVERRIDE_NO_PERMISSION;
     public Component FLAG_UI_RETURN_FLAGS;
     public Component LABEL_ACCESSORS;
+    public Component LABEL_ALL;
     public Component LABEL_AREA;
     public Component LABEL_BLOCKS;
     public Component LABEL_BUILDERS;
@@ -292,6 +293,8 @@ public class MessageCache {
     public Component MODE_NATURE;
     public Component MODE_SUBDIVISION;
     public Component MODE_TOWN;
+    public Component OPTION_APPLY_PLAYER_DENY_FLIGHT;
+    public Component OPTION_APPLY_PLAYER_DENY_GODMODE;
     public Component OPTION_DESCRIPTION_ABANDON_DELAY;
     public Component OPTION_DESCRIPTION_ABANDON_RETURN_RATIO;
     public Component OPTION_DESCRIPTION_BLOCKS_ACCRUED_PER_HOUR;
@@ -311,7 +314,8 @@ public class MessageCache {
     public Component OPTION_DESCRIPTION_MIN_SIZE_X;
     public Component OPTION_DESCRIPTION_MIN_SIZE_Y;
     public Component OPTION_DESCRIPTION_MIN_SIZE_Z;
-    public Component OPTION_DESCRIPTION_PLAYER_COMMAND;
+    public Component OPTION_DESCRIPTION_PLAYER_COMMAND_ENTER;
+    public Component OPTION_DESCRIPTION_PLAYER_COMMAND_EXIT;
     public Component OPTION_DESCRIPTION_PLAYER_DENY_FLIGHT;
     public Component OPTION_DESCRIPTION_PLAYER_DENY_GODMODE;
     public Component OPTION_DESCRIPTION_PLAYER_DENY_HUNGER;
@@ -326,7 +330,7 @@ public class MessageCache {
     public Component OPTION_DESCRIPTION_TAX_EXPIRATION;
     public Component OPTION_DESCRIPTION_TAX_EXPIRATION_DAYS_KEEP;
     public Component OPTION_DESCRIPTION_TAX_RATE;
-    public Component OPTION_PLAYER_DENY_FLIGHT;
+    public Component OPTION_UI_CLICK_REMOVE;
     public Component OWNER_ADMIN;
     public Component PERMISSION_ASSIGN_WITHOUT_HAVING;
     public Component PERMISSION_CLAIM_CREATE;
@@ -345,6 +349,8 @@ public class MessageCache {
     public Component PERMISSION_FIRE_SPREAD;
     public Component PERMISSION_FLAG_DEFAULTS;
     public Component PERMISSION_FLAG_OVERRIDES;
+    public Component PERMISSION_FLAG_ARG;
+    public Component PERMISSION_FLAG_GUI;
     public Component PERMISSION_FLAG_USE;
     public Component PERMISSION_FLOW_LIQUID;
     public Component PERMISSION_GLOBAL_OPTION;
@@ -607,6 +613,7 @@ public class MessageCache {
         FLAG_UI_OVERRIDE_NO_PERMISSION = MessageStorage.MESSAGE_DATA.getMessage("flag-ui-override-no-permission");
         FLAG_UI_RETURN_FLAGS = MessageStorage.MESSAGE_DATA.getMessage("flag-ui-return-flags");
         LABEL_ACCESSORS = MessageStorage.MESSAGE_DATA.getMessage("label-accessors");
+        LABEL_ALL = MessageStorage.MESSAGE_DATA.getMessage("label-all");
         LABEL_AREA = MessageStorage.MESSAGE_DATA.getMessage("label-area");
         LABEL_BLOCKS = MessageStorage.MESSAGE_DATA.getMessage("label-blocks");
         LABEL_BUILDERS = MessageStorage.MESSAGE_DATA.getMessage("label-builders");
@@ -669,7 +676,8 @@ public class MessageCache {
         OPTION_DESCRIPTION_MIN_SIZE_X = MessageStorage.MESSAGE_DATA.getMessage("option-description-min-size-x");
         OPTION_DESCRIPTION_MIN_SIZE_Y = MessageStorage.MESSAGE_DATA.getMessage("option-description-min-size-y");
         OPTION_DESCRIPTION_MIN_SIZE_Z = MessageStorage.MESSAGE_DATA.getMessage("option-description-min-size-z");
-        OPTION_DESCRIPTION_PLAYER_COMMAND = MessageStorage.MESSAGE_DATA.getMessage("option-description-player-command");
+        OPTION_DESCRIPTION_PLAYER_COMMAND_ENTER = MessageStorage.MESSAGE_DATA.getMessage("option-description-player-command-enter");
+        OPTION_DESCRIPTION_PLAYER_COMMAND_EXIT = MessageStorage.MESSAGE_DATA.getMessage("option-description-player-command-exit");
         OPTION_DESCRIPTION_PLAYER_DENY_FLIGHT = MessageStorage.MESSAGE_DATA.getMessage("option-description-player-deny-flight");
         OPTION_DESCRIPTION_PLAYER_DENY_GODMODE = MessageStorage.MESSAGE_DATA.getMessage("option-description-player-deny-godmode");
         OPTION_DESCRIPTION_PLAYER_DENY_HUNGER = MessageStorage.MESSAGE_DATA.getMessage("option-description-player-deny-hunger");
@@ -684,7 +692,9 @@ public class MessageCache {
         OPTION_DESCRIPTION_TAX_EXPIRATION = MessageStorage.MESSAGE_DATA.getMessage("option-description-tax-expiration");
         OPTION_DESCRIPTION_TAX_EXPIRATION_DAYS_KEEP = MessageStorage.MESSAGE_DATA.getMessage("option-description-tax-expiration-days-keep");
         OPTION_DESCRIPTION_TAX_RATE = MessageStorage.MESSAGE_DATA.getMessage("option-description-tax-rate");
-        OPTION_PLAYER_DENY_FLIGHT = MessageStorage.MESSAGE_DATA.getMessage("option-player-deny-flight");
+        OPTION_APPLY_PLAYER_DENY_FLIGHT = MessageStorage.MESSAGE_DATA.getMessage("option-apply-player-deny-flight");
+        OPTION_APPLY_PLAYER_DENY_GODMODE = MessageStorage.MESSAGE_DATA.getMessage("option-apply-player-deny-godmode");
+        OPTION_UI_CLICK_REMOVE = MessageStorage.MESSAGE_DATA.getMessage("option-ui-click-remove");
         OWNER_ADMIN = MessageStorage.MESSAGE_DATA.getMessage("owner-admin");
         PERMISSION_ASSIGN_WITHOUT_HAVING = MessageStorage.MESSAGE_DATA.getMessage("permission-assign-without-having");
         PERMISSION_CLAIM_CREATE = MessageStorage.MESSAGE_DATA.getMessage("permission-claim-create");
@@ -703,6 +713,8 @@ public class MessageCache {
         PERMISSION_FIRE_SPREAD = MessageStorage.MESSAGE_DATA.getMessage("permission-fire-spread");
         PERMISSION_FLAG_DEFAULTS = MessageStorage.MESSAGE_DATA.getMessage("permission-flag-defaults");
         PERMISSION_FLAG_OVERRIDES = MessageStorage.MESSAGE_DATA.getMessage("permission-flag-overrides");
+        PERMISSION_FLAG_ARG = MessageStorage.MESSAGE_DATA.getMessage("permission-flag-arg");
+        PERMISSION_FLAG_GUI = MessageStorage.MESSAGE_DATA.getMessage("permission-flag-gui");
         PERMISSION_FLAG_USE = MessageStorage.MESSAGE_DATA.getMessage("permission-flag-use");
         PERMISSION_FLOW_LIQUID = MessageStorage.MESSAGE_DATA.getMessage("permission-flow-liquid");
         PERMISSION_GLOBAL_OPTION = MessageStorage.MESSAGE_DATA.getMessage("permission-global-option");

@@ -38,9 +38,12 @@ import com.griefdefender.util.RegistryHelper;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 @SuppressWarnings("rawtypes")
 public class OptionRegistryModule implements CatalogRegistryModule<Option> {
@@ -111,7 +114,8 @@ public class OptionRegistryModule implements CatalogRegistryModule<Option> {
         this.createKey("griefdefender:radius-inspect", "radius-inspect", Integer.class);
         this.createKey("griefdefender:raid", "raid", Boolean.class);
         this.createKey("griefdefender:spawn-limit", "spawn-limit", Integer.class);
-        this.createKey("griefdefender:player-command", "player-command", String.class);
+        this.createKey("griefdefender:player-command-enter", "player-command-enter", true, List.class);
+        this.createKey("griefdefender:player-command-exit", "player-command-exit", true, List.class);
         this.createKey("griefdefender:player-deny-flight", "player-deny-flight", Boolean.class);
         this.createKey("griefdefender:player-deny-godmode", "player-deny-godmode", Boolean.class);
         this.createKey("griefdefender:player-deny-hunger", "player-deny-hunger", Boolean.class);
@@ -120,9 +124,12 @@ public class OptionRegistryModule implements CatalogRegistryModule<Option> {
         this.createKey("griefdefender:player-keep-inventory", "player-keep-inventory", Tristate.class);
         this.createKey("griefdefender:player-keep-level", "player-keep-level", Tristate.class);
         this.createKey("griefdefender:player-teleport-delay", "player-teleport-delay", Integer.class);
-        this.createKey("griefdefender:player-walk-speed", "player-walk-speed", Integer.class);
+        this.createKey("griefdefender:player-walk-speed", "player-walk-speed", Double.class);
         this.createKey("griefdefender:player-weather", "player-weather", WeatherType.class);
         this.createKey("griefdefender:pvp", "pvp", Tristate.class);
+        this.createKey("griefdefender:pvp-combat-command", "pvp-combat-command", Boolean.class);
+        this.createKey("griefdefender:pvp-combat-teleport", "pvp-combat-teleport", Boolean.class);
+        this.createKey("griefdefender:pvp-combat-timeout", "pvp-combat-timeout", Integer.class);
 
         RegistryHelper.mapFields(Options.class, input -> {
             final String name = input.replace("_", "-");
@@ -131,7 +138,15 @@ public class OptionRegistryModule implements CatalogRegistryModule<Option> {
     }
 
     private void createKey(String id, String name, Class<?> clazz) {
-        this.registryMap.put(id, new GDOption<>(id, name, clazz));
+        this.createKey(id, name, false, new HashSet<>(), clazz);
+    }
+
+    private void createKey(String id, String name, boolean multiValued, Class<?> clazz) {
+        this.createKey(id, name, multiValued, new HashSet<>(), clazz);
+    }
+
+    private void createKey(String id, String name, boolean multiValued, Set<String> requiredContextKeys, Class<?> clazz) {
+        this.registryMap.put(id, new GDOption<>(id, name, null, multiValued, requiredContextKeys, clazz));
     }
 
     @Override

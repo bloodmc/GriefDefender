@@ -44,7 +44,6 @@ import com.griefdefender.api.permission.option.Option;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.claim.GDClaimManager;
 import com.griefdefender.claim.GDClaimResult;
-import com.griefdefender.claim.GDClaimType;
 import com.griefdefender.configuration.ClaimTemplateStorage;
 import com.griefdefender.configuration.GriefDefenderConfig;
 import com.griefdefender.configuration.MessageStorage;
@@ -53,18 +52,15 @@ import com.griefdefender.configuration.type.GlobalConfig;
 import com.griefdefender.event.GDCauseStackManager;
 import com.griefdefender.event.GDRemoveClaimEvent;
 import com.griefdefender.permission.GDPermissionUser;
-import com.griefdefender.permission.GDPermissions;
 import com.griefdefender.permission.flag.FlagContexts;
 import com.griefdefender.permission.option.GDOption;
 import com.griefdefender.registry.FlagRegistryModule;
 import com.griefdefender.registry.OptionRegistryModule;
 import com.griefdefender.util.PermissionUtil;
-import com.griefdefender.util.SpongeContexts;
 import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextColor;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandSource;
-import org.spongepowered.api.service.permission.SubjectData;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 import org.spongepowered.api.world.storage.WorldProperties;
@@ -376,7 +372,6 @@ public abstract class BaseStorage {
         this.setDefaultFlags(contexts, globalDefaultFlags);
         final Map<String, String> globalDefaultOptions = activeConfig.getConfig().permissionCategory.getUserOptionDefaults();
         this.setDefaultOptions(ClaimContexts.GLOBAL_DEFAULT_CONTEXT.getName(), contexts, new HashMap<>(globalDefaultOptions));
-        // TODO - does not work with LP v5
         //GriefDefenderPlugin.getInstance().getPermissionProvider().setTransientPermission(GriefDefenderPlugin.DEFAULT_HOLDER, "griefdefender", false, new HashSet<>());
         activeConfig.save();
     }
@@ -388,11 +383,11 @@ public abstract class BaseStorage {
                 if (flag == null) {
                     continue;
                 }
-                PermissionUtil.getInstance().setTransientPermission(GriefDefenderPlugin.DEFAULT_HOLDER, GDPermissions.FLAG_BASE + "." + mapEntry.getKey(), mapEntry.getValue(), contexts);
+                PermissionUtil.getInstance().setTransientPermission(GriefDefenderPlugin.DEFAULT_HOLDER, flag.getPermission(), mapEntry.getValue(), contexts);
                 if (flag == Flags.ENTITY_DAMAGE) {
                     // allow monsters to be attacked by default
                     contexts.add(FlagContexts.TARGET_TYPE_MONSTER);
-                    PermissionUtil.getInstance().setTransientPermission(GriefDefenderPlugin.DEFAULT_HOLDER, GDPermissions.FLAG_BASE + "." + mapEntry.getKey(), true, contexts);
+                    PermissionUtil.getInstance().setTransientPermission(GriefDefenderPlugin.DEFAULT_HOLDER, flag.getPermission(), true, contexts);
                     contexts.remove(FlagContexts.TARGET_TYPE_MONSTER);
                 }
             }

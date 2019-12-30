@@ -439,10 +439,6 @@ public class BlockUtil {
         return false;
     }
 
-    public Set<Claim> getNearbyClaims(Location<World> location) {
-        return getNearbyClaims(location, 50);
-    }
-
     public Set<Claim> getNearbyClaims(Location<World> location, int blockDistance) {
         Set<Claim> claims = new HashSet<>();
         GDClaimManager claimWorldManager = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(location.getExtent().getUniqueId());

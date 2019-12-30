@@ -36,6 +36,10 @@ import com.griefdefender.api.claim.ShovelTypes;
 import com.griefdefender.api.permission.flag.Flags;
 import com.griefdefender.api.permission.option.Options;
 import com.griefdefender.api.permission.option.type.CreateModeTypes;
+import com.griefdefender.api.permission.option.type.GameModeType;
+import com.griefdefender.api.permission.option.type.GameModeTypes;
+import com.griefdefender.api.permission.option.type.WeatherType;
+import com.griefdefender.api.permission.option.type.WeatherTypes;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.configuration.MessageStorage;
@@ -50,6 +54,7 @@ import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextColor;
 
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -60,6 +65,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.UUID;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -67,6 +73,16 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class PlayerUtil {
 
     private static BlockFace[] faces = { BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST};
+    public static Map<GameModeType, GameMode> GAMEMODE_MAP = ImmutableMap.of(
+        GameModeTypes.ADVENTURE, GameMode.ADVENTURE,
+        GameModeTypes.CREATIVE, GameMode.CREATIVE,
+        GameModeTypes.SPECTATOR, GameMode.SPECTATOR,
+        GameModeTypes.SURVIVAL, GameMode.SURVIVAL
+    );
+    public static Map<WeatherType, org.bukkit.WeatherType> WEATHERTYPE_MAP = ImmutableMap.of(
+        WeatherTypes.CLEAR, org.bukkit.WeatherType.CLEAR,
+        WeatherTypes.DOWNFALL, org.bukkit.WeatherType.DOWNFALL
+    );
 
     private static PlayerUtil instance;
 

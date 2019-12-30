@@ -40,7 +40,6 @@ import com.griefdefender.api.permission.flag.Flags;
 import com.griefdefender.api.permission.option.Options;
 import com.griefdefender.cache.EventResultCache;
 import com.griefdefender.cache.MessageCache;
-import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.claim.GDClaimManager;
 import com.griefdefender.configuration.GriefDefenderConfig;
@@ -192,7 +191,7 @@ public class BlockEventHandler implements Listener {
             final Location faceLocation = BlockUtil.getInstance().getBlockRelative(location, face);
             final GDClaim targetClaim = this.storage.getClaimAt(faceLocation);
             final ItemStack activeItem = user != null && user.getOnlinePlayer() != null ? NMSUtil.getInstance().getActiveItem(user.getOnlinePlayer()) : null;
-            final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, GDPermissions.INTERACT_BLOCK_SECONDARY, activeItem, event.getBlock(), user, TrustTypes.BUILDER, true);
+            final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, Flags.INTERACT_BLOCK_SECONDARY, activeItem, event.getBlock(), user, TrustTypes.BUILDER, true);
             if (result == Tristate.FALSE) {
                 event.setCancelled(true);
             } else {
@@ -215,7 +214,7 @@ public class BlockEventHandler implements Listener {
             return;
         }
 
-        final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, GDPermissions.BLOCK_GROW, null, event.getBlock(), (GDPermissionUser) null, TrustTypes.BUILDER, false);
+        final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, Flags.BLOCK_GROW, null, event.getBlock(), (GDPermissionUser) null, TrustTypes.BUILDER, false);
         if (result == Tristate.FALSE) {
             event.setCancelled(true);
             return;
@@ -237,7 +236,7 @@ public class BlockEventHandler implements Listener {
                 continue;
             }
     
-            final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, GDPermissions.BLOCK_GROW, null, blockstate, event.getPlayer(), TrustTypes.BUILDER, true);
+            final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, Flags.BLOCK_GROW, null, blockstate, event.getPlayer(), TrustTypes.BUILDER, true);
             if (result == Tristate.FALSE) {
                 event.setCancelled(true);
                 return;
@@ -266,7 +265,7 @@ public class BlockEventHandler implements Listener {
         }
 
         if (fromBlock.isLiquid()) {
-            final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, GDPermissions.LIQUID_FLOW, fromBlock, toBlock, user, TrustTypes.BUILDER, true);
+            final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, Flags.LIQUID_FLOW, fromBlock, toBlock, user, TrustTypes.BUILDER, true);
             if (result == Tristate.FALSE) {
                 event.setCancelled(true);
                 return;
@@ -278,7 +277,7 @@ public class BlockEventHandler implements Listener {
 
     private boolean handleBlockBreak(BlockEvent event, Location location, GDClaim claim, Object source, Object target, GDPermissionUser user, boolean sendDenyMessage) {
         // check overrides
-        final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, claim, GDPermissions.BLOCK_BREAK, source, target, user, TrustTypes.BUILDER, true);
+        final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, claim, Flags.BLOCK_BREAK, source, target, user, TrustTypes.BUILDER, true);
         if (result == Tristate.FALSE) {
             if (sendDenyMessage && user != null) {
                 final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_BUILD,
@@ -330,7 +329,7 @@ public class BlockEventHandler implements Listener {
         GDClaim targetClaim = this.storage.getClaimAt(location);
 
         // check overrides
-        final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, GDPermissions.LEAF_DECAY, event.getBlock().getWorld(), event.getBlock(), (GDPermissionUser) null);
+        final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, Flags.LEAF_DECAY, event.getBlock().getWorld(), event.getBlock(), (GDPermissionUser) null);
         if (result == Tristate.FALSE) {
             event.setCancelled(true);
         }
@@ -425,7 +424,7 @@ public class BlockEventHandler implements Listener {
         for (Block block : event.blockList()) {
             final Location location = block.getLocation();
             targetClaim =  GriefDefenderPlugin.getInstance().dataStore.getClaimAt(location, targetClaim);
-            Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, GDPermissions.EXPLOSION_BLOCK, source, location.getBlock(), user, true);
+            Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, Flags.EXPLOSION_BLOCK, source, location.getBlock(), user, true);
             if (result == Tristate.FALSE) {
                 // Avoid lagging server from large explosions.
                 if (event.blockList().size() > 100) {
@@ -472,7 +471,7 @@ public class BlockEventHandler implements Listener {
         }
 
         // check overrides
-        final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, GDPermissions.BLOCK_BREAK, player, event.getBlock(), player, TrustTypes.BUILDER, true);
+        final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, Flags.BLOCK_BREAK, player, event.getBlock(), player, TrustTypes.BUILDER, true);
         if (result == Tristate.FALSE) {
             if (player != null) {
                 Component message = GDPermissionManager.getInstance().getEventMessage();
@@ -535,7 +534,7 @@ public class BlockEventHandler implements Listener {
 
         if (GDFlags.BLOCK_PLACE) {
             // check overrides
-            final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, GDPermissions.BLOCK_PLACE, player, block, player, TrustTypes.BUILDER, true);
+            final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, Flags.BLOCK_PLACE, player, block, player, TrustTypes.BUILDER, true);
             if (result == Tristate.FALSE) {
                 event.setCancelled(true);
                 GDTimings.BLOCK_PLACE_EVENT.stopTiming();

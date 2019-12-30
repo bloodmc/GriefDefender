@@ -27,17 +27,16 @@ package com.griefdefender;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.reflect.TypeToken;
-import com.griefdefender.api.Tristate;
 import com.griefdefender.api.claim.Claim;
 import com.griefdefender.api.claim.ClaimType;
 import com.griefdefender.api.claim.ShovelType;
 import com.griefdefender.api.claim.ShovelTypes;
 import com.griefdefender.api.data.PlayerData;
 import com.griefdefender.api.permission.Context;
-import com.griefdefender.api.permission.flag.Flag;
 import com.griefdefender.api.permission.option.Options;
 import com.griefdefender.api.permission.option.type.CreateModeType;
 import com.griefdefender.api.permission.option.type.CreateModeTypes;
+import com.griefdefender.api.permission.option.type.WeatherType;
 import com.griefdefender.cache.EventResultCache;
 import com.griefdefender.cache.MessageCache;
 import com.griefdefender.cache.PermissionHolderCache;
@@ -53,9 +52,7 @@ import net.kyori.text.Component;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.data.Transaction;
-import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.entity.living.player.Player;
-import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.service.economy.Currency;
 import org.spongepowered.api.service.economy.account.Account;
@@ -64,6 +61,7 @@ import org.spongepowered.api.world.World;
 
 import java.lang.ref.WeakReference;
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -122,6 +120,7 @@ public class GDPlayerData implements PlayerData {
     public Location<World> teleportLocation;
 
     public Instant lastPvpTimestamp;
+    public WeatherType lastWeatherType;
 
     // cached global option values
     public int minClaimLevel;
@@ -519,45 +518,6 @@ public class GDPlayerData implements PlayerData {
         return this.ignoreBasicClaims;
     }
 
-    public boolean canManageOption(Player player, GDClaim claim, boolean isGroup) {
-        if (claim.allowEdit(player) != null) {
-            return false;
-        }
-
-        if (claim.isWilderness()) {
-            return player.hasPermission(GDPermissions.MANAGE_WILDERNESS);
-        }
-        if (isGroup) {
-            if (claim.isTown() && player.hasPermission(GDPermissions.COMMAND_CLAIM_OPTIONS_GROUP_TOWN)) {
-                return true;
-            }
-            if (claim.isAdminClaim() && player.hasPermission(GDPermissions.COMMAND_CLAIM_OPTIONS_GROUP_ADMIN)) {
-                return true;
-            }
-            if (claim.isBasicClaim() && player.hasPermission(GDPermissions.COMMAND_CLAIM_OPTIONS_GROUP_BASIC)) {
-                return true;
-            }
-            if (claim.isSubdivision() && player.hasPermission(GDPermissions.COMMAND_CLAIM_OPTIONS_GROUP_SUBDIVISION)) {
-                return true;
-            }
-        } else {
-            if (claim.isTown() && player.hasPermission(GDPermissions.COMMAND_CLAIM_OPTIONS_PLAYER_TOWN)) {
-                return true;
-            }
-            if (claim.isAdminClaim() && player.hasPermission(GDPermissions.COMMAND_CLAIM_OPTIONS_PLAYER_ADMIN)) {
-                return true;
-            }
-            if (claim.isBasicClaim() && player.hasPermission(GDPermissions.COMMAND_CLAIM_OPTIONS_PLAYER_BASIC)) {
-                return true;
-            }
-            if (claim.isSubdivision() && player.hasPermission(GDPermissions.COMMAND_CLAIM_OPTIONS_PLAYER_SUBDIVISION)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     @Override
     public int getMaxAccruedClaimBlocks() {
         return GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), this.getSubject(), Options.MAX_ACCRUED_BLOCKS);
@@ -670,19 +630,52 @@ public class GDPlayerData implements PlayerData {
         return totalTax;
     }
 
-    public boolean inPvpCombat(World world) {
-        if (this.lastPvpTimestamp == null) {
+    public boolean inPvpCombat() {
+        final Player player = this.getSubject().getOnlinePlayer();
+        if (this.lastPvpTimestamp == null || player == null) {
             return false;
         }
 
         final Instant now = Instant.now();
-        final int combatTimeout = GriefDefenderPlugin.getActiveConfig(world.getProperties()).getConfig().pvp.combatTimeout;
+        final int combatTimeout = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), player, Options.PVP_COMBAT_TIMEOUT);
+        if (combatTimeout <= 0) {
+            return false;
+        }
+
         if (this.lastPvpTimestamp.plusSeconds(combatTimeout).isBefore(now)) {
             this.lastPvpTimestamp = null;
             return false;
         }
 
         return true;
+    }
+
+    public int getPvpCombatTimeRemaining() {
+        final Player player = this.getSubject().getOnlinePlayer();
+        if (this.lastPvpTimestamp == null || player == null) {
+            return 0;
+        }
+
+        final Instant now = Instant.now();
+        final int combatTimeout = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), player, Options.PVP_COMBAT_TIMEOUT);
+        if (combatTimeout <= 0) {
+            return 0;
+        }
+
+        if (this.lastPvpTimestamp.plusSeconds(combatTimeout).isBefore(now)) {
+            this.lastPvpTimestamp = null;
+            return 0;
+        }
+
+        final int duration = (int) Duration.between(this.lastPvpTimestamp, now).getSeconds();
+        return combatTimeout - duration;
+    }
+
+    public void onClaimDelete() {
+        this.lastShovelLocation = null;
+        this.eventResultCache = null;
+        this.claimResizing = null;
+        this.claimSubdividing = null;
     }
 
     public void onDisconnect() {

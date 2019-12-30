@@ -178,6 +178,7 @@ public class CommandClaimAbandon extends BaseCommand {
                 return;
             }
 
+            playerData.onClaimDelete();
             // remove all context permissions
             PermissionUtil.getInstance().clearPermissions(claim);
             playerData.revertActiveVisual(player);

@@ -518,45 +518,6 @@ public class GDPlayerData implements PlayerData {
         return this.ignoreBasicClaims;
     }
 
-    public boolean canManageOption(Player player, GDClaim claim, boolean isGroup) {
-        if (claim.allowEdit(player) != null) {
-            return false;
-        }
-
-        if (claim.isWilderness()) {
-            return player.hasPermission(GDPermissions.MANAGE_WILDERNESS);
-        }
-        if (isGroup) {
-            if (claim.isTown() && player.hasPermission(GDPermissions.COMMAND_CLAIM_OPTIONS_GROUP_TOWN)) {
-                return true;
-            }
-            if (claim.isAdminClaim() && player.hasPermission(GDPermissions.COMMAND_CLAIM_OPTIONS_GROUP_ADMIN)) {
-                return true;
-            }
-            if (claim.isBasicClaim() && player.hasPermission(GDPermissions.COMMAND_CLAIM_OPTIONS_GROUP_BASIC)) {
-                return true;
-            }
-            if (claim.isSubdivision() && player.hasPermission(GDPermissions.COMMAND_CLAIM_OPTIONS_GROUP_SUBDIVISION)) {
-                return true;
-            }
-        } else {
-            if (claim.isTown() && player.hasPermission(GDPermissions.COMMAND_CLAIM_OPTIONS_PLAYER_TOWN)) {
-                return true;
-            }
-            if (claim.isAdminClaim() && player.hasPermission(GDPermissions.COMMAND_CLAIM_OPTIONS_PLAYER_ADMIN)) {
-                return true;
-            }
-            if (claim.isBasicClaim() && player.hasPermission(GDPermissions.COMMAND_CLAIM_OPTIONS_PLAYER_BASIC)) {
-                return true;
-            }
-            if (claim.isSubdivision() && player.hasPermission(GDPermissions.COMMAND_CLAIM_OPTIONS_PLAYER_SUBDIVISION)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     @Override
     public int getMaxAccruedClaimBlocks() {
         return GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), this.getSubject(), Options.MAX_ACCRUED_BLOCKS);
@@ -669,19 +630,45 @@ public class GDPlayerData implements PlayerData {
         return totalTax;
     }
 
-    public boolean inPvpCombat(World world) {
-        if (this.lastPvpTimestamp == null) {
+    public boolean inPvpCombat() {
+        final Player player = this.getSubject().getOnlinePlayer();
+        if (this.lastPvpTimestamp == null || player == null) {
             return false;
         }
 
         final Instant now = Instant.now();
-        final int combatTimeout = GriefDefenderPlugin.getActiveConfig(world).getConfig().pvp.combatTimeout;
+        final int combatTimeout = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), player, Options.PVP_COMBAT_TIMEOUT);
+        if (combatTimeout <= 0) {
+            return false;
+        }
+
         if (this.lastPvpTimestamp.plusSeconds(combatTimeout).isBefore(now)) {
             this.lastPvpTimestamp = null;
             return false;
         }
 
         return true;
+    }
+
+    public int getPvpCombatTimeRemaining() {
+        final Player player = this.getSubject().getOnlinePlayer();
+        if (this.lastPvpTimestamp == null || player == null) {
+            return 0;
+        }
+
+        final Instant now = Instant.now();
+        final int combatTimeout = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), player, Options.PVP_COMBAT_TIMEOUT);
+        if (combatTimeout <= 0) {
+            return 0;
+        }
+
+        if (this.lastPvpTimestamp.plusSeconds(combatTimeout).isBefore(now)) {
+            this.lastPvpTimestamp = null;
+            return 0;
+        }
+
+        final int duration = (int) Duration.between(this.lastPvpTimestamp, now).getSeconds();
+        return combatTimeout - duration;
     }
 
     public void onClaimDelete() {

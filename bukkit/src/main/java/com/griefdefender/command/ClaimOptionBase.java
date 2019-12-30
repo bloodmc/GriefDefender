@@ -91,6 +91,8 @@ import java.util.TreeMap;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @SuppressWarnings({ "unchecked", "rawtypes" })
 public abstract class ClaimOptionBase extends BaseCommand {
@@ -121,16 +123,30 @@ public abstract class ClaimOptionBase extends BaseCommand {
                 throw new InvalidCommandArgument();
             }
             commandOption = args[0];
-            value = args[1];
+            // Check for quoted string
+            Pattern pattern = Pattern.compile("\"(.*)\"");
+            Matcher matcher = pattern.matcher(arguments);
+            if (matcher.find()) {
+                value = matcher.group(1);
+            } else {
+                value = args[1];
+            }
         }
 
-        Option option = null;
+        Option<?> option = null;
         if (commandOption != null) {
             option = GriefDefender.getRegistry().getType(Option.class, commandOption).orElse(null);
-            if (commandOption != null && option == null) {
+            if (option == null) {
                 TextAdapter.sendComponent(player, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.OPTION_NOT_FOUND, ImmutableMap.of(
                         "option", commandOption)));
                 return;
+            }
+            if (option == Options.PLAYER_COMMAND_ENTER || option == Options.PLAYER_COMMAND_EXIT) {
+                if (contexts == null) {
+                    TextAdapter.sendComponent(player, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.OPTION_REQUIRES_CONTEXTS, ImmutableMap.of(
+                            "contexts", "run-as=[player|console] run-for=[public|owner|member]")));
+                    return;
+                }
             }
         }
 
@@ -142,7 +158,7 @@ public abstract class ClaimOptionBase extends BaseCommand {
                 return;
             }
         } else if (!claim.isTown() && !playerData.canManageAdminClaims && !playerData.canIgnoreClaim(claim)) {
-            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().PERMISSION_GLOBAL_OPTION);
+            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().PERMISSION_PLAYER_OPTION);
             return;
         }
         if (option != null) {
@@ -165,9 +181,31 @@ public abstract class ClaimOptionBase extends BaseCommand {
             }
         }
 
-        final Set<Context> contextSet = CauseContextHelper.generateContexts(player, claim, contexts);
+        final Set<Context> contextSet = CauseContextHelper.generateContexts(option.getPermission(), player, claim, contexts);
         if (contextSet == null) {
             return;
+        }
+        if (option == Options.PLAYER_COMMAND_ENTER || option == Options.PLAYER_COMMAND_EXIT) {
+            final Set<String> requiredKeys = (Set<String>) option.getRequiredContextKeys();
+            for (String key : requiredKeys) {
+                boolean found = false;
+                for (Context context : contextSet) {
+                    if (context.getKey().equalsIgnoreCase(key)) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    TextAdapter.sendComponent(player, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.OPTION_REQUIRES_CONTEXTS, ImmutableMap.of(
+                            "contexts", key)));
+                    return;
+                }
+            }
+            if (contexts == null) {
+                TextAdapter.sendComponent(player, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.OPTION_REQUIRES_CONTEXTS, ImmutableMap.of(
+                        "contexts", "run-as=[player|console] run-for=[public|owner|member]")));
+                return;
+            }
         }
 
         if (claim != null) {
@@ -521,7 +559,11 @@ public abstract class ClaimOptionBase extends BaseCommand {
             }
         }
 
-        final boolean customContexts = UIHelper.containsCustomContext(contexts);
+        boolean customContexts = UIHelper.containsCustomContext(contexts);
+        // special case
+        if (option == Options.PLAYER_COMMAND_ENTER || option == Options.PLAYER_COMMAND_EXIT) {
+            customContexts = true;
+        }
         Component optionContexts = UIHelper.getFriendlyContextString(claim, contexts);
         String currentValue = optionHolder.getValue();
         TextColor color = optionHolder.getColor();
@@ -549,11 +591,12 @@ public abstract class ClaimOptionBase extends BaseCommand {
         }
         if (hasEditPermission) {
             if (!option.getAllowedType().isAssignableFrom(Integer.class) && !option.getAllowedType().isAssignableFrom(Double.class)) {
+                this.appendContexts(builder, contexts);
                 builder.clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(newOptionValueConsumer(src, claim, option, optionHolder, contexts, displayType, false))));
             } else {
-                builder.append(TextComponent.builder()
-                        .append(TextComponent.of(" >").decoration(TextDecoration.BOLD, true))
-                        .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(newOptionValueConsumer(src, claim, option, optionHolder, contexts, displayType, false)))));
+                builder.append(TextComponent.builder().append(TextComponent.of(" >").decoration(TextDecoration.BOLD, true)));
+                this.appendContexts(builder, contexts);
+                builder.clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(newOptionValueConsumer(src, claim, option, optionHolder, contexts, displayType, false))));
             }
 
             if (option.getAllowedType().isAssignableFrom(String.class)) {
@@ -568,7 +611,49 @@ public abstract class ClaimOptionBase extends BaseCommand {
                             "value", TextComponent.of(currentValue).color(TextColor.GOLD)))).build()));
         }
 
+        if (customContexts) {
+            builder.append(" ")
+                .append("[", TextColor.WHITE)
+                .append(TextComponent.builder()
+                        .append("x", TextColor.RED)
+                        .hoverEvent(HoverEvent.showText(MessageCache.getInstance().FLAG_UI_CLICK_REMOVE))
+                        .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(removeOptionValueConsumer(src, claim, option, optionHolder, contexts, displayType))))
+                        .build())
+                .append("]", TextColor.WHITE);
+        }
+
         return builder.build();
+    }
+
+    private void appendContexts(TextComponent.Builder builder, Set<Context> contexts) {
+        // check source/target
+        Component source = null;
+        Component target = null;
+        final Component whiteOpenBracket = TextComponent.of("[", TextColor.WHITE);
+        final Component whiteCloseBracket = TextComponent.of("]", TextColor.WHITE);
+        for (Context context : contexts) {
+            if (context.getKey().equals(ContextKeys.SOURCE)) {
+                source = TextComponent.builder()
+                            .append(whiteOpenBracket)
+                            .append("s", TextColor.GREEN)
+                            .append("=", TextColor.WHITE)
+                            .append(context.getValue().replace("minecraft:", ""), TextColor.GOLD)
+                            .append(whiteCloseBracket)
+                            .hoverEvent(HoverEvent.showText(MessageCache.getInstance().LABEL_SOURCE))
+                            .build();
+                builder.append(" ").append(source);
+            } else if (context.getKey().equals(ContextKeys.TARGET)) {
+                target = TextComponent.builder()
+                        .append(whiteOpenBracket)
+                        .append("t", TextColor.GREEN)
+                        .append("=", TextColor.WHITE)
+                        .append(context.getValue().replace("minecraft:", ""), TextColor.GOLD)
+                        .append(whiteCloseBracket)
+                        .hoverEvent(HoverEvent.showText(MessageCache.getInstance().LABEL_TARGET))
+                        .build();
+                builder.append(" ").append(target);
+            }
+        }
     }
 
     private boolean containsDefaultContext(Set<Context> contexts) {
@@ -638,7 +723,7 @@ public abstract class ClaimOptionBase extends BaseCommand {
                 if (value == null || value == WeatherTypes.UNDEFINED) {
                     newValue = "clear";
                 } else if (value == WeatherTypes.CLEAR) {
-                    newValue = "rain";
+                    newValue = "downfall";
                 } else {
                     newValue = "undefined";
                 }
@@ -718,6 +803,13 @@ public abstract class ClaimOptionBase extends BaseCommand {
             }
 
             PermissionUtil.getInstance().setOptionValue(this.subject, option.getPermission(), newValue, newContexts);
+            showOptionPermissions(src, claim, displayType);
+        };
+    }
+
+    private Consumer<CommandSender> removeOptionValueConsumer(GDPermissionUser src, GDClaim claim, Option option, OptionContextHolder optionHolder, Set<Context> contexts, MenuType displayType) {
+        return consumer -> {
+            PermissionUtil.getInstance().setOptionValue(this.subject, option.getPermission(), "undefined", contexts);
             showOptionPermissions(src, claim, displayType);
         };
     }
@@ -882,8 +974,8 @@ public abstract class ClaimOptionBase extends BaseCommand {
             if (value.equalsIgnoreCase("clear")) {
                 return (T) WeatherTypes.CLEAR;
             }
-            if (value.equalsIgnoreCase("rain")) {
-                return (T) WeatherTypes.RAIN;
+            if (value.equalsIgnoreCase("downfall")) {
+                return (T) WeatherTypes.DOWNFALL;
             }
         }
         if (type.getRawType().isAssignableFrom(CreateModeType.class)) {

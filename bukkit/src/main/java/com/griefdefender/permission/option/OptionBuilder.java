@@ -27,12 +27,19 @@ package com.griefdefender.permission.option;
 import com.griefdefender.api.permission.option.Option;
 import com.griefdefender.api.permission.option.Option.Builder;
 import com.griefdefender.registry.OptionRegistryModule;
+import net.kyori.text.Component;
+
+import java.util.HashSet;
+import java.util.Set;
 
 public final class OptionBuilder<T> implements Option.Builder<T> {
 
     Class<T> typeClass;
     String id;
     String name;
+    Component description;
+    boolean multiValued = false;
+    Set<String> requiredContextKeys = new HashSet<>();
 
     @Override
     public Builder<T> type(Class<T> tClass) {
@@ -53,6 +60,24 @@ public final class OptionBuilder<T> implements Option.Builder<T> {
     }
 
     @Override
+    public Builder<T> description(Component description) {
+        this.description = description;
+        return this;
+    }
+
+    @Override
+    public Builder<T> multiValued(boolean value) {
+        this.multiValued = value;
+        return this;
+    }
+
+    @Override
+    public Builder<T> requiredContextKeys(Set<String> keys) {
+        this.requiredContextKeys = keys;
+        return this;
+    }
+
+    @Override
     public Option<T> build() {
         final GDOption<T> key = new GDOption<>(this);
         OptionRegistryModule.getInstance().registerCustomType(key);
@@ -64,6 +89,8 @@ public final class OptionBuilder<T> implements Option.Builder<T> {
         this.typeClass = null;
         this.id = null;
         this.name = null;
+        this.multiValued = false;
+        this.requiredContextKeys = new HashSet<>();
         return this;
     }
 }

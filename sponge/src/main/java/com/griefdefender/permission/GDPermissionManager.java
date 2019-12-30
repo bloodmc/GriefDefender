@@ -48,8 +48,11 @@ import com.griefdefender.api.permission.flag.FlagData;
 import com.griefdefender.api.permission.flag.FlagDefinition;
 import com.griefdefender.api.permission.flag.Flags;
 import com.griefdefender.api.permission.option.Option;
+import com.griefdefender.api.permission.option.Options;
 import com.griefdefender.api.permission.option.type.CreateModeType;
 import com.griefdefender.api.permission.option.type.CreateModeTypes;
+import com.griefdefender.api.permission.option.type.WeatherType;
+import com.griefdefender.api.permission.option.type.WeatherTypes;
 import com.griefdefender.cache.EventResultCache;
 import com.griefdefender.cache.MessageCache;
 import com.griefdefender.cache.PermissionHolderCache;
@@ -159,48 +162,48 @@ public class GDPermissionManager implements PermissionManager {
 
     @Override
     public Tristate getActiveFlagPermissionValue(Claim claim, Subject subject, Flag flag, Object source, Object target, Set<Context> contexts, TrustType type, boolean checkOverride) {
-        return getFinalPermission(null, null, contexts, claim, flag.getPermission(), source, target, (GDPermissionHolder) subject, null, checkOverride);
+        return getFinalPermission(null, null, contexts, claim, flag, source, target, (GDPermissionHolder) subject, null, checkOverride);
     }
 
-    public Tristate getFinalPermission(Event event, Location<World> location, Claim claim, String flagPermission, Object source, Object target, GDPermissionHolder permissionHolder) {
-        return getFinalPermission(event, location, claim, flagPermission, source, target, permissionHolder, null, false);
+    public Tristate getFinalPermission(Event event, Location<World> location, Claim claim, Flag flag, Object source, Object target, GDPermissionHolder permissionHolder) {
+        return getFinalPermission(event, location, claim, flag, source, target, permissionHolder, null, false);
     }
 
-    public Tristate getFinalPermission(Event event, Location<World> location, Claim claim, String flagPermission, Object source, Object target, Player player) {
+    public Tristate getFinalPermission(Event event, Location<World> location, Claim claim, Flag flag, Object source, Object target, Player player) {
         final GDPermissionHolder permissionHolder = PermissionHolderCache.getInstance().getOrCreateUser(player);
-        return getFinalPermission(event, location, claim, flagPermission, source, target, permissionHolder, null, false);
+        return getFinalPermission(event, location, claim, flag, source, target, permissionHolder, null, false);
     }
 
-    public Tristate getFinalPermission(Event event, Location<World> location, Claim claim, String flagPermission, Object source, Object target, Player player, boolean checkOverride) {
+    public Tristate getFinalPermission(Event event, Location<World> location, Claim claim, Flag flag, Object source, Object target, Player player, boolean checkOverride) {
         final GDPermissionHolder permissionHolder = PermissionHolderCache.getInstance().getOrCreateUser(player);
-        return getFinalPermission(event, location, claim, flagPermission, source, target, permissionHolder, null, checkOverride);
+        return getFinalPermission(event, location, claim, flag, source, target, permissionHolder, null, checkOverride);
     }
 
-    public Tristate getFinalPermission(Event event, Location<World> location, Claim claim, String flagPermission, Object source, Object target, GDPermissionHolder permissionHolder, boolean checkOverride) {
-        return getFinalPermission(event, location, claim, flagPermission, source, target, permissionHolder, null, checkOverride);
+    public Tristate getFinalPermission(Event event, Location<World> location, Claim claim, Flag flag, Object source, Object target, GDPermissionHolder permissionHolder, boolean checkOverride) {
+        return getFinalPermission(event, location, claim, flag, source, target, permissionHolder, null, checkOverride);
     }
 
-    public Tristate getFinalPermission(Event event, Location<World> location, Claim claim, String flagPermission, Object source, Object target, User user) {
+    public Tristate getFinalPermission(Event event, Location<World> location, Claim claim, Flag flag, Object source, Object target, User user) {
         final GDPermissionHolder permissionHolder = PermissionHolderCache.getInstance().getOrCreateUser(user);
-        return getFinalPermission(event, location, claim, flagPermission, source, target, permissionHolder, null, false);
+        return getFinalPermission(event, location, claim, flag, source, target, permissionHolder, null, false);
     }
 
-    public Tristate getFinalPermission(Event event, Location<World> location, Claim claim, String flagPermission, Object source, Object target, User user, boolean checkOverride) {
+    public Tristate getFinalPermission(Event event, Location<World> location, Claim claim, Flag flag, Object source, Object target, User user, boolean checkOverride) {
         final GDPermissionHolder permissionHolder = PermissionHolderCache.getInstance().getOrCreateUser(user);
-        return getFinalPermission(event, location, claim, flagPermission, source, target, permissionHolder, null, checkOverride);
+        return getFinalPermission(event, location, claim, flag, source, target, permissionHolder, null, checkOverride);
     }
 
-    public Tristate getFinalPermission(Event event, Location<World> location, Claim claim, String flagPermission, Object source, Object target, Player player, TrustType type, boolean checkOverride) {
+    public Tristate getFinalPermission(Event event, Location<World> location, Claim claim, Flag flag, Object source, Object target, Player player, TrustType type, boolean checkOverride) {
         final GDPermissionHolder permissionHolder = PermissionHolderCache.getInstance().getOrCreateUser(player);
-        return getFinalPermission(event, location, claim, flagPermission, source, target, permissionHolder, type, checkOverride);
+        return getFinalPermission(event, location, claim, flag, source, target, permissionHolder, type, checkOverride);
     }
 
-    public Tristate getFinalPermission(Event event, Location<World> location, Claim claim, String flagPermission, Object source, Object target, User user, TrustType type, boolean checkOverride) {
+    public Tristate getFinalPermission(Event event, Location<World> location, Claim claim, Flag flag, Object source, Object target, User user, TrustType type, boolean checkOverride) {
         final GDPermissionHolder permissionHolder = PermissionHolderCache.getInstance().getOrCreateUser(user);
-        return getFinalPermission(event, location, claim, flagPermission, source, target, permissionHolder, type, checkOverride);
+        return getFinalPermission(event, location, claim, flag, source, target, permissionHolder, type, checkOverride);
     }
 
-    public Tristate getFinalPermission(Event event, Location<World> location, Claim claim, String flagPermission, Object source, Object target, GDPermissionHolder subject, TrustType type, boolean checkOverride) {
+    public Tristate getFinalPermission(Event event, Location<World> location, Claim claim, Flag flag, Object source, Object target, GDPermissionHolder subject, TrustType type, boolean checkOverride) {
         final Set<Context> contexts = new HashSet<>();
         for (Map.Entry<EventContextKey<?>, Object> mapEntry : event.getContext().asMap().entrySet()) {
             if (IGNORED_EVENT_CONTEXTS.contains(mapEntry.getKey())) {
@@ -218,10 +221,10 @@ public class GDPermissionManager implements PermissionManager {
             final Context context = new Context(parts[1], contextId);
             contexts.add(context);
         }
-        return getFinalPermission(event, location, contexts, claim, flagPermission, source, target, subject, type, checkOverride);
+        return getFinalPermission(event, location, contexts, claim, flag, source, target, subject, type, checkOverride);
     }
 
-    public Tristate getFinalPermission(Event event, Location<World> location, Set<Context> contexts, Claim claim, String flagPermission, Object source, Object target, GDPermissionHolder permissionHolder, TrustType type, boolean checkOverride) {
+    public Tristate getFinalPermission(Event event, Location<World> location, Set<Context> contexts, Claim claim, Flag flag, Object source, Object target, GDPermissionHolder permissionHolder, TrustType type, boolean checkOverride) {
         if (claim == null) {
             return Tristate.TRUE;
         }
@@ -277,24 +280,29 @@ public class GDPermissionManager implements PermissionManager {
         contexts.add(((GDClaim) claim).getWorldContext());
         this.eventContexts = contexts;
         this.eventPlayerData = playerData;
+        final String targetPermission = flag.getPermission();
 
-        String targetPermission = flagPermission;
-        /*if (!targetId.isEmpty()) {
-            //String[] parts = targetId.split(":");
-            //String targetMod = parts[0];
-            // move target meta to end of permission
-            Matcher m = PATTERN_META.matcher(targetId);
-            String targetMeta = "";
-            if (!flagPermission.contains("command-execute")) {
-                if (m.find()) {
-                    targetMeta = m.group(0);
-                    targetId = StringUtils.replace(targetId, targetMeta, "");
+        if (flag == Flags.ENTITY_SPAWN) {
+            // Check spawn limit
+            final int spawnLimit = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), GriefDefenderPlugin.DEFAULT_HOLDER, Options.SPAWN_LIMIT, claim, contexts);
+            if (spawnLimit > -1) {
+                if (target instanceof Entity) {
+                    final Entity entity = (Entity) target;
+                    final int currentEntityCount = ((GDClaim) claim).countEntities(entity .getType());
+                    if (currentEntityCount >= spawnLimit) {
+                        if (source instanceof Player) {
+                            final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.OPTION_APPLY_SPAWN_LIMIT,
+                                    ImmutableMap.of(
+                                    "type", entity.getType().getId(),
+                                    "limit", spawnLimit));
+                            GriefDefenderPlugin.sendMessage((Player) source, message);
+                        }
+                        return this.processResult(claim, flag.getPermission(), "spawn-limit", Tristate.FALSE, this.eventSubject);
+                    }
                 }
             }
-            targetPermission += "." + targetId + targetMeta;
-        }*/
+        }
 
-        targetPermission = StringUtils.replace(targetPermission, ":", ".");
         // If player can ignore admin claims and is currently ignoring , allow
         if (user != null && playerData != null && !playerData.debugClaimPermissions && playerData.canIgnoreClaim(claim)) {
             return processResult(claim, targetPermission, "ignore", Tristate.TRUE, user);
@@ -494,29 +502,17 @@ public class GDPermissionManager implements PermissionManager {
         return permissionValue;
     }
 
-    public void addEventLogEntry(Event event, Location<World> location, Object source, Object target, User user, String permission, String trust, Tristate result) {
+    public void addEventLogEntry(Event event, Location<World> location, Object source, Object target, User user, Flag flag, String trust, Tristate result) {
         final GDPermissionHolder holder = PermissionHolderCache.getInstance().getOrCreateUser(user);
-        addEventLogEntry(event, location, source, target, holder, permission, trust, result);
+        addEventLogEntry(event, location, source, target, holder, flag, trust, result);
     }
 
     // Used for situations where events are skipped for perf reasons
-    public void addEventLogEntry(Event event, Location<World> location, Object source, Object target, GDPermissionHolder permissionSubject, String permission, String trust, Tristate result) {
+    public void addEventLogEntry(Event event, Location<World> location, Object source, Object target, GDPermissionHolder permissionSubject, Flag flag, String trust, Tristate result) {
         if (GriefDefenderPlugin.debugActive) {
             String sourceId = getPermissionIdentifier(source, true);
-            String targetPermission = permission;
+            String targetPermission = flag.getPermission();
             String targetId = getPermissionIdentifier(target);
-            /*if (!targetId.isEmpty()) {
-                // move target meta to end of permission
-                Matcher m = PATTERN_META.matcher(targetId);
-                String targetMeta = "";
-                if (!permission.contains("command-execute")) {
-                    if (m.find()) {
-                        targetMeta = m.group(0);
-                        targetId = StringUtils.replace(targetId, targetMeta, "");
-                    }
-                }
-                targetPermission += "." + targetId + targetMeta;
-            }*/
             if (permissionSubject == null) {
                 permissionSubject = GriefDefenderPlugin.DEFAULT_HOLDER;
             }
@@ -823,6 +819,11 @@ public class GDPermissionManager implements PermissionManager {
     }
 
     public void addCustomEntityTypeContexts(Entity targetEntity, Set<Context> contexts, GDEntityType type, boolean isSource) {
+        if (isSource) {
+            contexts.add(ContextGroups.SOURCE_ALL);
+        } else {
+            contexts.add(ContextGroups.TARGET_ALL);
+        }
         // check vehicle
         if (targetEntity instanceof Boat || targetEntity instanceof Minecart) {
             if (isSource) {
@@ -1214,9 +1215,9 @@ public class GDPermissionManager implements PermissionManager {
             // check claim
             if (claim != null) {
                 contexts.add(claim.getContext());
-                String value = PermissionUtil.getInstance().getOptionValue(holder, option, contexts);
+                final T value = this.getOptionActualValue(type, holder, option, contexts);
                 if (value != null) {
-                    return this.getOptionTypeValue(type, value);
+                    return value;
                 }
                 contexts.remove(claim.getContext());
             }
@@ -1224,18 +1225,18 @@ public class GDPermissionManager implements PermissionManager {
             // check claim type
             if (claimType != null) {
                 contexts.add(claimType.getContext());
-                String value = PermissionUtil.getInstance().getOptionValue(holder, option, contexts);
+                final T value = this.getOptionActualValue(type, holder, option, contexts);
                 if (value != null) {
-                    return this.getOptionTypeValue(type, value);
+                    return value;
                 }
                 contexts.remove(claimType.getContext());
             }
         }
 
-        String value = PermissionUtil.getInstance().getOptionValue(holder, option, contexts);
         // Check only active contexts
+        T value = this.getOptionActualValue(type, holder, option, contexts);
         if (value != null) {
-            return this.getOptionTypeValue(type, value);
+            return value;
         }
 
         // Check type/global default context
@@ -1243,9 +1244,9 @@ public class GDPermissionManager implements PermissionManager {
             contexts.add(claimType.getDefaultContext());
         }
         contexts.add(ClaimContexts.GLOBAL_DEFAULT_CONTEXT);
-        value = PermissionUtil.getInstance().getOptionValue(holder, option, contexts);
+        value = this.getOptionActualValue(type, holder, option, contexts);
         if (value != null) {
-            return this.getOptionTypeValue(type, value);
+            return value;
         }
         contexts.remove(ClaimContexts.GLOBAL_DEFAULT_CONTEXT);
         if (claimType != null) {
@@ -1258,6 +1259,21 @@ public class GDPermissionManager implements PermissionManager {
         }
 
         return option.getDefaultValue();
+    }
+
+    private <T> T getOptionActualValue(TypeToken<T> type, GDPermissionHolder holder, Option option, Set<Context> contexts) {
+        if (option.multiValued()) {
+            List<String> values = PermissionUtil.getInstance().getOptionValueList(holder, option, contexts);
+            if (values != null && !values.isEmpty()) {
+                return (T) values;
+            }
+        }
+        String value = PermissionUtil.getInstance().getOptionValue(holder, option, contexts);
+        if (value != null) {
+            return this.getOptionTypeValue(type, value);
+        }
+
+        return null;
     }
 
     private <T> T getOptionTypeValue(TypeToken<T> type, String value) {
@@ -1301,6 +1317,13 @@ public class GDPermissionManager implements PermissionManager {
             if (value.equalsIgnoreCase("undefined")) {
                 return (T) CreateModeTypes.AREA;
             }
+            if (value.equalsIgnoreCase("volume")) {
+                return (T) CreateModeTypes.VOLUME;
+            }
+            if (value.equalsIgnoreCase("area")) {
+                return (T) CreateModeTypes.AREA;
+            }
+
             int permValue = 0;
             try {
                 permValue = Integer.parseInt(value);
@@ -1311,6 +1334,16 @@ public class GDPermissionManager implements PermissionManager {
                 return (T) CreateModeTypes.AREA;
             }
             return (T) (permValue == 1 ? CreateModeTypes.VOLUME : CreateModeTypes.AREA);
+        }
+        if (type.getRawType().isAssignableFrom(WeatherType.class)) {
+            if (value.equalsIgnoreCase("downfall")) {
+                return (T) WeatherTypes.DOWNFALL;
+            }
+            if (value.equalsIgnoreCase("clear")) {
+                return (T) WeatherTypes.CLEAR;
+            }
+
+            return (T) WeatherTypes.UNDEFINED;
         }
         if (type.getRawType().isAssignableFrom(Boolean.class)) {
             return (T) Boolean.valueOf(Boolean.parseBoolean(value));
@@ -1324,7 +1357,6 @@ public class GDPermissionManager implements PermissionManager {
             if (playerData != null) {
                 playerData.ignoreActiveContexts = true;
             }
-            //contexts.addAll(PermissionUtil.getInstance().getActiveContexts(holder));
             PermissionUtil.getInstance().addActiveContexts(contexts, holder, playerData, claim);
         }
 

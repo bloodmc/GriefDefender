@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -48,6 +49,13 @@ import com.griefdefender.permission.GDPermissionHolder;
  * to provide permissions lookups for GriefDefender.</p>
  */
 public interface PermissionProvider {
+
+    /**
+     * Get server name.
+     * 
+     * @return The server name
+     */
+    String getServerName();
 
     /**
      * Checks if the group identifier exists.
@@ -274,6 +282,18 @@ public interface PermissionProvider {
     String getOptionValue(GDPermissionHolder holder, Option option, Set<Context> contexts);
 
     /**
+     * Gets the current values of an option assigned to a holder.
+     * 
+     * Note: This is intended to be used for options that support multiple values.
+     * 
+     * @param holder The holder
+     * @param permission The permission to check
+     * @param contexts The contexts
+     * @return The option value list
+     */
+    List<String> getOptionValueList(GDPermissionHolder holder, Option option, Set<Context> contexts);
+
+    /**
      * Sets an option and value with contexts to a holder.
      * 
      * @param holder The holder
@@ -293,7 +313,23 @@ public interface PermissionProvider {
      * @param contexts The contexts
      * @return The permission result
      */
-    PermissionResult setPermissionValue(GDPermissionHolder holder, Flag flag, Tristate value, Set<Context> contexts);
+    default PermissionResult setPermissionValue(GDPermissionHolder holder, Flag flag, Tristate value, Set<Context> contexts) {
+        return this.setPermissionValue(holder, flag, value, contexts, true);
+    }
+
+    /**
+     * Sets a permission and value with contexts to a holder.
+     * 
+     * @param holder The holder
+     * @param flag The flag to use for permission
+     * @param value The value
+     * @param contexts The contexts
+     * @param save Whether a save should occur
+     * @return The permission result
+     */
+    default PermissionResult setPermissionValue(GDPermissionHolder holder, Flag flag, Tristate value, Set<Context> contexts, boolean save) {
+        return this.setPermissionValue(holder, flag.getPermission(), value, contexts, save);
+    }
 
     /**
      * Sets a permission and value with contexts to a holder.
@@ -304,7 +340,21 @@ public interface PermissionProvider {
      * @param contexts The contexts
      * @return Whether the set permission operation was successful
      */
-    boolean setPermissionValue(GDPermissionHolder holder, String permission, Tristate value, Set<Context> contexts);
+    default PermissionResult setPermissionValue(GDPermissionHolder holder, String permission, Tristate value, Set<Context> contexts) {
+        return this.setPermissionValue(holder, permission, value, contexts, true);
+    }
+
+    /**
+     * Sets a permission and value with contexts to a holder.
+     * 
+     * @param holder The holder
+     * @param permission The permission
+     * @param value The value
+     * @param contexts The contexts
+     * @param save Whether a save should occur
+     * @return Whether the set permission operation was successful
+     */
+    PermissionResult setPermissionValue(GDPermissionHolder holder, String permission, Tristate value, Set<Context> contexts, boolean save);
 
     /**
      * Sets a transient option and value with contexts to a holder.
@@ -334,4 +384,12 @@ public interface PermissionProvider {
      * @param holder The holder
      */
     void refreshCachedData(GDPermissionHolder holder);
+
+    /**
+     * Saves any pending permission changes to holder.
+     * 
+     * @param holder The holder
+     * @return a future which will complete when save is done
+     */
+    CompletableFuture<Void> save(GDPermissionHolder holder);
 }

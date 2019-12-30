@@ -155,6 +155,7 @@ public class CommandClaimAbandonAll extends BaseCommand {
                 playerData.useRestoreSchematic = event.isRestoring();
                 GriefDefenderPlugin.getInstance().dataStore.abandonClaimsForPlayer(user, allowedClaims);
                 playerData.useRestoreSchematic = false;
+                playerData.onClaimDelete();
     
                 if (GriefDefenderPlugin.getInstance().isEconomyModeEnabled()) {
                     final Account playerAccount = GriefDefenderPlugin.getInstance().economyService.get().getOrCreateAccount(playerData.playerID).orElse(null);

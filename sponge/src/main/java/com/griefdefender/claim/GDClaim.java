@@ -49,7 +49,6 @@ import com.griefdefender.api.claim.ShovelTypes;
 import com.griefdefender.api.claim.TrustType;
 import com.griefdefender.api.claim.TrustTypes;
 import com.griefdefender.api.data.ClaimData;
-import com.griefdefender.api.event.EventCause;
 import com.griefdefender.api.permission.Context;
 import com.griefdefender.api.permission.option.Options;
 import com.griefdefender.cache.MessageCache;
@@ -57,7 +56,6 @@ import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.configuration.ClaimDataConfig;
 import com.griefdefender.configuration.ClaimStorageData;
 import com.griefdefender.configuration.IClaimData;
-import com.griefdefender.configuration.MessageDataConfig;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.configuration.TownDataConfig;
 import com.griefdefender.configuration.TownStorageData;
@@ -77,7 +75,6 @@ import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.permission.GDPermissions;
 import com.griefdefender.registry.TrustTypeRegistryModule;
 import com.griefdefender.storage.BaseStorage;
-import com.griefdefender.storage.FileStorage;
 import com.griefdefender.util.EconomyUtil;
 import com.griefdefender.util.PermissionUtil;
 import com.griefdefender.util.SpongeContexts;
@@ -85,9 +82,12 @@ import com.griefdefender.util.SpongeUtil;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextColor;
+import net.kyori.text.serializer.plain.PlainComponentSerializer;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.entity.Entity;
+import org.spongepowered.api.entity.EntityType;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.cause.Cause;
@@ -378,6 +378,14 @@ public class GDClaim implements Claim {
         return this.claimData.getName();
     }
 
+    public String getFriendlyName() {
+        final Component claimName = this.claimData.getName().orElse(null);
+        if (claimName == null) {
+            return "none";
+        }
+        return PlainComponentSerializer.INSTANCE.serialize(claimName);
+    }
+
     public Component getFriendlyNameType() {
         return this.getFriendlyNameType(false);
     }
@@ -529,6 +537,20 @@ public class GDClaim implements Claim {
         }
 
         return TextComponent.of(this.getOwnerPlayerData().getPlayerName());
+    }
+
+    public String getOwnerFriendlyName() {
+        if (this.isAdminClaim()) {
+            return "administrator";
+        }
+        if (this.isWilderness()) {
+            return "wilderness";
+        }
+        final GDPlayerData playerData = this.ownerPlayerData;
+        if (playerData == null) {
+            return "[unknown]";
+        }
+        return playerData.getPlayerName();
     }
 
     @Override
@@ -2024,6 +2046,19 @@ public class GDClaim implements Claim {
         }
 
         return new GDClaimResult(ClaimResultType.SUCCESS);
+    }
+
+    public int countEntities(EntityType type) {
+        int count = 0;
+        for (Chunk chunk : this.getChunks()) {
+            for (Entity entity : chunk.getEntities()) {
+                if (entity.getType().equals(type)) {
+                    count++;
+                }
+            }
+        }
+
+        return count;
     }
 
     @Override

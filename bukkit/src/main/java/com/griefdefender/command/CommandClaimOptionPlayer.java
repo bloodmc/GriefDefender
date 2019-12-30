@@ -32,12 +32,8 @@ import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Optional;
 import co.aikar.commands.annotation.Subcommand;
 import co.aikar.commands.annotation.Syntax;
-import com.griefdefender.GriefDefenderPlugin;
-import com.griefdefender.api.Tristate;
-import com.griefdefender.cache.MessageCache;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.permission.GDPermissions;
-import com.griefdefender.util.PermissionUtil;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 

@@ -25,24 +25,21 @@
 package com.griefdefender.listener;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.reflect.TypeToken;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GDTimings;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.Tristate;
-import com.griefdefender.api.claim.TrustTypes;
-import com.griefdefender.api.permission.Context;
-import com.griefdefender.api.permission.ContextKeys;
 import com.griefdefender.api.permission.flag.Flags;
+import com.griefdefender.api.permission.option.Options;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.event.GDCauseStackManager;
 import com.griefdefender.permission.GDPermissionManager;
-import com.griefdefender.permission.GDPermissions;
 import com.griefdefender.permission.flag.GDFlags;
 import com.griefdefender.storage.BaseStorage;
 import com.griefdefender.util.PaginationUtil;
 import net.kyori.text.Component;
-import net.kyori.text.adapter.bukkit.TextAdapter;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.command.PluginCommand;
@@ -127,28 +124,71 @@ public class CommandEventHandler implements Listener {
             GDTimings.PLAYER_COMMAND_EVENT.stopTiming();
             return;
         }
-        String commandTarget = pluginId + ":" + command;
-        // first check the args
-        String argument = "";
-        for (String arg : args) {
-            if (arg.isEmpty()) {
-                continue;
-            }
-            commandTarget += "." + arg;
+
+        final int combatTimeRemaining = playerData.getPvpCombatTimeRemaining();
+        final boolean inPvpCombat = combatTimeRemaining > 0;
+        final boolean pvpCombatCommand = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Boolean.class), player, Options.PVP_COMBAT_COMMAND);
+        if (!pvpCombatCommand && inPvpCombat) {
+            final Component denyMessage = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PVP_IN_COMBAT_NOT_ALLOWED,
+                    ImmutableMap.of(
+                    "time-remaining", combatTimeRemaining));
+            GriefDefenderPlugin.sendMessage(player, denyMessage);
+            event.setCancelled(true);
+            GDTimings.PLAYER_COMMAND_EVENT.stopTiming();
+            return;
         }
 
-        final Context context = new Context(ContextKeys.TARGET, commandTarget);
-        if (GDFlags.COMMAND_EXECUTE && !commandExecuteSourceBlacklisted && !GriefDefenderPlugin.isTargetIdBlacklisted(Flags.COMMAND_EXECUTE.getName(), commandTarget, player.getWorld().getUID())) {
-            final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, player.getLocation(), claim, GDPermissions.COMMAND_EXECUTE, player, commandTarget, player, TrustTypes.ACCESSOR, true);
+        String commandBaseTarget = pluginId + ":" + command;
+        String commandTargetWithArgs = commandBaseTarget;
+        // first check the args
+        for (String arg : args) {
+            if (!arg.isEmpty()) {
+                commandTargetWithArgs = commandTargetWithArgs + "." + arg;
+            }
+        }
+
+        boolean commandExecuteTargetBlacklisted = false;
+        if (GriefDefenderPlugin.isTargetIdBlacklisted(Flags.COMMAND_EXECUTE.getName(), commandBaseTarget, player.getWorld().getUID())) {
+            commandExecuteTargetBlacklisted = true;
+        } else if (GriefDefenderPlugin.isTargetIdBlacklisted(Flags.COMMAND_EXECUTE.getName(), commandTargetWithArgs, player.getWorld().getUID())) {
+            commandExecuteTargetBlacklisted = true;
+        }
+
+        if (GDFlags.COMMAND_EXECUTE && !inPvpCombat && !commandExecuteSourceBlacklisted && !commandExecuteTargetBlacklisted) {
+            // First check base command
+            Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, player.getLocation(), claim, Flags.COMMAND_EXECUTE, player, commandBaseTarget, player, true);
+            if (result != Tristate.FALSE) {
+                // check with args
+                result = GDPermissionManager.getInstance().getFinalPermission(event, player.getLocation(), claim, Flags.COMMAND_EXECUTE, player, commandTargetWithArgs, player, true);
+            }
             if (result == Tristate.FALSE) {
                 final Component denyMessage = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.COMMAND_BLOCKED,
                         ImmutableMap.of(
                         "command", command,
                         "player", claim.getOwnerName()));
-                TextAdapter.sendComponent(player, denyMessage);
+                GriefDefenderPlugin.sendMessage(player, denyMessage);
                 event.setCancelled(true);
                 GDTimings.PLAYER_COMMAND_EVENT.stopTiming();
                 return;
+            }
+
+            GDTimings.PLAYER_COMMAND_EVENT.stopTiming();
+            return;
+        }
+        if (GDFlags.COMMAND_EXECUTE_PVP && inPvpCombat && !commandExecuteSourceBlacklisted && !commandExecuteTargetBlacklisted) {
+            // First check base command
+            Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, player.getLocation(), claim, Flags.COMMAND_EXECUTE_PVP, player, commandBaseTarget, player, true);
+            if (result != Tristate.FALSE) {
+                // check with args
+                result = GDPermissionManager.getInstance().getFinalPermission(event, player.getLocation(), claim, Flags.COMMAND_EXECUTE_PVP, player, commandTargetWithArgs, player, true);
+            }
+            if (result == Tristate.FALSE) {
+                final Component denyMessage = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.COMMAND_BLOCKED,
+                        ImmutableMap.of(
+                        "command", command,
+                        "player", claim.getOwnerName()));
+                GriefDefenderPlugin.sendMessage(player, denyMessage);
+                event.setCancelled(true);
             }
         }
         GDTimings.PLAYER_COMMAND_EVENT.stopTiming();

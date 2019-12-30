@@ -24,6 +24,8 @@
  */
 package com.griefdefender.util;
 
+import com.google.common.collect.BiMap;
+import com.google.common.collect.ImmutableBiMap;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.claim.ClaimType;
@@ -31,6 +33,10 @@ import com.griefdefender.api.claim.ClaimTypes;
 import com.griefdefender.api.claim.ShovelType;
 import com.griefdefender.api.claim.ShovelTypes;
 import com.griefdefender.api.permission.option.type.CreateModeTypes;
+import com.griefdefender.api.permission.option.type.GameModeType;
+import com.griefdefender.api.permission.option.type.GameModeTypes;
+import com.griefdefender.api.permission.option.type.WeatherType;
+import com.griefdefender.api.permission.option.type.WeatherTypes;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.internal.visual.ClaimVisual;
 import com.griefdefender.internal.visual.GDClaimVisualType;
@@ -38,11 +44,15 @@ import com.griefdefender.permission.GDPermissionUser;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextColor;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.network.play.server.SPacketChangeGameState;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.data.property.entity.EyeLocationProperty;
 import org.spongepowered.api.data.type.HandTypes;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
+import org.spongepowered.api.entity.living.player.gamemode.GameMode;
+import org.spongepowered.api.entity.living.player.gamemode.GameModes;
 import org.spongepowered.api.item.ItemType;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.service.user.UserStorageService;
@@ -56,6 +66,16 @@ import javax.annotation.Nullable;
 public class PlayerUtil {
 
     private static Direction[] faces = { Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST};
+    public static BiMap<GameModeType, GameMode> GAMEMODE_MAP = ImmutableBiMap.of(
+        GameModeTypes.ADVENTURE, GameModes.ADVENTURE,
+        GameModeTypes.CREATIVE, GameModes.CREATIVE,
+        GameModeTypes.SPECTATOR, GameModes.SPECTATOR,
+        GameModeTypes.SURVIVAL, GameModes.SURVIVAL
+    );
+    public static BiMap<WeatherType, org.spongepowered.api.world.weather.Weather> WEATHERTYPE_MAP = ImmutableBiMap.of(
+        WeatherTypes.CLEAR, org.spongepowered.api.world.weather.Weathers.CLEAR,
+        WeatherTypes.DOWNFALL, org.spongepowered.api.world.weather.Weathers.RAIN
+    );
 
     private static PlayerUtil instance;
 
@@ -203,5 +223,24 @@ public class PlayerUtil {
             return playerData.getMaxClaimLevel();
         }
         return 0;
+    }
+
+    public void setPlayerWeather(GDPermissionUser user, WeatherType type) {
+        final Player player = user.getOnlinePlayer();
+        if (type == WeatherTypes.DOWNFALL) {
+            ((EntityPlayerMP) player).connection.sendPacket(new SPacketChangeGameState(2, 0));
+        } else {
+            ((EntityPlayerMP) player).connection.sendPacket(new SPacketChangeGameState(1, 0));
+        }
+        user.getInternalPlayerData().lastWeatherType = type;
+    }
+
+    public void resetPlayerWeather(GDPermissionUser user) {
+        final Player player = user.getOnlinePlayer();
+        if (player.getWorld().getProperties().isRaining()) {
+            this.setPlayerWeather(user, WeatherTypes.DOWNFALL);
+        } else {
+            this.setPlayerWeather(user, WeatherTypes.CLEAR);
+        }
     }
 }

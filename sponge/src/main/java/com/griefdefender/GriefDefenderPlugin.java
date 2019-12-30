@@ -286,7 +286,6 @@ public class GriefDefenderPlugin {
     public GDBlockType createVisualBlock;
     public GDItemType modificationTool;
     public GDItemType investigationTool;
-    public int maxInspectionDistance = 100;
 
     public static boolean debugLogging = false;
     public static boolean debugActive = false;
@@ -942,7 +941,6 @@ public class GriefDefenderPlugin {
             this.createVisualBlock = BlockTypeRegistryModule.getInstance().getById(BaseStorage.globalConfig.getConfig().visual.claimCreateStartBlock).orElse(defaultCreateVisualBlock);
             this.modificationTool  = ItemTypeRegistryModule.getInstance().getById(BaseStorage.globalConfig.getConfig().claim.modificationTool).orElse(defaultModTool);
             this.investigationTool = ItemTypeRegistryModule.getInstance().getById(BaseStorage.globalConfig.getConfig().claim.investigationTool).orElse(ItemTypeRegistryModule.getInstance().getById("minecraft:stick").get());
-            this.maxInspectionDistance = BaseStorage.globalConfig.getConfig().general.maxClaimInspectionDistance;
             if (this.dataStore != null) {
                 for (World world : Sponge.getGame().getServer().getWorlds()) {
                     DimensionType dimType = world.getProperties().getDimensionType();

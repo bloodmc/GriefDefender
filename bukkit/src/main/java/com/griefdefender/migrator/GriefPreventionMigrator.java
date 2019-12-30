@@ -41,6 +41,7 @@ import com.griefdefender.internal.util.BlockUtil;
 import com.griefdefender.permission.GDPermissionHolder;
 import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.permission.flag.FlagContexts;
+import com.griefdefender.permission.option.OptionContexts;
 import com.griefdefender.storage.BaseStorage;
 import com.griefdefender.util.PermissionUtil;
 
@@ -229,20 +230,26 @@ public class GriefPreventionMigrator {
                     case FLAG_ENTER_COMMAND :
                         contexts.add(new Context(ContextKeys.FLAG, Flags.ENTER_CLAIM.getName()));
                         contexts.add(FlagContexts.TARGET_PLAYER);
-                        PermissionUtil.getInstance().setOptionValue(DEFAULT_HOLDER, Options.PLAYER_COMMAND.getPermission(), param, contexts);
+                        contexts.add(OptionContexts.COMMAND_RUNAS_CONSOLE);
+                        contexts.add(OptionContexts.COMMAND_RUNFOR_PUBLIC);
+                        PermissionUtil.getInstance().setOptionValue(DEFAULT_HOLDER, Options.PLAYER_COMMAND_ENTER.getPermission(), param, contexts);
                         break;
                     case FLAG_ENTER_COMMAND_OWNER :
                         contexts.add(new Context(ContextKeys.FLAG, Flags.ENTER_CLAIM.getName()));
                         contexts.add(FlagContexts.TARGET_PLAYER);
+                        contexts.add(OptionContexts.COMMAND_RUNAS_CONSOLE);
+                        contexts.add(OptionContexts.COMMAND_RUNFOR_OWNER);
                         if (claimOwner == null) {
                             GriefDefenderPlugin.getInstance().getLogger().info("Could not locate owner legacy claim id '" + bukkitClaimId + "'. Skipping...");
                             break;
                         }
-                        PermissionUtil.getInstance().setOptionValue(claimOwner, Options.PLAYER_COMMAND.getPermission(), param, contexts);
+                        PermissionUtil.getInstance().setOptionValue(claimOwner, Options.PLAYER_COMMAND_ENTER.getPermission(), param, contexts);
                         break;
                     case FLAG_ENTER_COMMAND_MEMBERS : {
                         contexts.add(new Context(ContextKeys.FLAG, Flags.ENTER_CLAIM.getName()));
                         contexts.add(FlagContexts.TARGET_PLAYER);
+                        contexts.add(OptionContexts.COMMAND_RUNAS_CONSOLE);
+                        contexts.add(OptionContexts.COMMAND_RUNFOR_MEMBER);
                         List<UUID> members = new ArrayList<>();
                         members.addAll(claimStorage.getConfig().getAccessors());
                         members.addAll(claimStorage.getConfig().getBuilders());
@@ -250,18 +257,22 @@ public class GriefPreventionMigrator {
                         members.addAll(claimStorage.getConfig().getManagers());
                         for (UUID memberUniqueId : members) {
                             final GDPermissionUser user = PermissionHolderCache.getInstance().getOrCreateUser(memberUniqueId);
-                            PermissionUtil.getInstance().setOptionValue(user, Options.PLAYER_COMMAND.getPermission(), param, contexts);
+                            PermissionUtil.getInstance().setOptionValue(user, Options.PLAYER_COMMAND_ENTER.getPermission(), param, contexts);
                         }
                         break;
                     }
                     case FLAG_ENTER_PLAYER_COMMAND :
                         contexts.add(new Context(ContextKeys.FLAG, Flags.ENTER_CLAIM.getName()));
                         contexts.add(FlagContexts.TARGET_PLAYER);
-                        PermissionUtil.getInstance().setOptionValue(DEFAULT_HOLDER, Options.PLAYER_COMMAND.getPermission(), param, contexts);
+                        contexts.add(OptionContexts.COMMAND_RUNAS_PLAYER);
+                        contexts.add(OptionContexts.COMMAND_RUNFOR_PUBLIC);
+                        PermissionUtil.getInstance().setOptionValue(DEFAULT_HOLDER, Options.PLAYER_COMMAND_ENTER.getPermission(), param, contexts);
                         break;
                     case FLAG_EXIT_COMMAND_MEMBERS : {
                         contexts.add(new Context(ContextKeys.FLAG, Flags.EXIT_CLAIM.getName()));
                         contexts.add(FlagContexts.TARGET_PLAYER);
+                        contexts.add(OptionContexts.COMMAND_RUNAS_PLAYER);
+                        contexts.add(OptionContexts.COMMAND_RUNFOR_MEMBER);
                         List<UUID> members = new ArrayList<>();
                         members.addAll(claimStorage.getConfig().getAccessors());
                         members.addAll(claimStorage.getConfig().getBuilders());
@@ -269,24 +280,28 @@ public class GriefPreventionMigrator {
                         members.addAll(claimStorage.getConfig().getManagers());
                         for (UUID memberUniqueId : members) {
                             final GDPermissionUser user = PermissionHolderCache.getInstance().getOrCreateUser(memberUniqueId);
-                            PermissionUtil.getInstance().setOptionValue(user, Options.PLAYER_COMMAND.getPermission(), param, contexts);
+                            PermissionUtil.getInstance().setOptionValue(user, Options.PLAYER_COMMAND_EXIT.getPermission(), param, contexts);
                         }
                         break;
                     }
                     case FLAG_EXIT_COMMAND_OWNER :
                         contexts.add(new Context(ContextKeys.FLAG, Flags.EXIT_CLAIM.getName()));
                         contexts.add(FlagContexts.TARGET_PLAYER);
+                        contexts.add(OptionContexts.COMMAND_RUNAS_CONSOLE);
+                        contexts.add(OptionContexts.COMMAND_RUNFOR_MEMBER);
                         if (claimOwner == null) {
                             GriefDefenderPlugin.getInstance().getLogger().info("Could not locate owner legacy claim id '" + bukkitClaimId + "'. Skipping...");
                             break;
                         }
-                        PermissionUtil.getInstance().setOptionValue(claimOwner, Options.PLAYER_COMMAND.getPermission(), param, contexts);
+                        PermissionUtil.getInstance().setOptionValue(claimOwner, Options.PLAYER_COMMAND_EXIT.getPermission(), param, contexts);
                         break;
                     case FLAG_EXIT_COMMAND :
                     case FLAG_EXIT_PLAYER_COMMAND :
                         contexts.add(new Context(ContextKeys.FLAG, Flags.EXIT_CLAIM.getName()));
                         contexts.add(FlagContexts.TARGET_PLAYER);
-                        PermissionUtil.getInstance().setOptionValue(DEFAULT_HOLDER, Options.PLAYER_COMMAND.getPermission(), param, contexts);
+                        contexts.add(OptionContexts.COMMAND_RUNAS_PLAYER);
+                        contexts.add(OptionContexts.COMMAND_RUNFOR_PUBLIC);
+                        PermissionUtil.getInstance().setOptionValue(DEFAULT_HOLDER, Options.PLAYER_COMMAND_EXIT.getPermission(), param, contexts);
                         break;
                     case FLAG_EXIT_MESSAGE :
                         claimStorage.getConfig().setFarewell(LegacyComponentSerializer.legacy().deserialize(param, '§'));

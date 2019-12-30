@@ -92,6 +92,8 @@ import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -2015,6 +2017,19 @@ public class GDClaim implements Claim {
         }
 
         return new GDClaimResult(ClaimResultType.SUCCESS);
+    }
+
+    public int countEntities(EntityType type) {
+        int count = 0;
+        for (Chunk chunk : this.getChunks()) {
+            for (Entity entity : chunk.getEntities()) {
+                if (entity.getType() == type) {
+                    count++;
+                }
+            }
+        }
+
+        return count;
     }
 
     @Override

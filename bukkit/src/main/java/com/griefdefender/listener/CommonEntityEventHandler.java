@@ -25,7 +25,14 @@
 package com.griefdefender.listener;
 
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -49,21 +56,31 @@ import com.griefdefender.api.ChatTypes;
 import com.griefdefender.api.GriefDefender;
 import com.griefdefender.api.Tristate;
 import com.griefdefender.api.claim.TrustTypes;
+import com.griefdefender.api.permission.Context;
 import com.griefdefender.api.permission.flag.Flags;
 import com.griefdefender.api.permission.option.Options;
+import com.griefdefender.api.permission.option.type.GameModeType;
+import com.griefdefender.api.permission.option.type.GameModeTypes;
+import com.griefdefender.api.permission.option.type.WeatherType;
+import com.griefdefender.api.permission.option.type.WeatherTypes;
 import com.griefdefender.cache.MessageCache;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
+import com.griefdefender.command.CommandHelper;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.event.GDBorderClaimEvent;
 import com.griefdefender.internal.registry.ItemTypeRegistryModule;
+import com.griefdefender.internal.util.BlockUtil;
+import com.griefdefender.internal.util.NMSUtil;
 import com.griefdefender.internal.util.VecHelper;
 import com.griefdefender.permission.GDPermissionManager;
 import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.permission.GDPermissions;
 import com.griefdefender.permission.flag.GDFlags;
+import com.griefdefender.permission.option.OptionContexts;
 import com.griefdefender.storage.BaseStorage;
-
+import com.griefdefender.util.PermissionUtil;
+import com.griefdefender.util.PlayerUtil;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.adapter.bukkit.TextAdapter;
@@ -129,7 +146,7 @@ public class CommonEntityEventHandler {
         if (GDFlags.ENTER_CLAIM && !enterBlacklisted && user != null && user.getInternalPlayerData().lastClaim != null) {
             final GDClaim lastClaim = (GDClaim) user.getInternalPlayerData().lastClaim.get();
             if (lastClaim != null && lastClaim != fromClaim) {
-                if (GDPermissionManager.getInstance().getFinalPermission(event, toLocation, toClaim, GDPermissions.ENTER_CLAIM, targetEntity, targetEntity, player, TrustTypes.ACCESSOR, false) == Tristate.FALSE) {
+                if (GDPermissionManager.getInstance().getFinalPermission(event, toLocation, toClaim, Flags.ENTER_CLAIM, targetEntity, targetEntity, player, TrustTypes.ACCESSOR, true) == Tristate.FALSE) {
                     Location claimCorner = new Location(toLocation.getWorld(), toClaim.lesserBoundaryCorner.getX(), targetEntity.getLocation().getBlockY(), toClaim.greaterBoundaryCorner.getZ());
                     targetEntity.teleport(claimCorner);
                 }
@@ -143,6 +160,7 @@ public class CommonEntityEventHandler {
         GDBorderClaimEvent gpEvent = new GDBorderClaimEvent(targetEntity, fromClaim, toClaim);
         if (user != null && toClaim.isUserTrusted(user, TrustTypes.ACCESSOR)) {
             GriefDefender.getEventManager().post(gpEvent);
+            final GDPlayerData playerData = user.getInternalPlayerData();
             if (gpEvent.cancelled()) {
                 if (targetEntity instanceof Vehicle) {
                     final Vehicle vehicle = (Vehicle) targetEntity;
@@ -194,9 +212,18 @@ public class CommonEntityEventHandler {
                 }
 
                 if (toClaim.isInTown()) {
-                    user.getInternalPlayerData().inTown = true;
+                    playerData.inTown = true;
                 } else {
-                    user.getInternalPlayerData().inTown = false;
+                    playerData.inTown = false;
+                }
+                if (player != null) {
+                    this.checkPlayerFlight(player, playerData, fromClaim, toClaim);
+                    this.checkPlayerGameMode(player, playerData, fromClaim, toClaim);
+                    this.checkPlayerGodMode(player, playerData, fromClaim, toClaim);
+                    this.checkPlayerWalkSpeed(player, playerData, fromClaim, toClaim);
+                    this.checkPlayerWeather(player, playerData, fromClaim, toClaim);
+                    this.runPlayerCommands(fromClaim, user, false);
+                    this.runPlayerCommands(toClaim, user, true);
                 }
             }
 
@@ -208,13 +235,13 @@ public class CommonEntityEventHandler {
             boolean enterCancelled = false;
             boolean exitCancelled = false;
             // enter
-            if (GDFlags.ENTER_CLAIM && !enterBlacklisted && GDPermissionManager.getInstance().getFinalPermission(event, toLocation, toClaim, GDPermissions.ENTER_CLAIM, targetEntity, targetEntity, user) == Tristate.FALSE) {
+            if (GDFlags.ENTER_CLAIM && !enterBlacklisted && GDPermissionManager.getInstance().getFinalPermission(event, toLocation, toClaim, Flags.ENTER_CLAIM, targetEntity, targetEntity, user, true) == Tristate.FALSE) {
                 enterCancelled = true;
                 gpEvent.cancelled(true);
             }
 
             // exit
-            if (GDFlags.EXIT_CLAIM && !exitBlacklisted && GDPermissionManager.getInstance().getFinalPermission(event, fromLocation, fromClaim, GDPermissions.EXIT_CLAIM, targetEntity, targetEntity, user) == Tristate.FALSE) {
+            if (GDFlags.EXIT_CLAIM && !exitBlacklisted && GDPermissionManager.getInstance().getFinalPermission(event, fromLocation, fromClaim, Flags.EXIT_CLAIM, targetEntity, targetEntity, user, true) == Tristate.FALSE) {
                 exitCancelled = true;
                 gpEvent.cancelled(true);
             }
@@ -250,8 +277,9 @@ public class CommonEntityEventHandler {
             }
 
             if (user != null) {
+                final GDPlayerData playerData = user.getInternalPlayerData();
                 final boolean showGpPrefix = GriefDefenderPlugin.getGlobalConfig().getConfig().message.enterExitShowGdPrefix;
-                user.getInternalPlayerData().lastClaim = new WeakReference<>(toClaim);
+                playerData.lastClaim = new WeakReference<>(toClaim);
                 Component welcomeMessage = gpEvent.getEnterMessage().orElse(null);
                 if (welcomeMessage != null && !welcomeMessage.equals(TextComponent.empty())) {
                     ChatType chatType = gpEvent.getEnterMessageChatType();
@@ -285,17 +313,95 @@ public class CommonEntityEventHandler {
                 }
 
                 if (toClaim.isInTown()) {
-                    user.getInternalPlayerData().inTown = true;
+                    playerData.inTown = true;
                 } else {
-                    user.getInternalPlayerData().inTown = false;
+                    playerData.inTown = false;
                 }
 
-                checkPlayerFlight(player, user.getInternalPlayerData(), fromClaim, toClaim);
+                if (player != null) {
+                    this.checkPlayerFlight(player, playerData, fromClaim, toClaim);
+                    this.checkPlayerGameMode(player, playerData, fromClaim, toClaim);
+                    this.checkPlayerGodMode(player, playerData, fromClaim, toClaim);
+                    this.checkPlayerWalkSpeed(player, playerData, fromClaim, toClaim);
+                    this.checkPlayerWeather(player, playerData, fromClaim, toClaim);
+                    this.runPlayerCommands(fromClaim, user, false);
+                    this.runPlayerCommands(toClaim, user, true);
+                }
             }
         }
 
         GDTimings.ENTITY_MOVE_EVENT.stopTiming();
         return true;
+    }
+
+    final static Pattern pattern = Pattern.compile("([^\\s]+)", Pattern.MULTILINE);
+
+    private void runPlayerCommands(GDClaim claim, GDPermissionUser user, boolean enter) {
+        final Player player = user.getOnlinePlayer();
+        List<String> rawCommandList = new ArrayList<>();
+        Set<Context> contexts = new HashSet<>();
+        if (player.getUniqueId().equals(claim.getOwnerUniqueId())) {
+            contexts.add(OptionContexts.COMMAND_RUNFOR_OWNER);
+        } else {
+            contexts.add(OptionContexts.COMMAND_RUNFOR_MEMBER);
+        }
+        contexts.add(OptionContexts.COMMAND_RUNFOR_PUBLIC);
+        // Check console commands
+        contexts.add(OptionContexts.COMMAND_RUNAS_CONSOLE);
+        if (enter) {
+            rawCommandList = GDPermissionManager.getInstance().getInternalOptionValue(new TypeToken<List<String>>() {}, user, Options.PLAYER_COMMAND_ENTER, claim, contexts);
+        } else {
+            rawCommandList = GDPermissionManager.getInstance().getInternalOptionValue(new TypeToken<List<String>>() {}, user, Options.PLAYER_COMMAND_EXIT, claim, contexts);
+        }
+
+        if (rawCommandList != null) {
+            runCommand(claim, player, rawCommandList, true);
+        }
+
+        // Check player commands
+        contexts.remove(OptionContexts.COMMAND_RUNAS_CONSOLE);
+        contexts.add(OptionContexts.COMMAND_RUNAS_PLAYER);
+        if (enter) {
+            rawCommandList = GDPermissionManager.getInstance().getInternalOptionValue(new TypeToken<List<String>>() {}, user, Options.PLAYER_COMMAND_ENTER, claim, contexts);
+        } else {
+            rawCommandList = GDPermissionManager.getInstance().getInternalOptionValue(new TypeToken<List<String>>() {}, user, Options.PLAYER_COMMAND_EXIT, claim, contexts);
+        }
+
+        if (rawCommandList != null) {
+            runCommand(claim, player, rawCommandList, false);
+        }
+    }
+
+    private void runCommand(GDClaim claim, Player player, List<String> rawCommandList, boolean runAsConsole) {
+        final List<String> commands = new ArrayList<>();
+        for (String command : rawCommandList) {
+            commands.add(this.replacePlaceHolders(claim, player, command));
+        }
+        for (String command : commands) {
+            final Matcher matcher = pattern.matcher(command);
+            if (matcher.find()) {
+                String baseCommand = matcher.group(0);
+                String args = command.replace(baseCommand + " ", "");
+                baseCommand = baseCommand.replace("\\", "").replace("/", "");
+                args = args.replace("%player%", player.getName());
+                if (runAsConsole) {
+                    CommandHelper.executeCommand(Bukkit.getConsoleSender(), baseCommand, args);
+                } else {
+                    CommandHelper.executeCommand(player, baseCommand, args);
+                }
+            }
+        }
+    }
+
+    private String replacePlaceHolders(GDClaim claim, Player player, String command) {
+        command = command
+                .replace("%player%", player.getName())
+                .replace("%owner%", claim.getOwnerFriendlyName())
+                .replace("%uuid%", player.getUniqueId().toString())
+                .replace("%world%", claim.getWorld().getName())
+                .replace("%server%", PermissionUtil.getInstance().getServerName())
+                .replace("%location%", BlockUtil.getInstance().posToString(player.getLocation()));
+        return command;
     }
 
     private void checkPlayerFlight(Player player, GDPlayerData playerData, GDClaim fromClaim, GDClaim toClaim) {
@@ -305,12 +411,11 @@ public class CommonEntityEventHandler {
         }
 
         if (fromClaim == toClaim || !player.isFlying()) {
-            // only handle player-fly in enter/exit
             return;
         }
 
         final Boolean noFly = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Boolean.class), playerData.getSubject(), Options.PLAYER_DENY_FLIGHT, toClaim);
-        final boolean adminFly = player.hasPermission(GDPermissions.BYPASS_OPTION);
+        final boolean adminFly = player.hasPermission(GDPermissions.BYPASS_OPTION + "." + Options.PLAYER_DENY_FLIGHT.getName().toLowerCase());
         final boolean ownerFly = toClaim.isBasicClaim() ? player.hasPermission(GDPermissions.USER_OPTION_PERK_OWNER_FLY_BASIC) : toClaim.isTown() ? player.hasPermission(GDPermissions.USER_OPTION_PERK_OWNER_FLY_TOWN) : false;
         if (player.getUniqueId().equals(toClaim.getOwnerUniqueId()) && ownerFly) {
             return;
@@ -319,7 +424,93 @@ public class CommonEntityEventHandler {
             player.setAllowFlight(false);
             player.setFlying(false);
             playerData.ignoreFallDamage = true;
-            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().OPTION_PLAYER_DENY_FLIGHT);
+            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().OPTION_APPLY_PLAYER_DENY_FLIGHT);
+        }
+    }
+
+    private void checkPlayerGodMode(Player player, GDPlayerData playerData, GDClaim fromClaim, GDClaim toClaim) {
+        final GameMode gameMode = player.getGameMode();
+        if (gameMode == GameMode.CREATIVE || gameMode == GameMode.SPECTATOR || !player.isInvulnerable()) {
+            return;
+        }
+
+        if (fromClaim == toClaim) {
+            return;
+        }
+
+        final Boolean noGodMode = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Boolean.class), playerData.getSubject(), Options.PLAYER_DENY_GODMODE, toClaim);
+        final boolean bypassOption = player.hasPermission(GDPermissions.BYPASS_OPTION + "." + Options.PLAYER_DENY_GODMODE.getName().toLowerCase());
+        if (!bypassOption && noGodMode) {
+            player.setInvulnerable(false);
+            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().OPTION_APPLY_PLAYER_DENY_GODMODE);
+        }
+    }
+
+    private void checkPlayerGameMode(Player player, GDPlayerData playerData, GDClaim fromClaim, GDClaim toClaim) {
+        if (fromClaim == toClaim) {
+            return;
+        }
+
+        final GameMode currentGameMode = player.getGameMode();
+        final GameModeType gameModeType = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(GameModeType.class), playerData.getSubject(), Options.PLAYER_GAMEMODE, toClaim);
+        final boolean bypassOption = player.hasPermission(GDPermissions.BYPASS_OPTION + "." + Options.PLAYER_GAMEMODE.getName().toLowerCase());
+        if (!bypassOption && gameModeType != null && gameModeType != GameModeTypes.UNDEFINED) {
+            final GameMode newGameMode = PlayerUtil.GAMEMODE_MAP.get(gameModeType);
+            if (currentGameMode != newGameMode) {
+                player.setGameMode(newGameMode);
+                final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.OPTION_APPLY_PLAYER_GAMEMODE,
+                        ImmutableMap.of(
+                        "gamemode", gameModeType.getName()));
+                GriefDefenderPlugin.sendMessage(player, message);
+            }
+        }
+    }
+
+    private void checkPlayerWalkSpeed(Player player, GDPlayerData playerData, GDClaim fromClaim, GDClaim toClaim) {
+        if (fromClaim == toClaim) {
+            return;
+        }
+
+        final float currentWalkSpeed = player.getWalkSpeed();
+        final double walkSpeed = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Double.class), playerData.getSubject(), Options.PLAYER_WALK_SPEED, toClaim);
+        final boolean bypassOption = player.hasPermission(GDPermissions.BYPASS_OPTION + "." + Options.PLAYER_WALK_SPEED.getName().toLowerCase());
+        if (!bypassOption && walkSpeed > 0) {
+            if (currentWalkSpeed != ((float) walkSpeed)) {
+                player.setWalkSpeed((float) walkSpeed);
+                final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.OPTION_APPLY_PLAYER_WALK_SPEED,
+                        ImmutableMap.of(
+                        "speed", walkSpeed));
+                GriefDefenderPlugin.sendMessage(player, message);
+            }
+        }
+    }
+
+    private void checkPlayerWeather(Player player, GDPlayerData playerData, GDClaim fromClaim, GDClaim toClaim) {
+        if (fromClaim == toClaim) {
+            return;
+        }
+
+        final WeatherType weatherType = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(WeatherType.class), playerData.getSubject(), Options.PLAYER_WEATHER, toClaim);
+        if (weatherType != null && weatherType != WeatherTypes.UNDEFINED) {
+            final org.bukkit.WeatherType currentWeather = player.getPlayerWeather();
+            player.setPlayerWeather(PlayerUtil.WEATHERTYPE_MAP.get(weatherType));
+            final org.bukkit.WeatherType newWeather = player.getPlayerWeather();
+            if (currentWeather != newWeather) {
+                final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.OPTION_APPLY_PLAYER_WEATHER,
+                        ImmutableMap.of(
+                        "weather", weatherType.getName()));
+                GriefDefenderPlugin.sendMessage(player, message);
+            }
+        } else {
+            final org.bukkit.WeatherType currentWeather = player.getPlayerWeather();
+            player.resetPlayerWeather();
+            final org.bukkit.WeatherType newWeather = player.getPlayerWeather();
+            if (currentWeather != newWeather) {
+                final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.OPTION_APPLY_PLAYER_WEATHER,
+                        ImmutableMap.of(
+                        "weather", weatherType.getName()));
+                GriefDefenderPlugin.sendMessage(player, message);
+            }
         }
     }
 

@@ -30,9 +30,6 @@ import com.google.common.reflect.TypeToken;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GDTimings;
 import com.griefdefender.GriefDefenderPlugin;
-import com.griefdefender.api.ChatType;
-import com.griefdefender.api.ChatTypes;
-import com.griefdefender.api.GriefDefender;
 import com.griefdefender.api.Tristate;
 import com.griefdefender.api.claim.Claim;
 import com.griefdefender.api.claim.ClaimBlockSystem;
@@ -43,6 +40,7 @@ import com.griefdefender.api.claim.ClaimTypes;
 import com.griefdefender.api.claim.ShovelTypes;
 import com.griefdefender.api.claim.TrustType;
 import com.griefdefender.api.claim.TrustTypes;
+import com.griefdefender.api.permission.flag.Flag;
 import com.griefdefender.api.permission.flag.Flags;
 import com.griefdefender.api.permission.option.Options;
 import com.griefdefender.api.permission.option.type.CreateModeTypes;
@@ -52,7 +50,6 @@ import com.griefdefender.claim.GDClaim;
 import com.griefdefender.claim.GDClaimManager;
 import com.griefdefender.command.CommandHelper;
 import com.griefdefender.configuration.MessageStorage;
-import com.griefdefender.event.GDBorderClaimEvent;
 import com.griefdefender.event.GDCauseStackManager;
 import com.griefdefender.internal.provider.WorldEditProvider;
 import com.griefdefender.internal.provider.WorldGuardProvider;
@@ -81,7 +78,6 @@ import net.kyori.text.format.TextColor;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
-import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -121,12 +117,9 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
-import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
-import java.lang.ref.WeakReference;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.Map;
@@ -326,7 +319,7 @@ public class PlayerEventHandler implements Listener {
         final Location location = event.getItemDrop().getLocation();
         final GDClaim targetClaim = GriefDefenderPlugin.getInstance().dataStore.getClaimAt(location);
 
-        if (GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, GDPermissions.ITEM_DROP, player, event.getItemDrop(), player, TrustTypes.ACCESSOR, true) == Tristate.FALSE) {
+        if (GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, Flags.ITEM_DROP, player, event.getItemDrop(), player, TrustTypes.ACCESSOR, true) == Tristate.FALSE) {
             event.setCancelled(true);
         }
     }
@@ -354,7 +347,7 @@ public class PlayerEventHandler implements Listener {
 
         final Location location = event.getItem().getLocation();
         final GDClaim targetClaim = GriefDefenderPlugin.getInstance().dataStore.getClaimAt(location);
-        if (GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, GDPermissions.ITEM_PICKUP, player, event.getItem(), player, TrustTypes.ACCESSOR, true) == Tristate.FALSE) {
+        if (GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, Flags.ITEM_PICKUP, player, event.getItem(), player, TrustTypes.ACCESSOR, true) == Tristate.FALSE) {
             event.setCancelled(true);
         }
     }
@@ -382,7 +375,7 @@ public class PlayerEventHandler implements Listener {
             GDTimings.PLAYER_INTERACT_INVENTORY_OPEN_EVENT.stopTiming();
             return;
         }
-        final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, claim, GDPermissions.INVENTORY_OPEN, player, target, user, TrustTypes.CONTAINER, true);
+        final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, claim, Flags.INTERACT_INVENTORY, player, target, user, TrustTypes.CONTAINER, true);
         if (result == Tristate.FALSE) {
             final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_INVENTORY_OPEN,
                     ImmutableMap.of(
@@ -416,7 +409,7 @@ public class PlayerEventHandler implements Listener {
         }
 
         final GDPermissionUser user = PermissionHolderCache.getInstance().getOrCreateUser(player.getUniqueId());
-        final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, claim, GDPermissions.INVENTORY_CLICK, source, target, user, TrustTypes.CONTAINER, true);
+        final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, claim, Flags.INTERACT_INVENTORY_CLICK, source, target, user, TrustTypes.CONTAINER, true);
         if (result == Tristate.FALSE) {
             final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_INTERACT_ITEM,
                     ImmutableMap.of(
@@ -445,7 +438,7 @@ public class PlayerEventHandler implements Listener {
         GDPlayerData playerData = this.dataStore.getOrCreatePlayerData(location.getWorld(), player.getUniqueId());
         GDClaim claim = this.dataStore.getClaimAtPlayer(playerData, location);
 
-        final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, claim, GDPermissions.ITEM_USE, player, itemInUse, player, TrustTypes.ACCESSOR, true);
+        final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, claim, Flags.ITEM_USE, player, itemInUse, player, TrustTypes.ACCESSOR, true);
         if (result == Tristate.FALSE) {
             final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_ITEM_USE,
                     ImmutableMap.of("item", ItemTypeRegistryModule.getInstance().getNMSKey(itemInUse)));
@@ -488,12 +481,12 @@ public class PlayerEventHandler implements Listener {
         final Location location = clickedBlock == null ? event.getPlayer().getLocation() : clickedBlock.getLocation();
 
         final GDClaim claim = this.dataStore.getClaimAt(location);
-        final String ITEM_PERMISSION = primaryEvent ? GDPermissions.INTERACT_ITEM_PRIMARY : GDPermissions.INTERACT_ITEM_SECONDARY;
-        if ((itemPrimaryBlacklisted && ITEM_PERMISSION.equals(GDPermissions.INTERACT_ITEM_PRIMARY)) || (itemSecondaryBlacklisted && ITEM_PERMISSION.equals(GDPermissions.INTERACT_ITEM_SECONDARY))) {
+        final Flag flag = primaryEvent ? Flags.INTERACT_ITEM_PRIMARY : Flags.INTERACT_ITEM_SECONDARY;
+        if ((itemPrimaryBlacklisted && flag == Flags.INTERACT_ITEM_PRIMARY) || (itemSecondaryBlacklisted && flag == Flags.INTERACT_ITEM_SECONDARY)) {
             return;
         }
 
-        if (GDPermissionManager.getInstance().getFinalPermission(event, location, claim, ITEM_PERMISSION, player, itemInHand, player, TrustTypes.ACCESSOR, true) == Tristate.FALSE) {
+        if (GDPermissionManager.getInstance().getFinalPermission(event, location, claim, flag, player, itemInHand, player, TrustTypes.ACCESSOR, true) == Tristate.FALSE) {
             Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_INTERACT_ITEM,
                     ImmutableMap.of(
                     "player", claim.getOwnerName(),
@@ -547,7 +540,7 @@ public class PlayerEventHandler implements Listener {
             }
 
             final GDClaim claim = this.dataStore.getClaimAt(location);
-            if (GDPermissionManager.getInstance().getFinalPermission(event, location, claim, GDPermissions.INTERACT_ITEM_SECONDARY, player, activeItem, player, TrustTypes.ACCESSOR, true) == Tristate.FALSE) {
+            if (GDPermissionManager.getInstance().getFinalPermission(event, location, claim, Flags.INTERACT_ITEM_SECONDARY, player, activeItem, player, TrustTypes.ACCESSOR, true) == Tristate.FALSE) {
                 Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_INTERACT_ITEM,
                         ImmutableMap.of(
                         "player", claim.getOwnerName(),
@@ -568,9 +561,9 @@ public class PlayerEventHandler implements Listener {
         GDTimings.PLAYER_INTERACT_ENTITY_SECONDARY_EVENT.startTiming();
         final GDClaim claim = this.dataStore.getClaimAt(location);
 
-        Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, claim, GDPermissions.INTERACT_ENTITY_SECONDARY, source, targetEntity, player, TrustTypes.ACCESSOR, true);
+        Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, claim, Flags.INTERACT_ENTITY_SECONDARY, source, targetEntity, player, TrustTypes.ACCESSOR, true);
         if (result == Tristate.TRUE && targetEntity instanceof ArmorStand) {
-            result = GDPermissionManager.getInstance().getFinalPermission(event, location, claim, GDPermissions.INVENTORY_OPEN, source, targetEntity, player, TrustTypes.CONTAINER, false);
+            result = GDPermissionManager.getInstance().getFinalPermission(event, location, claim, Flags.INTERACT_INVENTORY, source, targetEntity, player, TrustTypes.CONTAINER, false);
         }
         if (result == Tristate.FALSE) {
             event.setCancelled(true);
@@ -606,7 +599,7 @@ public class PlayerEventHandler implements Listener {
         final GDClaim claim = this.dataStore.getClaimAt(location);
         final TrustType trustType = NMSUtil.getInstance().hasBlockTileEntity(location) ? TrustTypes.CONTAINER : TrustTypes.ACCESSOR;
 
-        Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, claim, GDPermissions.INTERACT_BLOCK_SECONDARY, source, clickedBlock, player, trustType, true);
+        Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, claim, Flags.INTERACT_BLOCK_SECONDARY, source, clickedBlock, player, trustType, true);
         if (result == Tristate.FALSE) {
             event.setCancelled(true);
             GDTimings.PLAYER_INTERACT_BLOCK_SECONDARY_EVENT.stopTiming();
@@ -649,13 +642,13 @@ public class PlayerEventHandler implements Listener {
 
         GDTimings.PLAYER_INTERACT_BLOCK_PRIMARY_EVENT.startTiming();
         final GDClaim claim = this.dataStore.getClaimAt(location);
-        final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, claim, GDPermissions.INTERACT_BLOCK_PRIMARY, source, clickedBlock.getState(), player, TrustTypes.BUILDER, true);
+        final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, claim, Flags.INTERACT_BLOCK_PRIMARY, source, clickedBlock.getState(), player, TrustTypes.BUILDER, true);
         if (result == Tristate.FALSE) {
             if (GriefDefenderPlugin.isTargetIdBlacklisted(Flags.BLOCK_BREAK.toString(), clickedBlock.getState(), player.getWorld().getUID())) {
                 GDTimings.PLAYER_INTERACT_BLOCK_PRIMARY_EVENT.stopTiming();
                 return;
             }
-            if (GDPermissionManager.getInstance().getFinalPermission(event, location, claim, GDPermissions.BLOCK_BREAK, player, clickedBlock.getState(), player, TrustTypes.BUILDER, true) == Tristate.TRUE) {
+            if (GDPermissionManager.getInstance().getFinalPermission(event, location, claim, Flags.BLOCK_BREAK, player, clickedBlock.getState(), player, TrustTypes.BUILDER, true) == Tristate.TRUE) {
                 GDTimings.PLAYER_INTERACT_BLOCK_PRIMARY_EVENT.stopTiming();
                 return;
             }
@@ -721,11 +714,11 @@ public class PlayerEventHandler implements Listener {
             trustType = TrustTypes.ACCESSOR;
         }
         if (GDFlags.INTERACT_BLOCK_SECONDARY && playerData != null) {
-            String permission = GDPermissions.INTERACT_BLOCK_SECONDARY;
+            Flag flag = Flags.INTERACT_BLOCK_SECONDARY;
             if (event.getAction() == Action.PHYSICAL) {
-                permission = GDPermissions.COLLIDE_BLOCK;
+                flag = Flags.COLLIDE_BLOCK;
             }
-            Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, claim, permission, source, clickedBlock, player, trustType, true);
+            Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, claim, flag, source, clickedBlock, player, trustType, true);
             if (result == Tristate.FALSE) {
                 // if player is holding an item, check if it can be placed
                 if (GDFlags.BLOCK_PLACE && itemInHand != null && itemInHand.getType().isBlock()) {
@@ -733,7 +726,7 @@ public class PlayerEventHandler implements Listener {
                         GDTimings.PLAYER_INTERACT_BLOCK_SECONDARY_EVENT.stopTiming();
                         return;
                     }
-                    if (GDPermissionManager.getInstance().getFinalPermission(event, location, claim, GDPermissions.BLOCK_PLACE, source, itemInHand, player, TrustTypes.BUILDER, true) == Tristate.TRUE) {
+                    if (GDPermissionManager.getInstance().getFinalPermission(event, location, claim, Flags.BLOCK_PLACE, source, itemInHand, player, TrustTypes.BUILDER, true) == Tristate.TRUE) {
                         GDTimings.PLAYER_INTERACT_BLOCK_SECONDARY_EVENT.stopTiming();
                         return;
                     }
@@ -789,6 +782,21 @@ public class PlayerEventHandler implements Listener {
         final Location destination = event.getTo();
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
         final GDClaim sourceClaim =  this.dataStore.getClaimAtPlayer(playerData, player.getLocation());
+        // Cancel event if player is unable to teleport during PvP combat
+        final boolean pvpCombatTeleport = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Boolean.class), player, Options.PVP_COMBAT_TELEPORT, sourceClaim);
+        if (!pvpCombatTeleport) {
+            final int combatTimeRemaining = playerData.getPvpCombatTimeRemaining();
+            if (combatTimeRemaining > 0) {
+                final Component denyMessage = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PVP_IN_COMBAT_NOT_ALLOWED,
+                        ImmutableMap.of(
+                        "time-remaining", combatTimeRemaining));
+                GriefDefenderPlugin.sendMessage(player, denyMessage);
+                event.setCancelled(true);
+                GDTimings.ENTITY_TELEPORT_EVENT.stopTiming();
+                return;
+            }
+        }
+
         // Handle BorderClaimEvent
         if (!CommonEntityEventHandler.getInstance().onEntityMove(event, sourceLocation, destination, player)) {
             event.setCancelled(true);
@@ -800,7 +808,7 @@ public class PlayerEventHandler implements Listener {
             final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_PORTAL_EXIT,
                     ImmutableMap.of(
                     "player", sourceClaim.getOwnerName()));
-            if (GDFlags.ENTITY_TELEPORT_FROM && !teleportFromBlacklisted && GDPermissionManager.getInstance().getFinalPermission(event, sourceLocation, sourceClaim, GDPermissions.ENTITY_TELEPORT_FROM, type, player, player, TrustTypes.ACCESSOR, true) == Tristate.FALSE) {
+            if (GDFlags.ENTITY_TELEPORT_FROM && !teleportFromBlacklisted && GDPermissionManager.getInstance().getFinalPermission(event, sourceLocation, sourceClaim, Flags.ENTITY_TELEPORT_FROM, type, player, player, TrustTypes.ACCESSOR, true) == Tristate.FALSE) {
                 if (player != null) {
                     GriefDefenderPlugin.sendMessage(player, message);
                 }
@@ -808,7 +816,7 @@ public class PlayerEventHandler implements Listener {
                 event.setCancelled(true);
                 GDTimings.ENTITY_TELEPORT_EVENT.stopTiming();
                 return;
-            } else if (GDFlags.EXIT_CLAIM && !teleportFromBlacklisted && GDPermissionManager.getInstance().getFinalPermission(event, sourceLocation, sourceClaim, GDPermissions.EXIT_CLAIM, type, player, player, TrustTypes.ACCESSOR, true) == Tristate.FALSE) {
+            } else if (GDFlags.EXIT_CLAIM && !teleportFromBlacklisted && GDPermissionManager.getInstance().getFinalPermission(event, sourceLocation, sourceClaim, Flags.EXIT_CLAIM, type, player, player, TrustTypes.ACCESSOR, true) == Tristate.FALSE) {
                 if (player != null) {
                     GriefDefenderPlugin.sendMessage(player, message);
                 }
@@ -831,7 +839,7 @@ public class PlayerEventHandler implements Listener {
             final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_PORTAL_ENTER,
                     ImmutableMap.of(
                     "player", toClaim.getOwnerName()));
-            if (GDFlags.ENTITY_TELEPORT_TO && !teleportToBlacklisted && GDPermissionManager.getInstance().getFinalPermission(event, destination, toClaim, GDPermissions.ENTITY_TELEPORT_TO, type, player, player, TrustTypes.ACCESSOR, true) == Tristate.FALSE) {
+            if (GDFlags.ENTITY_TELEPORT_TO && !teleportToBlacklisted && GDPermissionManager.getInstance().getFinalPermission(event, destination, toClaim, Flags.ENTITY_TELEPORT_TO, type, player, player, TrustTypes.ACCESSOR, true) == Tristate.FALSE) {
                 if (player != null) {
                     GriefDefenderPlugin.sendMessage(player, message);
                 }
@@ -839,7 +847,7 @@ public class PlayerEventHandler implements Listener {
                 event.setCancelled(true);
                 GDTimings.ENTITY_TELEPORT_EVENT.stopTiming();
                 return;
-            } else if (GDFlags.ENTER_CLAIM && !teleportToBlacklisted && GDPermissionManager.getInstance().getFinalPermission(event, destination, toClaim, GDPermissions.ENTER_CLAIM, type, player, player, TrustTypes.ACCESSOR, true) == Tristate.FALSE) {
+            } else if (GDFlags.ENTER_CLAIM && !teleportToBlacklisted && GDPermissionManager.getInstance().getFinalPermission(event, destination, toClaim, Flags.ENTER_CLAIM, type, player, player, TrustTypes.ACCESSOR, true) == Tristate.FALSE) {
                 if (player != null) {
                     GriefDefenderPlugin.sendMessage(player, message);
                 }
@@ -1460,7 +1468,8 @@ public class PlayerEventHandler implements Listener {
         GDTimings.PLAYER_INVESTIGATE_CLAIM.startTiming();
         GDClaim claim = null;
         if (event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_AIR) {
-            claim = this.findNearbyClaim(player);
+            final int maxDistance = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), player, Options.RADIUS_INSPECT);
+            claim = this.findNearbyClaim(player, maxDistance);
             if (player.isSneaking()) {
                 if (!playerData.canIgnoreClaim(claim) && !player.hasPermission(GDPermissions.VISUALIZE_CLAIMS_NEARBY)) {
                     GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().PERMISSION_VISUAL_CLAIMS_NEARBY);
@@ -1469,7 +1478,7 @@ public class PlayerEventHandler implements Listener {
                 }
 
                 Location nearbyLocation = playerData.lastValidInspectLocation != null ? playerData.lastValidInspectLocation : player.getLocation();
-                Set<Claim> claims = BlockUtil.getInstance().getNearbyClaims(nearbyLocation);
+                Set<Claim> claims = BlockUtil.getInstance().getNearbyClaims(nearbyLocation, maxDistance);
                 int height = (int) (playerData.lastValidInspectLocation != null ? playerData.lastValidInspectLocation.getBlockY() : PlayerUtil.getInstance().getEyeHeight(player));
 
                 boolean hideBorders = this.worldEditProvider != null &&
@@ -1529,8 +1538,7 @@ public class PlayerEventHandler implements Listener {
         return true;
     }
 
-    private GDClaim findNearbyClaim(Player player) {
-        int maxDistance = GriefDefenderPlugin.getInstance().maxInspectionDistance;
+    private GDClaim findNearbyClaim(Player player, int maxDistance) {
         BlockRay blockRay = BlockRay.from(player).distanceLimit(maxDistance).build();
         GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
         GDClaim claim = null;

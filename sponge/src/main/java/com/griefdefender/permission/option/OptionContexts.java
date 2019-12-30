@@ -22,14 +22,16 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.griefdefender.configuration.category;
+package com.griefdefender.permission.option;
 
-import ninja.leaping.configurate.objectmapping.Setting;
-import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
+import com.griefdefender.api.permission.Context;
+import com.griefdefender.api.permission.ContextKeys;
 
-@ConfigSerializable
-public class PvpCategory extends ConfigCategory {
+public class OptionContexts {
 
-    @Setting(value = "combat-timeout", comment = "How long combat is considered to continue after the most recent damage.")
-    public int combatTimeout = 15;
+    public static final Context COMMAND_RUNAS_CONSOLE = new Context(ContextKeys.RUN_AS, "console");
+    public static final Context COMMAND_RUNAS_PLAYER = new Context(ContextKeys.RUN_AS, "player");
+    public static final Context COMMAND_RUNFOR_MEMBER = new Context(ContextKeys.RUN_FOR, "member");
+    public static final Context COMMAND_RUNFOR_OWNER = new Context(ContextKeys.RUN_FOR, "owner");
+    public static final Context COMMAND_RUNFOR_PUBLIC = new Context(ContextKeys.RUN_FOR, "public");
 }
