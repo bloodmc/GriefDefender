@@ -55,7 +55,7 @@ public class CommandClaimFlagGroup extends ClaimFlagBase {
     @Syntax("<group> <flag> <target> <value> [context[key=value]]")
     @Subcommand("flag group")
     public void execute(Player player, String group, @Optional String[] args) throws InvalidCommandArgument {
-        if (args.length < 2 || args.length > 3) {
+        if (args.length < 2 || args.length > 4) {
             throw new InvalidCommandArgument();
         }
 
