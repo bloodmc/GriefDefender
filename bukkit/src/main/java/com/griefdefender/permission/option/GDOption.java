@@ -26,7 +26,6 @@ package com.griefdefender.permission.option;
 
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.Tristate;
-import com.griefdefender.api.permission.Context;
 import com.griefdefender.api.permission.option.Option;
 import com.griefdefender.api.permission.option.type.CreateModeType;
 import com.griefdefender.api.permission.option.type.CreateModeTypes;
@@ -38,6 +37,7 @@ import com.griefdefender.api.permission.option.type.WeatherTypes;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -141,6 +141,7 @@ public class GDOption<T> implements Option<T> {
         this.description = null;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public T getDefaultValue() {
         if (this.allowed.isAssignableFrom(Tristate.class)) {
@@ -157,6 +158,9 @@ public class GDOption<T> implements Option<T> {
         }
         if (this.allowed.isAssignableFrom(Boolean.class)) {
             return (T) Boolean.FALSE;
+        }
+        if (this.allowed.isAssignableFrom(List.class)) {
+            return (T) new ArrayList<>();
         }
         if (this.allowed.isAssignableFrom(CreateModeType.class)) {
             return (T) CreateModeTypes.AREA;
