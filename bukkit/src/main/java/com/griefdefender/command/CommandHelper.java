@@ -989,14 +989,26 @@ public class CommandHelper {
                 return;
             }
             Player player = (Player) src;
-            GDClaim gpClaim = (GDClaim) claim;
-            GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getPlayerData(player.getWorld(), player.getUniqueId());
-            if (!playerData.canIgnoreClaim(gpClaim) && !playerData.canManageAdminClaims) {
+            GDClaim gdClaim = (GDClaim) claim;
+            final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getPlayerData(player.getWorld(), player.getUniqueId());
+            if (!playerData.canIgnoreClaim(gdClaim) && !playerData.canManageAdminClaims) {
                 // if not owner of claim, validate perms
                 if (!player.getUniqueId().equals(claim.getOwnerUniqueId())) {
-                    if (!player.hasPermission(GDPermissions.COMMAND_CLAIM_INFO_TELEPORT_OTHERS) && !gpClaim.isUserTrusted(player, TrustTypes.ACCESSOR)) {
+                    if (!player.hasPermission(GDPermissions.COMMAND_CLAIM_INFO_TELEPORT_OTHERS)) {
                         TextAdapter.sendComponent(player, MessageCache.getInstance().CLAIMINFO_UI_TELEPORT_FEATURE.color(TextColor.RED)); 
                         return;
+                    }
+                    if (!gdClaim.isUserTrusted(player, TrustTypes.ACCESSOR)) {
+                        if (GriefDefenderPlugin.getInstance().getVaultProvider() != null) {
+                            // Allow non-trusted to TP to claims for sale
+                            if (!gdClaim.getEconomyData().isForSale()) {
+                                TextAdapter.sendComponent(player, MessageCache.getInstance().CLAIMINFO_UI_TELEPORT_FEATURE.color(TextColor.RED)); 
+                                return;
+                            }
+                        } else {
+                            TextAdapter.sendComponent(player, MessageCache.getInstance().CLAIMINFO_UI_TELEPORT_FEATURE.color(TextColor.RED)); 
+                            return;
+                        }
                     }
                 } else if (!player.hasPermission(GDPermissions.COMMAND_CLAIM_INFO_TELEPORT_BASE)) {
                     TextAdapter.sendComponent(player, MessageCache.getInstance().CLAIMINFO_UI_TELEPORT_FEATURE.color(TextColor.RED)); 
