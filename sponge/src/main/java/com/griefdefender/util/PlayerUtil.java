@@ -57,6 +57,7 @@ import org.spongepowered.api.item.ItemType;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.service.user.UserStorageService;
 import org.spongepowered.api.util.Direction;
+import org.spongepowered.api.world.weather.Weather;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -227,6 +228,10 @@ public class PlayerUtil {
 
     public void setPlayerWeather(GDPermissionUser user, WeatherType type) {
         final Player player = user.getOnlinePlayer();
+        if (type == WeatherTypes.UNDEFINED) {
+            this.resetPlayerWeather(user);
+            return;
+        }
         if (type == WeatherTypes.DOWNFALL) {
             ((EntityPlayerMP) player).connection.sendPacket(new SPacketChangeGameState(2, 0));
         } else {

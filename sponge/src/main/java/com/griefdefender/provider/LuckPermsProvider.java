@@ -107,8 +107,6 @@ public class LuckPermsProvider implements PermissionProvider {
 
     private final LuckPerms luckPermsApi;
     private final static DefaultDataQueryOrderFunction DEFAULT_DATA_QUERY_ORDER = new DefaultDataQueryOrderFunction();
-    private final static PermissionResult RESULT_FAILURE = new GDPermissionResult(ResultTypes.FAILURE);
-    private final static PermissionResult RESULT_SUCCESS = new GDPermissionResult(ResultTypes.SUCCESS);
 
     public LuckPermsProvider() {
         final ProviderRegistration<LuckPerms> service = Sponge.getServiceManager().getRegistration(LuckPerms.class).orElse(null);
@@ -744,12 +742,12 @@ public class LuckPermsProvider implements PermissionProvider {
         ImmutableContextSet set = this.getLPContexts(contexts).immutableCopy();
         final PermissionHolder permissionHolder = this.getLuckPermsHolder(holder);
         if (permissionHolder == null) {
-            return RESULT_FAILURE;
+            new GDPermissionResult(ResultTypes.FAILURE);
         }
 
         final Option option = OptionRegistryModule.getInstance().getById(key).orElse(null);
         if (option == null) {
-            return RESULT_FAILURE;
+            new GDPermissionResult(ResultTypes.FAILURE);
         }
 
         final Node node = MetaNode.builder().key(key).value(value).context(set).build();
@@ -761,7 +759,7 @@ public class LuckPermsProvider implements PermissionProvider {
         } else {
             this.clearMeta(permissionHolder, key, set);
             this.savePermissionHolder(permissionHolder);
-            return RESULT_SUCCESS;
+            return new GDPermissionResult(ResultTypes.SUCCESS);
         }
         if (result != null) {
             if (result.wasSuccessful()) {
@@ -771,7 +769,7 @@ public class LuckPermsProvider implements PermissionProvider {
             return new GDPermissionResult(ResultTypes.FAILURE, TextComponent.builder().append(result.name()).build());
         }
 
-        return RESULT_FAILURE;
+        return new GDPermissionResult(ResultTypes.FAILURE);
     }
 
     public PermissionResult setPermissionValue(GDPermissionHolder holder, String permission, Tristate value, Set<Context> contexts, boolean save) {
@@ -780,7 +778,7 @@ public class LuckPermsProvider implements PermissionProvider {
         final Node node = this.luckPermsApi.getNodeBuilderRegistry().forPermission().permission(permission).value(value.asBoolean()).context(set).build();
         final PermissionHolder permissionHolder = this.getLuckPermsHolder(holder);
         if (permissionHolder == null) {
-            return RESULT_FAILURE;
+            return new GDPermissionResult(ResultTypes.FAILURE);
         }
 
         if (value == Tristate.UNDEFINED) {

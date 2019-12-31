@@ -39,6 +39,7 @@ import com.griefdefender.api.claim.Claim;
 import com.griefdefender.api.claim.ClaimContexts;
 import com.griefdefender.api.permission.Context;
 import com.griefdefender.api.permission.ContextKeys;
+import com.griefdefender.api.permission.PermissionResult;
 import com.griefdefender.api.permission.option.Option;
 import com.griefdefender.api.permission.option.Options;
 import com.griefdefender.api.permission.option.type.CreateModeType;
@@ -53,6 +54,7 @@ import com.griefdefender.claim.GDClaim;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.event.GDCauseStackManager;
 import com.griefdefender.internal.pagination.PaginationList;
+import com.griefdefender.listener.CommonEntityEventHandler;
 import com.griefdefender.permission.GDPermissionHolder;
 import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.permission.GDPermissions;
@@ -369,10 +371,17 @@ public abstract class ClaimOptionBase extends BaseCommand {
             }
         }
 
-        if (displayType == MenuType.DEFAULT) {
+        if (displayType == MenuType.DEFAULT || displayType == MenuType.CLAIM) {
             final Set<Context> contexts = new HashSet<>();
             contexts.add(ClaimContexts.GLOBAL_DEFAULT_CONTEXT);
             for (Option option : OptionRegistryModule.getInstance().getAll()) {
+                if (option.isGlobal() && displayType == MenuType.CLAIM) {
+                    continue;
+                }
+                // commands are special-cased as they use a List and cannot show up with no data
+                if (option == Options.PLAYER_COMMAND_ENTER || option == Options.PLAYER_COMMAND_EXIT) {
+                    continue;
+                }
                 boolean found = false;
                 for (Entry<String, OptionData> optionEntry : filteredContextMap.entrySet()) {
                     if (optionEntry.getValue().option == option) {
@@ -381,16 +390,11 @@ public abstract class ClaimOptionBase extends BaseCommand {
                     }
                 }
                 if (!found) {
-                    filteredContextMap.put(option.getPermission(), new OptionData(option, "undefined", displayType, contexts));
+                    filteredContextMap.put(option.getPermission(), new OptionData(option, option.getDefaultValue().toString(), MenuType.DEFAULT, contexts));
                 }
             }
         }
 
-        if (displayType == MenuType.CLAIM) {
-            final Set<Context> contexts = new HashSet<>();
-            contexts.add(ClaimContexts.GLOBAL_DEFAULT_CONTEXT);
-            filteredContextMap.put(Options.PVP.getPermission(), new OptionData(Options.PVP, "undefined", MenuType.DEFAULT, contexts));
-        }
         for (Map.Entry<Set<Context>, Map<String, String>> mapEntry : PermissionUtil.getInstance().getPermanentOptions(this.subject).entrySet()) {
             final Set<Context> contextSet = mapEntry.getKey();
             if (contextSet.contains(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)) {
@@ -437,6 +441,10 @@ public abstract class ClaimOptionBase extends BaseCommand {
             if (option.getName().contains("tax") && !GriefDefenderPlugin.getGlobalConfig().getConfig().claim.bankTaxSystem) {
                 continue;
             }
+            if (option.isGlobal() && displayType == MenuType.CLAIM) {
+                continue;
+            }
+
             for (OptionContextHolder optionHolder : optionData.optionContextMap.values()) {
                 if (displayType != MenuType.CLAIM && optionHolder.getType() != displayType) {
                     continue;
@@ -560,11 +568,7 @@ public abstract class ClaimOptionBase extends BaseCommand {
             }
         }
 
-        boolean customContexts = UIHelper.containsCustomContext(contexts);
-        // special case
-        if (option == Options.PLAYER_COMMAND_ENTER || option == Options.PLAYER_COMMAND_EXIT) {
-            customContexts = true;
-        }
+        boolean customContexts = this.containsCustomContext(option, contexts);
         Component optionContexts = UIHelper.getFriendlyContextString(claim, contexts);
         String currentValue = optionHolder.getValue();
         TextColor color = optionHolder.getColor();
@@ -655,15 +659,6 @@ public abstract class ClaimOptionBase extends BaseCommand {
                 builder.append(" ").append(target);
             }
         }
-    }
-
-    private boolean containsDefaultContext(Set<Context> contexts) {
-        for (Context context : contexts) {
-            if (context.getKey().contains("gd_claim_default")) {
-                return true;
-            }
-        }
-        return false;
     }
 
     private ClickEvent createClickEvent(Player src, Option option) {
@@ -787,7 +782,7 @@ public abstract class ClaimOptionBase extends BaseCommand {
             }
 
             Set<Context> newContexts = new HashSet<>();
-            final boolean isCustom = UIHelper.containsCustomContext(contexts);
+            final boolean isCustom = this.containsCustomContext(option, contexts);
             if (!isCustom && displayType == MenuType.CLAIM) {
                 newContexts.add(claim.getContext());
             } else {
@@ -803,7 +798,12 @@ public abstract class ClaimOptionBase extends BaseCommand {
                 }
             }
 
-            PermissionUtil.getInstance().setOptionValue(this.subject, option.getPermission(), newValue, newContexts);
+            final PermissionResult result = PermissionUtil.getInstance().setOptionValue(this.subject, option.getPermission(), newValue, newContexts);
+            if (result.successful()) {
+                if (option == Options.PLAYER_WEATHER) {
+                    CommonEntityEventHandler.getInstance().checkPlayerWeather(src, claim, claim, true);
+                }
+            }
             showOptionPermissions(src, claim, displayType);
         };
     }
@@ -815,84 +815,8 @@ public abstract class ClaimOptionBase extends BaseCommand {
         };
     }
 
-    private Consumer<CommandSource> adjustNumberConsumer(GDPermissionUser src, GDClaim claim, Option option, String currentValue, MenuType menuType, Set<Context> contexts) {
-        return consumer -> {
-            String newValue = "";
-            final Set<Context> filteredContexts = applySelectedTypeContext(claim, menuType, contexts);
-            if (option.getAllowedType().isAssignableFrom(Boolean.class)) {
-                Boolean value = getMenuTypeValue(TypeToken.of(Boolean.class), currentValue);
-                if (value == null) {
-                    newValue = "true";
-                } else if (value) {
-                    newValue = "false";
-                } else {
-                    newValue = "undefined";
-                }
-                PermissionUtil.getInstance().setOptionValue(this.subject, option.getPermission(), newValue, filteredContexts);
-            }
-            if (option.getAllowedType().isAssignableFrom(Integer.class)) {
-                newValue = getMenuTypeValue(TypeToken.of(String.class), currentValue);
-                if (newValue == null) {
-                    newValue = "undefined";
-                }
-                PermissionUtil.getInstance().setOptionValue(this.subject, option.getPermission(), newValue, filteredContexts);
-            }
-            showOptionPermissions(src, claim, menuType);
-        };
-    }
-
-    private Set<Context> applySelectedTypeContext(Claim claim, MenuType menuType, Set<Context> contexts) {
-        Set<Context> filteredContexts = new HashSet<>(contexts);
-        for (Context context : contexts) {
-            if (context.getKey().contains("gd_claim")) {
-                filteredContexts.remove(context);
-            }
-        }
-        if (menuType == MenuType.DEFAULT) {
-            filteredContexts.add(ClaimContexts.GLOBAL_DEFAULT_CONTEXT);
-        }
-        if (menuType == MenuType.CLAIM) {
-            filteredContexts.add(claim.getContext());
-        }
-        if (menuType == MenuType.OVERRIDE) {
-            filteredContexts.add(ClaimContexts.GLOBAL_OVERRIDE_CONTEXT);
-        }
-        return filteredContexts;
-    }
-
-    private boolean contextsMatch(Set<Context> contexts, Set<Context> newContexts) {
-        // first filter out gd claim contexts
-        final Set<Context> filteredContexts = new HashSet<>();
-        final Set<Context> filteredNewContexts = new HashSet<>();
-        for (Context context : contexts) {
-            if (context.getKey().contains("gd_claim")) {
-                continue;
-            }
-            filteredContexts.add(context);
-        }
-        for (Context context : newContexts) {
-            if (context.getKey().contains("gd_claim")) {
-                continue;
-            }
-            filteredNewContexts.add(context);
-        }
-        return Objects.hash(filteredContexts) == Objects.hash(filteredNewContexts);
-    }
-
-    private static Set<Context> createClaimContextSet(GDClaim claim, Set<Context> contexts) {
-        Set<Context> claimContexts = new HashSet<>();
-        claimContexts.add(claim.getContext());
-        for (Context context : contexts) {
-            if (context.getKey().contains("world") || context.getKey().contains("gd_claim")) {
-                continue;
-            }
-            claimContexts.add(context);
-        }
-        return claimContexts;
-    }
-
-    private static Component getOptionText(Option option, Set<Context> contexts) {
-        boolean customContext = UIHelper.containsCustomContext(contexts);
+    private Component getOptionText(Option option, Set<Context> contexts) {
+        boolean customContext = this.containsCustomContext(option, contexts);
 
         final Component optionText = TextComponent.builder().color(customContext ? TextColor.YELLOW : TextColor.GREEN).append(option.getName() + " ")
                 .hoverEvent(HoverEvent.showText(TextComponent.builder()
@@ -997,5 +921,30 @@ public abstract class ClaimOptionBase extends BaseCommand {
         return consumer -> {
             showOptionPermissions(src, claim, optionType);
         };
+    }
+
+    private boolean containsCustomContext(Option option, Set<Context> contexts) {
+        boolean hasClaimContext = false;
+        for (Context context : contexts) {
+            if (context.getKey().equals("gd_claim")) {
+                hasClaimContext = true;
+                continue;
+            }
+            // Options with a claim context is considered custom
+            if (context.getKey().equals("gd_claim_default") || context.getKey().equals("server")) {
+                continue;
+            }
+
+            return true;
+        }
+
+        // Always treat double and integer options as custom if not default
+        if (hasClaimContext) {
+            if (option.getAllowedType().isAssignableFrom(Double.class) || option.getAllowedType().isAssignableFrom(Integer.class)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

@@ -581,8 +581,12 @@ public class CommandHelper {
 
     public static List<Component> generateClaimTextList(List<Component> claimsTextList, Set<Claim> claimList, String worldName, GDPermissionUser user, CommandSender src, Consumer<CommandSender> returnCommand, boolean listChildren, boolean overlap, boolean listCommand) {
         if (claimList.size() > 0) {
+            final Player player = src instanceof Player ? (Player) src : null;
             for (Claim playerClaim : claimList) {
                 GDClaim claim = (GDClaim) playerClaim;
+                if (player != null && !claim.getData().getEconomyData().isForSale() && !claim.isUserTrusted(player, TrustTypes.ACCESSOR)) {
+                    continue;
+                }
                 if (!listCommand && !overlap && !listChildren && claim.isSubdivision() && !claim.getData().getEconomyData().isForSale()) {
                     continue;
                 }
@@ -658,7 +662,6 @@ public class CommandHelper {
                 if (!listChildren) {
                     childrenTextList = generateClaimTextList(new ArrayList<Component>(), claim.getChildren(true), worldName, user, src, returnCommand, true);
                 }
-                final Player player = src instanceof Player ? (Player) src : null;
                 Component buyClaim = TextComponent.empty();
                 if (player != null && claim.getEconomyData().isForSale() && claim.getEconomyData().getSalePrice() > -1) {
                     Component buyInfo = TextComponent.builder()

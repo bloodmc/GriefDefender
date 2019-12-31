@@ -217,11 +217,11 @@ public class CommonEntityEventHandler {
                     playerData.inTown = false;
                 }
                 if (player != null) {
-                    this.checkPlayerFlight(player, playerData, fromClaim, toClaim);
-                    this.checkPlayerGameMode(player, playerData, fromClaim, toClaim);
-                    this.checkPlayerGodMode(player, playerData, fromClaim, toClaim);
-                    this.checkPlayerWalkSpeed(player, playerData, fromClaim, toClaim);
-                    this.checkPlayerWeather(player, playerData, fromClaim, toClaim);
+                    this.checkPlayerFlight(user, fromClaim, toClaim);
+                    this.checkPlayerGameMode(user, fromClaim, toClaim);
+                    this.checkPlayerGodMode(user, fromClaim, toClaim);
+                    this.checkPlayerWalkSpeed(user, fromClaim, toClaim);
+                    this.checkPlayerWeather(user, fromClaim, toClaim, false);
                     this.runPlayerCommands(fromClaim, user, false);
                     this.runPlayerCommands(toClaim, user, true);
                 }
@@ -319,11 +319,11 @@ public class CommonEntityEventHandler {
                 }
 
                 if (player != null) {
-                    this.checkPlayerFlight(player, playerData, fromClaim, toClaim);
-                    this.checkPlayerGameMode(player, playerData, fromClaim, toClaim);
-                    this.checkPlayerGodMode(player, playerData, fromClaim, toClaim);
-                    this.checkPlayerWalkSpeed(player, playerData, fromClaim, toClaim);
-                    this.checkPlayerWeather(player, playerData, fromClaim, toClaim);
+                    this.checkPlayerFlight(user, fromClaim, toClaim);
+                    this.checkPlayerGameMode(user, fromClaim, toClaim);
+                    this.checkPlayerGodMode(user, fromClaim, toClaim);
+                    this.checkPlayerWalkSpeed(user, fromClaim, toClaim);
+                    this.checkPlayerWeather(user, fromClaim, toClaim, false);
                     this.runPlayerCommands(fromClaim, user, false);
                     this.runPlayerCommands(toClaim, user, true);
                 }
@@ -404,7 +404,9 @@ public class CommonEntityEventHandler {
         return command;
     }
 
-    private void checkPlayerFlight(Player player, GDPlayerData playerData, GDClaim fromClaim, GDClaim toClaim) {
+    private void checkPlayerFlight(GDPermissionUser user, GDClaim fromClaim, GDClaim toClaim) {
+        final Player player = user.getOnlinePlayer();
+        final GDPlayerData playerData = user.getInternalPlayerData();
         final GameMode gameMode = player.getGameMode();
         if (gameMode == GameMode.CREATIVE || gameMode == GameMode.SPECTATOR) {
             return;
@@ -428,7 +430,9 @@ public class CommonEntityEventHandler {
         }
     }
 
-    private void checkPlayerGodMode(Player player, GDPlayerData playerData, GDClaim fromClaim, GDClaim toClaim) {
+    private void checkPlayerGodMode(GDPermissionUser user, GDClaim fromClaim, GDClaim toClaim) {
+        final Player player = user.getOnlinePlayer();
+        final GDPlayerData playerData = user.getInternalPlayerData();
         final GameMode gameMode = player.getGameMode();
         if (gameMode == GameMode.CREATIVE || gameMode == GameMode.SPECTATOR || !player.isInvulnerable()) {
             return;
@@ -446,11 +450,13 @@ public class CommonEntityEventHandler {
         }
     }
 
-    private void checkPlayerGameMode(Player player, GDPlayerData playerData, GDClaim fromClaim, GDClaim toClaim) {
+    private void checkPlayerGameMode(GDPermissionUser user, GDClaim fromClaim, GDClaim toClaim) {
         if (fromClaim == toClaim) {
             return;
         }
 
+        final Player player = user.getOnlinePlayer();
+        final GDPlayerData playerData = user.getInternalPlayerData();
         final GameMode currentGameMode = player.getGameMode();
         final GameModeType gameModeType = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(GameModeType.class), playerData.getSubject(), Options.PLAYER_GAMEMODE, toClaim);
         final boolean bypassOption = player.hasPermission(GDPermissions.BYPASS_OPTION + "." + Options.PLAYER_GAMEMODE.getName().toLowerCase());
@@ -466,11 +472,13 @@ public class CommonEntityEventHandler {
         }
     }
 
-    private void checkPlayerWalkSpeed(Player player, GDPlayerData playerData, GDClaim fromClaim, GDClaim toClaim) {
+    private void checkPlayerWalkSpeed(GDPermissionUser user, GDClaim fromClaim, GDClaim toClaim) {
         if (fromClaim == toClaim) {
             return;
         }
 
+        final Player player = user.getOnlinePlayer();
+        final GDPlayerData playerData = user.getInternalPlayerData();
         final float currentWalkSpeed = player.getWalkSpeed();
         final double walkSpeed = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Double.class), playerData.getSubject(), Options.PLAYER_WALK_SPEED, toClaim);
         final boolean bypassOption = player.hasPermission(GDPermissions.BYPASS_OPTION + "." + Options.PLAYER_WALK_SPEED.getName().toLowerCase());
@@ -485,11 +493,13 @@ public class CommonEntityEventHandler {
         }
     }
 
-    private void checkPlayerWeather(Player player, GDPlayerData playerData, GDClaim fromClaim, GDClaim toClaim) {
-        if (fromClaim == toClaim) {
+    public void checkPlayerWeather(GDPermissionUser user, GDClaim fromClaim, GDClaim toClaim, boolean force) {
+        if (!force && fromClaim == toClaim) {
             return;
         }
 
+        final Player player = user.getOnlinePlayer();
+        final GDPlayerData playerData = user.getInternalPlayerData();
         final WeatherType weatherType = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(WeatherType.class), playerData.getSubject(), Options.PLAYER_WEATHER, toClaim);
         if (weatherType != null && weatherType != WeatherTypes.UNDEFINED) {
             final org.bukkit.WeatherType currentWeather = player.getPlayerWeather();

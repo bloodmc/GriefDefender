@@ -277,7 +277,7 @@ public class CommonEntityEventHandler {
                         this.checkPlayerGameMode(user, fromClaim, toClaim);
                         this.checkPlayerGodMode(user, fromClaim, toClaim);
                         this.checkPlayerWalkSpeed(user, fromClaim, toClaim);
-                        this.checkPlayerWeather(user, fromClaim, toClaim);
+                        this.checkPlayerWeather(user, fromClaim, toClaim, false);
                         this.runPlayerCommands(fromClaim, user, false);
                         this.runPlayerCommands(toClaim, user, true);
                     }
@@ -364,15 +364,13 @@ public class CommonEntityEventHandler {
                 }
 
                 if (player != null) {
-                    if (player != null) {
-                        this.checkPlayerFlight(user, fromClaim, toClaim);
-                        this.checkPlayerGameMode(user, fromClaim, toClaim);
-                        this.checkPlayerGodMode(user, fromClaim, toClaim);
-                        this.checkPlayerWalkSpeed(user, fromClaim, toClaim);
-                        this.checkPlayerWeather(user, fromClaim, toClaim);
-                        this.runPlayerCommands(fromClaim, user, false);
-                        this.runPlayerCommands(toClaim, user, true);
-                    }
+                    this.checkPlayerFlight(user, fromClaim, toClaim);
+                    this.checkPlayerGameMode(user, fromClaim, toClaim);
+                    this.checkPlayerGodMode(user, fromClaim, toClaim);
+                    this.checkPlayerWalkSpeed(user, fromClaim, toClaim);
+                    this.checkPlayerWeather(user, fromClaim, toClaim, false);
+                    this.runPlayerCommands(fromClaim, user, false);
+                    this.runPlayerCommands(toClaim, user, true);
                 }
             }
         }
@@ -465,7 +463,7 @@ public class CommonEntityEventHandler {
         }
 
         final Boolean noFly = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Boolean.class), playerData.getSubject(), Options.PLAYER_DENY_FLIGHT, toClaim);
-        final boolean adminFly = player.hasPermission(GDPermissions.BYPASS_OPTION);
+        final boolean adminFly = player.hasPermission(GDPermissions.BYPASS_OPTION + "." + Options.PLAYER_DENY_FLIGHT.getName().toLowerCase());
         final boolean ownerFly = toClaim.isBasicClaim() ? player.hasPermission(GDPermissions.USER_OPTION_PERK_OWNER_FLY_BASIC) : toClaim.isTown() ? player.hasPermission(GDPermissions.USER_OPTION_PERK_OWNER_FLY_TOWN) : false;
         if (player.getUniqueId().equals(toClaim.getOwnerUniqueId()) && ownerFly) {
             return;
@@ -540,29 +538,21 @@ public class CommonEntityEventHandler {
         }
     }
 
-    private void checkPlayerWeather(GDPermissionUser user, GDClaim fromClaim, GDClaim toClaim) {
-        if (fromClaim == toClaim) {
+    public void checkPlayerWeather(GDPermissionUser user, GDClaim fromClaim, GDClaim toClaim, boolean force) {
+        if (!force && fromClaim == toClaim) {
             return;
         }
 
         final Player player = user.getOnlinePlayer();
         final GDPlayerData playerData = user.getInternalPlayerData();
         final WeatherType weatherType = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(WeatherType.class), playerData.getSubject(), Options.PLAYER_WEATHER, toClaim);
-        final boolean bypassOption = player.hasPermission(GDPermissions.BYPASS_OPTION + "." + Options.PLAYER_WEATHER.getName().toLowerCase());
-        if (false && bypassOption) {
-            return;
-        }
-
-        if (weatherType != null && weatherType != WeatherTypes.UNDEFINED) {
+        if (weatherType != null) {
             final Weather currentWeather = player.getWorld().getWeather();
-            final Weather newWeather = PlayerUtil.WEATHERTYPE_MAP.get(weatherType);
-            if (currentWeather != newWeather) {
-                PlayerUtil.getInstance().setPlayerWeather(user, weatherType);
-                final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.OPTION_APPLY_PLAYER_WEATHER,
-                        ImmutableMap.of(
-                        "weather", weatherType.getName().toUpperCase()));
-                GriefDefenderPlugin.sendMessage(player, message);
-            }
+            PlayerUtil.getInstance().setPlayerWeather(user, weatherType);
+            final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.OPTION_APPLY_PLAYER_WEATHER,
+                    ImmutableMap.of(
+                    "weather", weatherType == WeatherTypes.UNDEFINED ? currentWeather.getName().toUpperCase() : weatherType.getName().toUpperCase()));
+            GriefDefenderPlugin.sendMessage(player, message);
         } else {
             final WeatherType currentWeather = playerData.lastWeatherType;
             PlayerUtil.getInstance().resetPlayerWeather(user);
