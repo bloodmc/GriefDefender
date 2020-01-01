@@ -567,7 +567,9 @@ public class LuckPermsProvider implements PermissionProvider {
     }
 
     public Tristate getPermissionValue(GDPermissionHolder holder, String permission) {
-        ImmutableContextSet set = ImmutableContextSet.empty();
+        final Set<Context> contexts = new HashSet<>();
+        this.checkServerContext(contexts);
+        ImmutableContextSet set = this.getLPContexts(contexts).immutableCopy();
         return this.getPermissionValue(holder, permission, set);
     }
 
@@ -578,13 +580,16 @@ public class LuckPermsProvider implements PermissionProvider {
 
     public Tristate getPermissionValue(GDClaim claim, GDPermissionHolder holder, String permission, Set<Context> contexts) {
         this.addActiveContexts(contexts, holder, null, claim);
-        return this.getPermissionValue(holder, permission, contexts);
+        this.checkServerContext(contexts);
+        ImmutableContextSet contextSet = this.getLPContexts(contexts).immutableCopy();
+        return this.getPermissionValue(holder, permission, contextSet);
     }
 
     public Tristate getPermissionValue(GDClaim claim, GDPermissionHolder holder, String permission, Set<Context> contexts, boolean checkTransient) {
         final Set<Context> activeContexts = new HashSet<>();
         this.addActiveContexts(activeContexts, holder, null, claim);
         contexts.addAll(activeContexts);
+        this.checkServerContext(contexts);
         final int contextHash =  Objects.hash(claim, holder, permission, contexts);
         final Cache<Integer, Tristate> cache = PermissionHolderCache.getInstance().getOrCreatePermissionCache(holder);
         Tristate result = cache.getIfPresent(contextHash);
@@ -687,6 +692,8 @@ public class LuckPermsProvider implements PermissionProvider {
     }
 
     public Tristate getPermissionValue(GDPermissionHolder holder, String permission, Set<Context> contexts) {
+        this.addActiveContexts(contexts, holder, null, null);
+        this.checkServerContext(contexts);
         ImmutableContextSet contextSet = this.getLPContexts(contexts).immutableCopy();
         return this.getPermissionValue(holder, permission, contextSet);
     }
