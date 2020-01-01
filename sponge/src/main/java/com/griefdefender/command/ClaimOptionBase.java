@@ -789,15 +789,24 @@ public abstract class ClaimOptionBase extends BaseCommand {
                 newContexts.addAll(contexts);
             }
 
-            // Remove server context
+            // Check server context
             final Iterator<Context> iterator = newContexts.iterator();
+            boolean hasServerContext = false;
             while (iterator.hasNext()) {
                 final Context context = iterator.next();
                 if (context.getKey().equals("server")) {
-                    iterator.remove();
+                    //iterator.remove();
+                    hasServerContext = true;
+                    break;
                 }
             }
 
+            if (!hasServerContext) {
+                final String serverName = PermissionUtil.getInstance().getServerName();
+                if (serverName != null) {
+                    newContexts.add(new Context("server", serverName));
+                }
+            }
             final PermissionResult result = PermissionUtil.getInstance().setOptionValue(this.subject, option.getPermission(), newValue, newContexts);
             if (result.successful()) {
                 if (option == Options.PLAYER_WEATHER) {

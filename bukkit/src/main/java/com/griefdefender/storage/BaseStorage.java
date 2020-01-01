@@ -378,6 +378,10 @@ public abstract class BaseStorage {
     }
 
     private void setDefaultFlags(Set<Context> contexts, Map<String, Boolean> defaultFlags) {
+        final String serverName = PermissionUtil.getInstance().getServerName();
+        if (serverName != null) {
+            contexts.add(new Context("server", serverName));
+        }
         GriefDefenderPlugin.getInstance().executor.execute(() -> {
             for (Map.Entry<String, Boolean> mapEntry : defaultFlags.entrySet()) {
                 final Flag flag = FlagRegistryModule.getInstance().getById(mapEntry.getKey()).orElse(null);

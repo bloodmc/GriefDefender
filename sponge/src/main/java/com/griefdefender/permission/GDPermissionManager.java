@@ -357,9 +357,15 @@ public class GDPermissionManager implements PermissionManager {
             contexts.remove(parent.getContext());
         }
 
+        // Check claim context
         contexts.add(claim.getContext());
-        contexts.add(claim.getType().getContext());
         Tristate value = PermissionUtil.getInstance().getPermissionValue((GDClaim) claim, holder, permission, contexts);
+        if (value != Tristate.UNDEFINED) {
+            return processResult(claim, permission, value, holder);
+        }
+        // Check default type context
+        contexts.add(claim.getType().getContext());
+        value = PermissionUtil.getInstance().getPermissionValue((GDClaim) claim, holder, permission, contexts);
         if (value != Tristate.UNDEFINED) {
             return processResult(claim, permission, value, holder);
         }

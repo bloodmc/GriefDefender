@@ -557,16 +557,7 @@ public class LuckPermsProvider implements PermissionProvider {
     public Set<Context> getGPContexts(ContextSet contextSet) {
         final Set<Context> gpContexts = new HashSet<>();
         for (net.luckperms.api.context.Context context : contextSet.toSet()) {
-            if (context.getKey().startsWith("gd_") || context.getKey().equals("used_item") 
-                    || context.getKey().equals("source") || context.getKey().equals("target")
-                    || context.getKey().equals("world") || context.getKey().equals("server")
-                    || context.getKey().equals("state")) {
-                if (contextSet.containsKey(ContextKeys.CLAIM) && context.getKey().equals("server")) {
-                    continue;
-                }
-
-                gpContexts.add(new Context(context.getKey(), context.getValue()));
-            }
+            gpContexts.add(new Context(context.getKey(), context.getValue()));
         }
         return gpContexts;
     }
@@ -582,6 +573,7 @@ public class LuckPermsProvider implements PermissionProvider {
     }
 
     public Tristate getPermissionValue(GDClaim claim, GDPermissionHolder holder, String permission, Set<Context> contexts) {
+        this.addActiveContexts(contexts, holder, null, claim);
         return this.getPermissionValue(holder, permission, contexts);
     }
 

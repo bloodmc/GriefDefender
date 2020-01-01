@@ -1539,6 +1539,9 @@ public class PlayerEventHandler implements Listener {
     }
 
     private GDClaim findNearbyClaim(Player player, int maxDistance) {
+        if (maxDistance <= 0) {
+            maxDistance = 100;
+        }
         BlockRay blockRay = BlockRay.from(player).distanceLimit(maxDistance).build();
         GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
         GDClaim claim = null;

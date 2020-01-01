@@ -75,24 +75,19 @@ public class DefaultPermissionCategory extends ConfigCategory {
         this.defaultClaimFlags.put(ClaimTypes.WILDERNESS.getName().toLowerCase(), wildernessFlagMap);
 
         final int maxAccruedBlocks = GriefDefenderPlugin.CLAIM_BLOCK_SYSTEM == ClaimBlockSystem.VOLUME ? 20480000 : 80000;
-        this.defaultUserOptions.put(Options.EXPIRATION.getName(), "14");
-        this.defaultUserOptions.put(Options.TAX_EXPIRATION.getName(), "7");
-        this.defaultUserOptions.put(Options.TAX_EXPIRATION_DAYS_KEEP.getName(), "7");
-        this.defaultUserOptions.put(Options.TAX_RATE.getName(), "1.0");
+        this.defaultUserOptions.put(Options.ABANDON_DELAY.getName(), "0");
+        this.defaultUserOptions.put(Options.ABANDON_RETURN_RATIO.getName(), "1.0");
         this.defaultUserOptions.put(Options.BLOCKS_ACCRUED_PER_HOUR.getName(), "120");
         this.defaultUserOptions.put(Options.CHEST_EXPIRATION.getName(), "7");
         this.defaultUserOptions.put(Options.CREATE_LIMIT.getName(), "-1");
         this.defaultUserOptions.put(Options.CREATE_MODE.getName(), "undefined");
         this.defaultUserOptions.put(Options.ECONOMY_BLOCK_COST.getName(), "0.0");
         this.defaultUserOptions.put(Options.ECONOMY_BLOCK_SELL_RETURN.getName(), "0.0");
+        this.defaultUserOptions.put(Options.EXPIRATION.getName(), "14");
         this.defaultUserOptions.put(Options.INITIAL_BLOCKS.getName(), "120");
         this.defaultUserOptions.put(Options.MAX_ACCRUED_BLOCKS.getName(), Integer.toString(maxAccruedBlocks));
         this.defaultUserOptions.put(Options.MIN_LEVEL.getName(), "0");
         this.defaultUserOptions.put(Options.MAX_LEVEL.getName(), "255");
-        this.defaultUserOptions.put(Options.ABANDON_DELAY.getName(), "0");
-        this.defaultUserOptions.put(Options.ABANDON_RETURN_RATIO.getName(), "1.0");
-        this.defaultUserOptions.put(Options.RAID.getName(), "true");
-        this.defaultUserOptions.put(Options.SPAWN_LIMIT.getName(), "-1");
         this.defaultUserOptions.put(Options.PLAYER_DENY_FLIGHT.getName(), "false");
         this.defaultUserOptions.put(Options.PLAYER_DENY_GODMODE.getName(), "false");
         this.defaultUserOptions.put(Options.PLAYER_DENY_HUNGER.getName(), "false");
@@ -107,6 +102,12 @@ public class DefaultPermissionCategory extends ConfigCategory {
         this.defaultUserOptions.put(Options.PVP_COMBAT_COMMAND.getName(), "false");
         this.defaultUserOptions.put(Options.PVP_COMBAT_TELEPORT.getName(), "false");
         this.defaultUserOptions.put(Options.PVP_COMBAT_TIMEOUT.getName(), "15");
+        this.defaultUserOptions.put(Options.RAID.getName(), "true");
+        this.defaultUserOptions.put(Options.RADIUS_INSPECT.getName(), "100");
+        this.defaultUserOptions.put(Options.SPAWN_LIMIT.getName(), "-1");
+        this.defaultUserOptions.put(Options.TAX_EXPIRATION.getName(), "7");
+        this.defaultUserOptions.put(Options.TAX_EXPIRATION_DAYS_KEEP.getName(), "7");
+        this.defaultUserOptions.put(Options.TAX_RATE.getName(), "1.0");
 
         this.defaultBasicOptions.put(Options.MIN_SIZE_X.getName(), "5");
         this.defaultBasicOptions.put(Options.MIN_SIZE_Y.getName(), "5");
