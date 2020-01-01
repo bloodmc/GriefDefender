@@ -705,6 +705,8 @@ public class LuckPermsProvider implements PermissionProvider {
     // To set options, pass "meta.option".
     @Override
     public String getOptionValue(GDPermissionHolder holder, Option option, Set<Context> contexts) {
+        // If no server context exists, add global
+        this.checkServerContext(contexts);
         ImmutableContextSet set = this.getLPContexts(contexts).immutableCopy();
         final PermissionHolder permissionHolder = this.getLuckPermsHolder(holder);
         if (permissionHolder == null) {
@@ -718,6 +720,8 @@ public class LuckPermsProvider implements PermissionProvider {
 
     @Override
     public List<String> getOptionValueList(GDPermissionHolder holder, Option option, Set<Context> contexts) {
+        // If no server context exists, add global
+        this.checkServerContext(contexts);
         ImmutableContextSet set = this.getLPContexts(contexts).immutableCopy();
         final PermissionHolder permissionHolder = this.getLuckPermsHolder(holder);
         if (permissionHolder == null) {
@@ -737,7 +741,7 @@ public class LuckPermsProvider implements PermissionProvider {
         DataMutateResult result = null;
         if (check) {
             // If no server context exists, add global
-            this.checkServerContext(contexts, value);
+            this.checkServerContext(contexts);
         }
         ImmutableContextSet set = this.getLPContexts(contexts).immutableCopy();
         final PermissionHolder permissionHolder = this.getLuckPermsHolder(holder);
@@ -776,7 +780,7 @@ public class LuckPermsProvider implements PermissionProvider {
         DataMutateResult result = null;
         if (check) {
             // If no server context exists, add global
-            this.checkServerContext(contexts, value.name());
+            this.checkServerContext(contexts);
         }
         ImmutableContextSet set = this.getLPContexts(contexts).immutableCopy();
         final Node node = this.luckPermsApi.getNodeBuilderRegistry().forPermission().permission(permission).value(value.asBoolean()).context(set).build();
@@ -812,7 +816,7 @@ public class LuckPermsProvider implements PermissionProvider {
 
     public void setTransientOption(GDPermissionHolder holder, String permission, String value, Set<Context> contexts) {
         // If no server context exists, add global
-        this.checkServerContext(contexts, value);
+        this.checkServerContext(contexts);
         MutableContextSet contextSet = this.getLPContexts(contexts);
         final PermissionHolder permissionHolder = this.getLuckPermsHolder(holder);
         if (permissionHolder == null) {
@@ -825,7 +829,7 @@ public class LuckPermsProvider implements PermissionProvider {
 
     public void setTransientPermission(GDPermissionHolder holder, String permission, Boolean value, Set<Context> contexts) {
         // If no server context exists, add global
-        this.checkServerContext(contexts, value.toString());
+        this.checkServerContext(contexts);
         MutableContextSet contextSet = this.getLPContexts(contexts);
         final PermissionHolder permissionHolder = this.getLuckPermsHolder(holder);
         if (permissionHolder == null) {
@@ -898,7 +902,7 @@ public class LuckPermsProvider implements PermissionProvider {
         holder.data().clear(set, NodeType.META.predicate(node -> node.getMetaKey().equals(metaKey)));
     }
 
-    private void checkServerContext(Set<Context> contexts, String value) {
+    private void checkServerContext(Set<Context> contexts) {
         for (Context context : contexts) {
             if (context.getKey().equalsIgnoreCase("server")) {
                 return;

@@ -549,20 +549,21 @@ public class CommonEntityEventHandler {
         if (weatherType != null) {
             final Weather currentWeather = player.getWorld().getWeather();
             PlayerUtil.getInstance().setPlayerWeather(user, weatherType);
-            final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.OPTION_APPLY_PLAYER_WEATHER,
+            // TODO - improve so it doesn't spam
+            /*final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.OPTION_APPLY_PLAYER_WEATHER,
                     ImmutableMap.of(
                     "weather", weatherType == WeatherTypes.UNDEFINED ? currentWeather.getName().toUpperCase() : weatherType.getName().toUpperCase()));
-            GriefDefenderPlugin.sendMessage(player, message);
+            GriefDefenderPlugin.sendMessage(player, message);*/
         } else {
             final WeatherType currentWeather = playerData.lastWeatherType;
             PlayerUtil.getInstance().resetPlayerWeather(user);
             final WeatherType newWeather = playerData.lastWeatherType;
-            if (currentWeather != newWeather) {
+            /*if (currentWeather != newWeather) {
                 final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.OPTION_APPLY_PLAYER_WEATHER,
                         ImmutableMap.of(
                         "weather", newWeather.getName().toUpperCase()));
                 GriefDefenderPlugin.sendMessage(player, message);
-            }
+            }*/
         }
     }
 

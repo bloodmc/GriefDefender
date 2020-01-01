@@ -505,22 +505,13 @@ public class CommonEntityEventHandler {
             final org.bukkit.WeatherType currentWeather = player.getPlayerWeather();
             player.setPlayerWeather(PlayerUtil.WEATHERTYPE_MAP.get(weatherType));
             final org.bukkit.WeatherType newWeather = player.getPlayerWeather();
-            if (currentWeather != newWeather) {
+            // TODO - improve so it doesn't spam
+            /*if (currentWeather != newWeather) {
                 final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.OPTION_APPLY_PLAYER_WEATHER,
                         ImmutableMap.of(
                         "weather", weatherType.getName()));
                 GriefDefenderPlugin.sendMessage(player, message);
-            }
-        } else {
-            final org.bukkit.WeatherType currentWeather = player.getPlayerWeather();
-            player.resetPlayerWeather();
-            final org.bukkit.WeatherType newWeather = player.getPlayerWeather();
-            if (currentWeather != newWeather) {
-                final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.OPTION_APPLY_PLAYER_WEATHER,
-                        ImmutableMap.of(
-                        "weather", weatherType.getName()));
-                GriefDefenderPlugin.sendMessage(player, message);
-            }
+            }*/
         }
     }
 
