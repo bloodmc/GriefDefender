@@ -39,7 +39,7 @@ import com.griefdefender.api.permission.flag.FlagDefinition;
 import com.griefdefender.permission.flag.GDFlagData;
 import com.griefdefender.permission.flag.GDFlagDefinition;
 import com.griefdefender.registry.FlagRegistryModule;
-
+import com.griefdefender.util.PermissionUtil;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.serializer.legacy.LegacyComponentSerializer;
@@ -145,6 +145,18 @@ public class FlagDefinitionSerializer implements TypeSerializer<FlagDefinition> 
                 } else {
                     contexts.add(new Context(key, value));
                 }
+            }
+            // Check for required server context and add if not found
+            boolean hasServerContext = false;
+            for (Context context : contexts) {
+                if (context.getKey().equalsIgnoreCase("server")) {
+                    hasServerContext = true;
+                    break;
+                }
+            }
+            if (!hasServerContext) {
+                final String serverName = PermissionUtil.getInstance().getServerName() == null ? "global" : PermissionUtil.getInstance().getServerName();
+                contexts.add(new Context("server", serverName));
             }
             flagDefinition.setContexts(contexts);
         }

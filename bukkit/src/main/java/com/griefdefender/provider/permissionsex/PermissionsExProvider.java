@@ -407,7 +407,7 @@ public class PermissionsExProvider implements PermissionProvider {
     }
 
     @Override
-    public PermissionResult setOptionValue(GDPermissionHolder holder, String permission, String value, Set<Context> contexts) {
+    public PermissionResult setOptionValue(GDPermissionHolder holder, String permission, String value, Set<Context> contexts, boolean check) {
         return convertResult(holderToPEXSubject(holder).data().update(data -> data.setOption(contextsGDToPEX(contexts), permission, value))).join();
     }
 
@@ -428,7 +428,7 @@ public class PermissionsExProvider implements PermissionProvider {
     }
 
     @Override
-    public PermissionResult setPermissionValue(GDPermissionHolder holder, String permission, Tristate value, Set<Context> contexts, boolean save) {
+    public PermissionResult setPermissionValue(GDPermissionHolder holder, String permission, Tristate value, Set<Context> contexts, boolean check, boolean save) {
         return convertResult(holderToPEXSubject(holder).data().update(data -> data.setPermission(contextsGDToPEX(contexts), permission, intFromTristate(value)))).join();
     }
 

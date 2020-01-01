@@ -196,23 +196,27 @@ public class PermissionUtil {
     }
 
     public PermissionResult setOptionValue(GDPermissionHolder holder, String permission, String value, Set<Context> contexts) {
-        return PERMISSION_PROVIDER.setOptionValue(holder, permission, value, contexts);
+        return PERMISSION_PROVIDER.setOptionValue(holder, permission, value, contexts, true);
+    }
+
+    public PermissionResult setOptionValue(GDPermissionHolder holder, String permission, String value, Set<Context> contexts, boolean check) {
+        return PERMISSION_PROVIDER.setOptionValue(holder, permission, value, contexts, check);
     }
 
     public PermissionResult setPermissionValue(GDPermissionHolder holder, Flag flag, Tristate value, Set<Context> contexts) {
-        return PERMISSION_PROVIDER.setPermissionValue(holder, flag, value, contexts, true);
+        return PERMISSION_PROVIDER.setPermissionValue(holder, flag, value, contexts, true, true);
     }
 
     public PermissionResult setPermissionValue(GDPermissionHolder holder, String permission, Tristate value, Set<Context> contexts) {
-        return PERMISSION_PROVIDER.setPermissionValue(holder, permission, value, contexts, true);
+        return PERMISSION_PROVIDER.setPermissionValue(holder, permission, value, contexts, true, true);
     }
 
-    public PermissionResult setPermissionValue(GDPermissionHolder holder, Flag flag, Tristate value, Set<Context> contexts, boolean save) {
-        return PERMISSION_PROVIDER.setPermissionValue(holder, flag, value, contexts, save);
+    public PermissionResult setPermissionValue(GDPermissionHolder holder, Flag flag, Tristate value, Set<Context> contexts, boolean check, boolean save) {
+        return PERMISSION_PROVIDER.setPermissionValue(holder, flag, value, contexts, check, save);
     }
 
-    public PermissionResult setPermissionValue(GDPermissionHolder holder, String permission, Tristate value, Set<Context> contexts, boolean save) {
-        return PERMISSION_PROVIDER.setPermissionValue(holder, permission, value, contexts, save);
+    public PermissionResult setPermissionValue(GDPermissionHolder holder, String permission, Tristate value, Set<Context> contexts, boolean check, boolean save) {
+        return PERMISSION_PROVIDER.setPermissionValue(holder, permission, value, contexts, check, save);
     }
 
     public void setTransientOption(GDPermissionHolder holder, String permission, String value, Set<Context> contexts) {

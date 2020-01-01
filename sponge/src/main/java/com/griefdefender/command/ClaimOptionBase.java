@@ -781,33 +781,43 @@ public abstract class ClaimOptionBase extends BaseCommand {
                 newValue = value == null ? "undefined" :String.valueOf(value);
             }
 
-            Set<Context> newContexts = new HashSet<>();
-            final boolean isCustom = this.containsCustomContext(option, contexts);
-            if (!isCustom && displayType == MenuType.CLAIM) {
+            Set<Context> newContexts = new HashSet<>(contexts);
+            if (displayType == MenuType.CLAIM) {
+                final Iterator<Context> iterator = newContexts.iterator();
+                while (iterator.hasNext()) {
+                    final Context context = iterator.next();
+                    if (context.getKey().equals("gd_claim_default")) {
+                        iterator.remove();
+                    }
+                }
                 newContexts.add(claim.getContext());
-            } else {
-                newContexts.addAll(contexts);
             }
 
+            Context serverContext = null;
+            final String serverName = PermissionUtil.getInstance().getServerName();
+            if (serverName != null) {
+                serverContext = new Context("server", serverName);
+            }
             // Check server context
             final Iterator<Context> iterator = newContexts.iterator();
             boolean hasServerContext = false;
             while (iterator.hasNext()) {
                 final Context context = iterator.next();
                 if (context.getKey().equals("server")) {
-                    //iterator.remove();
                     hasServerContext = true;
                     break;
                 }
             }
 
-            if (!hasServerContext) {
-                final String serverName = PermissionUtil.getInstance().getServerName();
-                if (serverName != null) {
-                    newContexts.add(new Context("server", serverName));
-                }
+            if (!hasServerContext && serverContext != null) {
+                newContexts.add(serverContext);
             }
             final PermissionResult result = PermissionUtil.getInstance().setOptionValue(this.subject, option.getPermission(), newValue, newContexts);
+            if (!result.successful()) {
+                // Try again without server context
+                newContexts.remove(serverContext);
+                PermissionUtil.getInstance().setOptionValue(this.subject, option.getPermission(), newValue, newContexts, false);
+            }
             if (result.successful()) {
                 if (option == Options.PLAYER_WEATHER) {
                     CommonEntityEventHandler.getInstance().checkPlayerWeather(src, claim, claim, true);

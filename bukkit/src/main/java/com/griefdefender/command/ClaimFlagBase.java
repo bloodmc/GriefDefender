@@ -941,15 +941,24 @@ public abstract class ClaimFlagBase extends BaseCommand {
     private Consumer<CommandSender> createFlagConsumer(GDPermissionUser src, GDClaim claim, Flag flag, FlagContextHolder flagHolder, Tristate newValue, Set<Context> contexts, MenuType displayType) {
         final Player player = src.getOnlinePlayer();
         return consumer -> {
-            Set<Context> newContexts = new HashSet<>();
             GDCauseStackManager.getInstance().pushCause(player);
-            final boolean isCustom = UIHelper.containsCustomContext(contexts);
-            if (!isCustom && displayType == MenuType.CLAIM) {
+            Set<Context> newContexts = new HashSet<>(contexts);
+            if (displayType == MenuType.CLAIM) {
+                final Iterator<Context> iterator = newContexts.iterator();
+                while (iterator.hasNext()) {
+                    final Context context = iterator.next();
+                    if (context.getKey().equals("gd_claim_default")) {
+                        iterator.remove();
+                    }
+                }
                 newContexts.add(claim.getContext());
-            } else {
-                newContexts.addAll(contexts);
             }
 
+            Context serverContext = null;
+            final String serverName = PermissionUtil.getInstance().getServerName();
+            if (serverName != null) {
+                serverContext = new Context("server", serverName);
+            }
             // Check server context
             final Iterator<Context> iterator = newContexts.iterator();
             boolean hasServerContext = false;
@@ -961,11 +970,8 @@ public abstract class ClaimFlagBase extends BaseCommand {
                 }
             }
 
-            if (!hasServerContext) {
-                final String serverName = PermissionUtil.getInstance().getServerName();
-                if (serverName != null) {
-                    newContexts.add(new Context("server", serverName));
-                }
+            if (!hasServerContext && serverContext != null) {
+                newContexts.add(serverContext);
             }
 
             GDFlagPermissionEvent.Set event = new GDFlagPermissionEvent.Set(this.subject, flag, newValue, newContexts);
@@ -976,6 +982,11 @@ public abstract class ClaimFlagBase extends BaseCommand {
             }
 
             PermissionResult result = PermissionUtil.getInstance().setPermissionValue(this.subject, flag, newValue, newContexts);
+            if (!result.successful()) {
+                // Try again without server context
+                newContexts.remove(serverContext);
+                result = PermissionUtil.getInstance().setPermissionValue(this.subject, flag, newValue, newContexts, false, true);
+            }
             if (result.successful()) {
                 showFlagPermissions(src, claim, displayType);
             }
