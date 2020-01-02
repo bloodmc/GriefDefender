@@ -575,7 +575,6 @@ public class LuckPermsProvider implements PermissionProvider {
     }
 
     public Tristate getPermissionValue(GDClaim claim, GDPermissionHolder holder, String permission, Set<Context> contexts) {
-        this.addActiveContexts(contexts, holder, null, claim);
         this.checkServerContext(contexts);
         ImmutableContextSet contextSet = this.getLPContexts(contexts).immutableCopy();
         return this.getPermissionValue(holder, permission, contextSet);
@@ -688,7 +687,6 @@ public class LuckPermsProvider implements PermissionProvider {
     }
 
     public Tristate getPermissionValue(GDPermissionHolder holder, String permission, Set<Context> contexts) {
-        this.addActiveContexts(contexts, holder, null, null);
         this.checkServerContext(contexts);
         ImmutableContextSet contextSet = this.getLPContexts(contexts).immutableCopy();
         return this.getPermissionValue(holder, permission, contextSet);

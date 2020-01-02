@@ -239,7 +239,7 @@ public class GDPermissionManager implements PermissionManager {
 
         if (flag == Flags.ENTITY_SPAWN) {
             // Check spawn limit
-            final int spawnLimit = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), GriefDefenderPlugin.DEFAULT_HOLDER, Options.SPAWN_LIMIT, claim, contexts);
+            final int spawnLimit = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), GriefDefenderPlugin.DEFAULT_HOLDER, Options.SPAWN_LIMIT, claim, new HashSet<>(contexts));
             if (spawnLimit > -1) {
                 if (target instanceof Entity) {
                     final Entity entity = (Entity) target;
