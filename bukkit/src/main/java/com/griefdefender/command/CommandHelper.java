@@ -205,6 +205,10 @@ public class CommandHelper {
                 GriefDefenderPlugin.sendMessage(src, denyReason);
                 return new GDPermissionResult(ResultTypes.NO_PERMISSION);
             }
+            if (value == null) {
+                GriefDefenderPlugin.sendMessage(src, MessageCache.getInstance().COMMAND_INVALID);
+                return new GDPermissionResult(ResultTypes.FAILURE);
+            }
         }
 
         // special handling for commands
@@ -223,11 +227,13 @@ public class CommandHelper {
                 }
     
                 String[] parts = target.split(":");
-                if (parts.length <= 1 || !parts[1].equalsIgnoreCase("any")) {
+                if (parts.length == 1) {
+                    addFlagContexts(contexts, flag, target);
+                } else if (parts.length > 1 && !parts[1].equalsIgnoreCase("any")) {
                     // check for meta
                     parts = target.split("\\.");
-                    String targetFlag = parts[0];
-                    if (parts.length > 1) {
+                    String targetId = parts[0];
+                    /*if (parts.length > 1) {
                         try {
                             Integer.parseInt(parts[1]);
                         } catch (NumberFormatException e) {
@@ -237,15 +243,9 @@ public class CommandHelper {
                             GriefDefenderPlugin.sendMessage(src, message);
                             return new GDPermissionResult(ResultTypes.TARGET_NOT_VALID);
                         }
-                    }
-                    addFlagContexts(contexts, flag, targetFlag);
-                    if (!targetFlag.startsWith("#") && !CommandHelper.validateFlagTarget(flag, targetFlag)) {
-                        //TODO
-                        /*final Text message = GriefDefenderPlugin.getInstance().messageData.permissionClaimManage
-                                .apply(ImmutableMap.of(
-                                "target", targetFlag,
-                                "flag", baseFlag)).build();*/
-                        GriefDefenderPlugin.sendMessage(src,TextComponent.of("Invalid flag " + targetFlag, TextColor.RED));
+                    }*/
+                    addFlagContexts(contexts, flag, targetId);
+                    if (!targetId.contains("#") && !CommandHelper.validateFlagTarget(flag, targetId)) {
                         return new GDPermissionResult(ResultTypes.TARGET_NOT_VALID);
                     }
                 }
