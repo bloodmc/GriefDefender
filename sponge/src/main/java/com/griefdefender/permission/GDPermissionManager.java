@@ -74,6 +74,7 @@ import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.adapter.spongeapi.TextAdapter;
 import net.kyori.text.format.TextColor;
+import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import org.apache.commons.io.FilenameUtils;
@@ -626,10 +627,11 @@ public class GDPermissionManager implements PermissionManager {
                     id = "minecraft:player";
                 }
 
+                String modId = "";
                 if (mcEntity != null && targetEntity instanceof Living) {
                     String[] parts = id.split(":");
                     if (parts.length > 1) {
-                        final String modId = parts[0];
+                        modId = parts[0];
                         String name = parts[1];
                         if (modId.equalsIgnoreCase("pixelmon") && modId.equalsIgnoreCase(name)) {
                             name = EntityUtils.getFriendlyName(mcEntity).toLowerCase();
@@ -645,7 +647,7 @@ public class GDPermissionManager implements PermissionManager {
                 }
 
                 if (type != null && !(targetEntity instanceof Player)) {
-                    addCustomEntityTypeContexts(targetEntity, contexts, type, isSource);
+                    addCustomEntityTypeContexts(targetEntity, contexts, type, modId, isSource);
                 }
 
                 if (this.isObjectIdBanned(claim, id, BanType.ENTITY)) {
@@ -824,11 +826,17 @@ public class GDPermissionManager implements PermissionManager {
         return false;
     }
 
-    public void addCustomEntityTypeContexts(Entity targetEntity, Set<Context> contexts, GDEntityType type, boolean isSource) {
+    public void addCustomEntityTypeContexts(Entity targetEntity, Set<Context> contexts, GDEntityType type, String modId, boolean isSource) {
         if (isSource) {
             contexts.add(ContextGroups.SOURCE_ALL);
+            if (modId != null && !modId.isEmpty()) {
+                contexts.add(new Context(ContextKeys.SOURCE, modId + ":" + ContextGroupKeys.ALL));
+            }
         } else {
             contexts.add(ContextGroups.TARGET_ALL);
+            if (modId != null && !modId.isEmpty()) {
+                contexts.add(new Context(ContextKeys.TARGET, modId + ":" + ContextGroupKeys.ALL));
+            }
         }
         // check vehicle
         if (targetEntity instanceof Boat || targetEntity instanceof Minecart) {
@@ -838,9 +846,33 @@ public class GDPermissionManager implements PermissionManager {
                 contexts.add(ContextGroups.TARGET_VEHICLE);
             }
         }
-        final String creatureType = type.getEnumCreatureTypeId();
+
+        String creatureType = type.getEnumCreatureTypeId();
         if (creatureType == null) {
-            return;
+            // fallback check for mods
+            if (targetEntity instanceof net.minecraft.entity.Entity) {
+                final net.minecraft.entity.Entity mcEntity = (net.minecraft.entity.Entity) targetEntity;
+                if (SpongeImplHooks.isCreatureOfType(mcEntity, EnumCreatureType.CREATURE)) {
+                    type.setEnumCreatureType(EnumCreatureType.CREATURE);
+                    creatureType = type.getEnumCreatureTypeId();
+                } else if (SpongeImplHooks.isCreatureOfType(mcEntity, EnumCreatureType.MONSTER)) {
+                    type.setEnumCreatureType(EnumCreatureType.MONSTER);
+                    creatureType = type.getEnumCreatureTypeId();
+                } else if (SpongeImplHooks.isCreatureOfType(mcEntity, EnumCreatureType.WATER_CREATURE)) {
+                    type.setEnumCreatureType(EnumCreatureType.WATER_CREATURE);
+                    creatureType = type.getEnumCreatureTypeId();
+                } else if (SpongeImplHooks.isCreatureOfType(mcEntity, EnumCreatureType.AMBIENT)) {
+                    type.setEnumCreatureType(EnumCreatureType.AMBIENT);
+                    creatureType = type.getEnumCreatureTypeId();
+                }
+                if (type.getEnumCreatureType() == null) {
+                    return;
+                }
+
+                creatureType = type.getEnumCreatureTypeId();
+            } else {
+                return;
+            }
         }
 
         final String contextKey = isSource ? "source" : "target";
@@ -848,32 +880,62 @@ public class GDPermissionManager implements PermissionManager {
         if (creatureType.contains("animal")) {
             if (isSource) {
                 contexts.add(ContextGroups.SOURCE_ANIMAL);
+                if (modId != null && !modId.isEmpty()) {
+                    contexts.add(new Context(ContextKeys.SOURCE, modId + ":" + ContextGroupKeys.ANIMAL));
+                }
             } else {
                 contexts.add(ContextGroups.TARGET_ANIMAL);
+                if (modId != null && !modId.isEmpty()) {
+                    contexts.add(new Context(ContextKeys.TARGET, modId + ":" + ContextGroupKeys.ANIMAL));
+                }
             }
         } else if (creatureType.contains("aquatic")) {
             if (isSource) {
                 contexts.add(ContextGroups.SOURCE_AQUATIC);
+                if (modId != null && !modId.isEmpty()) {
+                    contexts.add(new Context(ContextKeys.SOURCE, modId + ":" + ContextGroupKeys.AQUATIC));
+                }
             } else {
                 contexts.add(ContextGroups.TARGET_AQUATIC);
+                if (modId != null && !modId.isEmpty()) {
+                    contexts.add(new Context(ContextKeys.TARGET, modId + ":" + ContextGroupKeys.AQUATIC));
+                }
             }
         } else if (creatureType.contains("monster")) {
             if (isSource) {
                 contexts.add(ContextGroups.SOURCE_MONSTER);
+                if (modId != null && !modId.isEmpty()) {
+                    contexts.add(new Context(ContextKeys.SOURCE, modId + ":" + ContextGroupKeys.MONSTER));
+                }
             } else {
                 contexts.add(ContextGroups.TARGET_MONSTER);
+                if (modId != null && !modId.isEmpty()) {
+                    contexts.add(new Context(ContextKeys.TARGET, modId + ":" + ContextGroupKeys.MONSTER));
+                }
             }
         }  else if (creatureType.contains("ambient")) {
             if (isSource) {
                 contexts.add(ContextGroups.SOURCE_AMBIENT);
+                if (modId != null && !modId.isEmpty()) {
+                    contexts.add(new Context(ContextKeys.SOURCE, modId + ":" + ContextGroupKeys.AMBIENT));
+                }
             } else {
                 contexts.add(ContextGroups.TARGET_AMBIENT);
+                if (modId != null && !modId.isEmpty()) {
+                    contexts.add(new Context(ContextKeys.TARGET, modId + ":" + ContextGroupKeys.AMBIENT));
+                }
             }
         } else {
             if (isSource) {
                 contexts.add(ContextGroups.SOURCE_MISC);
+                if (modId != null && !modId.isEmpty()) {
+                    contexts.add(new Context(ContextKeys.SOURCE, modId + ":" + ContextGroupKeys.MISC));
+                }
             } else {
                 contexts.add(ContextGroups.TARGET_MISC);
+                if (modId != null && !modId.isEmpty()) {
+                    contexts.add(new Context(ContextKeys.TARGET, modId + ":" + ContextGroupKeys.MISC));
+                }
             }
         }
     }
