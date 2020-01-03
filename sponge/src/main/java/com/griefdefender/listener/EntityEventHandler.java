@@ -405,7 +405,7 @@ public class EntityEventHandler {
         if (protectEntity(event, event.getTargetEntity(), event.getCause(), damageSource)) {
             event.setCancelled(true);
         }
-        event.getTargetEntity().setCreator(null);
+
         GDTimings.ENTITY_DAMAGE_EVENT.stopTimingIfSync();
     }
 
@@ -923,18 +923,21 @@ public class EntityEventHandler {
         if (sourceInCombat && targetInCombat && (source.getInternalPlayerData().lastPvpTimestamp == target.getInternalPlayerData().lastPvpTimestamp)) {
             source.getInternalPlayerData().lastPvpTimestamp = Instant.now();
             target.getInternalPlayerData().lastPvpTimestamp = Instant.now();
+            GDPermissionManager.getInstance().addEventLogEntry(event, targetPlayer.getLocation(), source, targetPlayer, source, Flags.ENTITY_DAMAGE, "pvp-combat", Tristate.TRUE);
             return false;
         }
 
         // Check target claim
         if (!claim.isPvpEnabled()) {
             GriefDefenderPlugin.sendMessage(sourcePlayer, MessageCache.getInstance().PVP_CLAIM_NOT_ALLOWED);
+            GDPermissionManager.getInstance().addEventLogEntry(event, targetPlayer.getLocation(), source, targetPlayer, source, Flags.ENTITY_DAMAGE, "pvp", Tristate.FALSE);
             return true;
         }
         // Check source claim
         final GDClaim sourceClaim = GriefDefenderPlugin.getInstance().dataStore.getClaimAtPlayer(source.getInternalPlayerData(), sourcePlayer.getLocation());
         if (!sourceClaim.isPvpEnabled()) {
             GriefDefenderPlugin.sendMessage(sourcePlayer, MessageCache.getInstance().PVP_CLAIM_NOT_ALLOWED);
+            GDPermissionManager.getInstance().addEventLogEntry(event, targetPlayer.getLocation(), source, targetPlayer, source, Flags.ENTITY_DAMAGE, "pvp", Tristate.FALSE);
             return true;
         }
 
@@ -943,10 +946,12 @@ public class EntityEventHandler {
         Tristate targetResult = GDPermissionManager.getInstance().getFinalPermission(event, sourcePlayer.getLocation(), claim, Flags.ENTITY_DAMAGE, targetPlayer, sourcePlayer, targetPlayer, true);
         if (sourceResult == Tristate.FALSE) {
             GriefDefenderPlugin.sendMessage(sourcePlayer, MessageCache.getInstance().PVP_SOURCE_NOT_ALLOWED);
+            GDPermissionManager.getInstance().addEventLogEntry(event, targetPlayer.getLocation(), source, targetPlayer, source, Flags.ENTITY_DAMAGE, "pvp", Tristate.FALSE);
             return true;
         }
         if (targetResult == Tristate.FALSE) {
             GriefDefenderPlugin.sendMessage(sourcePlayer, MessageCache.getInstance().PVP_TARGET_NOT_ALLOWED);
+            GDPermissionManager.getInstance().addEventLogEntry(event, targetPlayer.getLocation(), source, targetPlayer, source, Flags.ENTITY_DAMAGE, "pvp", Tristate.FALSE);
             return true;
         }
 
@@ -961,16 +966,19 @@ public class EntityEventHandler {
         }
         if (sourceResult == Tristate.FALSE) {
             GriefDefenderPlugin.sendMessage(sourcePlayer, MessageCache.getInstance().PVP_SOURCE_NOT_ALLOWED);
+            GDPermissionManager.getInstance().addEventLogEntry(event, targetPlayer.getLocation(), source, targetPlayer, source, Options.PVP.getPermission(), "pvp", Tristate.FALSE);
             return true;
         }
         if (targetResult == Tristate.FALSE) {
             GriefDefenderPlugin.sendMessage(sourcePlayer, MessageCache.getInstance().PVP_TARGET_NOT_ALLOWED);
+            GDPermissionManager.getInstance().addEventLogEntry(event, targetPlayer.getLocation(), source, targetPlayer, source, Options.PVP.getPermission(), "pvp", Tristate.FALSE);
             return true;
         }
 
         final Instant now = Instant.now();
         source.getInternalPlayerData().lastPvpTimestamp = now;
         target.getInternalPlayerData().lastPvpTimestamp = now;
+        GDPermissionManager.getInstance().addEventLogEntry(event, targetPlayer.getLocation(), source, targetPlayer, source, Flags.ENTITY_DAMAGE, "pvp", Tristate.TRUE);
         return false;
     }
 }

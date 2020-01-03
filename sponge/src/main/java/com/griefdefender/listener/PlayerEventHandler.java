@@ -62,6 +62,7 @@ import com.griefdefender.permission.GDPermissions;
 import com.griefdefender.permission.flag.GDFlags;
 import com.griefdefender.provider.NucleusProvider;
 import com.griefdefender.storage.BaseStorage;
+import com.griefdefender.util.CauseContextHelper;
 import com.griefdefender.util.EconomyUtil;
 import com.griefdefender.util.PaginationUtil;
 import com.griefdefender.util.PlayerUtil;
@@ -885,8 +886,18 @@ public class PlayerEventHandler {
     }
 
     @Listener(order = Order.FIRST, beforeModifications = true)
-    public void onPlayerInteractBlockSecondary(InteractBlockEvent.Secondary event, @First Player player) {
-        // Run our item hook since Sponge no longer fires InteractItemEvent when targetting a non-air block
+    public void onPlayerInteractBlockSecondary(InteractBlockEvent.Secondary event) {
+        User user = CauseContextHelper.getEventUser(event);
+        final Object source = CauseContextHelper.getEventFakePlayerSource(event);
+        final Player player = source instanceof Player ? (Player) source : null;
+        if (player == null || NMSUtil.getInstance().isFakePlayer(player)) {
+            if (user == null) {
+                user = player;
+            }
+            this.handleFakePlayerInteractBlockSecondary(event, user, source);
+            return;
+        }
+
         final HandType handType = event.getHandType();
         final ItemStack itemInHand = player.getItemInHand(handType).orElse(ItemStack.empty());
         if (handleItemInteract(event, player, player.getWorld(), itemInHand).isCancelled()) {
@@ -903,9 +914,8 @@ public class PlayerEventHandler {
 
         GDTimings.PLAYER_INTERACT_BLOCK_SECONDARY_EVENT.startTimingIfSync();
         final BlockSnapshot clickedBlock = event.getTargetBlock();
-        final Object source = player;
         // Check if item is banned
-        final GDPlayerData playerData = this.dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
+        final GDPlayerData playerData = this.dataStore.getOrCreatePlayerData(player.getWorld(), user.getUniqueId());
         final Location<World> location = clickedBlock.getLocation().orElse(null);
 
         final GDClaim claim = this.dataStore.getClaimAt(location);
@@ -913,7 +923,7 @@ public class PlayerEventHandler {
         final TileEntity tileEntity = clickedBlock.getLocation().get().getTileEntity().orElse(null);
         final TrustType trustType = (tileEntity != null && NMSUtil.getInstance().containsInventory(tileEntity)) ? TrustTypes.CONTAINER : TrustTypes.ACCESSOR;
         if (GDFlags.INTERACT_BLOCK_SECONDARY && playerData != null) {
-            Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, claim, Flags.INTERACT_BLOCK_SECONDARY, source, event.getTargetBlock(), player, trustType, true);
+            Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, claim, Flags.INTERACT_BLOCK_SECONDARY, source, event.getTargetBlock(), user, trustType, true);
             if (result == Tristate.FALSE) {
                 // if player is holding an item, check if it can be placed
                 if (GDFlags.BLOCK_PLACE && !itemInHand.isEmpty() && NMSUtil.getInstance().isItemBlock(itemInHand)) {
@@ -921,7 +931,7 @@ public class PlayerEventHandler {
                         GDTimings.PLAYER_INTERACT_BLOCK_SECONDARY_EVENT.stopTimingIfSync();
                         return;
                     }
-                    if (GDPermissionManager.getInstance().getFinalPermission(event, location, claim, Flags.BLOCK_PLACE, source, itemInHand, player, TrustTypes.BUILDER, true) == Tristate.TRUE) {
+                    if (GDPermissionManager.getInstance().getFinalPermission(event, location, claim, Flags.BLOCK_PLACE, source, itemInHand, user, TrustTypes.BUILDER, true) == Tristate.TRUE) {
                         GDTimings.PLAYER_INTERACT_BLOCK_SECONDARY_EVENT.stopTimingIfSync();
                         return;
                     }
@@ -943,6 +953,28 @@ public class PlayerEventHandler {
         }
 
         GDTimings.PLAYER_INTERACT_BLOCK_SECONDARY_EVENT.stopTimingIfSync();
+    }
+
+    private void handleFakePlayerInteractBlockPrimary(InteractBlockEvent event, User user, Object source) {
+        final BlockSnapshot clickedBlock = event.getTargetBlock();
+        final Location<World> location = clickedBlock.getLocation().orElse(null);
+        final GDClaim claim = this.dataStore.getClaimAt(location);
+        final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, claim, Flags.INTERACT_BLOCK_PRIMARY, source, event.getTargetBlock(), user, TrustTypes.BUILDER, true);
+        if (result == Tristate.FALSE) {
+            event.setCancelled(true);
+        }
+    }
+
+    private void handleFakePlayerInteractBlockSecondary(InteractBlockEvent event, User user, Object source) {
+        final BlockSnapshot clickedBlock = event.getTargetBlock();
+        final Location<World> location = clickedBlock.getLocation().orElse(null);
+        final GDClaim claim = this.dataStore.getClaimAt(location);
+        final TileEntity tileEntity = clickedBlock.getLocation().get().getTileEntity().orElse(null);
+        final TrustType trustType = (tileEntity != null && NMSUtil.getInstance().containsInventory(tileEntity)) ? TrustTypes.CONTAINER : TrustTypes.ACCESSOR;
+        final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, claim, Flags.INTERACT_BLOCK_SECONDARY, source, event.getTargetBlock(), user, trustType, true);
+        if (result == Tristate.FALSE) {
+            event.setCancelled(true);
+        }
     }
 
     public InteractEvent handleItemInteract(InteractEvent event, Player player, World world, ItemStack itemInHand) {

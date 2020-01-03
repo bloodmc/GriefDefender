@@ -205,7 +205,7 @@ public class NMSUtil {
         return SpongeImplHooks.isCreatureOfType((net.minecraft.entity.Entity) entity, EnumCreatureType.CREATURE);
     }
 
-    public boolean isFakePlayer(Entity entity) {
+    public boolean isFakePlayer(Object entity) {
         if (!(entity instanceof EntityPlayer)) {
             return false;
         }

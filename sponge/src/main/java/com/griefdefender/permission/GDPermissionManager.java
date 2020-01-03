@@ -516,14 +516,16 @@ public class GDPermissionManager implements PermissionManager {
 
     // Used for situations where events are skipped for perf reasons
     public void addEventLogEntry(Event event, Location<World> location, Object source, Object target, GDPermissionHolder permissionSubject, Flag flag, String trust, Tristate result) {
+        this.addEventLogEntry(event, location, source, target, permissionSubject, flag.getPermission(), trust, result);
+    }
+    public void addEventLogEntry(Event event, Location<World> location, Object source, Object target, GDPermissionHolder permissionSubject, String permission, String trust, Tristate result) {
         if (GriefDefenderPlugin.debugActive) {
             String sourceId = getPermissionIdentifier(source, true);
-            String targetPermission = flag.getPermission();
             String targetId = getPermissionIdentifier(target);
             if (permissionSubject == null) {
                 permissionSubject = GriefDefenderPlugin.DEFAULT_HOLDER;
             }
-            GriefDefenderPlugin.addEventLogEntry(event, location, sourceId, targetId, permissionSubject, targetPermission, trust, result);
+            GriefDefenderPlugin.addEventLogEntry(event, location, sourceId, targetId, permissionSubject, permission, trust, result);
         }
     }
 

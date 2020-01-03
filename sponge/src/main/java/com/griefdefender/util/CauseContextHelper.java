@@ -30,10 +30,12 @@ import com.griefdefender.api.claim.ClaimContexts;
 import com.griefdefender.api.permission.Context;
 import com.griefdefender.api.permission.option.Options;
 import com.griefdefender.cache.MessageCache;
+import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.internal.util.NMSUtil;
 import com.griefdefender.permission.ContextGroupKeys;
 import com.griefdefender.permission.ContextGroups;
+import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.permission.GDPermissions;
 import net.kyori.text.TextComponent;
 import org.spongepowered.api.Sponge;
@@ -54,6 +56,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -61,6 +64,7 @@ public class CauseContextHelper {
 
     public static User getEventUser(Event event) {
         final Cause cause = event.getCause();
+        final Object source = event.getSource();
         final EventContext context = event.getContext();
         // Don't attempt to set user for leaf decay
         if (context.containsKey(EventContextKeys.LEAVES_DECAY)) {
@@ -71,6 +75,10 @@ public class CauseContextHelper {
         User fakePlayer = null;
         if (cause != null) {
             user = cause.first(User.class).orElse(null);
+            if (user == null) {
+                // check for FakePlayer in context
+                user = cause.getContext().get(EventContextKeys.FAKE_PLAYER).orElse(null);
+            }
             if (user != null && user instanceof Entity && NMSUtil.getInstance().isFakePlayer((Entity) user)) {
                 fakePlayer = user;
             }
@@ -90,6 +98,15 @@ public class CauseContextHelper {
                                 .orElse(context.get(EventContextKeys.CREATOR)
                                         .orElse(null)));
             } else {
+                // Check entity
+                final Entity entity = cause.last(Entity.class).orElse(null);
+                if (entity != null && entity != fakePlayer) {
+                    final UUID creator = entity.getCreator().orElse(null);
+                    if (creator != null) {
+                        final GDPermissionUser gdUser = PermissionHolderCache.getInstance().getOrCreateUser(creator);
+                        return gdUser.getOfflinePlayer();
+                    }
+                }
                 user = context.get(EventContextKeys.NOTIFIER)
                         .orElse(context.get(EventContextKeys.OWNER)
                                 .orElse(context.get(EventContextKeys.CREATOR)
@@ -110,6 +127,17 @@ public class CauseContextHelper {
         }
 
         return user;
+    }
+
+    public static Object getEventFakePlayerSource(Event event) {
+        Object source = event.getSource();
+        if (source instanceof net.minecraft.entity.Entity && NMSUtil.getInstance().isFakePlayer(source)) {
+            final Object actualSource = event.getCause().last(Object.class).orElse(null);
+            if (actualSource != source && (actualSource instanceof TileEntity || actualSource instanceof Entity)) {
+                return actualSource;
+            }
+        }
+        return source;
     }
 
     // Credit to digitok of freenode for the regex assistance
