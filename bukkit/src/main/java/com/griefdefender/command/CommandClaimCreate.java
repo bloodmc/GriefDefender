@@ -42,6 +42,7 @@ import com.griefdefender.api.claim.ClaimResult;
 import com.griefdefender.api.claim.ClaimResultType;
 import com.griefdefender.api.claim.ClaimType;
 import com.griefdefender.api.claim.ClaimTypes;
+import com.griefdefender.api.permission.ResultTypes;
 import com.griefdefender.api.permission.option.Options;
 import com.griefdefender.api.permission.option.type.CreateModeTypes;
 import com.griefdefender.cache.MessageCache;
@@ -101,6 +102,17 @@ public class CommandClaimCreate extends BaseCommand {
         final GDPermissionUser user = PermissionHolderCache.getInstance().getOrCreateUser(player);
         final GDPlayerData playerData = user.getInternalPlayerData();
         final ClaimType claimType = ClaimTypeRegistryModule.getInstance().getById(type).orElse(ClaimTypes.BASIC);
+        if (claimType == ClaimTypes.WILDERNESS) {
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CREATE_FAILED_RESULT,
+                    ImmutableMap.of("reason", ResultTypes.TARGET_NOT_VALID)));
+            return;
+        }
+        if (claimType == ClaimTypes.ADMIN && !playerData.ignoreAdminClaims && !playerData.canManageAdminClaims) {
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CREATE_FAILED_RESULT,
+                    ImmutableMap.of("reason", ResultTypes.TARGET_NOT_VALID)));
+            return;
+        }
+
         final boolean cuboid = playerData.getClaimCreateMode() == CreateModeTypes.VOLUME;
         if ((claimType == ClaimTypes.BASIC || claimType == ClaimTypes.TOWN) && GriefDefenderPlugin.getGlobalConfig().getConfig().economy.economyMode) {
             EconomyUtil.getInstance().economyCreateClaimConfirmation(player, playerData, location.getBlockY(), lesserBoundary, greaterBoundary, claimType,
