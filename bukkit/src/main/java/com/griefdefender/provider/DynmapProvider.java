@@ -174,16 +174,10 @@ public class DynmapProvider {
         return info;
     }
 
-    private boolean isVisible(String owner, String worldname) {
-        if (!this.cfg.visibleRegions.isEmpty()) {
-            if (!this.cfg.visibleRegions.contains(owner) && !this.cfg.visibleRegions.contains("world:" + worldname)
-                    && !this.cfg.visibleRegions.contains(worldname + "/" + owner)) {
-                return false;
-            }
-        }
+    private boolean isVisible(GDClaim claim, String owner, String worldname) {
         if (!this.cfg.hiddenRegions.isEmpty()) {
-            if (this.cfg.hiddenRegions.contains(owner) || this.cfg.hiddenRegions.contains("world:" + worldname)
-                    || this.cfg.hiddenRegions.contains(worldname + "/" + owner))
+            if (this.cfg.hiddenRegions.contains(claim.getUniqueId().toString()) || this.cfg.hiddenRegions.contains(owner) || 
+                    this.cfg.hiddenRegions.contains("world:" + worldname) || this.cfg.hiddenRegions.contains(worldname + "/" + owner))
                 return false;
         }
         return true;
@@ -231,7 +225,7 @@ public class DynmapProvider {
         }
         final String worldName = world.getName();
         final String owner = ((GDClaim) claim).getOwnerFriendlyName();
-        if (isVisible(owner, worldName)) {
+        if (isVisible((GDClaim) claim, owner, worldName)) {
             final Vector3i lesserPos = claim.getLesserBoundaryCorner();
             final Vector3i greaterPos = claim.getGreaterBoundaryCorner();
             final double[] x = new double[4];

@@ -53,9 +53,6 @@ public class DynmapCategory {
     @Setting("hidden-regions")
     public List<String> hiddenRegions = new ArrayList<>();
 
-    @Setting("visible-regions")
-    public List<String> visibleRegions = new ArrayList<>();
-
     @Setting("info-window-basic")
     public String infoWindowBasic = "<div class=\"infowindow\">"
             + "Name: <span style=\"font-weight:bold;\">%claimname%</span><br/>"
