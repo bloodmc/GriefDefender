@@ -161,6 +161,7 @@ import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.permission.flag.GDFlagData;
 import com.griefdefender.permission.flag.GDFlagDefinition;
 import com.griefdefender.permission.flag.GDFlags;
+import com.griefdefender.provider.DynmapProvider;
 import com.griefdefender.provider.LuckPermsProvider;
 import com.griefdefender.provider.MCClansProvider;
 import com.griefdefender.provider.NucleusProvider;
@@ -273,10 +274,11 @@ public class GriefDefenderPlugin {
     private SpongeCommandManager commandManager;
     public BaseStorage dataStore;
 
+    private DynmapProvider dynmapProvider;
+    private PermissionProvider permissionProvider;
     public MCClansProvider clanApiProvider;
     public NucleusProvider nucleusApiProvider;
     public WorldEditProvider worldEditProvider;
-    private PermissionProvider permissionProvider;
     public PermissionService permissionService;
 
     public Optional<EconomyService> economyService;
@@ -523,6 +525,9 @@ public class GriefDefenderPlugin {
             return;
         }
 
+        if (Sponge.getPluginManager().getPlugin("dynmap").isPresent()) {
+            this.dynmapProvider = new DynmapProvider();
+        }
         if (Sponge.getPluginManager().getPlugin("mcclans").isPresent()) {
             this.clanApiProvider = new MCClansProvider();
         }
@@ -1154,6 +1159,10 @@ public class GriefDefenderPlugin {
         }
 
         return false;
+    }
+
+    public DynmapProvider getDynmapProvider() {
+        return this.dynmapProvider;
     }
 
     public boolean isEconomyModeEnabled() {

@@ -26,6 +26,7 @@ package com.griefdefender.configuration.type;
 
 import com.griefdefender.configuration.category.CustomFlagGroupDefinitionCategory;
 import com.griefdefender.configuration.category.DefaultPermissionCategory;
+import com.griefdefender.configuration.category.DynmapCategory;
 import com.griefdefender.configuration.category.EconomyCategory;
 import com.griefdefender.configuration.category.MessageCategory;
 import com.griefdefender.configuration.category.MigratorCategory;
@@ -63,6 +64,8 @@ public class GlobalConfig extends ConfigBase {
                     + "\nNote: Available contexts are : flag, source, target, state, used_item, item_name"
                     + "\nThese contexts may change, See https://github.com/bloodmc/GriefDefender/wiki for latest information.")
     public CustomFlagGroupDefinitionCategory customFlags = new CustomFlagGroupDefinitionCategory();
+    @Setting
+    public DynmapCategory dynmap = new DynmapCategory();
     @Setting
     public EconomyCategory economy = new EconomyCategory();
     @Setting
