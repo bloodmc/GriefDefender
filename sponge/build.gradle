@@ -67,6 +67,10 @@ repositories {
         url = 'https://repo.codemc.org/repository/maven-public'
     }
     maven {
+        name = 'dynmap-repo'
+        url = 'http://repo.mikeprimm.com'
+    }
+    maven {
         name = 'sponge'
         url = 'https://repo.spongepowered.org/maven/'
     }
@@ -125,6 +129,7 @@ dependencies {
     compile "com.github.bloodmc:mcclans-api:develop-SNAPSHOT"
     compileOnly "com.sk89q.worldedit:worldedit-core:6.1.4-SNAPSHOT"
     compileOnly "net.luckperms:api:5.0"
+    compileOnly "us.dynmap:dynmap-api:3.0-SNAPSHOT"
 
     // required for bootstrap
     compile "com.googlecode.json-simple:json-simple:1.1.1"
