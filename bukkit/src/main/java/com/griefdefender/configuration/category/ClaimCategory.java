@@ -24,6 +24,9 @@
  */
 package com.griefdefender.configuration.category;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import ninja.leaping.configurate.objectmapping.Setting;
 import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
 
@@ -55,6 +58,12 @@ public class ClaimCategory extends ConfigCategory {
     @Setting(value = "claims-enabled",
             comment = "Whether claiming is enabled or not. (0 = Disabled, 1 = Enabled)")
     public int claimsEnabled = 1;
+    @Setting(value = "reserved-claim-names", comment = "A list of reserved claim names for use only by administrators."
+        + "\nNote: Names support wildcards '?' and '*' by using Apache's wildcard matcher." 
+        + "\nThe wildcard '?' represents a single character."
+        + "\nThe wildcard '*' represents zero or more characters."
+        + "\nFor more information on usage, see https://commons.apache.org/proper/commons-io/javadocs/api-2.5/org/apache/commons/io/FilenameUtils.html#wildcardMatch(java.lang.String,%20java.lang.String)")
+    public List<String> reservedClaimNames = new ArrayList<>();
     @Setting(value = "bank-tax-system", comment = "Whether to enable the bank/tax system for claims. Set to true to enable.")
     public boolean bankTaxSystem = false;
     @Setting(value = "tax-apply-hour", comment = "The specific hour in day to apply tax to all claims.")

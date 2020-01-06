@@ -33,12 +33,16 @@ import co.aikar.commands.annotation.Syntax;
 import com.google.common.collect.ImmutableMap;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
+import com.griefdefender.cache.MessageCache;
 import com.griefdefender.claim.GDClaim;
+import com.griefdefender.configuration.GriefDefenderConfig;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.permission.GDPermissions;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.serializer.legacy.LegacyComponentSerializer;
+
+import org.apache.commons.io.FilenameUtils;
 import org.spongepowered.api.entity.living.player.Player;
 
 @CommandAlias("%griefdefender")
@@ -56,6 +60,16 @@ public class CommandClaimName extends BaseCommand {
         if (result != null) {
             GriefDefenderPlugin.sendMessage(player, result);
             return;
+        }
+
+        if (!player.hasPermission(GDPermissions.USE_RESERVED_CLAIM_NAMES)) {
+            final GriefDefenderConfig<?> activeConfig = GriefDefenderPlugin.getActiveConfig(player.getWorld().getProperties());
+            for (String str : activeConfig.getConfig().claim.reservedClaimNames) {
+                if (FilenameUtils.wildcardMatch(name, str)) {
+                    GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().CLAIM_RESERVED_NAME);
+                    return;
+                }
+            }
         }
 
         final Component text = LegacyComponentSerializer.legacy().deserialize(name, '&');

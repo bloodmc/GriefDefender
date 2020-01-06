@@ -136,6 +136,7 @@ public class GDPermissions {
     public static final String COMMAND_CLAIM_CLEAR = "griefdefender.admin.claim.command.clear";
     public static final String COMMAND_CLAIM_PERMISSION_GROUP = "griefdefender.admin.claim.command.permission-group";
     public static final String COMMAND_CLAIM_PERMISSION_PLAYER = "griefdefender.admin.claim.command.permission-player";
+    public static final String COMMAND_CLAIM_RESERVE = "griefdefender.user.claim.command.reserve-name";
     public static final String COMMAND_CLAIM_SCHEMATIC = "griefdefender.admin.claim.command.schematic";
     public static final String COMMAND_IGNORE_CLAIMS = "griefdefender.admin.claim.command.ignore.base";
     public static final String COMMAND_DELETE_CLAIM_BASE = "griefdefender.admin.claim.command.delete.base";
@@ -162,6 +163,7 @@ public class GDPermissions {
     public static final String MANAGE_GLOBAL_OPTIONS = "griefdefender.admin.claim.option.global";
     public static final String MANAGE_OVERRIDE_OPTIONS = "griefdefender.admin.claim.option.override";
     public static final String SET_ADMIN_FLAGS = "griefdefender.admin.claim.set-admin-flags";
+    public static final String USE_RESERVED_CLAIM_NAMES = "griefdefender.admin.claim.use-reserved-names";
 
     // Misc
     public static final String COMMAND_HELP = "griefdefender.user.command.help";

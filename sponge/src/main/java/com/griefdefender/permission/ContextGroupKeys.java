@@ -33,5 +33,6 @@ public class ContextGroupKeys {
     public static final String FOOD = "#food";
     public static final String MISC = "#misc";
     public static final String MONSTER = "#monster";
+    public static final String PET = "#pet";
     public static final String VEHICLE = "#vehicle";
 }

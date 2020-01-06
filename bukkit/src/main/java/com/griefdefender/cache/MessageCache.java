@@ -69,6 +69,8 @@ public class MessageCache {
     public Component CLAIM_OWNER_ALREADY;
     public Component CLAIM_OWNER_ONLY;
     public Component CLAIM_RESPECTING;
+    public Component CLAIM_RESERVE_EXISTS;
+    public Component CLAIM_RESERVED_NAME;
     public Component CLAIM_RESTORE_SUCCESS;
     public Component CLAIM_TOO_FAR;
     public Component CLAIMINFO_UI_ADMIN_SETTINGS;
@@ -406,6 +408,7 @@ public class MessageCache {
     public Component TRUST_NO_CLAIMS;
     public Component TRUST_SELF;
     public Component UI_CLICK_CONFIRM;
+    public Component UI_CLICK_REMOVE;
     public Component UNTRUST_NO_CLAIMS;
     public Component UNTRUST_SELF;
 
@@ -432,6 +435,8 @@ public class MessageCache {
         CLAIM_NOT_YOURS = MessageStorage.MESSAGE_DATA.getMessage("claim-not-yours");
         CLAIM_OWNER_ALREADY = MessageStorage.MESSAGE_DATA.getMessage("claim-owner-already");
         CLAIM_OWNER_ONLY = MessageStorage.MESSAGE_DATA.getMessage("claim-owner-only");
+        CLAIM_RESERVE_EXISTS = MessageStorage.MESSAGE_DATA.getMessage("claim-reserve-exists");
+        CLAIM_RESERVED_NAME = MessageStorage.MESSAGE_DATA.getMessage("claim-reserved-name");
         CLAIM_RESPECTING = MessageStorage.MESSAGE_DATA.getMessage("claim-respecting");
         CLAIM_RESTORE_SUCCESS = MessageStorage.MESSAGE_DATA.getMessage("claim-restore-success");
         CLAIM_TOO_FAR = MessageStorage.MESSAGE_DATA.getMessage("claim-too-far");
@@ -770,6 +775,7 @@ public class MessageCache {
         TRUST_NO_CLAIMS = MessageStorage.MESSAGE_DATA.getMessage("trust-no-claims");
         TRUST_SELF = MessageStorage.MESSAGE_DATA.getMessage("trust-self");
         UI_CLICK_CONFIRM = MessageStorage.MESSAGE_DATA.getMessage("ui-click-confirm");
+        UI_CLICK_REMOVE = MessageStorage.MESSAGE_DATA.getMessage("ui-click-remove");
         UNTRUST_NO_CLAIMS = MessageStorage.MESSAGE_DATA.getMessage("untrust-no-claims");
         UNTRUST_SELF = MessageStorage.MESSAGE_DATA.getMessage("untrust-self");
 

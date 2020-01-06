@@ -113,6 +113,11 @@ public class CommandClaimSchematic extends BaseCommand {
                         .build());
             }
 
+            final int fillSize = 20 - (schematicTextList.size() + 2);
+            for (int i = 0; i < fillSize; i++) {
+                schematicTextList.add(TextComponent.of(" "));
+            }
+
             PaginationList.Builder paginationBuilder = PaginationList.builder()
                     .title(TextComponent.of("Schematics", TextColor.AQUA)).padding(TextComponent.of(" ").decoration(TextDecoration.STRIKETHROUGH, true)).contents(schematicTextList);
             paginationBuilder.sendTo(player);

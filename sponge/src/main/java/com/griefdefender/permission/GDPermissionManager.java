@@ -37,7 +37,6 @@ import com.griefdefender.api.claim.Claim;
 import com.griefdefender.api.claim.ClaimContexts;
 import com.griefdefender.api.claim.ClaimType;
 import com.griefdefender.api.claim.TrustType;
-import com.griefdefender.api.claim.TrustTypes;
 import com.griefdefender.api.permission.Context;
 import com.griefdefender.api.permission.ContextKeys;
 import com.griefdefender.api.permission.PermissionManager;
@@ -122,6 +121,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -649,7 +649,7 @@ public class GDPermissionManager implements PermissionManager {
                 }
 
                 if (type != null && !(targetEntity instanceof Player)) {
-                    addCustomEntityTypeContexts(targetEntity, contexts, type, modId, isSource);
+                    addCustomEntityTypeContexts(targetEntity, contexts, type, modId, id, isSource);
                 }
 
                 if (this.isObjectIdBanned(claim, id, BanType.ENTITY)) {
@@ -828,7 +828,7 @@ public class GDPermissionManager implements PermissionManager {
         return false;
     }
 
-    public void addCustomEntityTypeContexts(Entity targetEntity, Set<Context> contexts, GDEntityType type, String modId, boolean isSource) {
+    public void addCustomEntityTypeContexts(Entity targetEntity, Set<Context> contexts, GDEntityType type, String modId, String id, boolean isSource) {
         if (isSource) {
             contexts.add(ContextGroups.SOURCE_ALL);
             if (modId != null && !modId.isEmpty()) {
@@ -877,7 +877,6 @@ public class GDPermissionManager implements PermissionManager {
             }
         }
 
-        final String contextKey = isSource ? "source" : "target";
         //contexts.add(new Context(contextKey, "#" + creatureType));
         if (creatureType.contains("animal")) {
             if (isSource) {
@@ -891,6 +890,7 @@ public class GDPermissionManager implements PermissionManager {
                     contexts.add(new Context(ContextKeys.TARGET, modId + ":" + ContextGroupKeys.ANIMAL));
                 }
             }
+            this.checkPetContext(targetEntity, id, contexts);
         } else if (creatureType.contains("aquatic")) {
             if (isSource) {
                 contexts.add(ContextGroups.SOURCE_AQUATIC);
@@ -903,6 +903,7 @@ public class GDPermissionManager implements PermissionManager {
                     contexts.add(new Context(ContextKeys.TARGET, modId + ":" + ContextGroupKeys.AQUATIC));
                 }
             }
+            this.checkPetContext(targetEntity, id, contexts);
         } else if (creatureType.contains("monster")) {
             if (isSource) {
                 contexts.add(ContextGroups.SOURCE_MONSTER);
@@ -927,6 +928,7 @@ public class GDPermissionManager implements PermissionManager {
                     contexts.add(new Context(ContextKeys.TARGET, modId + ":" + ContextGroupKeys.AMBIENT));
                 }
             }
+            this.checkPetContext(targetEntity, id, contexts);
         } else {
             if (isSource) {
                 contexts.add(ContextGroups.SOURCE_MISC);
@@ -938,6 +940,16 @@ public class GDPermissionManager implements PermissionManager {
                 if (modId != null && !modId.isEmpty()) {
                     contexts.add(new Context(ContextKeys.TARGET, modId + ":" + ContextGroupKeys.MISC));
                 }
+            }
+        }
+    }
+
+    private void checkPetContext(Entity targetEntity, String id, Set<Context> contexts) {
+        if (this.eventSubject != null && this.eventSubject instanceof GDPermissionUser) {
+            final GDPermissionUser user = (GDPermissionUser) this.eventSubject;
+            final UUID uuid = targetEntity.getCreator().orElse(null);
+            if (uuid != null && uuid.equals(user.getUniqueId())) {
+                contexts.add(new Context(ContextGroupKeys.PET, id));
             }
         }
     }

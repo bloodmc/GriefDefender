@@ -116,6 +116,7 @@ import com.griefdefender.command.CommandClaimOptionGroup;
 import com.griefdefender.command.CommandClaimOptionPlayer;
 import com.griefdefender.command.CommandClaimPermissionGroup;
 import com.griefdefender.command.CommandClaimPermissionPlayer;
+import com.griefdefender.command.CommandClaimReserve;
 import com.griefdefender.command.CommandClaimSchematic;
 import com.griefdefender.command.CommandClaimSell;
 import com.griefdefender.command.CommandClaimSellBlocks;
@@ -619,6 +620,7 @@ public class GriefDefenderPlugin {
         manager.registerCommand(new CommandClaimOptionPlayer());
         manager.registerCommand(new CommandClaimPermissionGroup());
         manager.registerCommand(new CommandClaimPermissionPlayer());
+        manager.registerCommand(new CommandClaimReserve());
         manager.registerCommand(new CommandClaimSchematic());
         manager.registerCommand(new CommandClaimSell());
         manager.registerCommand(new CommandClaimSellBlocks());

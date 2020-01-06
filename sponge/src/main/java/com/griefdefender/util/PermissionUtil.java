@@ -28,13 +28,14 @@ import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.Tristate;
 import com.griefdefender.api.claim.Claim;
+import com.griefdefender.api.claim.TrustTypes;
 import com.griefdefender.api.permission.Context;
 import com.griefdefender.api.permission.PermissionResult;
 import com.griefdefender.api.permission.flag.Flag;
 import com.griefdefender.api.permission.option.Option;
-import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.permission.GDPermissionHolder;
+import com.griefdefender.permission.GDPermissions;
 import com.griefdefender.provider.PermissionProvider;
 
 import java.util.List;
@@ -42,6 +43,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+
+import org.spongepowered.api.entity.living.player.Player;
 
 public class PermissionUtil {
 
@@ -263,5 +266,31 @@ public class PermissionUtil {
         }
 
         return tristate;
+    }
+
+    public boolean canPlayerTeleport(Player player, GDClaim claim) {
+        final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getPlayerData(player.getWorld(), player.getUniqueId());
+        if (!playerData.canIgnoreClaim(claim) && !playerData.canManageAdminClaims) {
+            // if not owner of claim, validate perms
+            if (!player.getUniqueId().equals(claim.getOwnerUniqueId())) {
+                if (!player.hasPermission(GDPermissions.COMMAND_CLAIM_INFO_TELEPORT_OTHERS)) {
+                    return false;
+                }
+                if (!claim.isUserTrusted(player, TrustTypes.ACCESSOR)) {
+                    if (GriefDefenderPlugin.getInstance().economyService.orElse(null) != null) {
+                        // Allow non-trusted to TP to claims for sale
+                        if (!claim.getEconomyData().isForSale()) {
+                            return false;
+                        }
+                    } else {
+                        return false;
+                    }
+                }
+            } else if (!player.hasPermission(GDPermissions.COMMAND_CLAIM_INFO_TELEPORT_BASE)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

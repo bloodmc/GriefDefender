@@ -29,6 +29,7 @@ import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.CommandCompletion;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Description;
+import co.aikar.commands.annotation.Optional;
 import co.aikar.commands.annotation.Subcommand;
 import co.aikar.commands.annotation.Syntax;
 
@@ -38,6 +39,7 @@ import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.GriefDefender;
 import com.griefdefender.api.claim.Claim;
+import com.griefdefender.api.claim.TrustType;
 import com.griefdefender.api.claim.TrustTypes;
 import com.griefdefender.cache.MessageCache;
 import com.griefdefender.cache.PermissionHolderCache;
@@ -52,18 +54,31 @@ import net.kyori.text.adapter.bukkit.TextAdapter;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 @CommandAlias("%griefdefender")
 @CommandPermission(GDPermissions.COMMAND_UNTRUSTALL_PLAYER)
 public class CommandUntrustPlayerAll extends BaseCommand {
 
-    @CommandCompletion("@gdplayers @gddummy")
+    @CommandCompletion("@gdplayers @gdtrusttypes @gddummy")
     @CommandAlias("untrustall")
     @Description("Revokes player access to all your claims.")
-    @Syntax("<player>")
+    @Syntax("<player> [<accessor|builder|container|manager>]")
     @Subcommand("untrustall player")
-    public void execute(Player player, String target) {
+    public void execute(Player player, String target, @Optional String type) {
+        TrustType trustType = null;
+        if (type == null) {
+            trustType = TrustTypes.NONE;
+        } else {
+            trustType = CommandHelper.getTrustType(type);
+            if (trustType == null) {
+                GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().TRUST_INVALID);
+                return;
+            }
+        }
+
         GDPermissionUser user;
         if (target.equalsIgnoreCase("public")) {
             user = GriefDefenderPlugin.PUBLIC_USER;
@@ -96,7 +111,7 @@ public class CommandUntrustPlayerAll extends BaseCommand {
 
         GDCauseStackManager.getInstance().pushCause(player);
         GDUserTrustClaimEvent.Remove
-            event = new GDUserTrustClaimEvent.Remove(new ArrayList<>(claimList), ImmutableList.of(user.getUniqueId()), TrustTypes.NONE);
+            event = new GDUserTrustClaimEvent.Remove(new ArrayList<>(claimList), ImmutableList.of(user.getUniqueId()), trustType);
         GriefDefender.getEventManager().post(event);
         GDCauseStackManager.getInstance().popCause();
         if (event.cancelled()) {
@@ -106,7 +121,12 @@ public class CommandUntrustPlayerAll extends BaseCommand {
         }
 
         for (Claim claim : claimList) {
-            this.removeAllUserTrust(claim, user);
+            final GDClaim gdClaim = (GDClaim) claim;
+            if (trustType == TrustTypes.NONE) {
+                this.removeAllUserTrust(gdClaim, user);
+            } else {
+                this.removeUserTrust(gdClaim, user, trustType);
+            }
         }
 
         final Component message = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.UNTRUST_INDIVIDUAL_ALL_CLAIMS,
@@ -115,13 +135,23 @@ public class CommandUntrustPlayerAll extends BaseCommand {
         GriefDefenderPlugin.sendMessage(player, message);
     }
 
-    private void removeAllUserTrust(Claim claim, GDPermissionUser user) {
-        final GDClaim gdClaim = ((GDClaim) claim);
-        gdClaim.removeAllTrustsFromUser(user.getUniqueId());
-        gdClaim.getInternalClaimData().setRequiresSave(true);
-        gdClaim.getInternalClaimData().save();
-        for (Claim child : gdClaim.children) {
-            this.removeAllUserTrust(child, user);
+    private void removeUserTrust(GDClaim claim, GDPermissionUser user, TrustType type) {
+        final List<UUID> trustList = claim.getUserTrustList(type);
+        if (trustList.remove(user.getUniqueId())) {
+            claim.getInternalClaimData().setRequiresSave(true);
+            claim.getInternalClaimData().save();
+        }
+        for (Claim child : claim.children) {
+            this.removeUserTrust((GDClaim) child, user, type);
+        }
+    }
+
+    private void removeAllUserTrust(GDClaim claim, GDPermissionUser user) {
+        claim.removeAllTrustsFromUser(user.getUniqueId());
+        claim.getInternalClaimData().setRequiresSave(true);
+        claim.getInternalClaimData().save();
+        for (Claim child : claim.children) {
+            this.removeAllUserTrust((GDClaim) child, user);
         }
     }
 }

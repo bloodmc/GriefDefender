@@ -104,6 +104,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -561,7 +562,7 @@ public class GDPermissionManager implements PermissionManager {
                 String id = type.getId();
 
                 if (!(targetEntity instanceof Player)) {
-                    addCustomEntityTypeContexts(targetEntity, contexts, type, isSource);
+                    addCustomEntityTypeContexts(targetEntity, id, contexts, type, isSource);
                 }
 
                 if (this.isObjectIdBanned(claim, id, BanType.ENTITY)) {
@@ -691,7 +692,7 @@ public class GDPermissionManager implements PermissionManager {
         return false;
     }
 
-    public void addCustomEntityTypeContexts(Entity targetEntity, Set<Context> contexts, GDEntityType type, boolean isSource) {
+    public void addCustomEntityTypeContexts(Entity targetEntity, String id, Set<Context> contexts, GDEntityType type, boolean isSource) {
         if (isSource) {
             contexts.add(ContextGroups.SOURCE_ALL);
         } else {
@@ -710,7 +711,6 @@ public class GDPermissionManager implements PermissionManager {
             return;
         }
 
-        final String contextKey = isSource ? "source" : "target";
         //contexts.add(new Context(contextKey, "#" + creatureType));
         if (creatureType.contains("animal")) {
             if (isSource) {
@@ -718,12 +718,14 @@ public class GDPermissionManager implements PermissionManager {
             } else {
                 contexts.add(ContextGroups.TARGET_ANIMAL);
             }
+            this.checkPetContext(targetEntity, id, contexts);
         } else if (creatureType.contains("aquatic")) {
             if (isSource) {
                 contexts.add(ContextGroups.SOURCE_AQUATIC);
             } else {
                 contexts.add(ContextGroups.TARGET_AQUATIC);
             }
+            this.checkPetContext(targetEntity, id, contexts);
         } else if (creatureType.contains("monster")) {
             if (isSource) {
                 contexts.add(ContextGroups.SOURCE_MONSTER);
@@ -736,11 +738,22 @@ public class GDPermissionManager implements PermissionManager {
             } else {
                 contexts.add(ContextGroups.TARGET_AMBIENT);
             }
+            this.checkPetContext(targetEntity, id, contexts);
         } else {
             if (isSource) {
                 contexts.add(ContextGroups.SOURCE_MISC);
             } else {
                 contexts.add(ContextGroups.TARGET_MISC);
+            }
+        }
+    }
+
+    private void checkPetContext(Entity targetEntity, String id, Set<Context> contexts) {
+        if (this.eventSubject != null && this.eventSubject instanceof GDPermissionUser) {
+            final GDPermissionUser user = (GDPermissionUser) this.eventSubject;
+            final UUID uuid = NMSUtil.getInstance().getTameableOwnerUUID(targetEntity);
+            if (uuid != null && uuid.equals(user.getUniqueId())) {
+                contexts.add(new Context(ContextGroupKeys.PET, id));
             }
         }
     }

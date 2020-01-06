@@ -995,12 +995,14 @@ public abstract class ClaimFlagBase extends BaseCommand {
 
     private Consumer<CommandSource> createCustomFlagConsumer(GDPermissionUser src, GDClaim claim, String flagGroup) {
         return consumer -> {
+            PaginationUtil.getInstance().resetActivePage(src.getUniqueId());
             showCustomFlags(src, claim, flagGroup);
         };
     }
 
     private Consumer<CommandSource> createClaimFlagConsumer(GDPermissionUser src, GDClaim claim, MenuType flagType) {
         return consumer -> {
+            PaginationUtil.getInstance().resetActivePage(src.getUniqueId());
             showFlagPermissions(src, claim, flagType);
         };
     }

@@ -29,6 +29,7 @@ import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.CommandCompletion;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Description;
+import co.aikar.commands.annotation.Optional;
 import co.aikar.commands.annotation.Subcommand;
 import co.aikar.commands.annotation.Syntax;
 
@@ -38,6 +39,7 @@ import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.GriefDefender;
 import com.griefdefender.api.claim.Claim;
+import com.griefdefender.api.claim.TrustType;
 import com.griefdefender.api.claim.TrustTypes;
 import com.griefdefender.cache.MessageCache;
 import com.griefdefender.cache.PermissionHolderCache;
@@ -52,6 +54,7 @@ import net.kyori.text.adapter.bukkit.TextAdapter;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 @CommandAlias("%griefdefender")
@@ -61,11 +64,21 @@ public class CommandUntrustGroupAll extends BaseCommand {
     @CommandCompletion("@gdgroups @gdtrusttypes @gddummy")
     @CommandAlias("untrustallgroup")
     @Description("Revokes group access to all your claims")
-    @Syntax("<group>")
+    @Syntax("<group> [<accessor|builder|container|manager>]")
     @Subcommand("untrustall group")
-    public void execute(Player player, String target, String type) {
-        final GDPermissionGroup group = PermissionHolderCache.getInstance().getOrCreateGroup(target);
+    public void execute(Player player, String target, @Optional String type) {
+        TrustType trustType = null;
+        if (type == null) {
+            trustType = TrustTypes.NONE;
+        } else {
+            trustType = CommandHelper.getTrustType(type);
+            if (trustType == null) {
+                GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().TRUST_INVALID);
+                return;
+            }
+        }
 
+        final GDPermissionGroup group = PermissionHolderCache.getInstance().getOrCreateGroup(target);
         // validate player argument
         if (group == null) {
             GriefDefenderPlugin.sendMessage(player, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.COMMAND_INVALID_GROUP,
@@ -87,23 +100,39 @@ public class CommandUntrustGroupAll extends BaseCommand {
 
         GDCauseStackManager.getInstance().pushCause(player);
         GDGroupTrustClaimEvent.Remove
-            event = new GDGroupTrustClaimEvent.Remove(new ArrayList<>(claimList), ImmutableList.of(group.getName()), TrustTypes.NONE);
+            event = new GDGroupTrustClaimEvent.Remove(new ArrayList<>(claimList), ImmutableList.of(group.getName()), trustType);
         GriefDefender.getEventManager().post(event);
         GDCauseStackManager.getInstance().popCause();
         if (event.cancelled()) {
             TextAdapter.sendComponent(player, event.getMessage().orElse(MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.TRUST_PLUGIN_CANCEL,
-                    ImmutableMap.of("target", group))));
+                    ImmutableMap.of("target", group.getName()))));
             return;
         }
 
         for (Claim claim : claimList) {
-            this.removeAllGroupTrust(claim, group);
+            final GDClaim gdClaim = (GDClaim) claim;
+            if (trustType == TrustTypes.NONE) {
+                this.removeAllGroupTrust(gdClaim, group);
+            } else {
+                this.removeGroupTrust(gdClaim, group, trustType);
+            }
         }
 
         final Component message = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.UNTRUST_INDIVIDUAL_ALL_CLAIMS,
                ImmutableMap.of(
                 "player", group.getName()));
         GriefDefenderPlugin.sendMessage(player, message);
+    }
+
+    private void removeGroupTrust(GDClaim claim, GDPermissionGroup group, TrustType type) {
+        final List<String> trustList = claim.getGroupTrustList(type);
+        if (trustList.remove(group.getName())) {
+            claim.getInternalClaimData().setRequiresSave(true);
+            claim.getInternalClaimData().save();
+        }
+        for (Claim child : claim.children) {
+            this.removeGroupTrust((GDClaim) child, group, type);
+        }
     }
 
     private void removeAllGroupTrust(Claim claim, GDPermissionGroup holder) {

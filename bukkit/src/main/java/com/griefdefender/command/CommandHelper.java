@@ -627,35 +627,35 @@ public class CommandHelper {
                         .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(CommandHelper.createCommandConsumer(src, "claiminfo", claim.getUniqueId().toString(), createReturnClaimListConsumer(src, returnCommand)))))
                         .hoverEvent(HoverEvent.showText(basicInfo)).build();
 
-                Component claimCoordsTPClick = TextComponent.builder("")
-                        .append("[")
-                        .append("TP", TextColor.LIGHT_PURPLE)
-                        .append("]")
-                        .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(CommandHelper.createTeleportConsumer(src, VecHelper.toLocation(claim.getWorld(), southWest), claim))))
-                        .hoverEvent(HoverEvent.showText(MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.CLAIMLIST_UI_CLICK_TELEPORT_TARGET,
-                                ImmutableMap.of(
-                                    "name", teleportName,
-                                    "target", southWest.toString(),
-                                    "world", claim.getWorld().getName()))))
-                        .build();
-
                 Component claimSpawn = null;
-                if (claim.getData().getSpawnPos().isPresent()) {
-                    Vector3i spawnPos = claim.getData().getSpawnPos().get();
-                    Location spawnLoc = new Location(claim.getWorld(), spawnPos.getX(), spawnPos.getY(), spawnPos.getZ());
-                    claimSpawn = TextComponent.builder("")
-                            .append("[")
-                            .append("TP", TextColor.LIGHT_PURPLE)
-                            .append("]")
-                            .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(CommandHelper.createTeleportConsumer(src, spawnLoc, claim, true))))
-                            .hoverEvent(HoverEvent.showText(MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.CLAIMLIST_UI_CLICK_TELEPORT_TARGET,
-                                    ImmutableMap.of(
+                if (player !=null && PermissionUtil.getInstance().canPlayerTeleport(player, claim)) {
+                    final Vector3i spawnPos = claim.getData().getSpawnPos().orElse(null);
+                    if (spawnPos != null) {
+                        Location spawnLoc = new Location(claim.getWorld(), spawnPos.getX(), spawnPos.getY(), spawnPos.getZ());
+                        claimSpawn = TextComponent.builder("")
+                                .append("[")
+                                .append("TP", TextColor.LIGHT_PURPLE)
+                                .append("]")
+                                .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(CommandHelper.createTeleportConsumer(src, spawnLoc, claim, true))))
+                                .hoverEvent(HoverEvent.showText(MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.CLAIMLIST_UI_CLICK_TELEPORT_TARGET,
+                                        ImmutableMap.of(
+                                                "name", teleportName,
+                                                "target", "'s spawn @ " + spawnPos.toString(),
+                                                "world", claim.getWorld().getName()))))
+                                .build();
+                    } else {
+                        claimSpawn = TextComponent.builder("")
+                                .append("[")
+                                .append("TP", TextColor.LIGHT_PURPLE)
+                                .append("]")
+                                .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(CommandHelper.createTeleportConsumer(src, VecHelper.toLocation(claim.getWorld(), southWest), claim))))
+                                .hoverEvent(HoverEvent.showText(MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.CLAIMLIST_UI_CLICK_TELEPORT_TARGET,
+                                        ImmutableMap.of(
                                             "name", teleportName,
-                                            "target", "'s spawn @ " + spawnPos.toString(),
+                                            "target", southWest.toString(),
                                             "world", claim.getWorld().getName()))))
-                            .build();
-                } else {
-                    claimSpawn = claimCoordsTPClick;
+                                .build();
+                    }
                 }
 
                 List<Component> childrenTextList = new ArrayList<>();
@@ -682,8 +682,7 @@ public class CommandHelper {
                             .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(showChildrenList(childrenTextList, src, returnCommand, claim))))
                             .hoverEvent(HoverEvent.showText(MessageCache.getInstance().CLAIMLIST_UI_CLICK_VIEW_CHILDREN)).build();
                     claimsTextList.add(TextComponent.builder("")
-                            .append(claimSpawn)
-                            .append(" ")
+                            .append(claimSpawn != null ? claimSpawn.append(TextComponent.of(" ")) : TextComponent.of(""))
                             .append(claimInfoCommandClick)
                             .append(" : ", TextColor.WHITE)
                             .append(claim.getOwnerName().color(TextColor.GOLD))
@@ -696,8 +695,7 @@ public class CommandHelper {
                             .build());
                 } else {
                    claimsTextList.add(TextComponent.builder("")
-                           .append(claimSpawn)
-                           .append(" ")
+                           .append(claimSpawn != null ? claimSpawn.append(TextComponent.of(" ")) : TextComponent.of(""))
                            .append(claimInfoCommandClick)
                            .append(" : ", TextColor.WHITE)
                            .append(claim.getOwnerName().color(TextColor.GOLD))
@@ -988,34 +986,9 @@ public class CommandHelper {
                 // ignore
                 return;
             }
-            Player player = (Player) src;
-            GDClaim gdClaim = (GDClaim) claim;
-            final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getPlayerData(player.getWorld(), player.getUniqueId());
-            if (!playerData.canIgnoreClaim(gdClaim) && !playerData.canManageAdminClaims) {
-                // if not owner of claim, validate perms
-                if (!player.getUniqueId().equals(claim.getOwnerUniqueId())) {
-                    if (!player.hasPermission(GDPermissions.COMMAND_CLAIM_INFO_TELEPORT_OTHERS)) {
-                        TextAdapter.sendComponent(player, MessageCache.getInstance().CLAIMINFO_UI_TELEPORT_FEATURE.color(TextColor.RED)); 
-                        return;
-                    }
-                    if (!gdClaim.isUserTrusted(player, TrustTypes.ACCESSOR)) {
-                        if (GriefDefenderPlugin.getInstance().getVaultProvider() != null) {
-                            // Allow non-trusted to TP to claims for sale
-                            if (!gdClaim.getEconomyData().isForSale()) {
-                                TextAdapter.sendComponent(player, MessageCache.getInstance().CLAIMINFO_UI_TELEPORT_FEATURE.color(TextColor.RED)); 
-                                return;
-                            }
-                        } else {
-                            TextAdapter.sendComponent(player, MessageCache.getInstance().CLAIMINFO_UI_TELEPORT_FEATURE.color(TextColor.RED)); 
-                            return;
-                        }
-                    }
-                } else if (!player.hasPermission(GDPermissions.COMMAND_CLAIM_INFO_TELEPORT_BASE)) {
-                    TextAdapter.sendComponent(player, MessageCache.getInstance().CLAIMINFO_UI_TELEPORT_FEATURE.color(TextColor.RED)); 
-                    return;
-                }
-            }
 
+            final Player player = (Player) src;
+            final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getPlayerData(player.getWorld(), player.getUniqueId());
             final int teleportDelay = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), player, Options.PLAYER_TELEPORT_DELAY, claim);
             if (isClaimSpawn) {
                 if (teleportDelay > 0) {

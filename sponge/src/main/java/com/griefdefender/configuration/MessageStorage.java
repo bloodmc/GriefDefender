@@ -116,6 +116,7 @@ public class MessageStorage {
     public static final String CLAIM_NAME = "claim-name";
     public static final String CLAIM_OWNER_ONLY = "claim-owner-only";
     public static final String CLAIM_PROTECTED_ENTITY = "claim-protected-entity";
+    public static final String CLAIM_RESERVE_ADD = "claim-reserve-add";
     public static final String CLAIM_SHOW_NEARBY = "claim-show-nearby";
     public static final String CLAIM_SIZE_MIN = "claim-size-min";
     public static final String CLAIM_SIZE_MAX = "claim-size-max";
