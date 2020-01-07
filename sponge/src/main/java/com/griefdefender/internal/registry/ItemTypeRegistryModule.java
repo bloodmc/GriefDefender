@@ -27,6 +27,8 @@ package com.griefdefender.internal.registry;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.collect.ImmutableList;
+
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.item.ItemType;
 
 import java.util.Collection;
@@ -38,8 +40,7 @@ import java.util.Optional;
 public final class ItemTypeRegistryModule {
 
     protected final Map<String, GDItemType> itemTypeMappings = new HashMap<>();
-    private final org.spongepowered.common.registry.type.ItemTypeRegistryModule SPONGE_REGISTRY = org.spongepowered.common.registry.type.ItemTypeRegistryModule.getInstance();
-
+ 
     public static ItemTypeRegistryModule getInstance() {
         return Holder.INSTANCE;
     }
@@ -56,7 +57,7 @@ public final class ItemTypeRegistryModule {
     }
 
     public void registerDefaults() {
-        for (ItemType type : SPONGE_REGISTRY.getAll()) {
+        for (ItemType type : Sponge.getRegistry().getAllOf(ItemType.class)) {
             this.itemTypeMappings.put(type.getId(), new GDItemType(type));
         }
     }

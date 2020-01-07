@@ -27,6 +27,8 @@ package com.griefdefender.internal.registry;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.collect.ImmutableList;
+
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.BlockType;
 
 import java.util.Collection;
@@ -39,7 +41,6 @@ import java.util.Optional;
 public final class BlockTypeRegistryModule {
 
     protected final Map<String, GDBlockType> blockTypeMappings = new HashMap<>();
-    private final org.spongepowered.common.registry.type.BlockTypeRegistryModule SPONGE_REGISTRY = org.spongepowered.common.registry.type.BlockTypeRegistryModule.getInstance();
 
     public static BlockTypeRegistryModule getInstance() {
         return Holder.INSTANCE;
@@ -57,7 +58,7 @@ public final class BlockTypeRegistryModule {
     }
 
     public void registerDefaults() {
-        for (BlockType type : SPONGE_REGISTRY.getAll()) {
+        for (BlockType type : Sponge.getRegistry().getAllOf(BlockType.class)) {
             this.blockTypeMappings.put(type.getId(), new GDBlockType(type));
         }
     }

@@ -30,6 +30,8 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableList;
 import net.minecraft.entity.EnumCreatureType;
+
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.EntityType;
 import org.spongepowered.api.entity.living.Living;
 import org.spongepowered.common.entity.SpongeEntityType;
@@ -44,7 +46,6 @@ public final class EntityTypeRegistryModule {
 
     protected final Map<String, GDEntityType> entityTypeMappings = new HashMap<>();
     public final BiMap<String, EnumCreatureType> SPAWN_TYPES = HashBiMap.create();
-    private final org.spongepowered.common.registry.type.entity.EntityTypeRegistryModule SPONGE_REGISTRY = org.spongepowered.common.registry.type.entity.EntityTypeRegistryModule.getInstance();
 
     public static EntityTypeRegistryModule getInstance() {
         return Holder.INSTANCE;
@@ -74,7 +75,7 @@ public final class EntityTypeRegistryModule {
     }
 
     public void registerDefaults() {
-        for (EntityType type : SPONGE_REGISTRY.getAll()) {
+        for (EntityType type : Sponge.getRegistry().getAllOf(EntityType.class)) {
             this.entityTypeMappings.put(type.getId(), new GDEntityType(type));
         }
         SPAWN_TYPES.put("animal", EnumCreatureType.CREATURE);

@@ -482,9 +482,6 @@ public class GriefDefenderPlugin {
         TrustTypeRegistryModule.getInstance().registerDefaults();
         FlagRegistryModule.getInstance().registerDefaults();
         ResultTypeRegistryModule.getInstance().registerDefaults();
-        EntityTypeRegistryModule.getInstance().registerDefaults();
-        BlockTypeRegistryModule.getInstance().registerDefaults();
-        ItemTypeRegistryModule.getInstance().registerDefaults();
         CreateModeTypeRegistryModule.getInstance().registerDefaults();
         GameModeTypeRegistryModule.getInstance().registerDefaults();
         WeatherTypeRegistryModule.getInstance().registerDefaults();
@@ -503,6 +500,10 @@ public class GriefDefenderPlugin {
             return;
         }
 
+        // These must be registered here to catch all mod registrations
+        BlockTypeRegistryModule.getInstance().registerDefaults();
+        EntityTypeRegistryModule.getInstance().registerDefaults();
+        ItemTypeRegistryModule.getInstance().registerDefaults();
         this.loadConfig();
         this.registerBaseCommands();
         this.executor = Executors.newFixedThreadPool(GriefDefenderPlugin.getGlobalConfig().getConfig().thread.numExecutorThreads);
