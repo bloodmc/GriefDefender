@@ -51,6 +51,7 @@ import com.griefdefender.util.PermissionUtil;
 import net.kyori.text.Component;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.BlockSnapshot;
+import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.data.Transaction;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.scheduler.Task;
@@ -68,6 +69,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 public class GDPlayerData implements PlayerData {
 
@@ -98,6 +100,11 @@ public class GDPlayerData implements PlayerData {
 
     public boolean inTown = false;
     public boolean townChat = false;
+    public List<Component> chatLines = new ArrayList<>();
+    public Instant recordChatTimestamp;
+    public Instant commandInputTimestamp;
+    public String commandInput;
+    public Consumer<CommandSource> trustAddConsumer;
 
     // Always ignore active contexts by default
     // This prevents protection issues when other plugins call getActiveContext
@@ -669,6 +676,48 @@ public class GDPlayerData implements PlayerData {
 
         final int duration = (int) Duration.between(this.lastPvpTimestamp, now).getSeconds();
         return combatTimeout - duration;
+    }
+
+    public void updateRecordChat() {
+        final Player player = this.getSubject().getOnlinePlayer();
+        if (this.recordChatTimestamp == null || player == null) {
+            return;
+        }
+
+        final Instant now = Instant.now();
+        final int timeout = GriefDefenderPlugin.getGlobalConfig().getConfig().gui.chatCaptureIdleTimeout;
+        if (timeout <= 0) {
+            return;
+        }
+
+        if (this.recordChatTimestamp.plusSeconds(timeout).isBefore(now)) {
+            this.recordChatTimestamp = null;
+        }
+    }
+
+    public boolean isRecordingChat() {
+        return this.recordChatTimestamp != null;
+    }
+
+    public void updateCommandInput() {
+        final Player player = this.getSubject().getOnlinePlayer();
+        if (this.commandInputTimestamp == null || player == null) {
+            return;
+        }
+
+        final Instant now = Instant.now();
+        final int timeout = GriefDefenderPlugin.getGlobalConfig().getConfig().gui.commandInputIdleTimeout;
+        if (timeout <= 0) {
+            return;
+        }
+
+        if (this.commandInputTimestamp.plusSeconds(timeout).isBefore(now)) {
+            this.commandInputTimestamp = null;
+        }
+    }
+
+    public boolean isWaitingForInput() {
+        return this.commandInputTimestamp != null;
     }
 
     public void onClaimDelete() {

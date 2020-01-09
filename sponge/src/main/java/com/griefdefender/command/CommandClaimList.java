@@ -50,6 +50,7 @@ import com.griefdefender.internal.pagination.PaginationList;
 import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.permission.GDPermissions;
 import com.griefdefender.text.action.GDCallbackHolder;
+import com.griefdefender.util.ChatCaptureUtil;
 import com.griefdefender.util.PaginationUtil;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
@@ -92,7 +93,7 @@ public class CommandClaimList extends BaseCommand {
     @Syntax("[<player>|<player> <world>]")
     @Description("List information about a player's claim blocks and claims.")
     @Subcommand("claim list")
-    public void execute(Player src, @Optional User targetPlayer, @Optional World world) {//String[] args) {
+    public void execute(Player src, @Optional User targetPlayer, @Optional World world) {
         final GDPermissionUser user = targetPlayer == null ? PermissionHolderCache.getInstance().getOrCreateUser(src) : PermissionHolderCache.getInstance().getOrCreateUser(targetPlayer);
         if (user == null) {
             GriefDefenderPlugin.sendMessage(src, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.COMMAND_INVALID_PLAYER,
@@ -219,13 +220,20 @@ public class CommandClaimList extends BaseCommand {
                 .append(subTypeText)
                 .append(" ")
                 .append(townTypeText).build();
-        final int fillSize = 20 - (claimsTextList.size() + 2);
+
+        int fillSize = 20 - (claimsTextList.size() + 2);
+        Component footer = null;
+        if (src != null && src.hasPermission(GDPermissions.CHAT_CAPTURE)) {
+            footer = ChatCaptureUtil.getInstance().createRecordChatComponent(src, null, user.getInternalPlayerData(), "claimlist");
+            fillSize = 20 - (claimsTextList.size() + 3);
+        }
+
         for (int i = 0; i < fillSize; i++) {
             claimsTextList.add(TextComponent.of(" "));
         }
 
         PaginationList paginationList = PaginationList.builder()
-                .title(claimListHead).padding(TextComponent.of(" ").decoration(TextDecoration.STRIKETHROUGH, true)).contents(claimsTextList).build();
+                .title(claimListHead).padding(TextComponent.of(" ").decoration(TextDecoration.STRIKETHROUGH, true)).contents(claimsTextList).footer(footer).build();
         Integer activePage = 1;
         if (src instanceof Player) {
             final Player player = (Player) src;

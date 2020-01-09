@@ -30,6 +30,7 @@ import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Subcommand;
 import com.google.common.collect.ImmutableMap;
+import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.claim.Claim;
 import com.griefdefender.cache.MessageCache;
@@ -37,6 +38,8 @@ import com.griefdefender.claim.GDClaimManager;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.internal.pagination.PaginationList;
 import com.griefdefender.permission.GDPermissions;
+import com.griefdefender.util.ChatCaptureUtil;
+
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextDecoration;
@@ -69,6 +72,7 @@ public class CommandClaimBuy extends BaseCommand {
             return;
         }
 
+        final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
         Set<Claim> claimsForSale = new HashSet<>();
         GDClaimManager claimManager = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(player.getWorld().getUID());
         for (Claim worldClaim : claimManager.getWorldClaims()) {
@@ -88,9 +92,22 @@ public class CommandClaimBuy extends BaseCommand {
             }
         }
 
-        List<Component> claimsTextList = CommandHelper.generateClaimTextListCommand(new ArrayList<Component>(), claimsForSale, player.getWorld().getName(), null, player, CommandHelper.createCommandConsumer(player, "claimbuy", ""), false);
+        List<Component> textList = CommandHelper.generateClaimTextListCommand(new ArrayList<Component>(), claimsForSale, player.getWorld().getName(), null, player, CommandHelper.createCommandConsumer(player, "claimbuy", ""), false);
+        Component footer = null;
+        int fillSize = 20 - (textList.size() + 2);
+        if (player.hasPermission(GDPermissions.CHAT_CAPTURE)) {
+            footer = TextComponent.builder()
+                        .append(ChatCaptureUtil.getInstance().createRecordChatComponent(player, null, playerData, "claimbuy"))
+                        .build();
+            fillSize = 20 - (textList.size() + 3);
+        }
+
+        for (int i = 0; i < fillSize; i++) {
+            textList.add(TextComponent.of(" "));
+        }
+
         PaginationList.Builder paginationBuilder = PaginationList.builder()
-                .title(MessageCache.getInstance().COMMAND_CLAIMBUY_TITLE).padding(TextComponent.of(" ").decoration(TextDecoration.STRIKETHROUGH, true)).contents(claimsTextList);
+                .title(MessageCache.getInstance().COMMAND_CLAIMBUY_TITLE).padding(TextComponent.of(" ").decoration(TextDecoration.STRIKETHROUGH, true)).contents(textList).footer(footer);
         paginationBuilder.sendTo(player);
         return;
     }

@@ -49,6 +49,8 @@ import com.griefdefender.api.permission.option.Option;
 import com.griefdefender.api.permission.option.Options;
 import com.griefdefender.api.permission.option.type.CreateModeType;
 import com.griefdefender.api.permission.option.type.CreateModeTypes;
+import com.griefdefender.api.permission.option.type.GameModeType;
+import com.griefdefender.api.permission.option.type.GameModeTypes;
 import com.griefdefender.api.permission.option.type.WeatherType;
 import com.griefdefender.api.permission.option.type.WeatherTypes;
 import com.griefdefender.cache.EventResultCache;
@@ -1224,6 +1226,22 @@ public class GDPermissionManager implements PermissionManager {
             }
 
             return (T) WeatherTypes.UNDEFINED;
+        }
+        if (type.getRawType().isAssignableFrom(GameModeType.class)) {
+            if (value.equalsIgnoreCase("adventure")) {
+                return (T) GameModeTypes.ADVENTURE;
+            }
+            if (value.equalsIgnoreCase("creative")) {
+                return (T) GameModeTypes.CREATIVE;
+            }
+            if (value.equalsIgnoreCase("spectator")) {
+                return (T) GameModeTypes.SPECTATOR;
+            }
+            if (value.equalsIgnoreCase("survival")) {
+                return (T) GameModeTypes.SURVIVAL;
+            }
+
+            return (T) GameModeTypes.UNDEFINED;
         }
         if (type.getRawType().isAssignableFrom(Boolean.class)) {
             return (T) Boolean.valueOf(Boolean.parseBoolean(value));

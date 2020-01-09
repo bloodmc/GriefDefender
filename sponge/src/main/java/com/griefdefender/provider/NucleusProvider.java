@@ -30,12 +30,14 @@ import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.storage.BaseStorage;
 import com.griefdefender.util.SpongeUtil;
 import io.github.nucleuspowered.nucleus.api.NucleusAPI;
+import io.github.nucleuspowered.nucleus.api.chat.NucleusChatChannel;
 import io.github.nucleuspowered.nucleus.api.exceptions.PluginAlreadyRegisteredException;
 import io.github.nucleuspowered.nucleus.api.service.NucleusMessageTokenService;
 import io.github.nucleuspowered.nucleus.api.service.NucleusPrivateMessagingService;
 import net.kyori.text.Component;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.plugin.PluginContainer;
+import org.spongepowered.api.text.channel.MessageChannel;
 
 import java.util.Optional;
 
@@ -80,5 +82,9 @@ public class NucleusProvider {
 
         // register {{town}} from {{pl:griefdefender:town}}
         messageTokenService.registerPrimaryToken("town", pc, "town");
+    }
+
+    public boolean isChatChannel(MessageChannel channel) {
+        return channel instanceof NucleusChatChannel;
     }
 }

@@ -50,6 +50,8 @@ import com.griefdefender.api.permission.option.Option;
 import com.griefdefender.api.permission.option.Options;
 import com.griefdefender.api.permission.option.type.CreateModeType;
 import com.griefdefender.api.permission.option.type.CreateModeTypes;
+import com.griefdefender.api.permission.option.type.GameModeType;
+import com.griefdefender.api.permission.option.type.GameModeTypes;
 import com.griefdefender.api.permission.option.type.WeatherType;
 import com.griefdefender.api.permission.option.type.WeatherTypes;
 import com.griefdefender.cache.EventResultCache;
@@ -66,7 +68,6 @@ import com.griefdefender.internal.registry.GDEntityType;
 import com.griefdefender.internal.util.BlockUtil;
 import com.griefdefender.internal.util.NMSUtil;
 import com.griefdefender.registry.FlagRegistryModule;
-import com.griefdefender.registry.OptionRegistryModule;
 import com.griefdefender.util.EntityUtils;
 import com.griefdefender.util.PermissionUtil;
 import net.kyori.text.Component;
@@ -74,7 +75,6 @@ import net.kyori.text.TextComponent;
 import net.kyori.text.adapter.spongeapi.TextAdapter;
 import net.kyori.text.format.TextColor;
 import net.minecraft.entity.EnumCreatureType;
-import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -89,7 +89,6 @@ import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.EntityType;
-import org.spongepowered.api.entity.Item;
 import org.spongepowered.api.entity.living.Living;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
@@ -1426,6 +1425,22 @@ public class GDPermissionManager implements PermissionManager {
             }
 
             return (T) WeatherTypes.UNDEFINED;
+        }
+        if (type.getRawType().isAssignableFrom(GameModeType.class)) {
+            if (value.equalsIgnoreCase("adventure")) {
+                return (T) GameModeTypes.ADVENTURE;
+            }
+            if (value.equalsIgnoreCase("creative")) {
+                return (T) GameModeTypes.CREATIVE;
+            }
+            if (value.equalsIgnoreCase("spectator")) {
+                return (T) GameModeTypes.SPECTATOR;
+            }
+            if (value.equalsIgnoreCase("survival")) {
+                return (T) GameModeTypes.SURVIVAL;
+            }
+
+            return (T) GameModeTypes.UNDEFINED;
         }
         if (type.getRawType().isAssignableFrom(Boolean.class)) {
             return (T) Boolean.valueOf(Boolean.parseBoolean(value));

@@ -151,6 +151,7 @@ public class MessageStorage {
     public static final String COMMAND_INVALID_AMOUNT = "command-invalid-amount";
     public static final String COMMAND_INVALID_CLAIM = "command-invalid-claim";
     public static final String COMMAND_INVALID_GROUP = "command-invalid-group";
+    public static final String COMMAND_INVALID_INPUT = "command-invalid-input";
     public static final String COMMAND_INVALID_PLAYER = "command-invalid-player";
     public static final String COMMAND_INVALID_TYPE = "command-invalid-type";
     public static final String COMMAND_OPTION_EXCEEDS_ADMIN = "command-option-exceeds-admin";
@@ -305,7 +306,10 @@ public class MessageStorage {
     public static final String TRUST_INDIVIDUAL_ALL_CLAIMS = "trust-individual-all-claims";
     public static final String TRUST_PLUGIN_CANCEL = "trust-plugin-cancel";
     public static final String TUTORIAL_CLAIM_BASIC = "tutorial-claim-basic";
+    public static final String UI_CLICK_ADD_TARGET = "ui-click-add-target";
     public static final String UI_CLICK_FILTER_TYPE = "ui-click-filter-type";
+    public static final String UI_CLICK_RETURN_COMMAND = "ui-click-return-command";
+    public static final String UI_CLICK_VIEW = "ui-click-view";
     public static final String UNTRUST_INDIVIDUAL_ALL_CLAIMS = "untrust-individual-all-claims";
     public static final String UNTRUST_INDIVIDUAL_SINGLE_CLAIM = "untrust-individual-single-claim";
     public static final String UNTRUST_OWNER = "untrust-owner";

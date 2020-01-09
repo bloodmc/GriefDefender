@@ -40,6 +40,9 @@ import com.griefdefender.permission.flag.GDFlags;
 import com.griefdefender.storage.BaseStorage;
 import com.griefdefender.util.PaginationUtil;
 import net.kyori.text.Component;
+import net.kyori.text.TextComponent;
+import net.kyori.text.event.HoverEvent;
+import net.kyori.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.command.PluginCommand;
@@ -47,12 +50,20 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.server.RemoteServerCommandEvent;
 import org.bukkit.event.server.ServerCommandEvent;
 
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
+import java.util.Iterator;
+
 public class CommandEventHandler implements Listener {
 
+    private final DateTimeFormatter formatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT).withZone(ZoneId.systemDefault());
     private BaseStorage dataStore;
 
     public CommandEventHandler(BaseStorage dataStore) {
@@ -67,6 +78,41 @@ public class CommandEventHandler implements Listener {
     @EventHandler(priority = EventPriority.LOWEST)
     public void onRemoteServerCommand(RemoteServerCommandEvent event) {
        // CauseTracker.getInstance().getCauseStack().add(event.getSender());
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onPlayerChatPost(AsyncPlayerChatEvent event) {
+        final Player player = event.getPlayer();
+        final GDPlayerData playerData = this.dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
+        final Iterator<Player> iterator = event.getRecipients().iterator();
+        // check for command input
+        if (playerData.isWaitingForInput()) {
+            playerData.commandInput = event.getMessage();
+            playerData.trustAddConsumer.accept(player);
+            event.setCancelled(true);
+            return;
+        }
+
+        while (iterator.hasNext()) {
+            final Player receiver = iterator.next();
+            if (receiver == player) {
+                continue;
+            }
+
+            final GDPlayerData receiverData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(receiver.getWorld(), receiver.getUniqueId());
+            if (receiverData.isRecordingChat()) {
+                iterator.remove();
+                final String s = String.format(event.getFormat(), event.getPlayer().getDisplayName(), event.getMessage());
+                final Component message = LegacyComponentSerializer.legacy().deserialize(s, '&');
+                final Component component = TextComponent.builder()
+                        .append(TextComponent.builder()
+                                .append(message)
+                                .hoverEvent(HoverEvent.showText(TextComponent.of(formatter.format(Instant.now()))))
+                                .build())
+                        .build();
+                receiverData.chatLines.add(component);
+            }
+        }
     }
 
     @EventHandler(priority = EventPriority.LOWEST)

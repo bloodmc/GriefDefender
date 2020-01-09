@@ -256,6 +256,7 @@ public class MessageCache {
     public Component LABEL_BLOCKS;
     public Component LABEL_BUILDERS;
     public Component LABEL_BUY;
+    public Component LABEL_CANCEL;
     public Component LABEL_CHILDREN;
     public Component LABEL_CONFIRM;
     public Component LABEL_CONTAINERS;
@@ -276,6 +277,7 @@ public class MessageCache {
     public Component LABEL_OWNER;
     public Component LABEL_PERMISSION;
     public Component LABEL_PLAYER;
+    public Component LABEL_PRESET;
     public Component LABEL_PRICE;
     public Component LABEL_RAID;
     public Component LABEL_RESIZABLE;
@@ -386,6 +388,7 @@ public class MessageCache {
     public Component TELEPORT_MOVE_CANCEL;
     public Component TELEPORT_NO_SAFE_LOCATION;
     public Component TITLE_ACCESSOR;
+    public Component TITLE_ADVANCED;
     public Component TITLE_ALL;
     public Component TITLE_BUILDER;
     public Component TITLE_CLAIM;
@@ -407,6 +410,9 @@ public class MessageCache {
     public Component TRUST_LIST_HEADER;
     public Component TRUST_NO_CLAIMS;
     public Component TRUST_SELF;
+    public Component UI_CLICK_ADD;
+    public Component UI_CLICK_ADD_GROUP;
+    public Component UI_CLICK_ADD_PLAYER;
     public Component UI_CLICK_CONFIRM;
     public Component UI_CLICK_REMOVE;
     public Component UNTRUST_NO_CLAIMS;
@@ -618,11 +624,11 @@ public class MessageCache {
         FLAG_UI_OVERRIDE_NO_PERMISSION = MessageStorage.MESSAGE_DATA.getMessage("flag-ui-override-no-permission");
         FLAG_UI_RETURN_FLAGS = MessageStorage.MESSAGE_DATA.getMessage("flag-ui-return-flags");
         LABEL_ACCESSORS = MessageStorage.MESSAGE_DATA.getMessage("label-accessors");
-        LABEL_ALL = MessageStorage.MESSAGE_DATA.getMessage("label-all");
         LABEL_AREA = MessageStorage.MESSAGE_DATA.getMessage("label-area");
         LABEL_BLOCKS = MessageStorage.MESSAGE_DATA.getMessage("label-blocks");
         LABEL_BUILDERS = MessageStorage.MESSAGE_DATA.getMessage("label-builders");
         LABEL_BUY = MessageStorage.MESSAGE_DATA.getMessage("label-buy");
+        LABEL_CANCEL = MessageStorage.MESSAGE_DATA.getMessage("label-cancel");
         LABEL_CHILDREN = MessageStorage.MESSAGE_DATA.getMessage("label-children");
         LABEL_CONFIRM = MessageStorage.MESSAGE_DATA.getMessage("label-confirm");
         LABEL_CONTAINERS = MessageStorage.MESSAGE_DATA.getMessage("label-containers");
@@ -644,6 +650,7 @@ public class MessageCache {
         LABEL_PERMISSION = MessageStorage.MESSAGE_DATA.getMessage("label-permission");
         LABEL_PLAYER = MessageStorage.MESSAGE_DATA.getMessage("label-player");
         LABEL_PRICE = MessageStorage.MESSAGE_DATA.getMessage("label-price");
+        LABEL_PRESET = MessageStorage.MESSAGE_DATA.getMessage("label-preset");
         LABEL_RAID = MessageStorage.MESSAGE_DATA.getMessage("label-raid");
         LABEL_RESIZABLE = MessageStorage.MESSAGE_DATA.getMessage("label-resizable");
         LABEL_RESULT = MessageStorage.MESSAGE_DATA.getMessage("label-result");
@@ -753,6 +760,7 @@ public class MessageCache {
         TELEPORT_MOVE_CANCEL = MessageStorage.MESSAGE_DATA.getMessage("teleport-move-cancel");
         TELEPORT_NO_SAFE_LOCATION = MessageStorage.MESSAGE_DATA.getMessage("teleport-no-safe-location");
         TITLE_ACCESSOR = MessageStorage.MESSAGE_DATA.getMessage("title-accessor");
+        TITLE_ADVANCED = MessageStorage.MESSAGE_DATA.getMessage("title-advanced");
         TITLE_ALL = MessageStorage.MESSAGE_DATA.getMessage("title-all");
         TITLE_BUILDER = MessageStorage.MESSAGE_DATA.getMessage("title-builder");
         TITLE_CLAIM = MessageStorage.MESSAGE_DATA.getMessage("title-claim");
@@ -774,6 +782,9 @@ public class MessageCache {
         TRUST_LIST_HEADER = MessageStorage.MESSAGE_DATA.getMessage("trust-list-header");
         TRUST_NO_CLAIMS = MessageStorage.MESSAGE_DATA.getMessage("trust-no-claims");
         TRUST_SELF = MessageStorage.MESSAGE_DATA.getMessage("trust-self");
+        UI_CLICK_ADD = MessageStorage.MESSAGE_DATA.getMessage("ui-click-add");
+        UI_CLICK_ADD_GROUP = MessageStorage.MESSAGE_DATA.getMessage("ui-click-add-group");
+        UI_CLICK_ADD_PLAYER = MessageStorage.MESSAGE_DATA.getMessage("ui-click-add-player");
         UI_CLICK_CONFIRM = MessageStorage.MESSAGE_DATA.getMessage("ui-click-confirm");
         UI_CLICK_REMOVE = MessageStorage.MESSAGE_DATA.getMessage("ui-click-remove");
         UNTRUST_NO_CLAIMS = MessageStorage.MESSAGE_DATA.getMessage("untrust-no-claims");

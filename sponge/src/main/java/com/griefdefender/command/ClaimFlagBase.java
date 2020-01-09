@@ -63,6 +63,7 @@ import com.griefdefender.permission.ui.UIFlagData.FlagContextHolder;
 import com.griefdefender.registry.FlagRegistryModule;
 import com.griefdefender.text.action.GDCallbackHolder;
 import com.griefdefender.util.CauseContextHelper;
+import com.griefdefender.util.ChatCaptureUtil;
 import com.griefdefender.util.PaginationUtil;
 import com.griefdefender.util.PermissionUtil;
 
@@ -257,26 +258,38 @@ public abstract class ClaimFlagBase extends BaseCommand {
 
 
         Collections.sort(textComponents, UIHelper.PLAIN_COMPARATOR);
-        int fillSize = 20 - (textComponents.size() + 2);
-        for (int i = 0; i < fillSize; i++) {
-            textComponents.add(TextComponent.of(" "));
-        }
-
         String lastMenu = this.lastActiveMenuTypeMap.getIfPresent(src.getUniqueId());
         MenuType lastActiveMenu = MenuType.CLAIM;
         if (lastMenu != null) {
             lastActiveMenu = MenuType.valueOf(lastMenu.toUpperCase());
         }
+
+        int fillSize = 20 - (textComponents.size() + 2);
         Component footer = null;
         if (player.hasPermission(GDPermissions.ADVANCED_FLAGS)) {
             footer = TextComponent.builder().append(whiteOpenBracket)
-            .append(TextComponent.of("PRESET").color(TextColor.GOLD)).append(whiteCloseBracket)
-            .append(" ")
-            .append(TextComponent.builder()
-                    .append(TextComponent.of("ADVANCED").color(TextColor.GRAY)
-                    .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createClaimFlagConsumer(src, claim, lastActiveMenu)))))
-                    .build())
-            .build();
+                .append(TextComponent.of("PRESET").color(TextColor.GOLD)).append(whiteCloseBracket)
+                .append(" ")
+                .append(TextComponent.builder()
+                        .append(TextComponent.of("ADVANCED").color(TextColor.GRAY)
+                        .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createClaimFlagConsumer(src, claim, lastActiveMenu)))))
+                        .build())
+                .build();
+            if (player.hasPermission(GDPermissions.CHAT_CAPTURE)) {
+                System.out.println("TEST");
+                footer = footer.append(TextComponent.builder()
+                    .append("\n")
+                    .append(ChatCaptureUtil.getInstance().createRecordChatComponent(player, claim, src.getInternalPlayerData(), "claimflag"))
+                    .build());
+                fillSize = 20 - (textComponents.size() + 3);
+            }
+        } else if (player.hasPermission(GDPermissions.CHAT_CAPTURE)) {
+            footer = TextComponent.builder().append(ChatCaptureUtil.getInstance().createRecordChatComponent(player, claim, src.getInternalPlayerData(), "claimflag")).build();
+            fillSize = 20 - (textComponents.size() + 3);
+        }
+
+        for (int i = 0; i < fillSize; i++) {
+            textComponents.add(TextComponent.of(" "));
         }
         PaginationList.Builder paginationBuilder = PaginationList.builder()
                 .title(flagHeadBuilder.build()).padding(TextComponent.builder(" ").decoration(TextDecoration.STRIKETHROUGH, true).build()).contents(textComponents).footer(footer);
@@ -468,15 +481,12 @@ public abstract class ClaimFlagBase extends BaseCommand {
         }
 
         Collections.sort(textList, UIHelper.PLAIN_COMPARATOR);
-        int fillSize = 20 - (textList.size() + 2);
-        for (int i = 0; i < fillSize; i++) {
-            textList.add(TextComponent.of(" "));
-        }
-
         String lastActivePresetMenu = this.lastActivePresetMenuMap.getIfPresent(src.getUniqueId());
         if (lastActivePresetMenu == null) {
             lastActivePresetMenu = "user";
         }
+
+        int fillSize = 20 - (textList.size() + 2);
         Component footer = null;
         if (player.hasPermission(GDPermissions.ADVANCED_FLAGS)) {
             footer = TextComponent.builder().append(TextComponent.builder()
@@ -488,7 +498,22 @@ public abstract class ClaimFlagBase extends BaseCommand {
                 .append(TextComponent.of("ADVANCED").color(TextColor.RED))
                 .append(whiteCloseBracket)
                 .build();
+            if (player.hasPermission(GDPermissions.CHAT_CAPTURE)) {
+                footer = footer.append(TextComponent.builder()
+                    .append("\n")
+                    .append(ChatCaptureUtil.getInstance().createRecordChatComponent(player, claim, src.getInternalPlayerData(), "claimflag"))
+                    .build());
+                fillSize = 20 - (textList.size() + 3);
+            }
+        } else if (player.hasPermission(GDPermissions.CHAT_CAPTURE)) {
+            footer = TextComponent.builder().append(ChatCaptureUtil.getInstance().createRecordChatComponent(player, claim, src.getInternalPlayerData(), "claimflag")).build();
+            fillSize = 20 - (textList.size() + 3);
         }
+
+        for (int i = 0; i < fillSize; i++) {
+            textList.add(TextComponent.of(" "));
+        }
+
         PaginationList.Builder paginationBuilder = PaginationList.builder()
                 .title(claimFlagHead).padding(TextComponent.builder(" ").decoration(TextDecoration.STRIKETHROUGH, true).build()).contents(textList).footer(footer);
         final PaginationList paginationList = paginationBuilder.build();

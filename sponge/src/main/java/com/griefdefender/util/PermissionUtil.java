@@ -33,18 +33,18 @@ import com.griefdefender.api.permission.Context;
 import com.griefdefender.api.permission.PermissionResult;
 import com.griefdefender.api.permission.flag.Flag;
 import com.griefdefender.api.permission.option.Option;
+import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.permission.GDPermissionHolder;
 import com.griefdefender.permission.GDPermissions;
 import com.griefdefender.provider.PermissionProvider;
+import org.spongepowered.api.entity.living.player.Player;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-
-import org.spongepowered.api.entity.living.player.Player;
 
 public class PermissionUtil {
 

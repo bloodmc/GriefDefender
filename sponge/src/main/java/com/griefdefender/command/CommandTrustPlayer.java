@@ -48,6 +48,7 @@ import com.griefdefender.event.GDCauseStackManager;
 import com.griefdefender.event.GDUserTrustClaimEvent;
 import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.permission.GDPermissions;
+import com.griefdefender.util.PermissionUtil;
 import net.kyori.text.Component;
 import net.kyori.text.adapter.spongeapi.TextAdapter;
 import org.spongepowered.api.entity.living.player.Player;
@@ -84,6 +85,12 @@ public class CommandTrustPlayer extends BaseCommand {
         if (target.equalsIgnoreCase("public")) {
             user = GriefDefenderPlugin.PUBLIC_USER;
         } else {
+            if (PermissionUtil.getInstance().lookupUserUniqueId(target) == null) {
+                GriefDefenderPlugin.sendMessage(player, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.COMMAND_INVALID_PLAYER,
+                        ImmutableMap.of(
+                        "player", target)));
+                return;
+            }
             user = PermissionHolderCache.getInstance().getOrCreateUser(target);
         }
 

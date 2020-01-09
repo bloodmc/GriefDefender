@@ -67,11 +67,11 @@ import com.griefdefender.util.EconomyUtil;
 import com.griefdefender.util.PaginationUtil;
 import com.griefdefender.util.PlayerUtil;
 import com.griefdefender.util.SpongeUtil;
-import io.github.nucleuspowered.nucleus.api.chat.NucleusChatChannel;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
+import net.kyori.text.event.HoverEvent;
 import net.kyori.text.format.TextColor;
-
+import net.kyori.text.serializer.gson.GsonComponentSerializer;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.block.BlockType;
@@ -121,8 +121,10 @@ import org.spongepowered.api.service.user.UserStorageService;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.channel.MessageChannel;
 import org.spongepowered.api.text.channel.MessageReceiver;
+import org.spongepowered.api.text.channel.MutableMessageChannel;
 import org.spongepowered.api.text.channel.type.FixedMessageChannel;
 import org.spongepowered.api.text.format.TextColors;
+import org.spongepowered.api.text.serializer.TextSerializers;
 import org.spongepowered.api.util.blockray.BlockRay;
 import org.spongepowered.api.util.blockray.BlockRayHit;
 import org.spongepowered.api.world.Chunk;
@@ -133,8 +135,13 @@ import org.spongepowered.common.SpongeImpl;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -148,6 +155,7 @@ public class PlayerEventHandler {
     private int lastInteractItemPrimaryTick = -1;
     private int lastInteractItemSecondaryTick = -1;
     private boolean lastInteractItemCancelled = false;
+    private final DateTimeFormatter formatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT).withZone(ZoneId.systemDefault());
 
     public PlayerEventHandler(BaseStorage dataStore, GriefDefenderPlugin plugin) {
         this.dataStore = dataStore;
@@ -155,21 +163,63 @@ public class PlayerEventHandler {
         this.banService = Sponge.getServiceManager().getRegistration(BanService.class).get().getProvider();
     }
 
+    @Listener(order = Order.POST)
+    public void onPlayerChatPost(MessageChannelEvent.Chat event) {
+        final CommandSource commandSource = (CommandSource) event.getSource();
+        final MessageChannel channel = event.getChannel().orElse(null);
+        if (channel != null) {
+            final MutableMessageChannel mutableChannel = channel.asMutable();
+            final Iterator<MessageReceiver> iterator = mutableChannel.getMembers().iterator();
+            List<MessageReceiver> receiversToRemove = new ArrayList<>();
+            while (iterator.hasNext()) {
+                final MessageReceiver receiver = iterator.next();
+                if (receiver == commandSource) {
+                    continue;
+                }
+                if (receiver instanceof Player) {
+                    final Player playerReceiver = (Player) receiver;
+                    final GDPlayerData receiverData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(playerReceiver.getWorld(), playerReceiver.getUniqueId());
+                    if (receiverData.isRecordingChat()) {
+                        receiversToRemove.add(receiver);
+                        final Component message = GsonComponentSerializer.INSTANCE.deserialize(TextSerializers.JSON.serialize(event.getMessage()));
+                        final Component component = TextComponent.builder()
+                                .append(TextComponent.builder()
+                                        .append(message)
+                                        .hoverEvent(HoverEvent.showText(TextComponent.of(formatter.format(Instant.now()))))
+                                        .build())
+                                .build();
+                        receiverData.chatLines.add(component);
+                    }
+                }
+            }
+            for (MessageReceiver receiver : receiversToRemove) {
+                mutableChannel.removeMember(receiver);
+            }
+            event.setChannel(mutableChannel);
+        }
+    }
 
     @Listener(order = Order.FIRST, beforeModifications = true)
     public void onPlayerChat(MessageChannelEvent.Chat event, @First Player player) {
-        GDTimings.PLAYER_CHAT_EVENT.startTimingIfSync();
-        GriefDefenderConfig<?> activeConfig = GriefDefenderPlugin.getActiveConfig(player.getWorld().getProperties());
         if (!GriefDefenderPlugin.getInstance().claimsEnabledForWorld(player.getWorld().getUniqueId())) {
-            GDTimings.PLAYER_CHAT_EVENT.stopTimingIfSync();
             return;
         }
 
+        GDTimings.PLAYER_CHAT_EVENT.startTimingIfSync();
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
+        // check for command input
+        if (playerData.isWaitingForInput()) {
+            playerData.commandInput = event.getRawMessage().toPlain();
+            playerData.trustAddConsumer.accept(player);
+            event.setCancelled(true);
+            return;
+        }
+
         if (playerData.inTown && playerData.townChat) {
             final MessageChannel channel = event.getChannel().orElse(null);
             if (GriefDefenderPlugin.getInstance().nucleusApiProvider != null && channel != null) {
-                if (channel instanceof NucleusChatChannel) {
+                if (GriefDefenderPlugin.getInstance().nucleusApiProvider.isChatChannel(channel)) {
+                    GDTimings.PLAYER_CHAT_EVENT.stopTimingIfSync();
                     return;
                 }
             }
@@ -819,7 +869,19 @@ public class PlayerEventHandler {
     }
 
     @Listener(order = Order.FIRST, beforeModifications = true)
-    public void onPlayerInteractBlockPrimary(InteractBlockEvent.Primary.MainHand event, @First Player player) {
+    public void onPlayerInteractBlockPrimary(InteractBlockEvent.Primary.MainHand event) {
+        User user = CauseContextHelper.getEventUser(event);
+        final Object source = CauseContextHelper.getEventFakePlayerSource(event);
+        final Player player = source instanceof Player ? (Player) source : null;
+        if (player == null || NMSUtil.getInstance().isFakePlayer(player)) {
+            if (user == null) {
+                user = player;
+            }
+
+            this.handleFakePlayerInteractBlockPrimary(event, user, source);
+            return;
+        }
+
         final GDPlayerData playerData = this.dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
         final HandType handType = event.getHandType();
         final ItemStack itemInHand = player.getItemInHand(handType).orElse(ItemStack.empty());
@@ -854,7 +916,6 @@ public class PlayerEventHandler {
         GDTimings.PLAYER_INTERACT_BLOCK_PRIMARY_EVENT.startTimingIfSync();
         final BlockSnapshot clickedBlock = event.getTargetBlock();
         final Location<World> location = clickedBlock.getLocation().orElse(null);
-        final Object source = player;
         if (location == null) {
             GDTimings.PLAYER_INTERACT_BLOCK_PRIMARY_EVENT.stopTimingIfSync();
             return;

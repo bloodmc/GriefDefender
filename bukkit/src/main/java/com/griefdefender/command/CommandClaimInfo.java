@@ -40,6 +40,7 @@ import com.griefdefender.api.claim.Claim;
 import com.griefdefender.api.claim.ClaimResult;
 import com.griefdefender.api.claim.ClaimType;
 import com.griefdefender.api.claim.ClaimTypes;
+import com.griefdefender.api.claim.TrustType;
 import com.griefdefender.api.claim.TrustTypes;
 import com.griefdefender.api.permission.Context;
 import com.griefdefender.api.permission.option.Options;
@@ -55,6 +56,7 @@ import com.griefdefender.permission.GDPermissionManager;
 import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.permission.GDPermissions;
 import com.griefdefender.text.action.GDCallbackHolder;
+import com.griefdefender.util.ChatCaptureUtil;
 import com.griefdefender.util.PermissionUtil;
 import com.griefdefender.util.PlayerUtil;
 
@@ -204,14 +206,6 @@ public class CommandClaimInfo extends BaseCommand {
         Component name = claim.getName().orElse(null);
         Component greeting = claim.getData().getGreeting().orElse(null);
         Component farewell = claim.getData().getFarewell().orElse(null);
-        String accessors = "";
-        String builders = "";
-        String containers = "";
-        String managers = "";
-        String accessorGroups = "";
-        String builderGroups = "";
-        String containerGroups = "";
-        String managerGroups = "";
 
         final int minClaimLevel = gdClaim.getOwnerMinClaimLevel();
         double claimY = gdClaim.getOwnerPlayerData() == null ? 65.0D : (minClaimLevel > 65.0D ? minClaimLevel : 65);
@@ -277,53 +271,6 @@ public class CommandClaimInfo extends BaseCommand {
                     .append(worldName)
                     .append(claimSize)
                     .append(claimCost).build();
-        }
-        // users
-        final List<UUID> accessorList = gdClaim.getUserTrustList(TrustTypes.ACCESSOR, true);
-        final List<UUID> builderList = gdClaim.getUserTrustList(TrustTypes.BUILDER, true);
-        final List<UUID> containerList = gdClaim.getUserTrustList(TrustTypes.CONTAINER, true);
-        final List<UUID> managerList = gdClaim.getUserTrustList(TrustTypes.MANAGER, true);
-        for (UUID uuid : accessorList) {
-            final GDPermissionUser user = PermissionHolderCache.getInstance().getOrCreateUser(uuid);
-            final String userName = user.getFriendlyName();
-            if (userName != null) {
-                accessors += userName + " ";
-            }
-        }
-        for (UUID uuid : builderList) {
-            final GDPermissionUser user = PermissionHolderCache.getInstance().getOrCreateUser(uuid);
-            final String userName = user.getFriendlyName();
-            if (userName != null) {
-                builders += userName + " ";
-            }
-        }
-        for (UUID uuid : containerList) {
-            final GDPermissionUser user = PermissionHolderCache.getInstance().getOrCreateUser(uuid);
-            final String userName = user.getFriendlyName();
-            if (userName != null) {
-                containers += userName + " ";
-            }
-        }
-        for (UUID uuid : managerList) {
-            final GDPermissionUser user = PermissionHolderCache.getInstance().getOrCreateUser(uuid);
-            final String userName = user.getFriendlyName();
-            if (userName != null) {
-                managers += userName + " ";
-            }
-        }
-
-        // groups
-        for (String group : gdClaim.getGroupTrustList(TrustTypes.ACCESSOR, true)) {
-            accessorGroups += group + " ";
-        }
-        for (String group : gdClaim.getGroupTrustList(TrustTypes.BUILDER, true)) {
-            builderGroups += group + " ";
-        }
-        for (String group : gdClaim.getGroupTrustList(TrustTypes.CONTAINER, true)) {
-            containerGroups += group + " ";
-        }
-        for (String group : gdClaim.getGroupTrustList(TrustTypes.MANAGER, true)) {
-            managerGroups += group + " ";
         }
 
         /*if (gpClaim.isInTown()) {
@@ -617,29 +564,29 @@ public class CommandClaimInfo extends BaseCommand {
                     .append(northEastCorner).build();
         }
         Component claimAccessors = TextComponent.builder()
-                .append(MessageCache.getInstance().LABEL_ACCESSORS.color(TextColor.YELLOW))
-                .append(" : ")
-                .append(accessors.equals("") ? NONE : TextComponent.of(accessors, TextColor.BLUE))
-                .append(" ")
-                .append(accessorGroups, TextColor.LIGHT_PURPLE).build();
+                .append(MessageCache.getInstance().LABEL_ACCESSORS.color(TextColor.YELLOW).decoration(TextDecoration.ITALIC, true))
+                .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createTrustListConsumer(player, gdClaim, playerData, TrustTypes.ACCESSOR))))
+                .hoverEvent(HoverEvent.showText(MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.UI_CLICK_VIEW, 
+                        ImmutableMap.of("target", MessageCache.getInstance().LABEL_ACCESSORS))))
+                .build();
         Component claimBuilders = TextComponent.builder()
-                .append(MessageCache.getInstance().LABEL_BUILDERS.color(TextColor.YELLOW))
-                .append(" : ")
-                .append(builders.equals("") ? NONE : TextComponent.of(builders, TextColor.BLUE))
-                .append(" ")
-                .append(builderGroups, TextColor.LIGHT_PURPLE).build();
+                .append(MessageCache.getInstance().LABEL_BUILDERS.color(TextColor.GREEN).decoration(TextDecoration.ITALIC, true))
+                .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createTrustListConsumer(player, gdClaim, playerData, TrustTypes.BUILDER))))
+                .hoverEvent(HoverEvent.showText(MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.UI_CLICK_VIEW, 
+                        ImmutableMap.of("target", MessageCache.getInstance().LABEL_BUILDERS))))
+                .build();
         Component claimContainers = TextComponent.builder()
-                .append(MessageCache.getInstance().LABEL_CONTAINERS.color(TextColor.YELLOW))
-                .append(" : ")
-                .append(containers.equals("") ? NONE : TextComponent.of(containers, TextColor.BLUE))
-                .append(" ")
-                .append(containerGroups, TextColor.LIGHT_PURPLE).build();
+                .append(MessageCache.getInstance().LABEL_CONTAINERS.color(TextColor.LIGHT_PURPLE).decoration(TextDecoration.ITALIC, true))
+                .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createTrustListConsumer(player, gdClaim, playerData, TrustTypes.CONTAINER))))
+                .hoverEvent(HoverEvent.showText(MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.UI_CLICK_VIEW, 
+                        ImmutableMap.of("target", MessageCache.getInstance().LABEL_CONTAINERS))))
+                .build();
         Component claimCoowners = TextComponent.builder()
-                .append(MessageCache.getInstance().LABEL_MANAGERS.color(TextColor.YELLOW))
-                .append(" : ")
-                .append(managers.equals("") ? NONE : TextComponent.of(managers, TextColor.BLUE))
-                .append(" ")
-                .append(managerGroups, TextColor.LIGHT_PURPLE).build();
+                .append(MessageCache.getInstance().LABEL_MANAGERS.color(TextColor.GOLD).decoration(TextDecoration.ITALIC, true))
+                .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createTrustListConsumer(player, gdClaim, playerData, TrustTypes.MANAGER))))
+                .hoverEvent(HoverEvent.showText(MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.UI_CLICK_VIEW, 
+                        ImmutableMap.of("target", MessageCache.getInstance().LABEL_MANAGERS))))
+                .build();
         Component dateCreated = TextComponent.builder()
                 .append(MessageCache.getInstance().LABEL_CREATED.color(TextColor.YELLOW))
                 .append(" : ")
@@ -674,10 +621,15 @@ public class CommandClaimInfo extends BaseCommand {
                 .append("   ")
                 .append(claimDenyMessages)
                 .build());
-        textList.add(claimAccessors);
-        textList.add(claimBuilders);
-        textList.add(claimContainers);
-        textList.add(claimCoowners);
+        textList.add(TextComponent.builder()
+                .append(claimAccessors)
+                .append("  ")
+                .append(claimBuilders)
+                .append("  ")
+                .append(claimContainers)
+                .append("  ")
+                .append(claimCoowners)
+                .build());
         textList.add(claimGreeting);
         textList.add(claimFarewell);
         textList.add(dateCreated);
@@ -701,8 +653,19 @@ public class CommandClaimInfo extends BaseCommand {
             textList.remove(dateLastActive);
         }
 
+        int fillSize = 20 - (textList.size() + 2);
+        Component footer = null;
+        if (player != null && player.hasPermission(GDPermissions.CHAT_CAPTURE)) {
+            footer = ChatCaptureUtil.getInstance().createRecordChatComponent(player, gdClaim, playerData, "claiminfo");
+            fillSize = 20 - (textList.size() + 3);
+        }
+
+        for (int i = 0; i < fillSize; i++) {
+            textList.add(TextComponent.of(" "));
+        }
+
         PaginationList.Builder paginationBuilder = PaginationList.builder()
-                .title(MessageCache.getInstance().CLAIMINFO_UI_TITLE_CLAIMINFO.color(TextColor.AQUA)).padding(TextComponent.of(" ").decoration(TextDecoration.STRIKETHROUGH, true)).contents(textList);
+                .title(MessageCache.getInstance().CLAIMINFO_UI_TITLE_CLAIMINFO.color(TextColor.AQUA)).padding(TextComponent.of(" ").decoration(TextDecoration.STRIKETHROUGH, true)).contents(textList).footer(footer);
         paginationBuilder.sendTo(src);
     }
 
@@ -712,6 +675,18 @@ public class CommandClaimInfo extends BaseCommand {
             PaginationList.Builder paginationBuilder = PaginationList.builder()
                     .title(name.color(TextColor.AQUA)).padding(TextComponent.of(" ").decoration(TextDecoration.STRIKETHROUGH, true)).contents(textList);
             paginationBuilder.sendTo(src);
+        };
+    }
+
+    private Consumer<CommandSender> createTrustListConsumer(Player src, GDClaim claim, GDPlayerData playerData, TrustType type) {
+        return consumer -> {
+            Component returnToClaimInfo = TextComponent.builder()
+                    .append("[")
+                    .append(MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.UI_CLICK_RETURN_COMMAND, 
+                            ImmutableMap.of("command", "claiminfo")))
+                    .append("]")
+                .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(CommandHelper.createCommandConsumer(src, "claiminfo", claim.getUniqueId().toString())))).build();
+            CommandTrustList.showTrustList(src, claim, playerData, type, new ArrayList<>(), returnToClaimInfo);
         };
     }
 

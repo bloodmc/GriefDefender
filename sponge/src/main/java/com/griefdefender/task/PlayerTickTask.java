@@ -59,6 +59,8 @@ public class PlayerTickTask implements Runnable {
                 }
                 final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
                 final GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAtPlayer(playerData, player.getLocation());
+                // chat capture
+                playerData.updateRecordChat();
                 // health regen
                 if (world.getProperties().getTotalTime() % 100 == 0L) {
                     final GameMode gameMode = player.get(Keys.GAME_MODE).get();

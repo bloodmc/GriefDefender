@@ -24,6 +24,7 @@
  */
 package com.griefdefender.configuration.type;
 
+import com.griefdefender.configuration.category.GuiCategory;
 import com.griefdefender.configuration.category.CustomFlagGroupDefinitionCategory;
 import com.griefdefender.configuration.category.DefaultPermissionCategory;
 import com.griefdefender.configuration.category.DynmapCategory;
@@ -68,6 +69,8 @@ public class GlobalConfig extends ConfigBase {
     public DynmapCategory dynmap = new DynmapCategory();
     @Setting
     public EconomyCategory economy = new EconomyCategory();
+    @Setting
+    public GuiCategory gui = new GuiCategory();
     @Setting
     public PlayerDataCategory playerdata = new PlayerDataCategory();
     @Setting

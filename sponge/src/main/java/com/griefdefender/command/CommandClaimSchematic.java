@@ -43,6 +43,8 @@ import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.internal.pagination.PaginationList;
 import com.griefdefender.permission.GDPermissions;
 import com.griefdefender.text.action.GDCallbackHolder;
+import com.griefdefender.util.ChatCaptureUtil;
+
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.adapter.spongeapi.TextAdapter;
@@ -98,11 +100,11 @@ public class CommandClaimSchematic extends BaseCommand {
                 return;
             }
 
-            List<Component> schematicTextList = new ArrayList<>();
+            List<Component> textList = new ArrayList<>();
             for (ClaimSchematic schematic : claim.schematics.values()) {
                 final String schematicName = schematic.getName();
                 final Instant schematicDate = schematic.getDateCreated();
-                schematicTextList.add(
+                textList.add(
                         TextComponent.builder("")
                         .append(schematicName, TextColor.GREEN)
                         .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(displayConfirmationConsumer(player, claim, schematic))))
@@ -113,13 +115,21 @@ public class CommandClaimSchematic extends BaseCommand {
                         .build());
             }
 
-            final int fillSize = 20 - (schematicTextList.size() + 2);
+            Component footer = null;
+            int fillSize = 20 - (textList.size() + 2);
+            if (player.hasPermission(GDPermissions.CHAT_CAPTURE)) {
+                footer = TextComponent.builder()
+                            .append(ChatCaptureUtil.getInstance().createRecordChatComponent(player, null, playerData, "claimschematic"))
+                            .build();
+                fillSize = 20 - (textList.size() + 3);
+            }
+
             for (int i = 0; i < fillSize; i++) {
-                schematicTextList.add(TextComponent.of(" "));
+                textList.add(TextComponent.of(" "));
             }
 
             PaginationList.Builder paginationBuilder = PaginationList.builder()
-                    .title(TextComponent.of("Schematics", TextColor.AQUA)).padding(TextComponent.of(" ").decoration(TextDecoration.STRIKETHROUGH, true)).contents(schematicTextList);
+                    .title(TextComponent.of("Schematics", TextColor.AQUA)).padding(TextComponent.of(" ").decoration(TextDecoration.STRIKETHROUGH, true)).contents(textList).footer(footer);
             paginationBuilder.sendTo(player);
         } else if (action.equalsIgnoreCase("create")) {
             TextAdapter.sendComponent(player, TextComponent.of("Creating schematic backup...", TextColor.GREEN));

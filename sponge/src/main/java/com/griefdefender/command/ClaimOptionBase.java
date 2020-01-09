@@ -67,6 +67,7 @@ import com.griefdefender.permission.ui.UIHelper;
 import com.griefdefender.registry.OptionRegistryModule;
 import com.griefdefender.text.action.GDCallbackHolder;
 import com.griefdefender.util.CauseContextHelper;
+import com.griefdefender.util.ChatCaptureUtil;
 import com.griefdefender.util.PaginationUtil;
 import com.griefdefender.util.PermissionUtil;
 import net.kyori.text.Component;
@@ -471,12 +472,17 @@ public abstract class ClaimOptionBase extends BaseCommand {
 
         Collections.sort(textList, UIHelper.PLAIN_COMPARATOR);
         int fillSize = 20 - (textList.size() + 2);
+        Component footer = null;
+        if (player != null && player.hasPermission(GDPermissions.CHAT_CAPTURE)) {
+            footer = ChatCaptureUtil.getInstance().createRecordChatComponent(player, claim, playerData, "claimoption");
+            fillSize = 20 - (textList.size() + 3);
+        }
+
         for (int i = 0; i < fillSize; i++) {
             textList.add(TextComponent.of(" "));
         }
-
         PaginationList.Builder paginationBuilder = PaginationList.builder()
-                .title(claimOptionHead).padding(TextComponent.builder(" ").decoration(TextDecoration.STRIKETHROUGH, true).build()).contents(textList);
+                .title(claimOptionHead).padding(TextComponent.builder(" ").decoration(TextDecoration.STRIKETHROUGH, true).build()).contents(textList).footer(footer);
         final PaginationList paginationList = paginationBuilder.build();
         Integer activePage = 1;
         activePage = PaginationUtil.getInstance().getActivePage(player.getUniqueId());

@@ -51,6 +51,7 @@ import com.griefdefender.internal.pagination.PaginationList;
 import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.permission.GDPermissions;
 import com.griefdefender.text.action.GDCallbackHolder;
+import com.griefdefender.util.ChatCaptureUtil;
 import com.griefdefender.util.PaginationUtil;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
@@ -220,13 +221,20 @@ public class CommandClaimList extends BaseCommand {
                 .append(subTypeText)
                 .append(" ")
                 .append(townTypeText).build();
-        final int fillSize = 20 - (claimsTextList.size() + 2);
+
+        int fillSize = 20 - (claimsTextList.size() + 2);
+        Component footer = null;
+        if (src != null && src.hasPermission(GDPermissions.CHAT_CAPTURE)) {
+            footer = ChatCaptureUtil.getInstance().createRecordChatComponent(src, null, user.getInternalPlayerData(), "claimlist");
+            fillSize = 20 - (claimsTextList.size() + 3);
+        }
+
         for (int i = 0; i < fillSize; i++) {
             claimsTextList.add(TextComponent.of(" "));
         }
 
         PaginationList paginationList = PaginationList.builder()
-                .title(claimListHead).padding(TextComponent.of(" ").decoration(TextDecoration.STRIKETHROUGH, true)).contents(claimsTextList).build();
+                .title(claimListHead).padding(TextComponent.of(" ").decoration(TextDecoration.STRIKETHROUGH, true)).contents(claimsTextList).footer(footer).build();
         Integer activePage = 1;
         if (src instanceof Player) {
             final Player player = (Player) src;

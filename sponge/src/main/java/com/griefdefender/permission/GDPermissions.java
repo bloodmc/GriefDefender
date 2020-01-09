@@ -167,6 +167,7 @@ public class GDPermissions {
 
     // Misc
     public static final String COMMAND_HELP = "griefdefender.user.command.help";
+    public static final String CHAT_CAPTURE = "griefdefender.user.chat.capture";
 
     // Trust
     public static final String COMMAND_TRUST_GROUP = "griefdefender.user.claim.command.trust.group";
