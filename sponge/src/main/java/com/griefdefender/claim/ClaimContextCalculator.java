@@ -60,6 +60,7 @@ public class ClaimContextCalculator implements ContextCalculator<Subject> {
                 } else {
                     accumulator.add(sourceClaim.getSpongeContext());
                 }
+                accumulator.add(new Context("server", GriefDefenderPlugin.getInstance().getPermissionProvider().getServerName()));
             }
         }
 

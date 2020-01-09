@@ -38,6 +38,7 @@ import com.griefdefender.api.permission.ResultTypes;
 import com.griefdefender.api.permission.flag.Flag;
 import com.griefdefender.api.permission.option.Option;
 import com.griefdefender.cache.PermissionHolderCache;
+import com.griefdefender.claim.ClaimContextCalculator;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.permission.GDPermissionHolder;
 import com.griefdefender.permission.GDPermissionResult;
@@ -110,6 +111,7 @@ public class LuckPermsProvider implements PermissionProvider {
 
     public LuckPermsProvider() {
         this.luckPermsApi = Bukkit.getServicesManager().getRegistration(LuckPerms.class).getProvider();
+        this.luckPermsApi.getContextManager().registerCalculator(new ClaimContextCalculator());
     }
 
     public LuckPerms getApi() {

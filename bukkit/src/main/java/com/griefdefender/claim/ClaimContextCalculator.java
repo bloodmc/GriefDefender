@@ -54,6 +54,7 @@ public class ClaimContextCalculator implements ContextCalculator<Player> {
             } else {
                 contextSet.accept(sourceClaim.getContext().getKey(), sourceClaim.getContext().getValue());
             }
+            contextSet.accept("server", GriefDefenderPlugin.getInstance().getPermissionProvider().getServerName());
         }
     }
 }
