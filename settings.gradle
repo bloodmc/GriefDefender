@@ -1,3 +1,5 @@
+rootProject.name = 'griefdefender'
 include "bukkit"
+include "common"
 include "sponge"
 include "GriefDefenderAPI"

@@ -115,6 +115,7 @@ sourceSets {
 
 dependencies {
     compileOnly(project(path: ":GriefDefenderAPI"))
+    compile project (':common')
     compileOnly "com.griefdefender:reflect-helper:1.0"
     // Sponge
     apiCompile "org.spongepowered:spongeapi:$apiVersion"
@@ -200,6 +201,7 @@ shadowJar {
     classifier = ''
 
     dependencies {
+        include dependency(':common')
         include dependency("com.squareup.okhttp3:okhttp:3.9.1")
         include dependency("com.squareup.okio:okio:1.13.0")
         include dependency("com.googlecode.json-simple:json-simple:1.1.1")

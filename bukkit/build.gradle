@@ -104,6 +104,7 @@ sourceSets {
 
 dependencies {
     compileOnly(project(path: ":GriefDefenderAPI"))
+    compile project (':common')
     compileOnly "com.griefdefender:adapter:$adapterVersion"
     compileOnly "com.griefdefender:reflect-helper:1.0"
     // Bukkit
