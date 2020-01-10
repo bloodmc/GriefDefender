@@ -91,6 +91,7 @@ import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 import org.spongepowered.api.world.explosion.Explosion;
 import org.spongepowered.api.world.storage.WorldProperties;
+import org.spongepowered.common.SpongeImpl;
 
 import java.time.Instant;
 import java.util.Iterator;
@@ -274,6 +275,11 @@ public class EntityEventHandler {
 
     @Listener(order = Order.FIRST, beforeModifications = true)
     public void onEntitySpawn(SpawnEntityEvent event) {
+        // For whatever reason, some custom data seems to be triggering spawn events during shutdown
+        if (!SpongeImpl.getServer().isServerRunning()) {
+            return;
+        }
+
         Object source = event.getSource();
         if (source instanceof ConsoleSource || !GDFlags.ENTITY_SPAWN || event.getEntities().isEmpty()) {
             return;
