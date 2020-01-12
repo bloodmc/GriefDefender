@@ -517,15 +517,33 @@ public class PlayerEventHandler implements Listener {
         final ItemStack activeItem = NMSUtil.getInstance().getActiveItem(player, event);
         final GDPlayerData playerData = this.dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
 
-        if (targetEntity instanceof Tameable && playerData.petRecipientUniqueId != null) {
-            final Tameable tameableEntity = (Tameable) targetEntity;
-            final GDPermissionUser recipientUser = PermissionHolderCache.getInstance().getOrCreateUser(playerData.petRecipientUniqueId);
-            if (recipientUser != null) {
+        if (targetEntity instanceof Tameable) {
+            if (playerData.petRecipientUniqueId != null) {
+                final Tameable tameableEntity = (Tameable) targetEntity;
+                final GDPermissionUser recipientUser = PermissionHolderCache.getInstance().getOrCreateUser(playerData.petRecipientUniqueId);
                 tameableEntity.setOwner(recipientUser.getOfflinePlayer());
                 playerData.petRecipientUniqueId = null;
                 TextAdapter.sendComponent(player, MessageCache.getInstance().COMMAND_PET_CONFIRMATION);
                 event.setCancelled(true);
                 return;
+            }
+
+            final UUID uuid = NMSUtil.getInstance().getTameableOwnerUUID(targetEntity);
+            if (uuid != null) {
+                // always allow owner to interact with their pets
+                if (player.getUniqueId().equals(uuid)) {
+                    return;
+                }
+                // If pet protection is enabled, deny the interaction
+                if (GriefDefenderPlugin.getActiveConfig(player.getWorld().getUID()).getConfig().claim.protectTamedEntities) {
+                    final GDPermissionUser user = PermissionHolderCache.getInstance().getOrCreateUser(uuid);
+                    final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_PROTECTED_ENTITY,
+                            ImmutableMap.of(
+                            "player", user.getName()));
+                    GriefDefenderPlugin.sendMessage(player, message);
+                    event.setCancelled(true);
+                    return;
+                }
             }
         }
 

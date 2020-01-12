@@ -47,6 +47,7 @@ import com.griefdefender.api.permission.flag.Flags;
 import com.griefdefender.api.permission.option.Options;
 import com.griefdefender.api.permission.option.type.CreateModeTypes;
 import com.griefdefender.cache.MessageCache;
+import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.claim.GDClaimManager;
 import com.griefdefender.command.CommandHelper;
@@ -58,6 +59,7 @@ import com.griefdefender.internal.util.BlockUtil;
 import com.griefdefender.internal.util.NMSUtil;
 import com.griefdefender.internal.visual.ClaimVisual;
 import com.griefdefender.permission.GDPermissionManager;
+import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.permission.GDPermissions;
 import com.griefdefender.permission.flag.GDFlags;
 import com.griefdefender.provider.NucleusProvider;
@@ -84,6 +86,7 @@ import org.spongepowered.api.data.type.HandType;
 import org.spongepowered.api.data.type.HandTypes;
 import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.living.ArmorStand;
+import org.spongepowered.api.entity.living.Living;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.Listener;
@@ -669,7 +672,6 @@ public class PlayerEventHandler {
         GDTimings.PLAYER_INTERACT_INVENTORY_CLICK_EVENT.stopTimingIfSync();
     }
  
-    // when a player interacts with an entity...
     @Listener(order = Order.FIRST, beforeModifications = true)
     public void onPlayerInteractEntity(InteractEntityEvent.Primary event, @First Player player) {
         if (!GDFlags.INTERACT_ENTITY_PRIMARY || !GriefDefenderPlugin.getInstance().claimsEnabledForWorld(player.getWorld().getUniqueId())) {
@@ -689,6 +691,34 @@ public class PlayerEventHandler {
         }
 
         GDTimings.PLAYER_INTERACT_ENTITY_PRIMARY_EVENT.startTimingIfSync();
+        // check give pet
+        final GDPlayerData playerData = this.dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
+        if (playerData.petRecipientUniqueId != null) {
+            playerData.petRecipientUniqueId = null;
+            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().COMMAND_PET_TRANSFER_CANCEL);
+            event.setCancelled(true);
+            return;
+        }
+        if (targetEntity instanceof Living && targetEntity.get(Keys.TAMED_OWNER).isPresent()) {
+            final UUID ownerID = targetEntity.get(Keys.TAMED_OWNER).get().orElse(null);
+            // always allow owner to interact with their pets
+            if (player.getUniqueId().equals(ownerID)) {
+                GDTimings.PLAYER_INTERACT_ENTITY_PRIMARY_EVENT.stopTimingIfSync();
+                return;
+            }
+            // If pet protection is enabled, deny the interaction
+            if (GriefDefenderPlugin.getActiveConfig(player.getWorld().getProperties()).getConfig().claim.protectedTamedEntities) {
+                final GDPermissionUser user = PermissionHolderCache.getInstance().getOrCreateUser(ownerID);
+                final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_PROTECTED_ENTITY,
+                        ImmutableMap.of(
+                        "player", user.getName()));
+                GriefDefenderPlugin.sendMessage(player, message);
+                event.setCancelled(true);
+                GDTimings.PLAYER_INTERACT_ENTITY_PRIMARY_EVENT.stopTimingIfSync();
+                return;
+            }
+        }
+
         Location<World> location = targetEntity.getLocation();
         GDClaim claim = this.dataStore.getClaimAt(location);
         if (event.isCancelled() && claim.getData().getPvpOverride() == Tristate.TRUE && targetEntity instanceof Player) {
@@ -710,7 +740,6 @@ public class PlayerEventHandler {
         }
     }
 
-    // when a player interacts with an entity...
     @Listener(order = Order.FIRST, beforeModifications = true)
     public void onPlayerInteractEntity(InteractEntityEvent.Secondary event, @First Player player) {
         if (!GDFlags.INTERACT_ENTITY_SECONDARY || !GriefDefenderPlugin.getInstance().claimsEnabledForWorld(player.getWorld().getUniqueId())) {
@@ -726,9 +755,34 @@ public class PlayerEventHandler {
         }
 
         GDTimings.PLAYER_INTERACT_ENTITY_SECONDARY_EVENT.startTimingIfSync();
-        Location<World> location = targetEntity.getLocation();
-        GDClaim claim = this.dataStore.getClaimAt(location);
-        GDPlayerData playerData = this.dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
+        final Location<World> location = targetEntity.getLocation();
+        final GDClaim claim = this.dataStore.getClaimAt(location);
+        final GDPlayerData playerData = this.dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
+        if (targetEntity instanceof Living && targetEntity.get(Keys.TAMED_OWNER).isPresent()) {
+            final UUID ownerID = targetEntity.get(Keys.TAMED_OWNER).get().orElse(null);
+            // always allow owner to interact with their pets
+            if (player.getUniqueId().equals(ownerID) || playerData.canIgnoreClaim(claim)) {
+                if (playerData.petRecipientUniqueId != null) {
+                    targetEntity.offer(Keys.TAMED_OWNER, Optional.of(playerData.petRecipientUniqueId));
+                    playerData.petRecipientUniqueId = null;
+                    GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().COMMAND_PET_CONFIRMATION);
+                    event.setCancelled(true);
+                }
+                GDTimings.PLAYER_INTERACT_ENTITY_SECONDARY_EVENT.stopTimingIfSync();
+                return;
+            }
+            // If pet protection is enabled, deny the interaction
+            if (GriefDefenderPlugin.getActiveConfig(player.getWorld().getProperties()).getConfig().claim.protectedTamedEntities) {
+                final GDPermissionUser user = PermissionHolderCache.getInstance().getOrCreateUser(ownerID);
+                final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_PROTECTED_ENTITY,
+                        ImmutableMap.of(
+                        "player", user.getName()));
+                GriefDefenderPlugin.sendMessage(player, message);
+                event.setCancelled(true);
+                GDTimings.PLAYER_INTERACT_ENTITY_SECONDARY_EVENT.stopTimingIfSync();
+                return;
+            }
+        }
 
         if (playerData.canIgnoreClaim(claim)) {
             GDTimings.PLAYER_INTERACT_ENTITY_SECONDARY_EVENT.stopTimingIfSync();
@@ -761,7 +815,6 @@ public class PlayerEventHandler {
         handleItemInteract(event, player, world, itemInHand);
     }
 
-    // when a player picks up an item...
     @Listener(order = Order.LAST, beforeModifications = true)
     public void onPlayerPickupItem(ChangeInventoryEvent.Pickup.Pre event, @Root Player player) {
         if (!GDFlags.ITEM_PICKUP || !GriefDefenderPlugin.getInstance().claimsEnabledForWorld(player.getWorld().getUniqueId())) {
@@ -783,7 +836,6 @@ public class PlayerEventHandler {
         GDTimings.PLAYER_PICKUP_ITEM_EVENT.stopTimingIfSync();
     }
 
-    // when a player switches in-hand items
     @Listener
     public void onPlayerChangeHeldItem(ChangeInventoryEvent.Held event, @First Player player) {
         if (!GriefDefenderPlugin.getInstance().claimsEnabledForWorld(player.getWorld().getUniqueId())) {

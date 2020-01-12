@@ -543,7 +543,7 @@ public abstract class ClaimFlagBase extends BaseCommand {
 
     private Component getCustomFlagText(GDFlagDefinition customFlag) {
         TextComponent definitionType = TextComponent.empty();
-        TextColor flagColor = TextColor.GREEN;
+        TextColor flagColor = TextColor.YELLOW;
         for (Context context : customFlag.getContexts()) {
             if (context.getKey().contains("default")) {
                 definitionType = TextComponent.builder()
@@ -659,7 +659,7 @@ public abstract class ClaimFlagBase extends BaseCommand {
             newContexts.add(claim.getWorldContext());
             newContexts.add(claim.getOverrideTypeContext());
             newContexts.add(claim.getOverrideClaimContext());
-            Tristate result = PermissionUtil.getInstance().getPermissionValueWithRequiredContexts(claim, GriefDefenderPlugin.DEFAULT_HOLDER, flagData.getFlag().getPermission(), newContexts, "gd_claim");
+            Tristate result = PermissionUtil.getInstance().getPermissionValue(claim, GriefDefenderPlugin.DEFAULT_HOLDER, flagData.getFlag().getPermission(), newContexts);
             if (result != Tristate.UNDEFINED) {
                 dataResults.add(new GDActiveFlagData(flagData, result, GDActiveFlagData.Type.OVERRIDE));
                 continue;
@@ -669,7 +669,7 @@ public abstract class ClaimFlagBase extends BaseCommand {
             newContexts = new HashSet<>(filteredContexts);
             newContexts.add(claim.getWorldContext());
             newContexts.add(claim.getContext());
-            result = PermissionUtil.getInstance().getPermissionValueWithRequiredContexts(claim, GriefDefenderPlugin.DEFAULT_HOLDER, flagData.getFlag().getPermission(), newContexts, "gd_claim");
+            result = PermissionUtil.getInstance().getPermissionValue(claim, GriefDefenderPlugin.DEFAULT_HOLDER, flagData.getFlag().getPermission(), newContexts);
             if (result != Tristate.UNDEFINED) {
                 dataResults.add(new GDActiveFlagData(flagData, result, GDActiveFlagData.Type.CLAIM));
                 continue;
@@ -680,7 +680,7 @@ public abstract class ClaimFlagBase extends BaseCommand {
             newContexts.add(claim.getWorldContext());
             newContexts.add(ClaimContexts.GLOBAL_DEFAULT_CONTEXT);
             newContexts.add(claim.getDefaultTypeContext());
-            result = PermissionUtil.getInstance().getPermissionValueWithRequiredContexts(claim, GriefDefenderPlugin.DEFAULT_HOLDER, flagData.getFlag().getPermission(), newContexts, "gd_claim");
+            result = PermissionUtil.getInstance().getPermissionValue(claim, GriefDefenderPlugin.DEFAULT_HOLDER, flagData.getFlag().getPermission(), newContexts);
             if (result != Tristate.UNDEFINED) {
                 dataResults.add(new GDActiveFlagData(flagData, result, GDActiveFlagData.Type.DEFAULT));
                 continue;
@@ -714,7 +714,7 @@ public abstract class ClaimFlagBase extends BaseCommand {
         } else {
             TextColor valueColor = TextColor.GRAY;
             if (lastResult == Tristate.TRUE) {
-                valueColor = TextColor.GOLD;
+                valueColor = TextColor.GREEN;
             } else if (lastResult == Tristate.FALSE) {
                 valueColor = TextColor.RED;
             }
@@ -722,12 +722,10 @@ public abstract class ClaimFlagBase extends BaseCommand {
         }
 
         if (hasEditPermission) {
-            if (lastResult == null || lastResult == Tristate.UNDEFINED) {
-                hoverBuilder.append(MessageCache.getInstance().FLAG_UI_CLICK_ALLOW);
-            } else if (lastResult == Tristate.TRUE) {
+            if (lastResult == Tristate.TRUE) {
                 hoverBuilder.append(MessageCache.getInstance().FLAG_UI_CLICK_DENY);
             } else {
-                hoverBuilder.append(MessageCache.getInstance().FLAG_UI_CLICK_REMOVE);
+                hoverBuilder.append(MessageCache.getInstance().FLAG_UI_CLICK_ALLOW);
             }
 
             if (!customFlag.getContexts().isEmpty()) {
@@ -938,12 +936,10 @@ public abstract class ClaimFlagBase extends BaseCommand {
                 final Set<Context> newContexts = new HashSet<>(definitionContexts);
                 newContexts.addAll(flagData.getContexts());
                 Tristate newValue = Tristate.UNDEFINED;
-                if (currentValue == null || currentValue == Tristate.UNDEFINED) {
-                    newValue = Tristate.TRUE;
-                } else if (currentValue == Tristate.TRUE) {
+                if (currentValue == Tristate.TRUE) {
                     newValue = Tristate.FALSE;
                 } else {
-                    newValue = Tristate.UNDEFINED;
+                    newValue = Tristate.TRUE;
                 }
 
                 final Flag flag = flagData.getFlag();

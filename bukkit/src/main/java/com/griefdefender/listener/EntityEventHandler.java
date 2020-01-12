@@ -25,6 +25,7 @@
 package com.griefdefender.listener;
 
 import com.flowpowered.math.vector.Vector3i;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.reflect.TypeToken;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GDTimings;
@@ -41,6 +42,7 @@ import com.griefdefender.cache.MessageCache;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.claim.GDClaimManager;
+import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.event.GDCauseStackManager;
 import com.griefdefender.internal.tracking.EntityTracker;
 import com.griefdefender.internal.tracking.entity.GDEntity;
@@ -51,6 +53,7 @@ import com.griefdefender.permission.flag.GDFlags;
 import com.griefdefender.storage.BaseStorage;
 import com.griefdefender.util.CauseContextHelper;
 import com.griefdefender.util.PlayerUtil;
+import net.kyori.text.Component;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
@@ -332,6 +335,25 @@ public class EntityEventHandler implements Listener {
                 GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().COMMAND_PET_TRANSFER_CANCEL);
                 event.setCancelled(true);
                 return;
+            }
+            if (event.getEntity() instanceof Tameable) {
+                final UUID uuid = NMSUtil.getInstance().getTameableOwnerUUID(event.getEntity());
+                if (uuid != null) {
+                    // always allow owner to damage their pets
+                    if (player.getUniqueId().equals(uuid)) {
+                        return;
+                    }
+                    // If pet protection is enabled, deny the interaction
+                    if (GriefDefenderPlugin.getActiveConfig(player.getWorld().getUID()).getConfig().claim.protectTamedEntities) {
+                        final GDPermissionUser user = PermissionHolderCache.getInstance().getOrCreateUser(uuid);
+                        final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_PROTECTED_ENTITY,
+                                ImmutableMap.of(
+                                "player", user.getName()));
+                        GriefDefenderPlugin.sendMessage(player, message);
+                        event.setCancelled(true);
+                        return;
+                    }
+                }
             }
         }
 

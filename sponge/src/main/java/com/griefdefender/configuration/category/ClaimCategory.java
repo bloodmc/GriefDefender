@@ -58,6 +58,8 @@ public class ClaimCategory extends ConfigCategory {
     @Setting(value = "claims-enabled",
             comment = "Whether claiming is enabled or not. (0 = Disabled, 1 = Enabled)")
     public int claimsEnabled = 1;
+    @Setting(value = "protect-tamed-entities", comment = "Whether tamed entities should be protected in claims. Default: true")
+    public boolean protectedTamedEntities = true;
     @Setting(value = "reserved-claim-names", comment = "A list of reserved claim names for use only by administrators."
         + "\nNote: Names support wildcards '?' and '*' by using Apache's wildcard matcher." 
         + "\nThe wildcard '?' represents a single character."
