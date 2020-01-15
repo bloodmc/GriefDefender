@@ -68,6 +68,7 @@ import org.spongepowered.api.event.Order;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.cause.EventContext;
 import org.spongepowered.api.event.cause.EventContextKeys;
+import org.spongepowered.api.event.cause.entity.damage.DamageTypes;
 import org.spongepowered.api.event.cause.entity.damage.source.DamageSource;
 import org.spongepowered.api.event.cause.entity.damage.source.EntityDamageSource;
 import org.spongepowered.api.event.cause.entity.damage.source.IndirectEntityDamageSource;
@@ -417,6 +418,10 @@ public class EntityEventHandler {
     }
 
     public boolean protectEntity(Event event, Entity targetEntity, Cause cause, DamageSource damageSource) {
+        if (damageSource.getType() == DamageTypes.SUFFOCATE) {
+            // Ignore as this can only happen if an entity is stuck in wall
+            return false;
+        }
         if (!GDFlags.ENTITY_DAMAGE || !GriefDefenderPlugin.getInstance().claimsEnabledForWorld(targetEntity.getWorld().getUniqueId())) {
             return false;
         }
