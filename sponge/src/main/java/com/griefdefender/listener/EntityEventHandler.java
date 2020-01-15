@@ -459,18 +459,20 @@ public class EntityEventHandler {
                 }
                 if (targetEntity instanceof Living && targetEntity.get(Keys.TAMED_OWNER).isPresent()) {
                     final UUID ownerID = targetEntity.get(Keys.TAMED_OWNER).get().orElse(null);
-                    // always allow owner to interact with their pets
-                    if (player.getUniqueId().equals(ownerID)) {
-                        return false;
-                    }
-                    // If pet protection is enabled, deny the interaction
-                    if (GriefDefenderPlugin.getActiveConfig(player.getWorld().getProperties()).getConfig().claim.protectedTamedEntities) {
-                        final GDPermissionUser owner = PermissionHolderCache.getInstance().getOrCreateUser(ownerID);
-                        final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_PROTECTED_ENTITY,
-                                ImmutableMap.of(
-                                "player", owner.getName()));
-                        GriefDefenderPlugin.sendMessage(player, message);
-                        return true;
+                    if (ownerID != null) {
+                        // always allow owner to interact with their pets
+                        if (player.getUniqueId().equals(ownerID)) {
+                            return false;
+                        }
+                        // If pet protection is enabled, deny the interaction
+                        if (GriefDefenderPlugin.getActiveConfig(player.getWorld().getProperties()).getConfig().claim.protectedTamedEntities) {
+                            final GDPermissionUser owner = PermissionHolderCache.getInstance().getOrCreateUser(ownerID);
+                            final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_PROTECTED_ENTITY,
+                                    ImmutableMap.of(
+                                    "player", owner.getName()));
+                            GriefDefenderPlugin.sendMessage(player, message);
+                            return true;
+                        }
                     }
                 }
             }
