@@ -276,7 +276,6 @@ public abstract class ClaimFlagBase extends BaseCommand {
                         .build())
                 .build();
             if (player.hasPermission(GDPermissions.CHAT_CAPTURE)) {
-                System.out.println("TEST");
                 footer = footer.append(TextComponent.builder()
                     .append("\n")
                     .append(ChatCaptureUtil.getInstance().createRecordChatComponent(player, claim, src.getInternalPlayerData(), "claimflag"))
