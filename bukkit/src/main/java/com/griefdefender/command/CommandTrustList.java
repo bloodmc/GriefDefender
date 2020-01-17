@@ -67,11 +67,16 @@ import java.util.function.Consumer;
 public class CommandTrustList extends BaseCommand {
 
     @CommandAlias("trustlist")
-    @Description("Lists permissions for the claim you're standing in.")
+    @Description("Manages trust for the claim you're standing in.")
     @Subcommand("trust list")
     public void execute(Player player) {
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
         final GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAtPlayer(playerData, player.getLocation());
+        final Component message = claim.allowGrantPermission(player);
+        if (message != null) {
+            GriefDefenderPlugin.sendMessage(player, message);
+            return;
+        }
         showTrustList(player, claim, playerData, TrustTypes.NONE, new ArrayList<>(), null);
     }
 

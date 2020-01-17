@@ -555,30 +555,6 @@ public class CommandClaimInfo extends BaseCommand {
                     .append(northWestCorner)
                     .append(northEastCorner).build();
         }
-        Component claimAccessors = TextComponent.builder()
-                .append(MessageCache.getInstance().LABEL_ACCESSORS.color(TextColor.YELLOW).decoration(TextDecoration.ITALIC, true))
-                .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createTrustListConsumer(player, gdClaim, playerData, TrustTypes.ACCESSOR))))
-                .hoverEvent(HoverEvent.showText(MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.UI_CLICK_VIEW, 
-                        ImmutableMap.of("target", MessageCache.getInstance().LABEL_ACCESSORS))))
-                .build();
-        Component claimBuilders = TextComponent.builder()
-                .append(MessageCache.getInstance().LABEL_BUILDERS.color(TextColor.GREEN).decoration(TextDecoration.ITALIC, true))
-                .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createTrustListConsumer(player, gdClaim, playerData, TrustTypes.BUILDER))))
-                .hoverEvent(HoverEvent.showText(MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.UI_CLICK_VIEW, 
-                        ImmutableMap.of("target", MessageCache.getInstance().LABEL_BUILDERS))))
-                .build();
-        Component claimContainers = TextComponent.builder()
-                .append(MessageCache.getInstance().LABEL_CONTAINERS.color(TextColor.LIGHT_PURPLE).decoration(TextDecoration.ITALIC, true))
-                .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createTrustListConsumer(player, gdClaim, playerData, TrustTypes.CONTAINER))))
-                .hoverEvent(HoverEvent.showText(MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.UI_CLICK_VIEW, 
-                        ImmutableMap.of("target", MessageCache.getInstance().LABEL_CONTAINERS))))
-                .build();
-        Component claimCoowners = TextComponent.builder()
-                .append(MessageCache.getInstance().LABEL_MANAGERS.color(TextColor.GOLD).decoration(TextDecoration.ITALIC, true))
-                .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createTrustListConsumer(player, gdClaim, playerData, TrustTypes.MANAGER))))
-                .hoverEvent(HoverEvent.showText(MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.UI_CLICK_VIEW, 
-                        ImmutableMap.of("target", MessageCache.getInstance().LABEL_MANAGERS))))
-                .build();
         Component dateCreated = TextComponent.builder()
                 .append(MessageCache.getInstance().LABEL_CREATED.color(TextColor.YELLOW))
                 .append(" : ")
@@ -611,15 +587,41 @@ public class CommandClaimInfo extends BaseCommand {
                 .append("   ")
                 .append(claimDenyMessages)
                 .build());
-        textList.add(TextComponent.builder()
-                .append(claimAccessors)
-                .append("  ")
-                .append(claimBuilders)
-                .append("  ")
-                .append(claimContainers)
-                .append("  ")
-                .append(claimCoowners)
-                .build());
+        if (allowEdit == null) {
+            Component claimAccessors = TextComponent.builder()
+                    .append(MessageCache.getInstance().LABEL_ACCESSORS.color(TextColor.YELLOW).decoration(TextDecoration.ITALIC, true))
+                    .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createTrustListConsumer(player, gdClaim, playerData, TrustTypes.ACCESSOR))))
+                    .hoverEvent(HoverEvent.showText(MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.UI_CLICK_VIEW, 
+                            ImmutableMap.of("target", MessageCache.getInstance().LABEL_ACCESSORS))))
+                    .build();
+            Component claimBuilders = TextComponent.builder()
+                    .append(MessageCache.getInstance().LABEL_BUILDERS.color(TextColor.GREEN).decoration(TextDecoration.ITALIC, true))
+                    .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createTrustListConsumer(player, gdClaim, playerData, TrustTypes.BUILDER))))
+                    .hoverEvent(HoverEvent.showText(MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.UI_CLICK_VIEW, 
+                            ImmutableMap.of("target", MessageCache.getInstance().LABEL_BUILDERS))))
+                    .build();
+            Component claimContainers = TextComponent.builder()
+                    .append(MessageCache.getInstance().LABEL_CONTAINERS.color(TextColor.LIGHT_PURPLE).decoration(TextDecoration.ITALIC, true))
+                    .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createTrustListConsumer(player, gdClaim, playerData, TrustTypes.CONTAINER))))
+                    .hoverEvent(HoverEvent.showText(MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.UI_CLICK_VIEW, 
+                            ImmutableMap.of("target", MessageCache.getInstance().LABEL_CONTAINERS))))
+                    .build();
+            Component claimCoowners = TextComponent.builder()
+                    .append(MessageCache.getInstance().LABEL_MANAGERS.color(TextColor.GOLD).decoration(TextDecoration.ITALIC, true))
+                    .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createTrustListConsumer(player, gdClaim, playerData, TrustTypes.MANAGER))))
+                    .hoverEvent(HoverEvent.showText(MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.UI_CLICK_VIEW, 
+                            ImmutableMap.of("target", MessageCache.getInstance().LABEL_MANAGERS))))
+                    .build();
+            textList.add(TextComponent.builder()
+                    .append(claimAccessors)
+                    .append("  ")
+                    .append(claimBuilders)
+                    .append("  ")
+                    .append(claimContainers)
+                    .append("  ")
+                    .append(claimCoowners)
+                    .build());
+        }
         textList.add(claimGreeting);
         textList.add(claimFarewell);
         textList.add(dateCreated);
