@@ -38,6 +38,9 @@ public class ClaimContextCalculator implements ContextCalculator<Player> {
     @Override
     public void calculate(@NonNull Player player, @NonNull ContextConsumer contextSet) {
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getPlayerData(player.getWorld(), player.getUniqueId());
+        if (playerData == null) {
+            return;
+        }
         if (playerData.ignoreActiveContexts) {
             playerData.ignoreActiveContexts = false;
             return;

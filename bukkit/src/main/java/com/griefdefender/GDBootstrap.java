@@ -82,10 +82,12 @@ public class GDBootstrap extends JavaPlugin {
             bukkitJsonVersion = "1.14.3";
         } else if (Bukkit.getVersion().contains("1.14.4")) {
             bukkitJsonVersion = "1.14.4";
+        } else if (Bukkit.getVersion().contains("1.15.2")) {
+            bukkitJsonVersion = "1.15.2";
         } else if (Bukkit.getVersion().contains("1.15")) {
             bukkitJsonVersion = "1.15";
         } else {
-            this.getLogger().severe("Detected unsupported version '" + Bukkit.getVersion() + "'. GriefDefender only supports 1.8.8, 1.12.2, 1.13.2, and 1.14.2. GriefDefender will NOT load.");
+            this.getLogger().severe("Detected unsupported version '" + Bukkit.getVersion() + "'. GriefDefender only supports 1.8.8, 1.12.2, 1.13.2, 1.14.x, 1.15.0-1.15.2. GriefDefender will NOT load.");
             return;
         }
         try {
