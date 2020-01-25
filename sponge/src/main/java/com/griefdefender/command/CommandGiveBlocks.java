@@ -76,8 +76,6 @@ public class CommandGiveBlocks extends BaseCommand {
             }
             final GDPlayerData targetPlayerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(src.getWorld(), targetPlayer.getUniqueId());
             targetPlayerData.setBonusClaimBlocks(targetPlayerData.getBonusClaimBlocks() + amount);
-            playerData.getStorageData().save();
-            targetPlayerData.getStorageData().save();
             final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.COMMAND_GIVEBLOCKS_CONFIRMED);
             TextAdapter.sendComponent(src, message);
 

@@ -44,6 +44,7 @@ import com.griefdefender.configuration.TownStorageData;
 import com.griefdefender.configuration.type.ConfigBase;
 import com.griefdefender.event.GDLoadClaimEvent;
 import com.griefdefender.migrator.GPBukkitMigrator;
+import com.griefdefender.migrator.PlayerDataMigrator;
 import com.griefdefender.migrator.WorldGuardMigrator;
 import org.apache.commons.io.FileUtils;
 import org.spongepowered.api.Sponge;
@@ -182,14 +183,6 @@ public class FileStorage extends BaseStorage {
             if (GriefDefenderPlugin.getInstance().getWorldEditProvider() != null) {
                 GriefDefenderPlugin.getInstance().getWorldEditProvider().getSchematicWorldMap().put(world.getUniqueId(), newWorldDataPath.resolve("SchematicData"));
             }
-
-            if (BaseStorage.USE_GLOBAL_PLAYER_STORAGE) {
-                if (Files.notExists(globalPlayerDataPath)) {
-                    Files.createDirectories(globalPlayerDataPath);
-                }
-            } else if (Files.notExists(newWorldDataPath.resolve("PlayerData"))) {
-                Files.createDirectories(newWorldDataPath.resolve("PlayerData"));
-            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -228,13 +221,9 @@ public class FileStorage extends BaseStorage {
                 GriefDefenderPlugin.getInstance().getLogger().info("[" + world.getName() + "] " + this.claimLoadCount + " total claims loaded.");
             }
 
-            if (GriefDefenderPlugin.getGlobalConfig().getConfig().playerdata.useGlobalPlayerDataStorage) {
-                files = globalPlayerDataPath.toFile().listFiles();
-            } else {
-                files = newWorldDataPath.resolve("PlayerData").toFile().listFiles();
-            }
-            if (files != null && files.length > 0) {
-                this.loadPlayerData(world, files);
+            if (GriefDefenderPlugin.getGlobalConfig().getConfig().playerdata.useWorldPlayerData()) {
+                // migrate player data
+                PlayerDataMigrator.migrateWorld(world, newWorldDataPath.resolve("PlayerData"));
             }
 
             // If a wilderness claim was not loaded, create a new one

@@ -102,7 +102,6 @@ public class CommandSetAccruedClaimBlocks extends BaseCommand {
             return;
         }
 
-        playerData.getStorageData().save();
         GriefDefenderPlugin.sendMessage(src, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ADJUST_ACCRUED_BLOCKS_SUCCESS,
                     ImmutableMap.of(
                         "player", user.getName(),

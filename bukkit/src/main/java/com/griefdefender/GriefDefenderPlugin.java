@@ -864,7 +864,7 @@ public class GriefDefenderPlugin {
             MessageCache.getInstance().loadCache();
             BaseStorage.globalConfig.getConfig().customFlags.initDefaults();
             BaseStorage.globalConfig.save();
-            BaseStorage.USE_GLOBAL_PLAYER_STORAGE = BaseStorage.globalConfig.getConfig().playerdata.useGlobalPlayerDataStorage;
+            BaseStorage.USE_GLOBAL_PLAYER_STORAGE = !BaseStorage.globalConfig.getConfig().playerdata.useWorldPlayerData();
             GDFlags.populateFlagStatus();
             PermissionHolderCache.getInstance().getOrCreatePermissionCache(GriefDefenderPlugin.DEFAULT_HOLDER).invalidateAll();
             CLAIM_BLOCK_SYSTEM = BaseStorage.globalConfig.getConfig().playerdata.claimBlockSystem;

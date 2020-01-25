@@ -78,6 +78,7 @@ public class GDClaimManager implements ClaimManager {
 
     private static final BaseStorage DATASTORE = GriefDefenderPlugin.getInstance().dataStore;
     private UUID worldUniqueId;
+    private String worldName;
     private GriefDefenderConfig<?> activeConfig;
 
     // Player UUID -> player data
@@ -92,6 +93,7 @@ public class GDClaimManager implements ClaimManager {
 
     public GDClaimManager(World world) {
         this.worldUniqueId = world.getUniqueId();
+        this.worldName = world.getName();
         this.activeConfig = GriefDefenderPlugin.getActiveConfig(this.worldUniqueId);
     }
 
@@ -105,16 +107,8 @@ public class GDClaimManager implements ClaimManager {
     }
 
     private GDPlayerData createPlayerData(UUID playerUniqueId) {
-        Path playerFilePath = null;
-        if (BaseStorage.USE_GLOBAL_PLAYER_STORAGE) {
-            playerFilePath = BaseStorage.globalPlayerDataPath.resolve(playerUniqueId.toString());
-        } else {
-            playerFilePath = BaseStorage.worldConfigMap.get(this.worldUniqueId).getPath().getParent().resolve("PlayerData").resolve(playerUniqueId.toString());
-        }
-
-        PlayerStorageData playerStorage = new PlayerStorageData(playerFilePath);
         Set<Claim> claimList = this.createPlayerClaimList(playerUniqueId);
-        GDPlayerData playerData = new GDPlayerData(this.worldUniqueId, playerUniqueId, playerStorage, this.activeConfig, claimList);
+        GDPlayerData playerData = new GDPlayerData(this.worldUniqueId, this.worldName, playerUniqueId, claimList);
         this.getPlayerDataMap().put(playerUniqueId, playerData);
         return playerData;
     }
@@ -483,10 +477,6 @@ public class GDClaimManager implements ClaimManager {
             gpClaim.save();
         }
         this.getWildernessClaim().save();
-
-        for (GDPlayerData playerData : this.getPlayerDataMap().values()) {
-            playerData.getStorageData().save();
-        }
     }
 
     public void unload() {
@@ -611,14 +601,6 @@ public class GDClaimManager implements ClaimManager {
     }
 
     public void resetPlayerData() {
-        // check migration reset
-        if (GriefDefenderPlugin.getGlobalConfig().getConfig().playerdata.resetMigrations) {
-            for (GDPlayerData playerData : this.getPlayerDataMap().values()) {
-                final PlayerStorageData playerStorage = playerData.getStorageData();
-                playerStorage.getConfig().setMigratedBlocks(false);
-                playerStorage.save();
-            }
-        }
         // migrate playerdata to new claim block system
         final int migration3dRate = GriefDefenderPlugin.getGlobalConfig().getConfig().playerdata.migrateVolumeRate;
         final int migration2dRate = GriefDefenderPlugin.getGlobalConfig().getConfig().playerdata.migrateAreaRate;
@@ -635,19 +617,16 @@ public class GDClaimManager implements ClaimManager {
         }
 
         for (GDPlayerData playerData : this.getPlayerDataMap().values()) {
-            final PlayerStorageData playerStorage = playerData.getStorageData();
-            final int accruedBlocks = playerStorage.getConfig().getAccruedClaimBlocks();
+            final int accruedBlocks = playerData.getAccruedClaimBlocks();
             int newAccruedBlocks = accruedBlocks;
             // first check reset
             if (resetClaimBlockData) {
                 newAccruedBlocks = playerData.getTotalClaimsCost();
-                playerStorage.getConfig().setBonusClaimBlocks(0);
-            } else if (migration3dRate > -1 && !playerStorage.getConfig().hasMigratedBlocks()) {
+                playerData.setBonusClaimBlocks(0);
+            } else if (migration3dRate > -1) {
                 newAccruedBlocks = accruedBlocks * migration3dRate;
-                playerStorage.getConfig().setMigratedBlocks(true);
-            } else if (migration2dRate > -1 && !playerStorage.getConfig().hasMigratedBlocks()) {
+            } else if (migration2dRate > -1) {
                 newAccruedBlocks = accruedBlocks / migration2dRate;
-                playerStorage.getConfig().setMigratedBlocks(true);
             }
             if (newAccruedBlocks < 0) {
                 newAccruedBlocks = 0;
@@ -656,8 +635,7 @@ public class GDClaimManager implements ClaimManager {
             if (newAccruedBlocks > maxAccruedBlocks) {
                 newAccruedBlocks = maxAccruedBlocks;
             }
-            playerStorage.getConfig().setAccruedClaimBlocks(newAccruedBlocks);
-            playerStorage.save();
+            playerData.setAccruedClaimBlocks(newAccruedBlocks);
         }
     }
 

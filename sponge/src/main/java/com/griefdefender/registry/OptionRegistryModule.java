@@ -90,6 +90,8 @@ public class OptionRegistryModule implements CatalogRegistryModule<Option> {
     public void registerDefaults() {
         this.createKey("griefdefender:abandon-delay", "abandon-delay", Integer.class);
         this.createKey("griefdefender:abandon-return-ratio", "abandon-return-ratio", Double.class);
+        this.createKey("griefdefender:accrued-blocks", "accrued-blocks", Integer.class);
+        this.createKey("griefdefender:bonus-blocks", "bonus-blocks", Integer.class);
         this.createKey("griefdefender:create-limit", "create-limit", Integer.class);
         this.createKey("griefdefender:expiration", "expiration", Integer.class);
         this.createKey("griefdefender:max-size-x", "max-size-x", Integer.class);

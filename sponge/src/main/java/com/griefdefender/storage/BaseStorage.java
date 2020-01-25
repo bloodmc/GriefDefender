@@ -51,6 +51,7 @@ import com.griefdefender.configuration.type.ConfigBase;
 import com.griefdefender.configuration.type.GlobalConfig;
 import com.griefdefender.event.GDCauseStackManager;
 import com.griefdefender.event.GDRemoveClaimEvent;
+import com.griefdefender.migrator.PlayerDataMigrator;
 import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.permission.flag.FlagContexts;
 import com.griefdefender.permission.option.GDOption;
@@ -93,12 +94,10 @@ public abstract class BaseStorage {
     public final static Path globalPlayerDataPath = dataLayerFolderPath.resolve("GlobalPlayerData");
 
     public void initialize() throws Exception {
-        USE_GLOBAL_PLAYER_STORAGE = GriefDefenderPlugin.getGlobalConfig().getConfig().playerdata.useGlobalPlayerDataStorage;
-        if (USE_GLOBAL_PLAYER_STORAGE) {
-            File globalPlayerDataFolder = globalPlayerDataPath.toFile();
-            if (!globalPlayerDataFolder.exists()) {
-                globalPlayerDataFolder.mkdirs();
-            }
+        USE_GLOBAL_PLAYER_STORAGE = !GriefDefenderPlugin.getGlobalConfig().getConfig().playerdata.useWorldPlayerData();
+        if (GriefDefenderPlugin.getGlobalConfig().getConfig().playerdata.contextType.equalsIgnoreCase("global")) {
+            // migrate player data
+            PlayerDataMigrator.migrateGlobal();
         }
 
         // handle default flag/option permissions

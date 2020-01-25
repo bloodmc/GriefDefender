@@ -112,8 +112,6 @@ public class CommandClaimBuyBlocks extends BaseCommand {
 
             final int bonusTotal = playerData.getBonusClaimBlocks();
             playerData.setBonusClaimBlocks(bonusTotal + blockCount);
-            playerData.getStorageData().save();
-
             final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_BLOCK_PURCHASE_CONFIRMATION, ImmutableMap.of(
                     "amount", totalCost,
                     "balance", playerData.getRemainingClaimBlocks()));

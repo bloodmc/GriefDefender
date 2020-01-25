@@ -50,4 +50,11 @@ public class MigratorCategory extends ConfigCategory {
             "\nNote: Only cuboid regions are supported." +
             "\nNote: It is recommended to backup data before using.")
     public boolean worldGuardMigrator = false;
+
+    @Setting(value = "playerdata", comment = "Set to true to enable the legacy playerdata file migrator."
+            + "\nNote: Migrates legacy playerdata file format to permissions storage such as LuckPerms json or mysql storage."
+            + "\nNote: Before turning this on, make sure you properly set 'context-storage-type' in the the playerdata section of this config."
+            + "\nNote: It is HIGHLY recommended to backup your permissions database before running this migrator as all local playerdata files will be migrated to it."
+            + "\nNote: Do NOT run this migrator on more than one server if multiple servers share the same permissions database.")
+    public boolean playerDataMigrator = false;
 }

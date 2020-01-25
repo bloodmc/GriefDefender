@@ -77,6 +77,8 @@ public class DefaultPermissionCategory extends ConfigCategory {
         final int maxAccruedBlocks = GriefDefenderPlugin.CLAIM_BLOCK_SYSTEM == ClaimBlockSystem.VOLUME ? 20480000 : 80000;
         this.defaultUserOptions.put(Options.ABANDON_DELAY.getName(), "0");
         this.defaultUserOptions.put(Options.ABANDON_RETURN_RATIO.getName(), "1.0");
+        this.defaultUserOptions.put(Options.ACCRUED_BLOCKS.getName(), "0");
+        this.defaultUserOptions.put(Options.BONUS_BLOCKS.getName(), "0");
         this.defaultUserOptions.put(Options.BLOCKS_ACCRUED_PER_HOUR.getName(), "120");
         this.defaultUserOptions.put(Options.CHEST_EXPIRATION.getName(), "7");
         this.defaultUserOptions.put(Options.CREATE_LIMIT.getName(), "-1");

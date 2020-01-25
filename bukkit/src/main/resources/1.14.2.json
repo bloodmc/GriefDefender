@@ -9,9 +9,9 @@
         },
         {
             "name": "com.griefdefender:api:1.0.0",
-            "sha1": "a87c88ecf7f4aaa4cc18decef9f0cbb013a0e602",
-            "path": "com/griefdefender/api/1.0.0-SNAPSHOT/api-1.0.0-20191230.224219-13.jar",
-            "url": "https://repo.glaremasters.me/repository/bloodshot/com/griefdefender/api/1.0.0-SNAPSHOT/api-1.0.0-20191230.224219-13.jar"
+            "sha1": "08d8fa30e0f8bbb43a2100e712bed2a815a8fd87",
+            "path": "com/griefdefender/api/1.0.0-SNAPSHOT/api-1.0.0-20200125.004205-14.jar",
+            "url": "https://repo.glaremasters.me/repository/bloodshot/com/griefdefender/api/1.0.0-SNAPSHOT/api-1.0.0-20200125.004205-14.jar"
         },
         {
             "name": "com.griefdefender:reflect-helper:1.0",

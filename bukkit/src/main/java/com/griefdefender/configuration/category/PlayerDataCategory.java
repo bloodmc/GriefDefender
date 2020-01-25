@@ -31,8 +31,12 @@ import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
 @ConfigSerializable
 public class PlayerDataCategory extends ConfigCategory {
 
-    @Setting(value = "use-global-storage", comment = "Whether player data should be stored globally. False will store all data per world.")
-    public boolean useGlobalPlayerDataStorage = true;
+    @Setting(value = "context-storage-type", comment = "The context type used when storing playerdata within a permissions database."
+            + "\nAvailable types are : global, server, world. (Default: global)"
+            + "\nGlobal will store data globally shared by all servers."
+            + "\nServer will store data per server. Note: This requires servername to be properly set in permissions config."
+            + "\nWorld will store data per world.")
+    public String contextType = "global";
     @Setting(value = "claim-block-system", comment = "Determines which claim block system to use for claims. (Default: AREA)\nIf set to VOLUME, claim blocks will use the chunk count system to balance 3d claiming."
             + "\nIf set to AREA, the standard 2d block count system will be used.")
     public ClaimBlockSystem claimBlockSystem = ClaimBlockSystem.AREA;
@@ -55,4 +59,8 @@ public class PlayerDataCategory extends ConfigCategory {
             + "\nExample: If a player has 5 basic claims with a total cost of 1000, this will set their accrued claim blocks to 1000."
             + "\nNote: This will also reset all bonus claim blocks to 0. It is highly recommended to backup before using.")
     public boolean resetAccruedClaimBlocks = false;
+
+    public boolean useWorldPlayerData() {
+        return this.contextType.equalsIgnoreCase("world");
+    }
 }

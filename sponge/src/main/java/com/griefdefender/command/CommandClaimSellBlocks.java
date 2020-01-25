@@ -147,7 +147,7 @@ public class CommandClaimSellBlocks extends BaseCommand {
                 accruedBlocks = (int) (accruedBlocks - blockCount);
                 playerData.setAccruedClaimBlocks(accruedBlocks);
             }
-            playerData.saveAllData();
+
             GriefDefenderPlugin.sendMessage(player, message);
         }
     }

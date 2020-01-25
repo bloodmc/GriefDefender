@@ -47,6 +47,7 @@ import com.griefdefender.configuration.PlayerStorageData;
 import com.griefdefender.permission.GDPermissionManager;
 import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.permission.GDPermissions;
+import com.griefdefender.storage.BaseStorage;
 import com.griefdefender.util.PermissionUtil;
 import net.kyori.text.Component;
 import org.spongepowered.api.Sponge;
@@ -75,9 +76,10 @@ public class GDPlayerData implements PlayerData {
 
     public UUID playerID;
     public UUID worldUniqueId;
+    private String worldName;
     private WeakReference<GDPermissionUser> playerSubject;
     private Set<Claim> claimList;
-    private PlayerStorageData playerStorage;
+    private Set<Context> optionContexts;
     public Location<World> lastAfkCheckLocation;
     public Location<World> lastShovelLocation;
     public Location<World> endShovelLocation;
@@ -153,11 +155,26 @@ public class GDPlayerData implements PlayerData {
     public boolean useRestoreSchematic = false;
     private boolean checkedDimensionHeight = false;
 
-    public GDPlayerData(UUID worldUniqueId, UUID playerUniqueId, PlayerStorageData playerStorage, GriefDefenderConfig<?> activeConfig, Set<Claim> claims) {
+    public GDPlayerData(UUID worldUniqueId, String worldName, UUID playerUniqueId, Set<Claim> claims) {
         this.worldUniqueId = worldUniqueId;
+        this.worldName = worldName;
         this.playerID = playerUniqueId;
-        this.playerStorage = playerStorage;
         this.claimList = claims;
+        final Set<Context> contexts = new HashSet<>();
+        if (!BaseStorage.USE_GLOBAL_PLAYER_STORAGE) {
+            contexts.add(new Context("server", PermissionUtil.getInstance().getServerName()));
+            contexts.add(new Context("world", this.worldName.toLowerCase()));
+        } else {
+            final String contextType = GriefDefenderPlugin.getGlobalConfig().getConfig().playerdata.contextType;
+            if (contextType.equalsIgnoreCase("world")) {
+                contexts.add(new Context("world", this.worldName.toLowerCase()));
+            } else if (contextType.equalsIgnoreCase("global")) {
+                contexts.add(new Context("server", "global"));
+            } else {
+                contexts.add(new Context("server", PermissionUtil.getInstance().getServerName()));
+            }
+        }
+        this.optionContexts = contexts;
         this.refreshPlayerOptions();
     }
 
@@ -377,7 +394,7 @@ public class GDPlayerData implements PlayerData {
 
     @Override
     public int getAccruedClaimBlocks() {
-        return this.playerStorage.getConfig().getAccruedClaimBlocks();
+        return GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), this.getSubject(), Options.ACCRUED_BLOCKS, new HashSet<>(this.optionContexts));
     }
 
     public boolean addAccruedClaimBlocks(int newAccruedClaimBlocks) {
@@ -386,7 +403,7 @@ public class GDPlayerData implements PlayerData {
             return false;
         }
 
-        this.playerStorage.getConfig().setAccruedClaimBlocks(currentTotal + newAccruedClaimBlocks);
+        this.setAccruedClaimBlocks(currentTotal + newAccruedClaimBlocks);
         return true;
     }
 
@@ -395,16 +412,16 @@ public class GDPlayerData implements PlayerData {
             return false;
         }
 
-        this.playerStorage.getConfig().setAccruedClaimBlocks(newAccruedClaimBlocks);
+        GDPermissionManager.getInstance().setOption(Options.ACCRUED_BLOCKS, this.getSubject(), String.valueOf(newAccruedClaimBlocks), new HashSet<>(this.optionContexts));
         return true;
     }
 
     public int getBonusClaimBlocks() {
-        return this.playerStorage.getConfig().getBonusClaimBlocks();
+        return GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), this.getSubject(), Options.BONUS_BLOCKS, new HashSet<>(this.optionContexts));
     }
 
     public void setBonusClaimBlocks(int bonusClaimBlocks) {
-        this.playerStorage.getConfig().setBonusClaimBlocks(bonusClaimBlocks);
+        GDPermissionManager.getInstance().setOption(Options.BONUS_BLOCKS, this.getSubject(), String.valueOf(bonusClaimBlocks), new HashSet<>(this.optionContexts));
     }
 
     public CreateModeType getClaimCreateMode() {
@@ -472,14 +489,6 @@ public class GDPlayerData implements PlayerData {
         }
 
         return true;
-    }
-
-    public void saveAllData() {
-        this.playerStorage.save();
-    }
-
-    public PlayerStorageData getStorageData() {
-        return this.playerStorage;
     }
 
     public Set<Claim> getClaims() {

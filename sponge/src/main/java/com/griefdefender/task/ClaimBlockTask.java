@@ -32,7 +32,6 @@ import com.griefdefender.api.claim.ClaimResultType;
 import com.griefdefender.api.permission.option.Options;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.claim.GDClaimResult;
-import com.griefdefender.configuration.PlayerStorageData;
 import com.griefdefender.permission.GDPermissionManager;
 import com.griefdefender.storage.BaseStorage;
 import org.spongepowered.api.Sponge;
@@ -106,14 +105,12 @@ public class ClaimBlockTask implements Runnable {
             } else {
                 int currentTotal = playerData.getAccruedClaimBlocks();
                 if ((currentTotal + accruedBlocks) > playerData.getMaxAccruedClaimBlocks()) {
-                    PlayerStorageData playerStorage = playerData.getStorageData();
-                    playerStorage.getConfig().setAccruedClaimBlocks(playerData.getMaxAccruedClaimBlocks());
+                    playerData.setAccruedClaimBlocks(playerData.getMaxAccruedClaimBlocks());
                     playerData.lastAfkCheckLocation = player.getLocation();
                     return;
                 }
 
-                PlayerStorageData playerStorage = playerData.getStorageData();
-                playerStorage.getConfig().setAccruedClaimBlocks(playerStorage.getConfig().getAccruedClaimBlocks() + accruedBlocks);
+                playerData.setAccruedClaimBlocks(playerData.getAccruedClaimBlocks() + accruedBlocks);
             }
         }
 

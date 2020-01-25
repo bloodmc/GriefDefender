@@ -77,7 +77,6 @@ public class CommandAdjustBonusClaimBlocks extends BaseCommand {
         // give blocks to player
         GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(world.getUID(), user.getUniqueId());
         playerData.setBonusClaimBlocks(playerData.getBonusClaimBlocks() + adjustment);
-        playerData.getStorageData().save();
         final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ADJUST_BONUS_BLOCKS_SUCCESS, ImmutableMap.of(
                 "player", user.getName(),
                 "amount", adjustment,

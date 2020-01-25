@@ -48,7 +48,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class GDOption<T> implements Option<T> {
 
     private static final List<String> GLOBAL_OPTIONS = Arrays.asList(
-            "abandon-return-ratio", "blocks-accrued-per-hour", "chest-expiration", "economy-block-cost", 
+            "abandon-return-ratio", "accrued-blocks", "bonus-blocks", "blocks-accrued-per-hour", "chest-expiration", "economy-block-cost", 
             "economy-block-sell-return", "expiration", "initial-blocks", "max-accrued-blocks", "radius-list", 
             "radius-list");
     private static final List<String> ADMIN_OPTIONS = Arrays.asList(

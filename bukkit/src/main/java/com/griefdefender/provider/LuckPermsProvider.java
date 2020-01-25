@@ -906,6 +906,13 @@ public class LuckPermsProvider implements PermissionProvider {
     }
 
     private void clearMeta(PermissionHolder holder, String metaKey, ContextSet set) {
+        if (set.size() == 1 && set.containsKey("server")) {
+            if (set.getAnyValue("server").get().equalsIgnoreCase("global")) {
+                // LP does not remove meta if passing only global context so we need to make sure to pass none
+                holder.data().clear(NodeType.META.predicate(node -> node.getMetaKey().equals(metaKey)));
+                return;
+            }
+        }
         holder.data().clear(set, NodeType.META.predicate(node -> node.getMetaKey().equals(metaKey)));
     }
 

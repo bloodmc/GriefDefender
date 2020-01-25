@@ -502,9 +502,8 @@ public class GPBukkitMigrator {
                     final int bonusBlocks = Integer.parseInt(lines.get(2));
                     final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(world, uuid);
                     // Set directly in storage as subject data has not been initialized
-                    playerData.getStorageData().getConfig().setAccruedClaimBlocks(accruedBlocks);
-                    playerData.getStorageData().getConfig().setBonusClaimBlocks(bonusBlocks);
-                    playerData.saveAllData();
+                    playerData.setAccruedClaimBlocks(accruedBlocks);
+                    playerData.setBonusClaimBlocks(bonusBlocks);
                 } catch (NumberFormatException e) {
                     e.printStackTrace();
                     continue;

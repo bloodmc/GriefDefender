@@ -1273,6 +1273,10 @@ public class GDPermissionManager implements PermissionManager {
         return this.getInternalOptionValue(type, holder, option, (ClaimType) null);
     }
 
+    public <T> T getInternalOptionValue(TypeToken<T> type, GDPermissionHolder holder, Option<T> option, Set<Context> contexts) {
+        return getInternalOptionValue(type, holder, option, null, null, contexts);
+    }
+
     public <T> T getInternalOptionValue(TypeToken<T> type, GDPermissionHolder holder, Option<T> option, Claim claim, Set<Context> contexts) {
         return getInternalOptionValue(type, holder, option, claim, null, contexts);
     }
@@ -1538,14 +1542,14 @@ public class GDPermissionManager implements PermissionManager {
 
     @Override
     public CompletableFuture<PermissionResult> setOption(Option option, String value, Set<Context> contexts) {
-        // TODO Auto-generated method stub
-        return null;
+        final PermissionResult result = PermissionUtil.getInstance().setOptionValue(GriefDefenderPlugin.DEFAULT_HOLDER, option.getPermission(), value, contexts);
+        return CompletableFuture.completedFuture(result);
     }
 
     @Override
     public CompletableFuture<PermissionResult> setOption(Option option, Subject subject, String value, Set<Context> contexts) {
-        // TODO Auto-generated method stub
-        return null;
+        final PermissionResult result = PermissionUtil.getInstance().setOptionValue((GDPermissionHolder) subject, option.getPermission(), value, contexts);
+        return CompletableFuture.completedFuture(result);
     }
 
     @Override
