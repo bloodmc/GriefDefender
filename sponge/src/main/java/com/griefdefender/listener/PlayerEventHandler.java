@@ -368,12 +368,15 @@ public class PlayerEventHandler {
             if (result != Tristate.FALSE && args.length > 0) {
                 // Check with args
                 // Test with each arg, break once result returns false
+                String commandBaseTargetArgCheck = commandBaseTarget;
                 for (String arg : args) {
                     if (!arg.isEmpty()) {
-                        result = GDPermissionManager.getInstance().getFinalPermission(event, player.getLocation(), claim, Flags.COMMAND_EXECUTE, event.getSource(), commandBaseTarget + "." + arg, player, TrustTypes.MANAGER, true);
+                        commandBaseTargetArgCheck = commandBaseTargetArgCheck + "." + arg;
+                        result = GDPermissionManager.getInstance().getFinalPermission(event, player.getLocation(), claim, Flags.COMMAND_EXECUTE, event.getSource(), commandBaseTargetArgCheck, player, TrustTypes.MANAGER, true);
                         if (result == Tristate.FALSE) {
                             break;
                         }
+
                     }
                 }
             }
@@ -392,13 +395,15 @@ public class PlayerEventHandler {
         }
         if (GDFlags.COMMAND_EXECUTE_PVP && inPvpCombat && !commandExecuteSourceBlacklisted && !commandExecuteTargetBlacklisted) {
             // First check base command
-            Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, player.getLocation(), claim, Flags.COMMAND_EXECUTE_PVP, event.getSource(), commandBaseTarget, player,true);
+            Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, player.getLocation(), claim, Flags.COMMAND_EXECUTE_PVP, event.getSource(), commandBaseTarget, player, true);
             if (result != Tristate.FALSE && args.length > 0) {
                 // check with args
                 // Test with each arg, break once result returns false
+                String commandBaseTargetArgCheck = commandBaseTarget;
                 for (String arg : args) {
                     if (!arg.isEmpty()) {
-                        result = GDPermissionManager.getInstance().getFinalPermission(event, player.getLocation(), claim, Flags.COMMAND_EXECUTE_PVP, event.getSource(), commandTargetWithArgs, player,true);
+                        commandBaseTargetArgCheck = commandBaseTargetArgCheck + "." + arg;
+                        result = GDPermissionManager.getInstance().getFinalPermission(event, player.getLocation(), claim, Flags.COMMAND_EXECUTE_PVP, event.getSource(), commandBaseTargetArgCheck, player, true);
                         if (result == Tristate.FALSE) {
                             break;
                         }
