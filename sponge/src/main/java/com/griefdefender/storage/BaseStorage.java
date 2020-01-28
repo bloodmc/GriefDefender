@@ -95,7 +95,7 @@ public abstract class BaseStorage {
 
     public void initialize() throws Exception {
         USE_GLOBAL_PLAYER_STORAGE = !GriefDefenderPlugin.getGlobalConfig().getConfig().playerdata.useWorldPlayerData();
-        if (GriefDefenderPlugin.getGlobalConfig().getConfig().playerdata.contextType.equalsIgnoreCase("global")) {
+        if (USE_GLOBAL_PLAYER_STORAGE) {
             // migrate player data
             PlayerDataMigrator.migrateGlobal();
         }
