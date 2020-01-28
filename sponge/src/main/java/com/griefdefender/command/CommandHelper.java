@@ -965,6 +965,8 @@ public class CommandHelper {
 
     private static boolean validateCommandMapping(CommandSource src, String command, String pluginId) {
         CommandMapping commandMapping = Sponge.getCommandManager().get(command).orElse(null);
+        if (command.equals("any"))
+            return true;
         if (commandMapping == null) {
             TextAdapter.sendComponent(src, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PLUGIN_COMMAND_NOT_FOUND,
                     ImmutableMap.of(
