@@ -1252,7 +1252,7 @@ public class PlayerEventHandler {
             Chunk chunk = player.getWorld().getChunk(location.getBlockX() >> 4, 0, location.getBlockZ() >> 4).get();
             int miny = location.getBlockY();
             World world = chunk.getWorld();
-            //final Chunk newChunk = world.regenerateChunk(chunk.getPosition().getX(), 0, chunk.getPosition().getZ()).orElse(null);
+            final Chunk newChunk = world.regenerateChunk(chunk.getPosition().getX(), 0, chunk.getPosition().getZ()).orElse(null);
             GDTimings.PLAYER_HANDLE_SHOVEL_ACTION.stopTiming();
             return;
         }
