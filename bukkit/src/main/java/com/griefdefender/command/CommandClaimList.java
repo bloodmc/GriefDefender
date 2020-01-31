@@ -55,6 +55,7 @@ import com.griefdefender.util.ChatCaptureUtil;
 import com.griefdefender.util.PaginationUtil;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
+import net.kyori.text.adapter.bukkit.TextAdapter;
 import net.kyori.text.event.ClickEvent;
 import net.kyori.text.event.HoverEvent;
 import net.kyori.text.format.TextColor;
@@ -74,7 +75,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 @CommandAlias("%griefdefender")
-@CommandPermission(GDPermissions.COMMAND_CLAIM_LIST)
+@CommandPermission(GDPermissions.COMMAND_CLAIM_LIST_BASE)
 public class CommandClaimList extends BaseCommand {
 
     private final ClaimType forcedType;
@@ -95,7 +96,18 @@ public class CommandClaimList extends BaseCommand {
     @Description("List information about a player's claim blocks and claims.")
     @Subcommand("claim list")
     public void execute(Player src, @Optional String targetPlayer, @Optional World world) {
-        final GDPermissionUser user = targetPlayer == null ? PermissionHolderCache.getInstance().getOrCreateUser(src) : PermissionHolderCache.getInstance().getOrCreateUser(targetPlayer);
+        GDPermissionUser user = null;
+        // check target player
+        if (targetPlayer != null) {
+            user = PermissionHolderCache.getInstance().getOrCreateUser(targetPlayer);
+            if (user != null && user.getOnlinePlayer() != src && !src.hasPermission(GDPermissions.COMMAND_CLAIM_LIST_OTHERS)) {
+                TextAdapter.sendComponent(src, MessageCache.getInstance().PERMISSION_PLAYER_VIEW_OTHERS);
+                return;
+            }
+        } else {
+            user = PermissionHolderCache.getInstance().getOrCreateUser(src);
+        }
+
         if (user == null) {
             GriefDefenderPlugin.sendMessage(src, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.COMMAND_INVALID_PLAYER,
                     ImmutableMap.of(

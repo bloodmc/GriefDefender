@@ -87,11 +87,7 @@ public class PermissionHolderCache {
         if (uuid != null) {
             return this.getOrCreateUser(uuid);
         }
-        // check Bukkit
-        final OfflinePlayer player = Bukkit.getOfflinePlayer(username);
-        if (player != null) {
-            return this.getOrCreateUser(player);
-        }
+        // Avoid checking Bukkit.getOfflinePlayer(name) as it will create a UUID for anything passed
 
         return null;
     }

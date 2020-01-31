@@ -35,7 +35,8 @@ public class GDPermissions {
     public static final String COMMAND_ABANDON_ALL_CLAIMS = "griefdefender.user.claim.command.abandon-all";
     public static final String COMMAND_ABANDON_TOP_LEVEL_CLAIM = "griefdefender.user.claim.command.abandon-top-level";
     public static final String COMMAND_CUBOID_CLAIMS = "griefdefender.user.claim.command.cuboid";
-    public static final String COMMAND_CLAIM_LIST = "griefdefender.user.claim.command.list";
+    public static final String COMMAND_CLAIM_LIST_BASE = "griefdefender.user.claim.command.list.base";
+    public static final String COMMAND_CLAIM_LIST_OTHERS = "griefdefender.user.claim.command.list.others";
     public static final String COMMAND_BASIC_MODE = "griefdefender.user.claim.command.basic-mode";
     public static final String COMMAND_GIVE_BLOCKS = "griefdefender.user.claim.command.give.blocks";
     public static final String COMMAND_GIVE_BOOK = "griefdefender.user.claim.command.give.book";
