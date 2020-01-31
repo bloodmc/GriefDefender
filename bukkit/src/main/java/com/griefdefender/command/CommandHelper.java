@@ -953,6 +953,10 @@ public class CommandHelper {
     }
 
     private static boolean validateCommandMapping(CommandSender src, String command, String pluginId) {
+        if (command.equalsIgnoreCase("any")) {
+            return true;
+        }
+
         Command commandMapping = NMSUtil.getInstance().getBukkitCommandMap().getCommand(command);
         if (commandMapping == null) {
             TextAdapter.sendComponent(src, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PLUGIN_COMMAND_NOT_FOUND,

@@ -30,6 +30,7 @@ import com.griefdefender.GDPlayerData;
 import com.griefdefender.GDTimings;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.Tristate;
+import com.griefdefender.api.claim.TrustTypes;
 import com.griefdefender.api.permission.flag.Flags;
 import com.griefdefender.api.permission.option.Options;
 import com.griefdefender.claim.GDClaim;
@@ -202,10 +203,21 @@ public class CommandEventHandler implements Listener {
 
         if (GDFlags.COMMAND_EXECUTE && !inPvpCombat && !commandExecuteSourceBlacklisted && !commandExecuteTargetBlacklisted) {
             // First check base command
-            Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, player.getLocation(), claim, Flags.COMMAND_EXECUTE, player, commandBaseTarget, player, true);
-            if (result != Tristate.FALSE) {
-                // check with args
-                result = GDPermissionManager.getInstance().getFinalPermission(event, player.getLocation(), claim, Flags.COMMAND_EXECUTE, player, commandTargetWithArgs, player, true);
+            Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, player.getLocation(), claim, Flags.COMMAND_EXECUTE, player, commandBaseTarget, player, TrustTypes.MANAGER, true);
+            if (result != Tristate.FALSE && args.length > 0) {
+                // Check with args
+                // Test with each arg, break once result returns false
+                String commandBaseTargetArgCheck = commandBaseTarget;
+                for (String arg : args) {
+                    if (!arg.isEmpty()) {
+                        commandBaseTargetArgCheck = commandBaseTargetArgCheck + "." + arg;
+                        result = GDPermissionManager.getInstance().getFinalPermission(event, player.getLocation(), claim, Flags.COMMAND_EXECUTE, player, commandBaseTargetArgCheck, player, TrustTypes.MANAGER, true);
+                        if (result == Tristate.FALSE) {
+                            break;
+                        }
+
+                    }
+                }
             }
             if (result == Tristate.FALSE) {
                 final Component denyMessage = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.COMMAND_BLOCKED,
@@ -224,9 +236,19 @@ public class CommandEventHandler implements Listener {
         if (GDFlags.COMMAND_EXECUTE_PVP && inPvpCombat && !commandExecuteSourceBlacklisted && !commandExecuteTargetBlacklisted) {
             // First check base command
             Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, player.getLocation(), claim, Flags.COMMAND_EXECUTE_PVP, player, commandBaseTarget, player, true);
-            if (result != Tristate.FALSE) {
+            if (result != Tristate.FALSE && args.length > 0) {
                 // check with args
-                result = GDPermissionManager.getInstance().getFinalPermission(event, player.getLocation(), claim, Flags.COMMAND_EXECUTE_PVP, player, commandTargetWithArgs, player, true);
+                // Test with each arg, break once result returns false
+                String commandBaseTargetArgCheck = commandBaseTarget;
+                for (String arg : args) {
+                    if (!arg.isEmpty()) {
+                        commandBaseTargetArgCheck = commandBaseTargetArgCheck + "." + arg;
+                        result = GDPermissionManager.getInstance().getFinalPermission(event, player.getLocation(), claim, Flags.COMMAND_EXECUTE_PVP, player, commandBaseTargetArgCheck, player, true);
+                        if (result == Tristate.FALSE) {
+                            break;
+                        }
+                    }
+                }
             }
             if (result == Tristate.FALSE) {
                 final Component denyMessage = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.COMMAND_BLOCKED,
@@ -235,6 +257,8 @@ public class CommandEventHandler implements Listener {
                         "player", claim.getOwnerName()));
                 GriefDefenderPlugin.sendMessage(player, denyMessage);
                 event.setCancelled(true);
+                GDTimings.PLAYER_COMMAND_EVENT.stopTiming();
+                return;
             }
         }
         GDTimings.PLAYER_COMMAND_EVENT.stopTiming();
