@@ -49,7 +49,6 @@ import com.griefdefender.permission.GDPermissionManager;
 import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.permission.GDPermissions;
 import com.griefdefender.text.action.GDCallbackHolder;
-import com.griefdefender.util.PermissionUtil;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.adapter.spongeapi.TextAdapter;
@@ -179,8 +178,6 @@ public class CommandClaimAbandon extends BaseCommand {
             }
 
             playerData.onClaimDelete();
-            // remove all context permissions
-            PermissionUtil.getInstance().clearPermissions(claim);
             playerData.revertActiveVisual(player);
 
             if (claim.isTown()) {

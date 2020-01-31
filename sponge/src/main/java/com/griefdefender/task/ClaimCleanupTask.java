@@ -143,8 +143,6 @@ public class ClaimCleanupTask implements Runnable {
                     if (!schematicRestore && activeConfig.getConfig().claim.claimAutoNatureRestore) {
                         BlockUtil.getInstance().restoreClaim(claim);
                     }
-                    // remove all context permissions
-                    PermissionUtil.getInstance().clearPermissions(claim);
                 }
             }
         }

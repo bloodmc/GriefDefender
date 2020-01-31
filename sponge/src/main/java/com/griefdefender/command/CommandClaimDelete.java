@@ -40,7 +40,6 @@ import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.event.GDCauseStackManager;
 import com.griefdefender.permission.GDPermissions;
 import com.griefdefender.text.action.GDCallbackHolder;
-import com.griefdefender.util.PermissionUtil;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.adapter.spongeapi.TextAdapter;
@@ -106,7 +105,6 @@ public class CommandClaimDelete extends BaseCommand {
             }
 
             playerData.onClaimDelete();
-            PermissionUtil.getInstance().clearPermissions((GDClaim) claim);
             playerData.revertActiveVisual(player);
 
             if (claim.isTown()) {

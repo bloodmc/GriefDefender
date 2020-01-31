@@ -56,7 +56,7 @@ import java.util.Set;
 public class ClaimCleanupTask extends BukkitRunnable {
 
     public ClaimCleanupTask(int interval) {
-        this.runTaskTimer(GDBootstrap.getInstance(), 1L, interval);
+        this.runTaskTimer(GDBootstrap.getInstance(), 1L, interval * 20 * 60);
     }
 
     @Override
@@ -105,8 +105,6 @@ public class ClaimCleanupTask extends BukkitRunnable {
                         if (!schematicRestore && activeConfig.getConfig().claim.claimAutoNatureRestore) {
                             BlockUtil.getInstance().restoreClaim(claim);
                         }
-                        // remove all context permissions
-                        PermissionUtil.getInstance().clearPermissions(claim);
                     }
                     return;
                 }
@@ -147,8 +145,6 @@ public class ClaimCleanupTask extends BukkitRunnable {
                     if (!schematicRestore && activeConfig.getConfig().claim.claimAutoNatureRestore) {
                         BlockUtil.getInstance().restoreClaim(claim);
                     }
-                    // remove all context permissions
-                    PermissionUtil.getInstance().clearPermissions(claim);
                 }
             }
         }

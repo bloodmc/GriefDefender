@@ -46,6 +46,7 @@ import com.griefdefender.event.GDLoadClaimEvent;
 import com.griefdefender.migrator.GriefPreventionMigrator;
 import com.griefdefender.migrator.PlayerDataMigrator;
 import com.griefdefender.migrator.WorldGuardMigrator;
+import com.griefdefender.util.PermissionUtil;
 
 import org.apache.commons.io.FileUtils;
 import org.bukkit.Bukkit;
@@ -466,6 +467,7 @@ public class FileStorage extends BaseStorage {
                 }
             }
 
+            PermissionUtil.getInstance().clearPermissions((GDClaim) claim);
             return new GDClaimResult(claim, ClaimResultType.SUCCESS);
         } catch (IOException e) {
             e.printStackTrace();

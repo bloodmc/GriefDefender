@@ -180,7 +180,6 @@ public abstract class BaseStorage {
         }
 
         for (Claim claim : claimsToDelete) {
-            PermissionUtil.getInstance().clearPermissions((GDClaim) claim);
             claimWorldManager.deleteClaimInternal(claim, true);
         }
 
@@ -194,7 +193,6 @@ public abstract class BaseStorage {
 
     public void abandonClaimsForPlayer(GDPermissionUser user, Set<Claim> claimsToDelete) {
         for (Claim claim : claimsToDelete) {
-            PermissionUtil.getInstance().clearPermissions((GDClaim) claim);
             GDClaimManager claimWorldManager = this.claimWorldManagers.get(claim.getWorldUniqueId());
             claimWorldManager.deleteClaimInternal(claim, true);
         }
@@ -207,7 +205,6 @@ public abstract class BaseStorage {
             final GDPlayerData playerData = BaseStorage.GLOBAL_PLAYER_DATA.get(playerID);
             List<Claim> claimsToDelete = new ArrayList<>(playerData.getInternalClaims());
             for (Claim claim : claimsToDelete) {
-                PermissionUtil.getInstance().clearPermissions((GDClaim) claim);
                 GDClaimManager claimWorldManager = this.claimWorldManagers.get(claim.getWorldUniqueId());
                 claimWorldManager.deleteClaimInternal(claim, true);
             }
@@ -233,7 +230,6 @@ public abstract class BaseStorage {
             }
  
             for (Claim claim : claimsToDelete) {
-                PermissionUtil.getInstance().clearPermissions(GriefDefenderPlugin.DEFAULT_HOLDER, ImmutableSet.of(claim.getContext()));
                 claimWorldManager.deleteClaimInternal(claim, true);
                 claims.remove(claim);
             }

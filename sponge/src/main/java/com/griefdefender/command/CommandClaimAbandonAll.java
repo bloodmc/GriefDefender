@@ -48,7 +48,6 @@ import com.griefdefender.permission.GDPermissionManager;
 import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.permission.GDPermissions;
 import com.griefdefender.text.action.GDCallbackHolder;
-import com.griefdefender.util.PermissionUtil;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.adapter.spongeapi.TextAdapter;
@@ -139,8 +138,6 @@ public class CommandClaimAbandonAll extends BaseCommand {
                 double refund = 0;
                 // adjust claim blocks
                 for (Claim claim : allowedClaims) {
-                    // remove all context permissions
-                    PermissionUtil.getInstance().clearPermissions((GDClaim) claim);
                     if (claim.isSubdivision() || claim.isAdminClaim() || claim.isWilderness()) {
                         continue;
                     }

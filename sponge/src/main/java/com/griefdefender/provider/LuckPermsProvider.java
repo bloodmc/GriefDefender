@@ -305,11 +305,48 @@ public class LuckPermsProvider implements PermissionProvider {
     }
 
     public void clearPermissions(GDClaim claim) {
-        Map<Set<Context>, Map<String, Boolean>> permissionMap = this.getPermanentPermissions(GriefDefenderPlugin.DEFAULT_HOLDER);
+        // check default holder
+        this.clearPermission(claim.getUniqueId(), GriefDefenderPlugin.DEFAULT_HOLDER);
+        // check loaded groups
+        for (Group group : this.luckPermsApi.getGroupManager().getLoadedGroups()) {
+            if (group.getName().equalsIgnoreCase("default")) {
+                continue;
+            }
+            final GDPermissionHolder holder = PermissionHolderCache.getInstance().getOrCreateGroup(group.getName());
+            if (holder == null) {
+                continue;
+            }
+
+            this.clearPermission(claim.getUniqueId(), holder);
+        }
+        // check user trusts
+        for (UUID uuid : claim.getUserTrusts()) {
+            if (uuid.equals(GriefDefenderPlugin.PUBLIC_UUID) || uuid.equals(GriefDefenderPlugin.WORLD_USER_UUID) || uuid.equals(GriefDefenderPlugin.ADMIN_USER_UUID)) {
+                continue;
+            }
+            final GDPermissionHolder holder = PermissionHolderCache.getInstance().getOrCreateUser(uuid);
+            if (holder == null) {
+                continue;
+            }
+            this.clearPermission(claim.getUniqueId(), holder);
+        }
+    }
+
+    private void clearPermission(UUID claimUniqueId, GDPermissionHolder holder) {
+        Map<Set<Context>, Map<String, Boolean>> permissionMap = this.getPermanentPermissions(holder);
         for (Entry<Set<Context>, Map<String, Boolean>> mapEntry : permissionMap.entrySet()) {
             for (Context context : mapEntry.getKey()) {
-                if (context.getKey().equalsIgnoreCase("gd_claim") && context.getValue().equalsIgnoreCase(claim.getUniqueId().toString())) {
-                    this.clearPermissions(GriefDefenderPlugin.DEFAULT_HOLDER, mapEntry.getKey());
+                if (context.getKey().equalsIgnoreCase("gd_claim") && context.getValue().equalsIgnoreCase(claimUniqueId.toString())) {
+                    this.clearPermissions(holder, mapEntry.getKey());
+                    break;
+                }
+            }
+        }
+        Map<Set<Context>, Map<String, String>> optionMap = this.getPermanentOptions(holder);
+        for (Entry<Set<Context>, Map<String, String>> mapEntry : optionMap.entrySet()) {
+            for (Context context : mapEntry.getKey()) {
+                if (context.getKey().equalsIgnoreCase("gd_claim") && context.getValue().equalsIgnoreCase(claimUniqueId.toString())) {
+                    this.clearPermissions(holder, mapEntry.getKey());
                     break;
                 }
             }

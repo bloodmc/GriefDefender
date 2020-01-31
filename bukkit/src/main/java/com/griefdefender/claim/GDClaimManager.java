@@ -41,8 +41,6 @@ import com.griefdefender.api.claim.ClaimTypes;
 import com.griefdefender.api.permission.option.Options;
 import com.griefdefender.configuration.ClaimDataConfig;
 import com.griefdefender.configuration.ClaimStorageData;
-import com.griefdefender.configuration.GriefDefenderConfig;
-import com.griefdefender.configuration.PlayerStorageData;
 import com.griefdefender.event.GDRemoveClaimEvent;
 import com.griefdefender.internal.tracking.PlayerIndexStorage;
 import com.griefdefender.internal.tracking.chunk.GDChunk;
@@ -81,7 +79,6 @@ public class GDClaimManager implements ClaimManager {
     private static final BaseStorage DATASTORE = GriefDefenderPlugin.getInstance().dataStore;
     private UUID worldUniqueId;
     private String worldName;
-    private GriefDefenderConfig<?> activeConfig;
 
     // Player UUID -> player data
     private Map<UUID, GDPlayerData> playerDataList = Maps.newHashMap();
@@ -100,7 +97,6 @@ public class GDClaimManager implements ClaimManager {
     public GDClaimManager(World world) {
         this.worldUniqueId = world.getUID();
         this.worldName = world.getName();
-        this.activeConfig = GriefDefenderPlugin.getActiveConfig(this.worldUniqueId);
         this.playerIndexStorage = new PlayerIndexStorage(world);
     }
 
