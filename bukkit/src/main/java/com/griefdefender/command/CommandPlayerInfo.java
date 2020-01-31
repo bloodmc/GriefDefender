@@ -114,8 +114,9 @@ public class CommandPlayerInfo extends BaseCommand {
         }
 
         // otherwise if no permission to delve into another player's claims data or self
-        if ((user != null && user != src && !src.hasPermission(GDPermissions.COMMAND_PLAYER_INFO_OTHERS))) {
+        if (user != null && user.getOnlinePlayer() != src && !src.hasPermission(GDPermissions.COMMAND_PLAYER_INFO_OTHERS)) {
            TextAdapter.sendComponent(src, MessageCache.getInstance().PERMISSION_PLAYER_VIEW_OTHERS);
+           return;
         }
 
 
