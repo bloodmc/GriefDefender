@@ -383,6 +383,11 @@ public class CommonEntityEventHandler {
 
     private void runPlayerCommands(GDClaim claim, GDPermissionUser user, boolean enter) {
         final Player player = user.getOnlinePlayer();
+        if (player == null) {
+            // Most likely NPC
+            return;
+        }
+
         List<String> rawCommandList = new ArrayList<>();
         Set<Context> contexts = new HashSet<>();
         if (player.getUniqueId().equals(claim.getOwnerUniqueId())) {
@@ -451,6 +456,11 @@ public class CommonEntityEventHandler {
 
     private void checkPlayerFlight(GDPermissionUser user, GDClaim fromClaim, GDClaim toClaim) {
         final Player player = user.getOnlinePlayer();
+        if (player == null) {
+            // Most likely NPC
+            return;
+        }
+
         final GDPlayerData playerData = user.getInternalPlayerData();
         final GameMode gameMode = player.get(Keys.GAME_MODE).orElse(null);
         if (gameMode == null || gameMode == GameModes.CREATIVE || gameMode == GameModes.SPECTATOR) {
@@ -478,6 +488,11 @@ public class CommonEntityEventHandler {
 
     private void checkPlayerGodMode(GDPermissionUser user, GDClaim fromClaim, GDClaim toClaim) {
         final Player player = user.getOnlinePlayer();
+        if (player == null) {
+            // Most likely NPC
+            return;
+        }
+
         final GDPlayerData playerData = user.getInternalPlayerData();
         final GameMode gameMode = player.get(Keys.GAME_MODE).get();
         if (gameMode == GameModes.CREATIVE || gameMode == GameModes.SPECTATOR || !player.get(Keys.INVULNERABLE).get()) {
@@ -502,6 +517,11 @@ public class CommonEntityEventHandler {
         }
 
         final Player player = user.getOnlinePlayer();
+        if (player == null) {
+            // Most likely NPC
+            return;
+        }
+
         final GDPlayerData playerData = user.getInternalPlayerData();
         final GameMode currentGameMode = player.get(Keys.GAME_MODE).get();
         final GameModeType gameModeType = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(GameModeType.class), playerData.getSubject(), Options.PLAYER_GAMEMODE, toClaim);
@@ -524,6 +544,11 @@ public class CommonEntityEventHandler {
         }
 
         final Player player = user.getOnlinePlayer();
+        if (player == null) {
+            // Most likely NPC
+            return;
+        }
+
         final GDPlayerData playerData = user.getInternalPlayerData();
         final double currentWalkSpeed = player.get(Keys.WALKING_SPEED).get();
         final double walkSpeed = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Double.class), playerData.getSubject(), Options.PLAYER_WALK_SPEED, toClaim);
@@ -544,6 +569,11 @@ public class CommonEntityEventHandler {
         }
 
         final Player player = user.getOnlinePlayer();
+        if (player == null) {
+            // Most likely NPC
+            return;
+        }
+
         final GDPlayerData playerData = user.getInternalPlayerData();
         final WeatherType weatherType = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(WeatherType.class), playerData.getSubject(), Options.PLAYER_WEATHER, toClaim);
         if (weatherType != null) {
