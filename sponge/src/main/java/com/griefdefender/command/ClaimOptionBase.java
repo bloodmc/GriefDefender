@@ -217,7 +217,7 @@ public abstract class ClaimOptionBase extends BaseCommand {
                 showOptionPermissions(src, (GDClaim) claim, MenuType.CLAIM);
                 return;
             } else if (option != null && value != null) {
-                if (!((GDOption) option).validateStringValue(value, false)) {
+                if (!value.equalsIgnoreCase("undefined") && !((GDOption) option).validateStringValue(value, false)) {
                     GriefDefenderPlugin.sendMessage(player, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.OPTION_INVALID_VALUE, 
                             ImmutableMap.of(
                                     "value", value,
@@ -227,17 +227,23 @@ public abstract class ClaimOptionBase extends BaseCommand {
                 }
 
                 MenuType type = MenuType.DEFAULT;
+                boolean useClaimContext = true;
                 for (Context context : contextSet) {
+                    if (context.getKey().equals(ContextKeys.CLAIM_DEFAULT)) {
+                        useClaimContext = false;
+                        break;
+                    }
                     if (context.getKey().equals(ContextKeys.CLAIM)) {
                         type = MenuType.CLAIM;
                         break;
                     }
                     if (context.getKey().equals(ContextKeys.CLAIM_OVERRIDE)) {
                         type = MenuType.OVERRIDE;
+                        useClaimContext = false;
                         break;
                     }
                 }
-                if (!option.isGlobal()) {
+                if (!option.isGlobal() && useClaimContext) {
                     contextSet.add(claim.getContext());
                     if (contextSet.isEmpty() ) {
                         type = MenuType.CLAIM;
