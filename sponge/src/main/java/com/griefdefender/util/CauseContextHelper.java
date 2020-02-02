@@ -184,7 +184,7 @@ public class CauseContextHelper {
                 GriefDefenderPlugin.sendMessage(src, TextComponent.of("Invalid context entered."));
                 return null;
             }
-            final String contextName = parts[0];
+            final String contextName = parts[0].toLowerCase();
             parts = parts[1].split(":");
             if (parts.length < 1) {
                 GriefDefenderPlugin.sendMessage(src, TextComponent.of("Invalid context entered."));
@@ -224,6 +224,8 @@ public class CauseContextHelper {
                     contextSet.add(ClaimContexts.ADMIN_DEFAULT_CONTEXT);
                 } else if (arg1.equals("basic")) {
                     contextSet.add(ClaimContexts.BASIC_DEFAULT_CONTEXT);
+                } else if (arg1.equals("subdivision")) {
+                    contextSet.add(ClaimContexts.SUBDIVISION_DEFAULT_CONTEXT);
                 } else if (arg1.equals("town")) {
                     contextSet.add(ClaimContexts.TOWN_DEFAULT_CONTEXT);
                 } else if (arg1.equals("wilderness")) {
@@ -247,6 +249,8 @@ public class CauseContextHelper {
                     contextSet.add(ClaimContexts.ADMIN_OVERRIDE_CONTEXT);
                 } else if (arg1.equals("basic")) {
                     contextSet.add(ClaimContexts.BASIC_OVERRIDE_CONTEXT);
+                } else if (arg1.equals("subdivision")) {
+                    contextSet.add(ClaimContexts.SUBDIVISION_OVERRIDE_CONTEXT);
                 } else if (arg1.equals("town")) {
                     contextSet.add(ClaimContexts.TOWN_OVERRIDE_CONTEXT);
                 } else if (arg1.equals("wilderness")) {
