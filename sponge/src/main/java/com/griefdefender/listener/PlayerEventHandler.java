@@ -1564,7 +1564,7 @@ public class PlayerEventHandler {
                 if (!playerData.canManageAdminClaims) {
                     playerCanResize = false;
                 }
-            } else if (!player.getUniqueId().equals(claim.getOwnerUniqueId())) {
+            } else if (!player.getUniqueId().equals(claim.getOwnerUniqueId()) || !player.hasPermission(GDPermissions.CLAIM_RESIZE)) {
                 playerCanResize = false;
             }
             if (!playerCanResize) {
