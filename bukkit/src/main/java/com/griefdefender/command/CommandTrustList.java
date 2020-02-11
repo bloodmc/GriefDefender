@@ -299,8 +299,6 @@ public class CommandTrustList extends BaseCommand {
         PaginationList.Builder paginationBuilder = PaginationList.builder()
                 .title(claimTrustHead).padding(TextComponent.of(" ").decoration(TextDecoration.STRIKETHROUGH, true)).contents(trustList).footer(footer);
         paginationBuilder.sendTo(src);
-        paginationBuilder.sendTo(src);
-
     }
 
     private static Consumer<CommandSender> createTrustConsumer(Player src, GDClaim claim, GDPlayerData playerData, TrustType type, Component returnCommand) {
