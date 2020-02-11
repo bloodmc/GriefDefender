@@ -984,7 +984,7 @@ public class PlayerEventHandler implements Listener {
             return;
         }
 
-        if (playerData.claimResizing != null) {
+        if (playerData.claimResizing != null && playerData.lastShovelLocation != null) {
             handleResizeFinish(event, player, location, playerData);
             GDTimings.PLAYER_HANDLE_SHOVEL_ACTION.stopTiming();
             return;

@@ -1514,6 +1514,7 @@ public class GDClaim implements Claim {
                 final Component message = MessageCache.getInstance().CREATE_SUBDIVISION_ONLY;
                 GriefDefenderPlugin.sendMessage(player, message);
                 playerData.lastShovelLocation = null;
+                playerData.claimResizing = null;
                 // TODO: Add new result type for this
                 return new GDClaimResult(ClaimResultType.BELOW_MIN_SIZE_X, message);
             }
