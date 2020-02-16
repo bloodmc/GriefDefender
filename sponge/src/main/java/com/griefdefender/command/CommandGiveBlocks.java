@@ -37,6 +37,11 @@ public class CommandGiveBlocks extends BaseCommand {
     @Syntax("<player> <amount>")
     @Subcommand("giveblocks")
     public void execute(Player src, User targetPlayer, int amount) {
+        if (amount <= 0) {
+            TextAdapter.sendComponent(src, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.COMMAND_INVALID_AMOUNT));
+            return;
+        }
+
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(src.getWorld(), src.getUniqueId());
         int availableBlocks = playerData.getAccruedClaimBlocks() + playerData.getBonusClaimBlocks();
         if (amount > availableBlocks) {
