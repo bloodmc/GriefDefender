@@ -25,17 +25,14 @@
 package com.griefdefender.provider;
 
 import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.common.collect.ImmutableSet;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.Tristate;
 import com.griefdefender.api.claim.Claim;
 import com.griefdefender.api.permission.Context;
-import com.griefdefender.api.permission.ContextKeys;
 import com.griefdefender.api.permission.PermissionResult;
 import com.griefdefender.api.permission.ResultTypes;
-import com.griefdefender.api.permission.flag.Flag;
 import com.griefdefender.api.permission.option.Option;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.ClaimContextCalculator;
@@ -80,18 +77,12 @@ import java.util.UUID;
 import java.util.Map.Entry;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.FilenameUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 
 public class LuckPermsProvider implements PermissionProvider {
-
-    private final Cache<String, Group> groupCache = Caffeine.newBuilder().expireAfterAccess(30, TimeUnit.MINUTES)
-            .build();
-    private final Cache<String, User> userCache = Caffeine.newBuilder().expireAfterAccess(30, TimeUnit.MINUTES)
-            .build();
 
     public static Comparator<Set<Context>> CONTEXT_COMPARATOR = new Comparator<Set<Context>>() {
         @Override
@@ -140,11 +131,7 @@ public class LuckPermsProvider implements PermissionProvider {
     }
 
     public User getLuckPermsUser(String identifier) {
-        User user = this.userCache.getIfPresent(identifier);
-        if (user != null) {
-            return user;
-        }
-
+        User user = null;
         UUID uuid = null;
         if (identifier.length() == 36) {
             try {
@@ -160,9 +147,6 @@ public class LuckPermsProvider implements PermissionProvider {
         if (user == null) {
             user = this.luckPermsApi.getUserManager().getUser(identifier);
         }
-        if (user != null) {
-            this.userCache.put(identifier, user);
-        }
 
         return user;
     }
@@ -171,16 +155,8 @@ public class LuckPermsProvider implements PermissionProvider {
         if (identifier.equalsIgnoreCase("default")) {
             return this.luckPermsApi.getGroupManager().getGroup("default");
         }
-        Group group = this.groupCache.getIfPresent(identifier);
-        if (group != null) {
-            return group;
-        }
 
-        group = this.luckPermsApi.getGroupManager().getGroup(identifier);
-        if (group != null) {
-            this.groupCache.put(identifier, group);
-        }
-        return group;
+        return this.luckPermsApi.getGroupManager().getGroup(identifier);
     }
 
     public Group getGroupSubject(String identifier) {
@@ -197,25 +173,6 @@ public class LuckPermsProvider implements PermissionProvider {
             return null;
         }
     }
-
-   /* public GDPermissionUser getUserSubject(String name) {
-        final User user = this.luckPermsApi.getUserManager().getUser(name);
-        if (user != null) {
-            return new GDPermissionUser(user);
-        }
-
-        try {
-            final UUID uuid = this.luckPermsApi.getUserManager().lookupUuid(name).get();
-            if (uuid != null) {
-                return this.luckPermsApi.getUserManager().loadUser(uuid).get();
-            }
-            return null;
-        } catch (InterruptedException e) {
-            return null;
-        } catch (ExecutionException e) {
-            return null;
-        }
-    }*/
 
     public UUID lookupUserUniqueId(String name) {
         final User user = this.getLuckPermsUser(name);
