@@ -332,6 +332,7 @@ public class CommonEntityEventHandler {
             if (player != null) {
 			    if (GDFlags.ENTITY_RIDING && onMount) {
                     if (GDPermissionManager.getInstance().getFinalPermission(event, targetEntity.getLocation(), toClaim, Flags.ENTITY_RIDING, player, targetEntity, player, TrustTypes.ACCESSOR, true) == Tristate.FALSE) {
+                        event.setCancelled(true);
                         Location<World> safeLocation = Sponge.getGame().getTeleportHelper()
                                 .getSafeLocation(fromLocation, 80, 0)
                                 .orElseGet(() -> Sponge.getGame().getTeleportHelper()
@@ -340,6 +341,8 @@ public class CommonEntityEventHandler {
                                 );
                         targetEntity.getBaseVehicle().clearPassengers();
                         player.setTransform(player.getTransform().setLocation(safeLocation));
+                        GDTimings.ENTITY_MOVE_EVENT.stopTimingIfSync();
+                        return false;
                     }
                 }
                 final GDPlayerData playerData = user.getInternalPlayerData();
