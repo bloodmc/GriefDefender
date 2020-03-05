@@ -919,7 +919,7 @@ public class EntityEventHandler {
     }
 
     @Listener(order = Order.FIRST, beforeModifications = true)
-    public void onEntityMount(RideEntityEvent event) {
+    public void onEntityMount(RideEntityEvent.Mount event) {
         if (!GDFlags.ENTITY_RIDING) {
             return;
         }
