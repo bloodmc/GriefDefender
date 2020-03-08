@@ -80,6 +80,7 @@ public class DynmapProvider {
             public void apiEnabled(DynmapCommonAPI api) {
                 dynmap = api;
                 cfg = GriefDefenderPlugin.getGlobalConfig().getConfig().dynmap;
+                markerapi = api.getMarkerAPI();
                 activate();
             }
         });
