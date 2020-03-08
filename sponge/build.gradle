@@ -32,7 +32,7 @@ sponge {
         meta {
             name = "GriefDefender"
             version = "$version"
-            description = "This plugin is designed to prevent all forms of grief."
+            description = "Designed to defend servers from all forms of grief."
             url = "$url"
             authors = ["bloodmc"]
         }
