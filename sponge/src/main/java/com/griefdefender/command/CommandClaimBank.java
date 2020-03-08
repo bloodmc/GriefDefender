@@ -66,7 +66,7 @@ public class CommandClaimBank extends BaseCommand {
             }
         }
 
-        if (args.length == 0 || args.length < 2) {
+        if (args.length < 2) {
             CommandHelper.displayClaimBankInfo(player, claim);
             return;
         }

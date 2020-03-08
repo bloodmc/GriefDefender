@@ -45,11 +45,9 @@ public class MCClansEventHandler {
         final GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAt(event.getLocation());
         if (!claim.isInTown()) {
             event.setCancelledWithMessage("You must be in a town in order to set your clan home.");
-            return;
         }
-        if (!claim.getOwnerUniqueId().equals(event.getClan().getOwner().getUUID())) {
+        else if (!claim.getOwnerUniqueId().equals(event.getClan().getOwner().getUUID())) {
             event.setCancelledWithMessage("You do not own this town.");
-            return;
         }
     }
 

@@ -196,8 +196,6 @@ public abstract class BaseStorage {
             GDClaimManager claimWorldManager = this.claimWorldManagers.get(claim.getWorldUniqueId());
             claimWorldManager.deleteClaimInternal(claim, true);
         }
-
-        return;
     }
 
     public void deleteClaimsForPlayer(UUID playerID) {

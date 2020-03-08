@@ -96,7 +96,6 @@ public class CommandClaimSellBlocks extends BaseCommand {
                     "amount", playerData.getEconomyClaimBlockReturn(),
                     "balance", availableBlocks));
             GriefDefenderPlugin.sendMessage(player, message);
-            return;
         } else {
             // try to parse number of blocks
             if (blockCount <= 0) {

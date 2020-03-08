@@ -81,7 +81,7 @@ public class UIFlagData {
         return true;
     }
 
-    public class FlagContextHolder {
+    public static class FlagContextHolder {
         private Set<Context> contexts;
         private Flag flag;
         private Boolean value;

@@ -60,7 +60,7 @@ public class OptionData {
         return true;
     }
 
-    public class OptionContextHolder {
+    public static class OptionContextHolder {
         private Set<Context> contexts;
         private Option option;
         private String value;

@@ -28,6 +28,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import net.kyori.text.Component;
 import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.channel.MessageReceiver;
 
 import java.util.List;
@@ -107,7 +108,7 @@ public interface PaginationList {
      * to the specified message receiver.
      *
      * @param receiver The receiver to send the first page to
-     * @see PaginationList#sendTo(MessageReceiver, int) to send a specific page
+     * @see PaginationList#sendTo(CommandSource, int) to send a specific page
      */
     default void sendTo(CommandSource receiver) {
         sendTo(receiver, 1);

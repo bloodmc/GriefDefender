@@ -99,7 +99,6 @@ public class CommandClaimBuyBlocks extends BaseCommand {
                     "amount", economyBlockCost,
                     "balance", String.valueOf("$" + balance)));
             GriefDefenderPlugin.sendMessage(player, message);
-            return;
         } else {
             if (blockCount <= 0) {
                 GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().ECONOMY_BLOCK_BUY_INVALID);

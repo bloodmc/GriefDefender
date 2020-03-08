@@ -342,8 +342,7 @@ public class GDPermissionManager implements PermissionManager {
 
     private Tristate getUserPermission(GDPermissionHolder holder, Claim claim, String permission) {
         final List<Claim> inheritParents = claim.getInheritedParents();
-        final Set<Context> contexts = new HashSet<>();
-        contexts.addAll(this.eventContexts);
+        final Set<Context> contexts = new HashSet<>(this.eventContexts);
 
         for (Claim parentClaim : inheritParents) {
             GDClaim parent = (GDClaim) parentClaim;
@@ -500,10 +499,8 @@ public class GDPermissionManager implements PermissionManager {
         }
 
         if (eventPlayerData != null && eventPlayerData.eventResultCache != null) {
-            final Flag flag = FlagRegistryModule.getInstance().getById(permission).orElse(null);
-            if (flag != null) {
-                eventPlayerData.eventResultCache = new EventResultCache((GDClaim) claim, flag.getName().toLowerCase(), permissionValue, trust);
-            }
+            FlagRegistryModule.getInstance().getById(permission).ifPresent(flag ->
+                    eventPlayerData.eventResultCache = new EventResultCache((GDClaim) claim, flag.getName().toLowerCase(), permissionValue, trust));
         }
         return permissionValue;
     }
@@ -991,7 +988,7 @@ public class GDPermissionManager implements PermissionManager {
     private Set<Context> addBlockPropertyContexts(Set<Context> contexts, BlockState block) {
         Matcher matcher = BLOCKSTATE_PATTERN.matcher(block.toString());
         if (matcher.find()) {
-            final String properties[] = matcher.group(0).split(",");
+            final String[] properties = matcher.group(0).split(",");
             for (String property : properties) {
                 contexts.add(new Context("state", property.replace("=", ":")));
             }
@@ -1022,7 +1019,7 @@ public class GDPermissionManager implements PermissionManager {
         }
         final int sourceIndex = flagPermission.indexOf(".source.");
         if (sourceIndex != -1) {
-            flagPermission = StringUtils.replace(flagPermission, flagPermission.substring(sourceIndex, flagPermission.length()), "");
+            flagPermission = StringUtils.replace(flagPermission, flagPermission.substring(sourceIndex), "");
         }
 
         return flagPermission;
@@ -1580,8 +1577,7 @@ public class GDPermissionManager implements PermissionManager {
 
     @Override
     public CompletableFuture<PermissionResult> setFlagDefinition(Subject subject, FlagDefinition flagDefinition, Tristate value) {
-        final Set<Context> contexts = new HashSet<>();
-        contexts.addAll(flagDefinition.getContexts());
+        final Set<Context> contexts = new HashSet<>(flagDefinition.getContexts());
         PermissionResult result = null;
         CompletableFuture<PermissionResult> future = new CompletableFuture<>();
         for (FlagData flagData : flagDefinition.getFlagData()) {

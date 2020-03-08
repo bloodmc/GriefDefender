@@ -57,7 +57,7 @@ public class GDTaxClaimEvent extends GDClaimEvent implements TaxClaimEvent {
 
     @Override
     public double getTaxAmount() {
-        return (this.getClaim().getClaimBlocks() / 256) * this.taxRate;
+        return (int) (this.getClaim().getClaimBlocks() / 256) * this.taxRate;
     }
 
     @Override

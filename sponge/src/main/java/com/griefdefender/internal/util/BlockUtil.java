@@ -107,14 +107,7 @@ public class BlockUtil {
     }
 
     public String posToString(int x, int y, int z) {
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(x);
-        stringBuilder.append(";");
-        stringBuilder.append(y);
-        stringBuilder.append(";");
-        stringBuilder.append(z);
-
-        return stringBuilder.toString();
+        return x + ";" + y + ";" + z;
     }
 
     public Vector3i posFromString(String pos) throws Exception {
@@ -458,7 +451,7 @@ public class BlockUtil {
                         if (claimsInChunk != null) {
                             for (Claim claim : claimsInChunk) {
                                 final GDClaim gpClaim = (GDClaim) claim;
-                                if (gpClaim.parent == null && !claims.contains(claim)) {
+                                if (gpClaim.parent == null) {
                                     claims.add(claim);
                                 }
                             }

@@ -71,7 +71,7 @@ public class ChatCaptureUtil {
     }
 
     public Component createRecordChatComponent(Player player, GDClaim claim, GDPlayerData playerData, String command, Component returnComponent) {
-        final Component chatSettings = TextComponent.builder()
+        return TextComponent.builder()
                     .append(TextComponent.builder()
                             .append(whiteOpenBracket)
                             .append("RECORD-CHAT").color(TextColor.GOLD).append(whiteCloseBracket)
@@ -83,7 +83,6 @@ public class ChatCaptureUtil {
                             .append(getRecordChatClickableInfoText(player, claim, MessageCache.getInstance().CLAIMINFO_UI_CLICK_TOGGLE, playerData.isRecordingChat() ? TextComponent.of("ON", TextColor.GREEN) : TextComponent.of("OFF", TextColor.RED), command))
                             .build())
                     .build();
-        return chatSettings;
     }
 
     public Component getRecordChatClickableInfoText(CommandSource src, GDClaim claim, Component clickText, Component infoText, String command) {
@@ -163,9 +162,7 @@ public class ChatCaptureUtil {
                 .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(CommandHelper.createCommandConsumer(player, command, "")))).build();
         }
         textList.add(returnToClaimInfo);
-        for (Component chatLine : playerData.chatLines) {
-            textList.add(chatLine);
-        }
+        textList.addAll(playerData.chatLines);
 
         int fillSize = 20 - (textList.size() + 2);
         for (int i = 0; i < fillSize; i++) {

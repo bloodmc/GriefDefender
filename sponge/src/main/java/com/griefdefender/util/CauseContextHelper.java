@@ -79,7 +79,7 @@ public class CauseContextHelper {
                 // check for FakePlayer in context
                 user = cause.getContext().get(EventContextKeys.FAKE_PLAYER).orElse(null);
             }
-            if (user != null && user instanceof Entity && NMSUtil.getInstance().isFakePlayer((Entity) user)) {
+            if (user instanceof Entity && NMSUtil.getInstance().isFakePlayer((Entity) user)) {
                 fakePlayer = user;
             }
         }
@@ -120,7 +120,7 @@ public class CauseContextHelper {
             if (event instanceof ExplosionEvent) {
                 // Check igniter
                 final Living living = context.get(EventContextKeys.IGNITER).orElse(null);
-                if (living != null && living instanceof User) {
+                if (living instanceof User) {
                     user = (User) living;
                 }
             }

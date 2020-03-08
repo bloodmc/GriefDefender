@@ -28,6 +28,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.kyori.text.Component;
 import net.kyori.text.serializer.plain.PlainComponentSerializer;
+import org.spongepowered.api.text.Text;
 
 /**
  * A subclass of Exception that contains a rich message that is an instance of

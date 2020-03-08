@@ -246,7 +246,7 @@ public class GDPaginationCalculator {
 
             int paddingNecessary = LINE_WIDTH - inputLength;
 
-            int paddingCount = GenericMath.floor(paddingNecessary / paddingLength);
+            int paddingCount = GenericMath.floor((double) paddingNecessary / paddingLength);
             //pick a halfway point
             int beforePadding = GenericMath.floor(paddingCount / 2.0);
             //Do not use ceil, this prevents floating point errors.

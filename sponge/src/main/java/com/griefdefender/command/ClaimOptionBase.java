@@ -119,7 +119,7 @@ public abstract class ClaimOptionBase extends BaseCommand {
         final String arguments = String.join(" ", args);
         int index = arguments.indexOf("context[");
         if (index != -1) {
-            contexts = arguments.substring(index, arguments.length());
+            contexts = arguments.substring(index);
         }
         if (args.length > 0) {
             if (args.length < 2) {
@@ -215,7 +215,6 @@ public abstract class ClaimOptionBase extends BaseCommand {
         if (claim != null) {
             if (commandOption == null && value == null && player.hasPermission(GDPermissions.COMMAND_LIST_CLAIM_OPTIONS)) {
                 showOptionPermissions(src, (GDClaim) claim, MenuType.CLAIM);
-                return;
             } else if (option != null && value != null) {
                 if (!value.equalsIgnoreCase("undefined") && !((GDOption) option).validateStringValue(value, false)) {
                     GriefDefenderPlugin.sendMessage(player, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.OPTION_INVALID_VALUE, 
@@ -259,7 +258,6 @@ public abstract class ClaimOptionBase extends BaseCommand {
                                         "value", TextComponent.of(value).color(TextColor.LIGHT_PURPLE),
                                         "target", subject.getFriendlyName())));
                 GDCauseStackManager.getInstance().popCause();
-                return;
             }
         }
     }

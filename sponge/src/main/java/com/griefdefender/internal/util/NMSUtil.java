@@ -97,7 +97,7 @@ public class NMSUtil {
             mcEntity = (net.minecraft.entity.Entity) targetEntity;
         }
         String id = "";
-        if (mcEntity != null && mcEntity instanceof EntityItem) {
+        if (mcEntity instanceof EntityItem) {
             EntityItem mcItem = (EntityItem) mcEntity;
             net.minecraft.item.ItemStack itemStack = mcItem.getItem();
             if (itemStack != null && itemStack.getItem() != null) {

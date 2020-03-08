@@ -125,7 +125,6 @@ public class EconomyUtil {
                     GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CREATE_FAILED_RESULT,
                             ImmutableMap.of("reason", result.getResultType())));
                 }
-                return;
             }
 
             // otherwise, advise him on the /trust command and show him his new claim

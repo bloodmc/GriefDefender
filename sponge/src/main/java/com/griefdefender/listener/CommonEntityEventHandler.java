@@ -125,7 +125,7 @@ public class CommonEntityEventHandler {
             user = PermissionHolderCache.getInstance().getOrCreateUser(player);
         } else {
             final Entity controller = EntityUtils.getControllingPassenger(targetEntity);
-            if (controller != null && controller instanceof Player) {
+            if (controller instanceof Player) {
                 player = (Player) controller;
                 user = PermissionHolderCache.getInstance().getOrCreateUser(player);
             } else {

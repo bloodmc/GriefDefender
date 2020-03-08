@@ -80,11 +80,9 @@ public class RedProtectMigrator {
                 int minX = region.getNode(rname,"minX").getInt();
                 int minY = region.getNode(rname,"minY").getInt(0);
                 int minZ = region.getNode(rname,"minZ").getInt();
-                List<String> owners = new ArrayList<String>();
-                owners.addAll(region.getNode(rname,"owners").getList(TypeToken.of(String.class)));
-                
-                List<String> members = new ArrayList<String>();
-                members.addAll(region.getNode(rname,"members").getList(TypeToken.of(String.class)));
+                List<String> owners = new ArrayList<>(region.getNode(rname, "owners").getList(TypeToken.of(String.class)));
+
+                List<String> members = new ArrayList<>(region.getNode(rname, "members").getList(TypeToken.of(String.class)));
                 
                 String creator = region.getNode(rname,"creator").getString();             
                 String welcome = region.getNode(rname,"welcome").getString();                 
@@ -132,7 +130,7 @@ public class RedProtectMigrator {
                         continue;
                     }
 
-                    UUID builderUniqueId = null;
+                    UUID builderUniqueId;
                     try {
                         builderUniqueId = PermissionUtil.getInstance().lookupUserUniqueId(creator);
                         if (builderUniqueId == null) {
@@ -155,11 +153,9 @@ public class RedProtectMigrator {
             }
             GriefDefenderPlugin.getInstance().getLogger().info("Finished RedProtect region data migration for world '" + world.getProperties().getWorldName() + "'."
                     + " Migrated a total of " + count + " regions.");
-        } catch (IOException e) {
+        } catch (IOException | ObjectMappingException e) {
             e.printStackTrace();
-        } catch (ObjectMappingException e) {
-            e.printStackTrace();
-        } 
+        }
     }
 
     private static boolean validate(final String username){

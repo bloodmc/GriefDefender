@@ -202,41 +202,29 @@ public class GDClaimManager implements ClaimManager {
             if (!claim.isAdminClaim() && (!claim.isInTown() || !claim.getTownClaim().getOwnerUniqueId().equals(claim.getOwnerUniqueId()))) {
                 final GDPlayerData playerData = this.getPlayerDataMap().get(claim.getOwnerUniqueId());
                 Set<Claim> playerClaims = playerData.getInternalClaims();
-                if (!playerClaims.contains(claim)) {
-                    playerClaims.add(claim);
-                }
+                playerClaims.add(claim);
             }
             return;
         }
 
-        if (!this.worldClaims.contains(claim)) {
-            this.worldClaims.add(claim);
-        }
+        this.worldClaims.add(claim);
         final UUID ownerId = claim.getOwnerUniqueId();
         final GDPlayerData playerData = this.getPlayerDataMap().get(ownerId);
         if (playerData != null) {
             Set<Claim> playerClaims = playerData.getInternalClaims();
-            if (!playerClaims.contains(claim)) {
-                playerClaims.add(claim);
-            }
+            playerClaims.add(claim);
         } else if (!claim.isAdminClaim()) {
             this.createPlayerData(ownerId);
         }
 
         this.updateChunkHashes(claim);
-        return;
     }
 
     public void updateChunkHashes(GDClaim claim) {
         this.deleteChunkHashes(claim);
         Set<Long> chunkHashes = claim.getChunkHashes(true);
         for (Long chunkHash : chunkHashes) {
-            Set<Claim> claimsInChunk = this.getInternalChunksToClaimsMap().get(chunkHash);
-            if (claimsInChunk == null) {
-                claimsInChunk = new HashSet<Claim>();
-                this.getInternalChunksToClaimsMap().put(chunkHash, claimsInChunk);
-            }
-
+            Set<Claim> claimsInChunk = this.getInternalChunksToClaimsMap().computeIfAbsent(chunkHash, k -> new HashSet<>());
             claimsInChunk.add(claim);
         }
     }
@@ -284,11 +272,9 @@ public class GDClaimManager implements ClaimManager {
             try (final CauseStackManager.StackFrame frame = Sponge.getCauseStackManager().pushCauseFrame()) {
                 Sponge.getCauseStackManager().pushCause(GriefDefenderPlugin.getInstance());
                 final EconomyService economyService = GriefDefenderPlugin.getInstance().economyService.get();
-                final UniqueAccount ownerAccount = economyService.getOrCreateAccount(claim.getOwnerUniqueId()).orElse(null);
-                if (ownerAccount != null) {
-                    ownerAccount.deposit(economyService.getDefaultCurrency(), bankAccount.getBalance(economyService.getDefaultCurrency()),
-                        Sponge.getCauseStackManager().getCurrentCause());
-                }
+                economyService.getOrCreateAccount(claim.getOwnerUniqueId()).ifPresent(ownerAccount ->
+                        ownerAccount.deposit(economyService.getDefaultCurrency(), bankAccount.getBalance(economyService.getDefaultCurrency()),
+                        Sponge.getCauseStackManager().getCurrentCause()));
                 bankAccount.resetBalance(economyService.getDefaultCurrency(), Sponge.getCauseStackManager().getCurrentCause());
             }
         }

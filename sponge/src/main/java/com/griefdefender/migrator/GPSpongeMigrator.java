@@ -153,8 +153,7 @@ public class GPSpongeMigrator {
     }
 
     private void migrateFolderData(File[] files) {
-        for (int i = 0; i < files.length; i++) {
-            File file = files[i];
+        for (File file : files) {
             if (file.isDirectory()) {
                 migrateFolderData(file.listFiles());
             }
@@ -338,7 +337,7 @@ public class GPSpongeMigrator {
         String sourcePart = parts.length > 1 ? parts[1] : null;
         if (sourcePart != null) {
             // handle source
-            String sourceParts[] = sourcePart.split("\\.");
+            String[] sourceParts = sourcePart.split("\\.");
             String sourceId = sourceParts[0];
             if (sourceParts.length > 1) {
                 String value = sourceParts[1];
@@ -372,7 +371,7 @@ public class GPSpongeMigrator {
         }
 
         // Handle target
-        String targetParts[] = targetPart.split("\\.");
+        String[] targetParts = targetPart.split("\\.");
         String targetId = targetParts[0];
         if (targetParts.length > 1) {
             String value = targetParts[1];

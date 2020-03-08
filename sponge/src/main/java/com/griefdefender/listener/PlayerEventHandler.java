@@ -758,7 +758,6 @@ public class PlayerEventHandler {
                 event.setCancelled(true);
                 this.sendInteractEntityDenyMessage(itemInHand, targetEntity, claim, player, handType);
                 GDTimings.PLAYER_INTERACT_ENTITY_PRIMARY_EVENT.stopTimingIfSync();
-                return;
             }
         }
     }
@@ -1205,10 +1204,9 @@ public class PlayerEventHandler {
         }
 
         GDTimings.PLAYER_HANDLE_SHOVEL_ACTION.startTimingIfSync();
-        BlockSnapshot clickedBlock = targetBlock;
-        Location<World> location = clickedBlock.getLocation().orElse(null);
+        Location<World> location = targetBlock.getLocation().orElse(null);
 
-        if (clickedBlock.getState().getType() == BlockTypes.AIR) {
+        if (targetBlock.getState().getType() == BlockTypes.AIR) {
             boolean ignoreAir = false;
             if (this.worldEditProvider != null) {
                 // Ignore air so players can use client-side WECUI block target which uses max reach distance
@@ -1445,7 +1443,6 @@ public class PlayerEventHandler {
                 GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CREATE_FAILED_RESULT,
                         ImmutableMap.of("reason", result.getResultType())));
             }
-            return;
         } else {
             playerData.lastShovelLocation = null;
             final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CREATE_SUCCESS,
@@ -1537,7 +1534,6 @@ public class PlayerEventHandler {
                 CommandHelper.showOverlapClaims(player, claims, location.getBlockY());
             }
             event.setCancelled(true);
-            return;
         } else {
             playerData.lastShovelLocation = null;
             playerData.claimSubdividing = null;

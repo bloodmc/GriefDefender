@@ -640,7 +640,7 @@ public class GDPlayerData implements PlayerData {
         final GDPermissionUser subject = this.getSubject();
         for (Claim claim : this.getInternalClaims()) {
             double playerTaxRate = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Double.class), subject, Options.TAX_RATE, claim);
-            totalTax += (claim.getClaimBlocks() / 256) * playerTaxRate;
+            totalTax += (int) (claim.getClaimBlocks() / 256) * playerTaxRate;
         }
 
         return totalTax;

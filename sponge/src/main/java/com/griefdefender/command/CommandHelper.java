@@ -931,7 +931,7 @@ public class CommandHelper {
                     return null;
                 }
             }
-            args = target.substring(argsIndex, target.length());
+            args = target.substring(argsIndex);
             Pattern p = Pattern.compile("\\[([^\\]]+)\\]");
             Matcher m = p.matcher(args);
             if (!m.find()) {
@@ -1098,7 +1098,6 @@ public class CommandHelper {
                         GriefDefenderPlugin.sendMessage(src, message);
                         claim.getData().getEconomyData()
                             .addBankTransaction(new GDBankTransaction(BankTransactionType.WITHDRAW_FAIL, playerData.playerID, Instant.now(), amount));
-                        return;
                     }
                 } else if (command.equalsIgnoreCase("deposit")) {
                     TransactionResult
@@ -1142,7 +1141,6 @@ public class CommandHelper {
                         GriefDefenderPlugin.sendMessage(src, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.BANK_WITHDRAW_NO_FUNDS));
                         claim.getData().getEconomyData()
                             .addBankTransaction(new GDBankTransaction(BankTransactionType.DEPOSIT_FAIL, playerData.playerID, Instant.now(), amount));
-                        return;
                     }
                 }
             }

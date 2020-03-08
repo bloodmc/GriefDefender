@@ -141,10 +141,9 @@ public class GriefDefenderConfig<T extends ConfigBase> {
 
     public void load() throws IOException, ObjectMappingException {
         // load settings from file
-        CommentedConfigurationNode loadedNode = this.loader.load();
 
         // store "what's in the file" separately in memory
-        this.fileData = loadedNode;
+        this.fileData = this.loader.load();
 
         // make a copy of the file data
         this.data = this.fileData.copy();
@@ -211,9 +210,8 @@ public class GriefDefenderConfig<T extends ConfigBase> {
                 final Double nodeVal = node.getValue(Types::asDouble);
                 if (nodeVal != null) {
                     Double parentVal = parentValue.getValue(Types::asDouble);
-                    if (parentVal == null && nodeVal.doubleValue() == 0 || (parentVal != null && nodeVal.doubleValue() == parentVal.doubleValue())) {
+                    if (parentVal == null && nodeVal == 0 || (parentVal != null && nodeVal.doubleValue() == parentVal.doubleValue())) {
                         node.setValue(null);
-                        continue;
                     }
                 }
             }

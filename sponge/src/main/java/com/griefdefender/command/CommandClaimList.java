@@ -166,7 +166,7 @@ public class CommandClaimList extends BaseCommand {
             final Player player = (Player) src;
             final String lastClaimType = this.lastActiveClaimTypeMap.getIfPresent(player.getUniqueId());
             String currentType = type == null ? "OWN" : type.toString();
-            if (lastClaimType != null && !lastClaimType.equals(currentType.toString())) {
+            if (lastClaimType != null && !lastClaimType.equals(currentType)) {
                 PaginationUtil.getInstance().resetActivePage(player.getUniqueId());
             }
         }

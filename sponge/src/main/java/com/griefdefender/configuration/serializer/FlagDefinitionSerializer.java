@@ -77,10 +77,9 @@ public class FlagDefinitionSerializer implements TypeSerializer<FlagDefinition> 
                 String value = split[1];
                 // Handle linked Flag
                 if (key.equalsIgnoreCase("flag")) {
-                    final String flagName = value;
-                    linkedFlag = FlagRegistryModule.getInstance().getById(flagName).orElse(null);
+                    linkedFlag = FlagRegistryModule.getInstance().getById(value).orElse(null);
                     if (linkedFlag == null) {
-                        throw new ObjectMappingException("Input '" + flagName + "' is not a valid GD flag to link to.");
+                        throw new ObjectMappingException("Input '" + value + "' is not a valid GD flag to link to.");
                     }
                 } else { //contexts
                     // validate context key
@@ -115,21 +114,21 @@ public class FlagDefinitionSerializer implements TypeSerializer<FlagDefinition> 
         Set<Context> contexts = new HashSet<>();
         if (contextList != null) {
             for (String context : contextList) {
-                final String parts[] = context.split("=");
+                final String[] parts = context.split("=");
                 if (parts.length <= 1) {
                     throw new ObjectMappingException("Invalid context '" + context + "' for flag definition '" + flagDisplayName + "'. Skipping...");
                 }
                 final String key = parts[0];
                 final String value = parts[1];
+                final boolean invalidContext = !value.equalsIgnoreCase("global") && !value.equalsIgnoreCase("basic") && !value.equalsIgnoreCase("admin")
+                        && !value.equalsIgnoreCase("subdivision") && !value.equalsIgnoreCase("town");
                 if (key.equalsIgnoreCase("default") || key.equalsIgnoreCase("gd_claim_default")) {
-                    if (!value.equalsIgnoreCase("global") && !value.equalsIgnoreCase("basic") && !value.equalsIgnoreCase("admin")
-                            && !value.equalsIgnoreCase("subdivision") && !value.equalsIgnoreCase("town")) {
+                    if (invalidContext) {
                         throw new ObjectMappingException("Invalid context '" + key + "' with value '" + value + "'.");
                     }
                     contexts.add(new Context("gd_claim_default", value));
                 } else if (key.equalsIgnoreCase("override") || key.equalsIgnoreCase("gd_claim_override")) {
-                    if (!value.equalsIgnoreCase("global") && !value.equalsIgnoreCase("basic") && !value.equalsIgnoreCase("admin")
-                            && !value.equalsIgnoreCase("subdivision") && !value.equalsIgnoreCase("town")) {
+                    if (invalidContext) {
                         // try UUID
                         if (value.length() == 36) {
                             try {
@@ -185,19 +184,19 @@ public class FlagDefinitionSerializer implements TypeSerializer<FlagDefinition> 
             int count = 0;
             final Flag flag = flagData.getFlag();
             final Set<Context> dataContexts = flagData.getContexts();
-            String permission = "";
+            StringBuilder permission = new StringBuilder();
             if (count > 0) {
-                permission += ", ";
+                permission.append(", ");
             }
-            permission += "flag=" + flag.getName().toLowerCase();
+            permission.append("flag=").append(flag.getName().toLowerCase());
             count++;
 
             for (Context context : dataContexts) {
                 String key = context.getKey();
-                permission += ", " + key + "=" + context.getValue();
+                permission.append(", ").append(key).append("=").append(context.getValue());
             }
 
-            permissions.add(permission);
+            permissions.add(permission.toString());
         }
         permissionNode.setValue(permissions);
     }

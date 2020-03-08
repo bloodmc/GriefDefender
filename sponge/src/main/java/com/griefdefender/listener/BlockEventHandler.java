@@ -143,7 +143,7 @@ public class BlockEventHandler {
         }
         final boolean pistonExtend = context.containsKey(EventContextKeys.PISTON_EXTEND);
         final boolean isLiquidSource = context.containsKey(EventContextKeys.LIQUID_FLOW);
-        final boolean isFireSource = isLiquidSource ? false : context.containsKey(EventContextKeys.FIRE_SPREAD);
+        final boolean isFireSource = !isLiquidSource && context.containsKey(EventContextKeys.FIRE_SPREAD);
         final boolean isLeafDecay = context.containsKey(EventContextKeys.LEAVES_DECAY);
         if (!GDFlags.LEAF_DECAY && isLeafDecay) {
             return;
@@ -733,7 +733,7 @@ public class BlockEventHandler {
         final User user = CauseContextHelper.getEventUser(event);
         if (source instanceof LocatableBlock) {
             locatable = (LocatableBlock) source;
-            if (user != null && user instanceof Player) {
+            if (user instanceof Player) {
                 final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(locatable.getWorld(), user.getUniqueId());
                 sourceClaim = this.dataStore.getClaimAt(locatable.getLocation(), playerData.lastClaim.get());
             } else {
@@ -747,14 +747,14 @@ public class BlockEventHandler {
             return;
         }
 
-        Player player = user != null && user instanceof Player ? (Player) user : null;
+        Player player = user instanceof Player ? (Player) user : null;
         GDPlayerData playerData = null;
         if (user != null) {
             playerData = this.dataStore.getOrCreatePlayerData(world, user.getUniqueId());
         }
 
         GriefDefenderConfig<?> activeConfig = GriefDefenderPlugin.getActiveConfig(world.getProperties());
-        if (sourceClaim != null && !(source instanceof User) && playerData != null && playerData.eventResultCache != null && playerData.eventResultCache.checkEventResultCache(sourceClaim, Flags.BLOCK_PLACE.getName()) == Tristate.TRUE) {
+        if (!(source instanceof User) && playerData != null && playerData.eventResultCache != null && playerData.eventResultCache.checkEventResultCache(sourceClaim, Flags.BLOCK_PLACE.getName()) == Tristate.TRUE) {
             GDTimings.BLOCK_PLACE_EVENT.stopTimingIfSync();
             return;
         }
@@ -780,7 +780,7 @@ public class BlockEventHandler {
 
             if (GDFlags.BLOCK_PLACE) {
                 // Allow blocks to grow within claims
-                if (user == null && sourceClaim != null && sourceClaim.getUniqueId().equals(targetClaim.getUniqueId())) {
+                if (user == null && sourceClaim.getUniqueId().equals(targetClaim.getUniqueId())) {
                     GDTimings.BLOCK_PLACE_EVENT.stopTimingIfSync();
                     return;
                 }
@@ -808,13 +808,13 @@ public class BlockEventHandler {
 
             if (targetClaim.isWilderness() && activeConfig.getConfig().claim.autoChestClaimBlockRadius > -1) {
                 TileEntity tileEntity = block.getLocation().get().getTileEntity().orElse(null);
-                if (tileEntity == null || !(tileEntity instanceof Chest)) {
+                if (!(tileEntity instanceof Chest)) {
                     GDTimings.BLOCK_PLACE_EVENT.stopTimingIfSync();
                     continue;
                 }
 
-                final int minClaimLevel = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), user, Options.MIN_LEVEL).intValue();
-                final int maxClaimLevel = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), user, Options.MAX_LEVEL).intValue();
+                final int minClaimLevel = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), user, Options.MIN_LEVEL);
+                final int maxClaimLevel = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), user, Options.MAX_LEVEL);
                 if (block.getPosition().getY() < minClaimLevel || block.getPosition().getY() > maxClaimLevel) {
                     final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_CHEST_OUTSIDE_LEVEL,
                             ImmutableMap.of(

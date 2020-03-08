@@ -1913,7 +1913,7 @@ public class GDClaim implements Claim {
         }
 
         final GDClaimManager claimWorldManager = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(this.world.getUniqueId());
-        final GDPlayerData sourcePlayerData = src != null && src instanceof Player ? claimWorldManager.getOrCreatePlayerData(((Player) src).getUniqueId()) : null;
+        final GDPlayerData sourcePlayerData = src instanceof Player ? claimWorldManager.getOrCreatePlayerData(((Player) src).getUniqueId()) : null;
         UUID newOwnerUUID = ownerUniqueId.orElse(this.ownerUniqueId);
         final ClaimResult result = this.validateClaimType(type, newOwnerUUID, sourcePlayerData);
         if (!result.successful()) {
@@ -1952,16 +1952,13 @@ public class GDClaim implements Claim {
         }
         if (type != ClaimTypes.ADMIN) {
             final Set<Claim> newPlayerClaims = claimWorldManager.getInternalPlayerClaims(newOwnerUUID);
-            if (newPlayerClaims != null && !newPlayerClaims.contains(this)) {
+            if (newPlayerClaims != null) {
                 newPlayerClaims.add(this);
             }
         }
 
         if (!this.isAdminClaim() && this.ownerPlayerData != null) {
-            final Player player = Sponge.getServer().getPlayer(this.ownerUniqueId).orElse(null);
-            if (player != null) {
-                this.ownerPlayerData.revertActiveVisual(player);
-            }
+            Sponge.getServer().getPlayer(this.ownerUniqueId).ifPresent(player -> this.ownerPlayerData.revertActiveVisual(player));
         }
 
         // revert visuals for all players watching this claim
@@ -2067,7 +2064,7 @@ public class GDClaim implements Claim {
         if (this == o) {
             return true;
         }
-        if (o == null || !(o instanceof GDClaim)) {
+        if (!(o instanceof GDClaim)) {
             return false;
         }
         GDClaim that = (GDClaim) o;
@@ -2334,9 +2331,7 @@ public class GDClaim implements Claim {
 
         List<UUID> userList = this.getUserTrustList(type);
         for (UUID uuid : uuids) {
-            if (userList.contains(uuid)) {
-                userList.remove(uuid);
-            }
+            userList.remove(uuid);
         }
 
         this.claimData.setRequiresSave(true);
@@ -2423,9 +2418,7 @@ public class GDClaim implements Claim {
 
         List<String> groupList = this.getGroupTrustList(type);
         for (String group : groups) {
-            if (groupList.contains(group)) {
-                groupList.remove(group);
-            }
+            groupList.remove(group);
         }
 
         this.claimData.setRequiresSave(true);

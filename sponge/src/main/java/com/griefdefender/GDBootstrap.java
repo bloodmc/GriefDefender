@@ -56,7 +56,6 @@ import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -101,9 +100,7 @@ public class GDBootstrap {
                 this.getLogger().error("Resource " + bukkitJsonVersion + ".json is corrupted!. Please contact author for assistance.");
                 return;
             }
-            final Iterator<JSONObject> iterator = libraries.iterator();
-            while (iterator.hasNext()) {
-                JSONObject lib = iterator.next();
+            for (JSONObject lib : (Iterable<JSONObject>) libraries) {
                 final String name = (String) lib.get("name");
                 final String sha1 = (String) lib.get("sha1");
                 final String path = (String) lib.get("path");
@@ -161,9 +158,7 @@ public class GDBootstrap {
                 // Some maven repos like nexus require a user agent so we just pass one to satisfy it
                 urlConnection.setRequestProperty("User-Agent", USER_AGENT);
                 ReadableByteChannel rbc = Channels.newChannel(urlConnection.getInputStream());
-                if (!Files.exists(libPath)) {
-                    file.getParentFile().mkdirs();
-                }
+                file.getParentFile().mkdirs();
                 FileOutputStream fos = new FileOutputStream(file);
                 fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
                 fos.close();
@@ -176,7 +171,7 @@ public class GDBootstrap {
             
             final String hash = getLibraryHash(file);
             
-            if (hash == null || !sha1.equals(hash)) {
+            if (!sha1.equals(hash)) {
                 this.getLogger().error("Detected invalid hash '" + hash + "' for file '" + libPath + "'. Expected '" + sha1 + "'. Skipping...");
                 try {
                     Files.delete(libPath);
@@ -196,15 +191,15 @@ public class GDBootstrap {
             final MessageDigest md = MessageDigest.getInstance("SHA-1");
             final byte[] data = Files.readAllBytes(file.toPath());
             final byte[] b = md.digest(data); 
-            StringBuffer buffer = new StringBuffer();
-            for (int i = 0; i < b.length; i++) {
-                if ((0xff & b[i]) < 0x10) {
-                    buffer.append("0" + Integer.toHexString((0xFF & b[i])));
+            StringBuilder strBuilder = new StringBuilder();
+            for (byte value : b) {
+                if ((0xff & value) < 0x10) {
+                    strBuilder.append("0").append(Integer.toHexString((0xFF & value)));
                 } else {
-                    buffer.append(Integer.toHexString(0xFF & b[i]));
+                    strBuilder.append(Integer.toHexString(0xFF & value));
                 }
             }
-            return buffer.toString();
+            return strBuilder.toString();
         } catch (Throwable t) {
             t.printStackTrace();
         }

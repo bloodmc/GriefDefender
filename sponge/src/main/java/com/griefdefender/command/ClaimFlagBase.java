@@ -123,7 +123,7 @@ public abstract class ClaimFlagBase extends BaseCommand {
         final String arguments = String.join(" ", args);
         int index = arguments.indexOf("context[");
         if (index != -1) {
-            contexts = arguments.substring(index, arguments.length());
+            contexts = arguments.substring(index);
         }
         if (args.length > 0) {
             if (!src.getInternalPlayerData().canIgnoreClaim(claim) && !player.hasPermission(GDPermissions.COMMAND_FLAGS_CLAIM_ARG)) {
@@ -183,20 +183,17 @@ public abstract class ClaimFlagBase extends BaseCommand {
                 } else {
                     TextAdapter.sendComponent(player, MessageCache.getInstance().PERMISSION_FLAG_USE);
                 }
-                return;
             } else if (flag != null && value != null) {
                 GDCauseStackManager.getInstance().pushCause(player);
                 PermissionResult result = CommandHelper.addFlagPermission(player, this.subject, claim, flag, target, PermissionUtil.getInstance().getTristateFromString(value.toUpperCase()), contextSet);
-                final String flagTarget = target;
                 if (result.getResultType() == ResultTypes.TARGET_NOT_VALID) {
                     GriefDefenderPlugin.sendMessage(player, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.FLAG_INVALID_TARGET,
-                            ImmutableMap.of("target", flagTarget,
+                            ImmutableMap.of("target", target,
                                     "flag", flag)));
                 } else if (result.getResultType() == ResultTypes.NO_PERMISSION) {
                     GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().PERMISSION_FLAG_USE);
                 }
                 GDCauseStackManager.getInstance().popCause();
-                return;
             }
         } else {
             GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().CLAIM_NOT_FOUND);

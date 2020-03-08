@@ -71,7 +71,7 @@ public class GDPaginationHolder {
 
         ActivePagination pagination = paginations.get(pageId);
         if (pagination == null) {
-            throw new CommandException(TextComponent.of("No pagination registered for id " + id.toString(), TextColor.RED));
+            throw new CommandException(TextComponent.of("No pagination registered for id " + id, TextColor.RED));
         }
         return pagination;
     }

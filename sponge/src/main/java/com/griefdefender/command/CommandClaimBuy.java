@@ -109,6 +109,5 @@ public class CommandClaimBuy extends BaseCommand {
         PaginationList.Builder paginationBuilder = PaginationList.builder()
                 .title(MessageCache.getInstance().COMMAND_CLAIMBUY_TITLE).padding(TextComponent.of(" ").decoration(TextDecoration.STRIKETHROUGH, true)).contents(textList).footer(footer);
         paginationBuilder.sendTo(player);
-        return;
     }
 }

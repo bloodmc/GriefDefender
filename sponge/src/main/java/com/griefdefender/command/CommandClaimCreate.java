@@ -140,7 +140,6 @@ public class CommandClaimCreate extends BaseCommand {
                 GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CREATE_FAILED_RESULT,
                         ImmutableMap.of("reason", result.getResultType())));
             }
-            return;
         } else {
             playerData.lastShovelLocation = null;
             final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CREATE_SUCCESS,
