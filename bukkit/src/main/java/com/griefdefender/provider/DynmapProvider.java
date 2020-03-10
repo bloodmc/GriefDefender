@@ -81,11 +81,6 @@ public class DynmapProvider {
                 activate();
             }
         });
-        if (this.markerapi == null) {
-            this.logger.severe("Error loading Dynmap Provider! Could not locate Marker API.");
-            return;
-        }
-        GriefDefender.getEventManager().register(this);
     }
 
     private Map<String, AreaMarker> areaMarkers = new HashMap<String, AreaMarker>();
@@ -278,6 +273,7 @@ public class DynmapProvider {
     private void activate() {
         this.markerapi = this.dynmap.getMarkerAPI();
         if (this.markerapi == null) {
+            this.logger.severe("Error loading Dynmap Provider! Could not locate Marker API.");
             return;
         }
         if (this.reload) {
@@ -311,6 +307,7 @@ public class DynmapProvider {
         this.set.setHideByDefault(this.cfg.layerHideByDefault);
 
         new GriefDefenderUpdate(40L);
+        GriefDefender.getEventManager().register(this);
         this.logger.info("Dynmap provider is activated");
     }
 
