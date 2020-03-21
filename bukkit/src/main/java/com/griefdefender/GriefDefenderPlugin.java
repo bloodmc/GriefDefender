@@ -464,7 +464,8 @@ public class GriefDefenderPlugin {
             this.essentialsProvider = new EssentialsProvider();
         }
 
-        if (Bukkit.getPluginManager().getPlugin("dynmap") != null) {
+        if (Bukkit.getPluginManager().getPlugin("dynmap") != null
+                && GriefDefenderPlugin.getGlobalConfig().getConfig().dynmap.enabled) {
             this.dynmapProvider = new DynmapProvider();
         }
 

@@ -35,6 +35,9 @@ import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
 @ConfigSerializable
 public class DynmapCategory {
 
+    @Setting("enabled")
+    public boolean enabled = true;
+
     @Setting("owner-styles")
     public Map<String, DynmapOwnerStyleCategory> ownerStyles = new HashMap<>();
 
