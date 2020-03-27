@@ -527,7 +527,8 @@ public class GriefDefenderPlugin {
             return;
         }
 
-        if (Sponge.getPluginManager().getPlugin("dynmap").isPresent()) {
+        if (Sponge.getPluginManager().getPlugin("dynmap").isPresent()
+                && GriefDefenderPlugin.getGlobalConfig().getConfig().dynmap.enabled) {
             this.dynmapProvider = new DynmapProvider();
         }
         if (Sponge.getPluginManager().getPlugin("mcclans").isPresent()) {
