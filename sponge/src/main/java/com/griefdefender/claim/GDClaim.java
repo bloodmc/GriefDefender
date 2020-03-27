@@ -1769,26 +1769,14 @@ public class GDClaim implements Claim {
         }
 
         return entityList;
-    }
-
-    @Override
-    public List<Player> getPlayers() {
-        Collection<Player> worldPlayerList = Sponge.getServer().getWorld(this.world.getUniqueId()).get().getPlayers();
-        List<Player> playerList = new ArrayList<>();
-        for (Player player : worldPlayerList) {
-            if (!(player.isRemoved() && this.contains(VecHelper.toVector3i(player.getLocation())))) {
-                playerList.add(player);
-            }
-        }
-
-        return playerList;
     }*/
+
     @Override
     public List<UUID> getPlayers() {
         Collection<Player> worldPlayerList = Sponge.getServer().getWorld(this.world.getUniqueId()).get().getPlayers();
         List<UUID> playerList = new ArrayList<>();
         for (Player player : worldPlayerList) {
-            if (!(player.isRemoved() && this.contains(player.getLocation().getBlockPosition()))) {
+            if (!player.isRemoved() && this.contains(player.getLocation().getBlockPosition())) {
                 playerList.add(player.getUniqueId());
             }
         }
