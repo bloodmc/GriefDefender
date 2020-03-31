@@ -4,6 +4,7 @@ import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.griefdefender.GriefDefenderPlugin;
+import com.griefdefender.api.GriefDefender;
 import com.griefdefender.api.claim.ClaimTypes;
 import com.griefdefender.api.permission.flag.Flag;
 import com.griefdefender.api.permission.flag.Flags;
@@ -168,7 +169,7 @@ public class NMSUtil {
 
     public User createUserFromCache(String username) {
         final UUID uuid = SpongeUsernameCache.getLastKnownUUID(username);
-        if (username != null) {
+        if (uuid != null) {
             return Sponge.getGame().getServiceManager().provide(UserStorageService.class).get().get(GameProfile.of(uuid, username)).orElse(null);
         }
         return null;

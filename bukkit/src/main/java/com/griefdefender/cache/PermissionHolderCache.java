@@ -79,7 +79,7 @@ public class PermissionHolderCache {
     }
 
     public GDPermissionUser getOrCreateUser(String username) {
-        if (username == null) {
+        if (username == null || username.length() > 16) {
             return null;
         }
 
