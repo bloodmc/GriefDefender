@@ -1961,6 +1961,11 @@ public class GDClaim implements Claim {
             isAdmin = true;
         }
 
+        GDPermissionUser user = null;
+        if (newOwnerUUID != null) {
+            user = PermissionHolderCache.getInstance().getOrCreateUser(newOwnerUUID);
+        }
+
         if (type == ClaimTypes.ADMIN) {
             if (!isAdmin) {
                 final Component message = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.RESULT_TYPE_CHANGE_NOT_ADMIN,
@@ -1995,20 +2000,27 @@ public class GDClaim implements Claim {
             if (this.parent == null) {
                 final Component message = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.RESULT_TYPE_CREATE_DENY,
                         ImmutableMap.of(
-                                "type", TextComponent.of("SUBDIVISION", TextColor.AQUA),
+                                "type", this.getFriendlyNameType(true),
                                 "target_type", TextComponent.of("WILDERNESS", TextColor.GREEN)));
                 return new GDClaimResult(ClaimResultType.WRONG_CLAIM_TYPE, message);
             }
             if (this.isAdminClaim() && newOwnerUUID == null) {
                 return new GDClaimResult(ClaimResultType.REQUIRES_OWNER, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.RESULT_TYPE_REQUIRES_OWNER,
                         ImmutableMap.of(
-                                "type", TextComponent.of("ADMIN", TextColor.RED),
+                                "type", this.getFriendlyNameType(true),
                                 "target_type", TextComponent.of("SUBDIVISION", TextColor.AQUA))));
             }
         } else if (type == ClaimTypes.TOWN) {
             if (this.parent != null && this.parent.isTown()) {
                 final Component message = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.RESULT_TYPE_NO_CHILDREN,
                         ImmutableMap.of("type", TextComponent.of("TOWN").color(TextColor.GREEN)));
+                return new GDClaimResult(ClaimResultType.WRONG_CLAIM_TYPE, message);
+            }
+            if (!isAdmin && user != null && !PermissionUtil.getInstance().holderHasPermission(user, GDPermissions.CLAIM_CREATE_TOWN)) {
+                final Component message = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.RESULT_TYPE_CREATE_DENY,
+                        ImmutableMap.of(
+                                "type", this.getFriendlyNameType(true),
+                                "target_type", TextComponent.of("TOWN", TextColor.GREEN)));
                 return new GDClaimResult(ClaimResultType.WRONG_CLAIM_TYPE, message);
             }
         } else if (type == ClaimTypes.WILDERNESS) {

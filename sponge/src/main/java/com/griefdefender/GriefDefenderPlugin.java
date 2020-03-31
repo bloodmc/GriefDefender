@@ -574,7 +574,7 @@ public class GriefDefenderPlugin {
         int cleanupTaskInterval = GriefDefenderPlugin.getGlobalConfig().getConfig().claim.expirationCleanupInterval;
         if (cleanupTaskInterval > 0) {
             ClaimCleanupTask cleanupTask = new ClaimCleanupTask();
-            Sponge.getScheduler().createTaskBuilder().interval(10, TimeUnit.SECONDS).execute(cleanupTask)
+            Sponge.getScheduler().createTaskBuilder().interval(cleanupTaskInterval, TimeUnit.SECONDS).execute(cleanupTask)
                     .submit(GDBootstrap.getInstance());
         }
     }
