@@ -119,7 +119,7 @@ public class GDFlagDefinitions {
 
         // ADMIN
         contexts = new HashSet<>();
-        contexts.add(FlagContexts.SOURCE_ENDERMAN);
+        contexts.add(FlagContexts.SOURCE_PLAYER);
         ENDERPEARL = new GDFlagDefinition(Flags.INTERACT_ITEM_SECONDARY, contexts, "enderpearl", MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_ENDERPEARL);
         ENDERPEARL.getContexts().add(ClaimContexts.GLOBAL_DEFAULT_CONTEXT);
 
@@ -370,7 +370,7 @@ public class GDFlagDefinitions {
 
         contexts = new HashSet<>();
         contexts.add(FlagContexts.TARGET_TYPE_VEHICLE);
-        VEHICLE_PLACE = new GDFlagDefinition(Flags.BLOCK_PLACE, contexts, "vehicle-place", MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_VEHICLE_PLACE);
+        VEHICLE_PLACE = new GDFlagDefinition(Flags.INTERACT_ITEM_SECONDARY, contexts, "vehicle-place", MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_VEHICLE_PLACE);
 
         contexts = new HashSet<>();
         contexts.add(FlagContexts.TARGET_VINE);
