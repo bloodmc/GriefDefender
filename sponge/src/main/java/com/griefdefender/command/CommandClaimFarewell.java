@@ -49,7 +49,7 @@ public class CommandClaimFarewell extends BaseCommand {
 
     @CommandAlias("claimfarewell")
     @Description("Sets the farewell message of your claim.")
-    @Syntax("<message>")
+    @Syntax("<message>|clear")
     @Subcommand("claim farewell")
     public void execute(Player player, String message) {
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());

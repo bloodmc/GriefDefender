@@ -52,7 +52,7 @@ import org.bukkit.entity.Player;
 public class CommandClaimName extends BaseCommand {
 
     @CommandAlias("claimname")
-    @Syntax("<name>")
+    @Syntax("<name>|clear")
     @Description("Sets the name of your claim.")
     @Subcommand("claim name")
     public void execute(Player player, String name) {
@@ -74,8 +74,8 @@ public class CommandClaimName extends BaseCommand {
             }
         }
 
-        final Component text = LegacyComponentSerializer.legacy().deserialize(name, '&');
-        if (text == TextComponent.empty()) {
+        final TextComponent text = LegacyComponentSerializer.legacy().deserialize(name, '&');
+        if (text == TextComponent.empty() || text.content().equals("clear")) {
             claim.getInternalClaimData().setName(null);
         } else {
             claim.getInternalClaimData().setName(text);
