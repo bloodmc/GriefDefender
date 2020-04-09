@@ -500,7 +500,7 @@ public class EntityEventHandler {
         final GDPermissionUser targetUser = targetEntity instanceof Player ? PermissionHolderCache.getInstance().getOrCreateUser((Player) targetEntity) : null;
         if (source instanceof Player && targetUser != null) {
             final GDPermissionUser sourceUser = PermissionHolderCache.getInstance().getOrCreateUser(((Player) source).getUniqueId());
-            if (sourceUser.getOnlinePlayer() != null) {
+            if (sourceUser.getOnlinePlayer() != null && targetUser.getOnlinePlayer() != null) {
                 return this.getPvpProtectResult(event, claim, sourceUser, targetUser);
             }
         }

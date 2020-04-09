@@ -399,7 +399,7 @@ public class EntityEventHandler implements Listener {
         GDPermissionUser user = null;
         if (source instanceof Player && targetUser != null) {
             user = PermissionHolderCache.getInstance().getOrCreateUser(((Player) source).getUniqueId());
-            if (user.getOnlinePlayer() != null) {
+            if (user.getOnlinePlayer() != null && targetUser.getOnlinePlayer() != null) {
                 return this.getPvpProtectResult(event, claim, user, targetUser);
             }
         }
@@ -422,7 +422,7 @@ public class EntityEventHandler implements Listener {
         }
         if (owner != null && targetUser != null && !owner.equals(targetUser.getUniqueId())) {
             final GDPermissionUser sourceUser = PermissionHolderCache.getInstance().getOrCreateUser(owner);
-            if (sourceUser.getOnlinePlayer() != null) {
+            if (sourceUser.getOnlinePlayer() != null && targetUser.getOnlinePlayer() != null) {
                 return this.getPvpProtectResult(event, claim, sourceUser, targetUser);
             }
         }
