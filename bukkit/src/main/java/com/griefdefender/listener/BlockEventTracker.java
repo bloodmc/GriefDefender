@@ -33,6 +33,7 @@ import com.griefdefender.internal.tracking.chunk.GDChunk;
 import com.griefdefender.internal.util.BlockUtil;
 import com.griefdefender.internal.util.NMSUtil;
 import com.griefdefender.internal.util.VecHelper;
+import com.griefdefender.permission.GDPermissionManager;
 import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.util.CauseContextHelper;
 import com.griefdefender.util.Direction;
@@ -104,30 +105,38 @@ public class BlockEventTracker implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBlockPhysicsMonitor(BlockPhysicsEvent event) {
-        if (!event.isCancelled()) {
-            final Vector3i testPos = VecHelper.toVector3i(event.getBlock().getLocation());
-            final Block sourceBlock = NMSUtil.getInstance().getSourceBlock(event);
-            final Location sourceLocation = sourceBlock != null ? sourceBlock.getLocation() : null;
-            if (sourceLocation != null && sourceLocation.equals(event.getBlock().getLocation())) {
+        final String targetBlockName = GDPermissionManager.getInstance().getPermissionIdentifier(event.getBlock());
+        if (targetBlockName.equals("minecraft:observer")) {
+            return;
+        }
+
+        final Block sourceBlock = NMSUtil.getInstance().getSourceBlock(event);
+        final Location sourceLocation = sourceBlock != null ? sourceBlock.getLocation() : null;
+        if (sourceLocation != null && sourceLocation.equals(event.getBlock().getLocation())) {
+            return;
+        }
+        if (sourceBlock != null) {
+            final String sourceBlockName = GDPermissionManager.getInstance().getPermissionIdentifier(sourceBlock);
+            if (sourceBlockName.equals("minecraft:observer")) {
                 return;
             }
+        }
 
-            final GDClaimManager claimWorldManager = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(event.getBlock().getWorld().getUID());
-            final GDChunk gpChunk = claimWorldManager.getChunk(event.getBlock().getChunk());
-            final GDPermissionUser user = CauseContextHelper.getEventUser(sourceLocation);
-            final UUID uuid = user != null ? user.getUniqueId() : null;
+        final GDClaimManager claimWorldManager = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(event.getBlock().getWorld().getUID());
+        final GDChunk gpChunk = claimWorldManager.getChunk(event.getBlock().getChunk());
+        final GDPermissionUser user = CauseContextHelper.getEventUser(sourceLocation);
+        final UUID uuid = user != null ? user.getUniqueId() : null;
 
-            final Vector3i targetPos = VecHelper.toVector3i(event.getBlock().getLocation());
-            //final Vector3i sourcePos = VecHelper.toVector3i(event.getSourceBlock().getLocation());
-            //final Location targetLocation = event.getBlock().getLocation();
-            if (uuid != null) {
-                gpChunk.addTrackedBlockPosition(targetPos, uuid, PlayerTracker.Type.NOTIFIER);
-                // Bukkit doesn't send surrounding events for performance reasons so we must handle it manually
-                /*for (Direction direction : NOTIFY_DIRECTIONS) {
-                    final Vector3i directionPos = targetPos.add(direction.asBlockOffset());
-                    gpChunk.addTrackedBlockPosition(directionPos, uuid, PlayerTracker.Type.NOTIFIER);
-                }*/
-            }
+        final Vector3i targetPos = VecHelper.toVector3i(event.getBlock().getLocation());
+        //final Vector3i sourcePos = VecHelper.toVector3i(event.getSourceBlock().getLocation());
+        //final Location targetLocation = event.getBlock().getLocation();
+        if (uuid != null) {
+            gpChunk.addTrackedBlockPosition(targetPos, uuid, PlayerTracker.Type.NOTIFIER);
+            // Bukkit doesn't send surrounding events for performance reasons so we must handle it manually
+            /*for (Direction direction : NOTIFY_DIRECTIONS) {
+                final Vector3i directionPos = targetPos.add(direction.asBlockOffset());
+                gpChunk.addTrackedBlockPosition(directionPos, uuid, PlayerTracker.Type.NOTIFIER);
+            }*/
         }
     }
 
