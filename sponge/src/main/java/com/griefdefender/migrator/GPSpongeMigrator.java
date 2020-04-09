@@ -270,6 +270,8 @@ public class GPSpongeMigrator {
                             .replace("claim-expiration", "expiration")
                             .replace("claim-create-mode", "create-mode")
                             .replace("create-claim-limit", "create-limit")
+                            .replace("initial-claim-blocks", "initial-blocks")
+                            .replace("max-accrued-claim-blocks", "max-accrued-blocks")
                             .replace("min-claim-level", "min-level")
                             .replace("max-claim-level", "max-level")
                             .replace("min-claim-size", "min-size")
