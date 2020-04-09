@@ -103,6 +103,8 @@ public class GDDebugData {
     }
 
     public void addRecord(String flag, String trust, String source, String target, String location, String user, String permission, Tristate result) {
+        // markdown uses '__' for strong formatting, so underscores must be escaped
+        user = user.replace("_", "\\_");
         if (this.records.size() < MAX_LINES) {
             this.records.add("| " + flag + " | " + trust + " | " + source + " | " + target + " | " + location + " | " + user + " | " + permission + " | " + result + " | ");
         } else {
