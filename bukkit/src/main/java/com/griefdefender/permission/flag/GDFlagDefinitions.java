@@ -271,7 +271,7 @@ public class GDFlagDefinitions {
 
         contexts = new HashSet<>();
         contexts.add(FlagContexts.SOURCE_ENDERMAN);
-        ENDERMAN_GRIEF = new GDFlagDefinition(Flags.ENTITY_DAMAGE, contexts, "enderman-grief", MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_ENDERMAN_GRIEF);
+        ENDERMAN_GRIEF = new GDFlagDefinition(Flags.BLOCK_BREAK, contexts, "enderman-grief", MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_ENDERMAN_GRIEF);
 
         contexts = new HashSet<>();
         contexts.add(FlagContexts.SOURCE_FIRE);
