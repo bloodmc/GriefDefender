@@ -67,7 +67,7 @@ public class FlagContexts {
     public static final Context TARGET_PLAYER = new Context(ContextKeys.TARGET, "minecraft:player");
     public static final Context TARGET_ICE_FORM = new Context(ContextKeys.TARGET, "minecraft:ice");
     public static final Context TARGET_ICE_MELT = new Context(ContextKeys.TARGET, "minecraft:water");
-    public static final Context TARGET_SNOW_LAYER = new Context(ContextKeys.TARGET, "minecraft:snow_layer");
+    public static final Context TARGET_SNOW = new Context(ContextKeys.TARGET, "minecraft:snow");
     public static final Context TARGET_TURTLE_EGG = new Context(ContextKeys.TARGET, "minecraft:turtle_egg");
     public static final Context TARGET_VINE = new Context(ContextKeys.TARGET, "minecraft:vine");
     public static final Context TARGET_XP_ORB = new Context(ContextKeys.TARGET, "minecraft:xp_orb");

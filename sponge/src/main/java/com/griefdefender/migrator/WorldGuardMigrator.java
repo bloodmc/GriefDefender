@@ -100,7 +100,7 @@ public class WorldGuardMigrator {
     static final Context TARGET_PLAYER = new Context("target", "player");
     static final Context TARGET_ICE_FORM = new Context("target", "ice");
     static final Context TARGET_ICE_MELT = new Context("target", "water");
-    static final Context TARGET_SNOW_LAYER = new Context("target", "snow_layer");
+    static final Context TARGET_SNOW = new Context("target", "snow");
     static final Context TARGET_TURTLE_EGG = new Context("target", "turtle_egg");
     static final Context TARGET_VINE = new Context("target", "vine");
     static final Context TARGET_XP_ORB = new Context("target", "xp_orb");
@@ -562,7 +562,7 @@ public class WorldGuardMigrator {
                             }
                             break;
                         case "snow-fall": 
-                            contexts.add(TARGET_SNOW_LAYER);
+                            contexts.add(TARGET_SNOW);
                             if (valueNode.getString().equals("deny")) {
                                 PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_PLACE, Tristate.FALSE, contexts);
                             } else {
@@ -570,7 +570,7 @@ public class WorldGuardMigrator {
                             }
                             break;
                         case "snow-melt": 
-                            contexts.add(TARGET_SNOW_LAYER);
+                            contexts.add(TARGET_SNOW);
                             if (valueNode.getString().equals("deny")) {
                                 PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_BREAK, Tristate.FALSE, contexts);
                             } else {

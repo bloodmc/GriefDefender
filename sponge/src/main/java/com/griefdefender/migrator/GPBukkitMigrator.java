@@ -135,7 +135,7 @@ public class GPBukkitMigrator {
     private static final Context SOURCE_PLAYER = new Context(ContextKeys.SOURCE, "player");
     private static final Context TARGET_ICE_FORM = new Context(ContextKeys.TARGET, "ice");
     private static final Context TARGET_PLAYER = new Context(ContextKeys.TARGET, "player");
-    private static final Context TARGET_SNOW_LAYER = new Context("target", "snow_layer");
+    private static final Context TARGET_SNOW = new Context("target", "snow");
 
     public static void migrate(World world, Path gpClassicDataPath) throws FileNotFoundException, ClassNotFoundException {
         count = 0;
@@ -227,7 +227,7 @@ public class GPBukkitMigrator {
                         // TODO
                         break;
                     case FLAG_ENTER_MESSAGE :
-                        claimStorage.getConfig().setGreeting(LegacyComponentSerializer.legacy().deserialize(param, '§'));
+                        claimStorage.getConfig().setGreeting(LegacyComponentSerializer.legacy().deserialize(param, 'ï¿½'));
                         claimStorage.getConfig().setRequiresSave(true);
                         claimStorage.save();
                         break;
@@ -308,7 +308,7 @@ public class GPBukkitMigrator {
                         PermissionUtil.getInstance().setOptionValue(DEFAULT_HOLDER, Options.PLAYER_COMMAND_EXIT.getPermission(), param, contexts);
                         break;
                     case FLAG_EXIT_MESSAGE :
-                        claimStorage.getConfig().setFarewell(LegacyComponentSerializer.legacy().deserialize(param, '§'));
+                        claimStorage.getConfig().setFarewell(LegacyComponentSerializer.legacy().deserialize(param, 'ï¿½'));
                         claimStorage.getConfig().setRequiresSave(true);
                         claimStorage.save();
                         break;
@@ -400,7 +400,7 @@ public class GPBukkitMigrator {
                         PermissionUtil.getInstance().setPermissionValue(DEFAULT_HOLDER, Flags.ENTITY_DAMAGE.getPermission(), Tristate.FALSE, contexts);
                         break;
                     case FLAG_NO_SNOW_FORM :
-                        contexts.add(TARGET_SNOW_LAYER);
+                        contexts.add(TARGET_SNOW);
                         PermissionUtil.getInstance().setPermissionValue(DEFAULT_HOLDER, Flags.BLOCK_MODIFY.getPermission(), Tristate.FALSE, contexts);
                         break;
                     case FLAG_NO_VEHICLE :

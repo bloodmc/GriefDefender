@@ -510,7 +510,7 @@ public class ClaimVisual {
     }
 
     private boolean isTransparent(BlockState state) {
-        if (state.getType() == BlockTypes.SNOW_LAYER) {
+        if (state.getType() == BlockTypes.SNOW) {
             return false;
         }
 

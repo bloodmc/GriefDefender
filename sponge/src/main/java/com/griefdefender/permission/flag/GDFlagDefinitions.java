@@ -332,11 +332,11 @@ public class GDFlagDefinitions {
         SLEEP = new GDFlagDefinition(Flags.INTERACT_BLOCK_SECONDARY, contexts, "sleep", MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_SLEEP);
 
         contexts = new HashSet<>();
-        contexts.add(FlagContexts.TARGET_SNOW_LAYER);
+        contexts.add(FlagContexts.TARGET_SNOW);
         SNOW_FALL = new GDFlagDefinition(Flags.BLOCK_PLACE, contexts, "snow-fall", MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_SNOW_FALL);
 
         contexts = new HashSet<>();
-        contexts.add(FlagContexts.TARGET_SNOW_LAYER);
+        contexts.add(FlagContexts.TARGET_SNOW);
         SNOW_MELT = new GDFlagDefinition(Flags.BLOCK_BREAK, contexts, "snow-melt", MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_SNOW_MELT);
 
         contexts = new HashSet<>();

@@ -522,7 +522,7 @@ public class WorldGuardMigrator {
                             }
                             break;
                         case "snow-fall": 
-                            contexts.add(FlagContexts.TARGET_SNOW_LAYER);
+                            contexts.add(FlagContexts.TARGET_SNOW);
                             if (valueNode.getString().equals("deny")) {
                                 PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_PLACE, Tristate.FALSE, contexts);
                             } else {
@@ -530,7 +530,7 @@ public class WorldGuardMigrator {
                             }
                             break;
                         case "snow-melt": 
-                            contexts.add(FlagContexts.TARGET_SNOW_LAYER);
+                            contexts.add(FlagContexts.TARGET_SNOW);
                             if (valueNode.getString().equals("deny")) {
                                 PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_BREAK, Tristate.FALSE, contexts);
                             } else {
