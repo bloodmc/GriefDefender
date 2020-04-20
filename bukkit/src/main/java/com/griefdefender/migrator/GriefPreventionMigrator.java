@@ -396,7 +396,7 @@ public class GriefPreventionMigrator {
                         PermissionUtil.getInstance().setPermissionValue(DEFAULT_HOLDER, Flags.ENTITY_DAMAGE.getPermission(), Tristate.FALSE, contexts);
                         break;
                     case FLAG_NO_SNOW_FORM :
-                        contexts.add(FlagContexts.TARGET_SNOW_LAYER);
+                        contexts.add(FlagContexts.TARGET_SNOW);
                         PermissionUtil.getInstance().setPermissionValue(DEFAULT_HOLDER, Flags.BLOCK_MODIFY.getPermission(), Tristate.FALSE, contexts);
                         break;
                     case FLAG_NO_VEHICLE :
