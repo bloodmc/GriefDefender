@@ -290,6 +290,15 @@ public class CommandTrustList extends BaseCommand {
                         .append(ChatCaptureUtil.getInstance().createRecordChatComponent(src, claim, playerData, "trustlist", returnCommand))
                         .build();
             }
+        } else {
+            footer = TextComponent.empty();
+            if (messages != null && !messages.isEmpty()) {
+                for (Component message : messages) {
+                    footer = footer.append(message);
+                    fillSize -= 1;
+                }
+                messages.clear();
+            }
         }
 
         for (int i = 0; i < fillSize; i++) {
