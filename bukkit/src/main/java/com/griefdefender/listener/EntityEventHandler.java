@@ -113,7 +113,7 @@ public class EntityEventHandler implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onEntityBlockFormEvent(EntityBlockFormEvent event) {
-        CommonBlockEventHandler.getInstance().handleBlockPlace(event, event.getEntity(), event.getBlock());
+        CommonBlockEventHandler.getInstance().handleBlockPlace(event, event.getEntity(), event.getNewState());
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
@@ -138,9 +138,6 @@ public class EntityEventHandler implements Listener {
 
         final Location location = block.getLocation();
         final GDClaim targetClaim = this.baseStorage.getClaimAt(location);
-        if (targetClaim.isWilderness()) {
-            return;
-        }
 
         final Entity source = event.getEntity();
         GDPermissionUser user = null;
@@ -353,6 +350,12 @@ public class EntityEventHandler implements Listener {
                         event.setCancelled(true);
                         return;
                     }
+                } else {
+                    // always allow owner to damage their untamed animals
+                    final GDClaim claim = this.baseStorage.getClaimAt(event.getEntity().getLocation());
+                    if (player.getUniqueId().equals(claim.getOwnerUniqueId())) {
+                        return;
+                    }
                 }
             }
         }
@@ -366,6 +369,10 @@ public class EntityEventHandler implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onEntityDamage(EntityDamageEvent event) {
+        if (event instanceof EntityDamageByEntityEvent) {
+            // Ignore as this is handled above
+            return;
+        }
         GDTimings.ENTITY_DAMAGE_EVENT.startTiming();
         if (protectEntity(event, event.getCause(), event.getEntity())) {
             event.setCancelled(true);

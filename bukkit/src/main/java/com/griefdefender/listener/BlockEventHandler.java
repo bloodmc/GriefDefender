@@ -104,24 +104,24 @@ public class BlockEventHandler implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onBlockFadeEvent(BlockFadeEvent event) {
-        CommonBlockEventHandler.getInstance().handleBlockModify(event, event.getBlock(), event.getNewState().getBlock());
+        CommonBlockEventHandler.getInstance().handleBlockModify(event, event.getBlock(), event.getNewState());
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onBlockForm(BlockFormEvent event) {
-        CommonBlockEventHandler.getInstance().handleBlockSpread(event, event.getBlock(), event.getNewState().getBlock());
+        CommonBlockEventHandler.getInstance().handleBlockPlace(event, event.getBlock(), event.getNewState());
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onBlockSpreadEvent(BlockSpreadEvent event) {
-        CommonBlockEventHandler.getInstance().handleBlockSpread(event, event.getSource(), event.getNewState().getBlock());
+        CommonBlockEventHandler.getInstance().handleBlockSpread(event, event.getSource(), event.getNewState());
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onBlockBurn(BlockBurnEvent event) {
         final Block fromBlock = NMSUtil.getInstance().getIgnitingBlock(event);
         final Block toBlock = event.getBlock();
-        CommonBlockEventHandler.getInstance().handleBlockModify(event, fromBlock, toBlock);
+        CommonBlockEventHandler.getInstance().handleBlockModify(event, fromBlock, toBlock.getState());
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
@@ -316,7 +316,7 @@ public class BlockEventHandler implements Listener {
             GDCauseStackManager.getInstance().pushCause(event.getPlayer());
         }
         final Object source = event.getIgnitingBlock() != null ? event.getIgnitingBlock() : event.getIgnitingEntity();
-        CommonBlockEventHandler.getInstance().handleBlockModify(event, source, event.getBlock());
+        CommonBlockEventHandler.getInstance().handleBlockModify(event, source, event.getBlock().getState());
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
