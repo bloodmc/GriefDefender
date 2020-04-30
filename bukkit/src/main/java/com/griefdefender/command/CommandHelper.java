@@ -992,6 +992,12 @@ public class CommandHelper {
             }
 
             final Player player = (Player) src;
+            // check if world is loaded
+            if (Bukkit.getWorld(location.getWorld().getUID()) == null) {
+                TextAdapter.sendComponent(player, MessageCache.getInstance().TELEPORT_NO_SAFE_LOCATION);
+                return;
+            }
+
             final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getPlayerData(player.getWorld(), player.getUniqueId());
             final int teleportDelay = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), player, Options.PLAYER_TELEPORT_DELAY, claim);
             if (isClaimSpawn) {

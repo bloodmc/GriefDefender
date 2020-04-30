@@ -225,6 +225,10 @@ public class PlayerUtil {
     }
 
     public boolean isSafeLocation(Location location) {
+        // check if world is loaded
+        if (Bukkit.getWorld(location.getWorld().getUID()) == null) {
+            return false;
+        }
         final Block currentBlock = location.getBlock();
         final Block aboveBlock = currentBlock.getRelative(BlockFace.UP);
         final Block belowBlock =currentBlock.getRelative(BlockFace.DOWN);
