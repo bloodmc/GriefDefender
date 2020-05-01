@@ -913,7 +913,7 @@ public class GDClaim implements Claim {
         // Check limits
         final Player currentOwner = ownerData.getSubject() instanceof Player ? (Player) ownerData.getSubject() : null;
         final int createClaimLimit = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), newOwnerData.getSubject(), Options.CREATE_LIMIT, this);
-        if (createClaimLimit > -1 && (newOwnerData.getInternalClaims().size() + 1) > createClaimLimit) {
+        if (createClaimLimit > -1 && (newOwnerData.getClaimTypeCount(this.getType()) + 1) > createClaimLimit) {
             if (currentOwner != null) {
                 GriefDefenderPlugin.sendMessage(currentOwner, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.CLAIM_TRANSFER_EXCEEDS_LIMIT));
             }

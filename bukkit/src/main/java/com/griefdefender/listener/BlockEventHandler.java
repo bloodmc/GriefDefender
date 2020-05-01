@@ -109,7 +109,7 @@ public class BlockEventHandler implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onBlockForm(BlockFormEvent event) {
-        CommonBlockEventHandler.getInstance().handleBlockPlace(event, event.getBlock(), event.getNewState());
+        CommonBlockEventHandler.getInstance().handleBlockModify(event, event.getBlock(), event.getNewState());
     }
 
     @EventHandler(priority = EventPriority.LOWEST)

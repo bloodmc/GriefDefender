@@ -93,6 +93,11 @@ public class CommonBlockEventHandler {
         Block fromBlock = null;
         if (source instanceof Block) {
             fromBlock = (Block) source;
+            // Air -> block should always be recorded as place
+            if (fromBlock.isEmpty()) {
+                handleBlockPlace(event, source, newState);
+                return;
+            }
         } 
         if (!(event instanceof BlockBurnEvent) && fromBlock != null && newState != null && !fromBlock.getLocation().equals(newState.getLocation())) {
             handleBlockSpread(event, fromBlock, newState);
@@ -136,12 +141,10 @@ public class CommonBlockEventHandler {
             return;
         }
 
+        // TODO - remove this when flag definition defaults are finished
         if (player == null) {
-            // BlockFormEvent's are triggered based on world conditions and should not be caused by a player
-            if (!(source instanceof Entity) && !(event instanceof BlockFormEvent)) {
-                final GDPermissionUser user = CauseContextHelper.getEventUser(location);
-                player = user != null ? user.getOnlinePlayer() : null;
-            }
+            final GDPermissionUser user = CauseContextHelper.getEventUser(location);
+            player = user != null ? user.getOnlinePlayer() : null;
         }
 
         GDClaim targetClaim = this.storage.getClaimAt(location);
