@@ -744,6 +744,7 @@ public class GDPlayerData implements PlayerData {
         this.claimResizing = null;
         this.claimSubdividing = null;
         this.visualClaimId = null;
+        this.commandInputTimestamp = null;
         if (this.visualRevertTask != null) {
             this.visualRevertTask.cancel();
             this.visualRevertTask = null;

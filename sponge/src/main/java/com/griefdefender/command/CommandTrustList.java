@@ -289,6 +289,15 @@ public class CommandTrustList extends BaseCommand {
                         .append(ChatCaptureUtil.getInstance().createRecordChatComponent(src, claim, playerData, "trustlist", returnCommand))
                         .build();
             }
+        } else {
+            footer = TextComponent.empty();
+            if (messages != null && !messages.isEmpty()) {
+                for (Component message : messages) {
+                    footer = footer.append(message);
+                    fillSize -= 1;
+                }
+                messages.clear();
+            }
         }
 
         for (int i = 0; i < fillSize; i++) {
@@ -298,8 +307,6 @@ public class CommandTrustList extends BaseCommand {
         PaginationList.Builder paginationBuilder = PaginationList.builder()
                 .title(claimTrustHead).padding(TextComponent.of(" ").decoration(TextDecoration.STRIKETHROUGH, true)).contents(trustList).footer(footer);
         paginationBuilder.sendTo(src);
-        paginationBuilder.sendTo(src);
-
     }
 
     private static Consumer<CommandSource> createTrustConsumer(Player src, GDClaim claim, GDPlayerData playerData, TrustType type, Component returnCommand) {
