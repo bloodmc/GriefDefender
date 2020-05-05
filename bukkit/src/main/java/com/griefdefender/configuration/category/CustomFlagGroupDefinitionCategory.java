@@ -50,7 +50,6 @@ public class CustomFlagGroupDefinitionCategory extends ConfigCategory {
     }
 
     public void initDefaults() {
-        this.groups.clear();
         CustomFlagGroupCategory userGroup = this.groups.get("user");
         CustomFlagGroupCategory adminGroup = this.groups.get("admin");
         if (userGroup == null) {
