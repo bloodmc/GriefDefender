@@ -39,6 +39,7 @@ import com.griefdefender.api.Tristate;
 import com.griefdefender.api.claim.TrustTypes;
 import com.griefdefender.api.permission.flag.Flags;
 import com.griefdefender.claim.GDClaim;
+import com.griefdefender.event.GDCauseStackManager;
 import com.griefdefender.permission.GDPermissionManager;
 import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.permission.flag.GDFlags;
@@ -108,14 +109,18 @@ public class CommonBlockEventHandler {
             return;
         }
 
+        if (newState.getBlock().isEmpty()) {
+            // Block -> Air should always be recorded as break
+            handleBlockBreak(event, source, newState);
+            return;
+        }
+
         final World world = newState.getWorld();
         if (!GriefDefenderPlugin.getInstance().claimsEnabledForWorld(world.getUID())) {
             return;
         }
 
-        final Location sourceLocation = fromBlock != null ? fromBlock.getLocation() : null;
-        final GDPermissionUser user = CauseContextHelper.getEventUser(sourceLocation);
-
+        final GDPermissionUser user = GDCauseStackManager.getInstance().getCurrentCause().first(GDPermissionUser.class).orElse(null);
         Location location = newState.getLocation();
         GDClaim targetClaim = this.storage.getClaimAt(location);
 
@@ -155,29 +160,29 @@ public class CommonBlockEventHandler {
         }
     }
 
-    public void handleBlockBreak(Event event, Object source, Block block) {
+    public void handleBlockBreak(Event event, Object source, BlockState blockState) {
         if (!GDFlags.BLOCK_BREAK) {
             return;
         }
         // Ignore air blocks
-        if (block.isEmpty()) {
+        if (blockState.getBlock().isEmpty()) {
             return;
         }
 
         Player player = source instanceof Player ? (Player) source : null;
-        final Location location = block.getLocation();
+        final Location location = blockState.getLocation();
         if (location == null) {
             return;
         }
 
-        final World world = block.getWorld();
+        final World world = blockState.getWorld();
         if (!GriefDefenderPlugin.getInstance().claimsEnabledForWorld(world.getUID())) {
             return;
         }
 
         GDClaim targetClaim = this.storage.getClaimAt(location);
 
-        final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, Flags.BLOCK_BREAK, source, block, player, TrustTypes.BUILDER, true);
+        final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, Flags.BLOCK_BREAK, source, blockState, player, TrustTypes.BUILDER, true);
         if (result == Tristate.FALSE) {
             ((Cancellable) event).setCancelled(true);
         }

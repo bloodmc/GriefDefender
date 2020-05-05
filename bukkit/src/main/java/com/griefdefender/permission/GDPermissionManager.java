@@ -94,11 +94,11 @@ import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.player.PlayerBucketEvent;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -126,11 +126,6 @@ public class GDPermissionManager implements PermissionManager {
     private Set<Context> eventContexts = new HashSet<>();
     private Component eventMessage;
     private static final Pattern PATTERN_META = Pattern.compile("\\.[\\d+]*$");
-    private static final List<Context> CONTEXT_LIST = Arrays.asList(
-            ClaimContexts.ADMIN_DEFAULT_CONTEXT, ClaimContexts.ADMIN_OVERRIDE_CONTEXT,
-            ClaimContexts.BASIC_DEFAULT_CONTEXT, ClaimContexts.BASIC_OVERRIDE_CONTEXT,
-            ClaimContexts.TOWN_DEFAULT_CONTEXT, ClaimContexts.TOWN_OVERRIDE_CONTEXT,
-            ClaimContexts.WILDERNESS_OVERRIDE_CONTEXT, ClaimContexts.WILDERNESS_DEFAULT_CONTEXT);
 
     private enum BanType {
         BLOCK,
@@ -193,16 +188,7 @@ public class GDPermissionManager implements PermissionManager {
         this.eventLocation = location;
         // refresh contexts
         this.eventContexts = new HashSet<>();
-        /*final ItemStackSnapshot usedItem = event.getContext().get(EventContextKeys.USED_ITEM).orElse(null);
-        final DamageType damageType = event.getContext().get(EventContextKeys.DAMAGE_TYPE).orElse(null);
-        if (usedItem != null) {
-            //final String id = getPermissionIdentifier(usedItem);
-            this.eventContexts.add(new Context("used_item", usedItem.getType().getId()));
-        }
-        if (damageType != null) {
-            //final String id = getPermissionIdentifier(damageType);
-            this.eventContexts.add(new Context("damage_type", damageType.getId()));
-        }*/
+
         if (user != null) {
             if (user.getOnlinePlayer() != null) {
                 this.addPlayerContexts(user.getOnlinePlayer(), contexts);
@@ -224,21 +210,6 @@ public class GDPermissionManager implements PermissionManager {
         this.eventContexts = contexts;
         this.eventPlayerData = playerData;
         final String targetPermission = flag.getPermission();
-       /* if (!targetId.isEmpty()) {
-            String[] parts = targetId.split(":");
-            String targetMod = parts[0];
-            // move target meta to end of permission
-            Matcher m = PATTERN_META.matcher(targetId);
-            String targetMeta = "";
-            if (!flagPermission.contains("command-execute")) {
-                if (m.find()) {
-                    targetMeta = m.group(0);
-                    targetId = StringUtils.replace(targetId, targetMeta, "");
-                }
-            }
-            targetId += targetMeta;
-           // targetPermission += "." + targetId + targetMeta;
-        }*/
 
         if (flag == Flags.ENTITY_SPAWN) {
             // Check spawn limit
@@ -455,7 +426,7 @@ public class GDPermissionManager implements PermissionManager {
                 }
             }
 
-            GriefDefenderPlugin.addEventLogEntry(this.currentEvent, this.eventLocation, this.eventSourceId, this.eventTargetId, this.eventSubject == null ? permissionHolder : this.eventSubject, permission, trust, permissionValue);
+            GriefDefenderPlugin.addEventLogEntry(this.currentEvent, claim, this.eventLocation, this.eventSourceId, this.eventTargetId, this.eventSubject == null ? permissionHolder : this.eventSubject, permission, trust, permissionValue, this.eventContexts);
         }
 
 
@@ -761,17 +732,23 @@ public class GDPermissionManager implements PermissionManager {
     }
 
     private void addPlayerContexts(Player player, Set<Context> contexts) {
-        if(!PermissionUtil.getInstance().containsKey(contexts, "used_item") && NMSUtil.getInstance().getActiveItem(player, this.currentEvent) != null) {
-            final ItemStack stack = NMSUtil.getInstance().getActiveItem(player, this.currentEvent);
-            if (stack.getType() != Material.AIR) {
-                contexts.add(new Context("used_item", getPermissionIdentifier(stack)));
-                if (stack.getItemMeta() != null && stack.getItemMeta().getDisplayName() != null) {
-                    String itemName = stack.getItemMeta().getDisplayName().replaceAll("[^A-Za-z0-9]", "").toLowerCase();
-                    if (itemName != null && !itemName.isEmpty()) {
-                        if (!itemName.contains(":")) {
-                            itemName = "minecraft:" + itemName;
+        if(!PermissionUtil.getInstance().containsKey(contexts, "used_item")) {
+            // special case
+            if (this.currentEvent instanceof PlayerBucketEvent) {
+                final PlayerBucketEvent bucketEvent = (PlayerBucketEvent) this.currentEvent;
+                contexts.add(new Context("used_item", "minecraft:" + bucketEvent.getBucket().name().toLowerCase()));
+            } else {
+                final ItemStack stack = NMSUtil.getInstance().getActiveItem(player, this.currentEvent);
+                if (stack != null && stack.getType() != Material.AIR) {
+                    contexts.add(new Context("used_item", getPermissionIdentifier(stack)));
+                    if (stack.getItemMeta() != null && stack.getItemMeta().getDisplayName() != null) {
+                        String itemName = stack.getItemMeta().getDisplayName().replaceAll("[^A-Za-z0-9]", "").toLowerCase();
+                        if (itemName != null && !itemName.isEmpty()) {
+                            if (!itemName.contains(":")) {
+                                itemName = "minecraft:" + itemName;
+                            }
+                            contexts.add(new Context("item_name", itemName));
                         }
-                        contexts.add(new Context("item_name", itemName));
                     }
                 }
             }

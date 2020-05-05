@@ -25,8 +25,6 @@
 package com.griefdefender.configuration.type;
 
 import com.griefdefender.configuration.category.GuiCategory;
-import com.griefdefender.configuration.category.CustomFlagGroupDefinitionCategory;
-import com.griefdefender.configuration.category.DefaultPermissionCategory;
 import com.griefdefender.configuration.category.DynmapCategory;
 import com.griefdefender.configuration.category.EconomyCategory;
 import com.griefdefender.configuration.category.MessageCategory;
@@ -39,32 +37,6 @@ import ninja.leaping.configurate.objectmapping.Setting;
 
 public class GlobalConfig extends ConfigBase {
 
-    @Setting(value = "custom-flags", comment = "Used to define a group of custom flags for players/admins."
-            + "\nEach group defined will be displayed in the flag GUI for users."
-            + "\nGroups can have the following settings : "
-            + "\n    enabled=<true|false>: Whether the group is enabled."
-            + "\n    admin-group=<true|false>: Whether this group is considered for admin use only."
-            + "\n    hover=<text>: The hover text to be displayed when hovering over group name in GUI."
-            + "\n    title=<text>: The title text to be used for TAB display."
-            + "\n    value=<true|false>: This is used to set a default value for the flag definition. It is only used in conjunction with 'override=<type>, default=<type> settings."
-            + "\n    contexts=[\"key=value\"]: A list of optional definition contexts that will be applied to all permissions."
-            + "\nNote: This is primary used with 'default' and 'override' contexts. Ex. contexts=[\"default=global\"]"
-            + "\nEach group will have an associated permission in order to be viewable."
-            + "\nThe 'user' group will use the permission : 'griefdefender.custom.flag.group.user'"
-            + "\nThe 'admin' group will use the permission : 'griefdefender.custom.flag.group.admin'"
-            + "\nWithin each group, you can define flag definitions."
-            + "\nEach flag definition must be defined in the following format:"
-                    + "\nenabled: Controls whether the definition is enabled. Accepts a value of 'true' or 'false'"
-                    + "\ndescription: The flag description to display on hover. Uses the legacy text format."
-                    + "\npermissions: The list of permissions to link to definition. Each permission accepts the following contexts :"
-                    + "\n    flag=<linked-flag>: This context is used to link the permission to a GD specific flag. Ex. 'flag=block-break' would link permission to GD's block-break flag"
-                    + "\n    source=<id>: This context is used to specify a source id such as 'minecraft:creeper'."
-                    + "\n    target=<id>: This context is used to specify a target id such as 'minecraft:chest'."
-                    + "\n    state=<properties>: This context is used to specify a blockstate property such as 'state=lit:true'."
-                    + "\nNote: Required if no source or target context is specified, the permission will default to ALL."
-                    + "\nNote: Available contexts are : flag, source, target, state, used_item, item_name"
-                    + "\nThese contexts may change, See https://github.com/bloodmc/GriefDefender/wiki for latest information.")
-    public CustomFlagGroupDefinitionCategory customFlags = new CustomFlagGroupDefinitionCategory();
     @Setting
     public DynmapCategory dynmap = new DynmapCategory();
     @Setting
@@ -81,8 +53,6 @@ public class GlobalConfig extends ConfigBase {
     public MigratorCategory migrator = new MigratorCategory();
     @Setting(value = "modules")
     public ModuleCategory modules = new ModuleCategory();
-    @Setting(value = "default-permissions")
-    public DefaultPermissionCategory permissionCategory = new DefaultPermissionCategory();
     @Setting
     public ThreadCategory thread = new ThreadCategory();
 

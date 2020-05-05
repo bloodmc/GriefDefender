@@ -104,11 +104,11 @@ public class GDDebugData {
         this.header.add("| " + PlainComponentSerializer.INSTANCE.serialize(MessageCache.getInstance().DEBUG_RECORD_START) + " | " + DATE_FORMAT.format(new Date(this.startTime)) + "|");
     }
 
-    public void addRecord(String flag, String trust, String source, String target, String location, String user, String permission, Tristate result) {
+    public void addRecord(String flag, String trust, String source, String target, String location, String user, String contexts, Tristate result) {
         // markdown uses '__' for strong formatting, so underscores must be escaped
         user = user.replace("_", "\\_");
         if (this.records.size() < MAX_LINES) {
-            this.records.add("| " + flag + " | " + trust + " | " + source + " | " + target + " | " + location + " | " + user + " | " + permission + " | " + result + " | ");
+            this.records.add("| " + flag + " | " + trust + " | " + source + " | " + target + " | " + location + " | " + user + " | " + contexts + " | " + result + " | ");
         } else {
             TextAdapter.sendComponent(this.source, TextComponent.builder("").append("MAX DEBUG LIMIT REACHED!").append("\n")
                     .append("Pasting output...", TextColor.GREEN).build());
@@ -156,15 +156,15 @@ public class GDDebugData {
         final String SOURCE = PlainComponentSerializer.INSTANCE.serialize(MessageCache.getInstance().LABEL_SOURCE);
         final String TARGET = PlainComponentSerializer.INSTANCE.serialize(MessageCache.getInstance().LABEL_TARGET);
         final String USER = PlainComponentSerializer.INSTANCE.serialize(MessageCache.getInstance().LABEL_USER);
-        final String PERMISSION = PlainComponentSerializer.INSTANCE.serialize(MessageCache.getInstance().LABEL_PERMISSION);
+        final String CONTEXT = PlainComponentSerializer.INSTANCE.serialize(MessageCache.getInstance().LABEL_CONTEXT);
         final String RESULT = PlainComponentSerializer.INSTANCE.serialize(MessageCache.getInstance().LABEL_RESULT);
         debugOutput.add("| " + RECORD_END + " | " + DATE_FORMAT.format(new Date(endTime)) + "|");
         long elapsed = (endTime - startTime) / 1000L; 
         debugOutput.add("| " + TIME_ELAPSED + " | " + elapsed + " seconds" + "|");
         debugOutput.add("");
         debugOutput.add("### " + OUTPUT) ;
-        debugOutput.add("| " + FLAG + " | " + TRUST + " | " + SOURCE + " | " + TARGET + " | " + LOCATION + " | " + USER + " | " + PERMISSION + " | " + RESULT + " |");
-        debugOutput.add("|------|-------|--------|--------|----------|------|------------|--------|");
+        debugOutput.add("| " + FLAG + " | " + TRUST + " | " + SOURCE + " | " + TARGET + " | " + LOCATION + " | " + USER + " | " + CONTEXT + " | " + RESULT + " |");
+        debugOutput.add("|------|-------|--------|--------|----------|------|----------|--------|");
 
         debugOutput.addAll(this.records);
 

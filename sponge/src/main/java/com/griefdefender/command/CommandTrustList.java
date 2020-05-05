@@ -319,7 +319,7 @@ public class CommandTrustList extends BaseCommand {
         return consumer -> {
             if (messages == null || messages.isEmpty()) {
                 playerData.commandInputTimestamp = Instant.now();
-                playerData.trustAddConsumer = createAddConsumer(src, claim, playerData, type, returnCommand);
+                playerData.commandConsumer = createAddConsumer(src, claim, playerData, type, returnCommand);
             }
             messages.add(TextComponent.builder()
                     .append(TextComponent.of("Do you want to add a ")
@@ -383,7 +383,7 @@ public class CommandTrustList extends BaseCommand {
             }
             CommandHelper.executeCommand(src, "trust", name + " " + type.getName().toLowerCase());
             playerData.commandInputTimestamp = null;
-            playerData.trustAddConsumer = null;
+            playerData.commandConsumer = null;
             showTrustList(src, claim, playerData, type, messages, returnCommand);
         };
     }
@@ -391,7 +391,7 @@ public class CommandTrustList extends BaseCommand {
     private static Consumer<CommandSource> createCancelConsumer(Player src, GDClaim claim, GDPlayerData playerData, TrustType type, Component returnCommand) {
         return consumer -> {
             playerData.commandInputTimestamp = null;
-            playerData.trustAddConsumer = null;
+            playerData.commandConsumer = null;
             showTrustList(src, claim, playerData, type, new ArrayList<>(), returnCommand);
         };
     }

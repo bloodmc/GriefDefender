@@ -106,7 +106,7 @@ public class GDPlayerData implements PlayerData {
     public Instant recordChatTimestamp;
     public Instant commandInputTimestamp;
     public String commandInput;
-    public Consumer<CommandSource> trustAddConsumer;
+    public Consumer<CommandSource> commandConsumer;
 
     // Always ignore active contexts by default
     // This prevents protection issues when other plugins call getActiveContext
@@ -252,7 +252,8 @@ public class GDPlayerData implements PlayerData {
         for (int i = 0; i < this.visualBlocks.size(); i++) {
             BlockSnapshot snapshot = this.visualBlocks.get(i).getOriginal();
             // If original block does not exist, do not send to player
-            if (snapshot.getState().getType() != snapshot.getLocation().get().getBlockType()) {
+            final Location<World> location = snapshot.getLocation().orElse(null);
+            if (location != null && (snapshot.getState().getType() != location.getBlockType())) {
                 if (claim != null) {
                     claim.markVisualDirty = true;
                 }

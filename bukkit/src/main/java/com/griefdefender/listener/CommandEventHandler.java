@@ -89,7 +89,7 @@ public class CommandEventHandler implements Listener {
         // check for command input
         if (playerData.isWaitingForInput()) {
             playerData.commandInput = event.getMessage();
-            playerData.trustAddConsumer.accept(player);
+            playerData.commandConsumer.accept(player);
             event.setCancelled(true);
             return;
         }

@@ -809,30 +809,52 @@ public class LuckPermsProvider implements PermissionProvider {
         return new GDPermissionResult(ResultTypes.FAILURE, TextComponent.builder().append(result.name()).build());
     }
 
-    public void setTransientOption(GDPermissionHolder holder, String permission, String value, Set<Context> contexts) {
+    public PermissionResult setTransientOption(GDPermissionHolder holder, String permission, String value, Set<Context> contexts) {
         // If no server context exists, add global
         this.checkServerContext(contexts);
         MutableContextSet contextSet = this.getLPContexts(contexts);
         final PermissionHolder permissionHolder = this.getLuckPermsHolder(holder);
         if (permissionHolder == null) {
-            return;
+            return new GDPermissionResult(ResultTypes.FAILURE, TextComponent.builder().append("invalid").build());
         }
 
-        final Node node = this.luckPermsApi.getNodeBuilderRegistry().forMeta().key(permission).value(value).context(contextSet).build();
-        permissionHolder.transientData().add(node);
+        DataMutateResult result = null;
+        if (value == null) {
+            final Node node = this.luckPermsApi.getNodeBuilderRegistry().forMeta().key(permission).context(contextSet).build();
+            result = permissionHolder.transientData().remove(node);
+        } else {
+            final Node node = this.luckPermsApi.getNodeBuilderRegistry().forMeta().key(permission).value(value).context(contextSet).build();
+            result = permissionHolder.transientData().add(node);
+        }
+
+        if (result.wasSuccessful()) {
+            return new GDPermissionResult(ResultTypes.SUCCESS, TextComponent.builder().append(result.name()).build());
+        }
+        return new GDPermissionResult(ResultTypes.FAILURE, TextComponent.builder().append(result.name()).build());
     }
 
-    public void setTransientPermission(GDPermissionHolder holder, String permission, Boolean value, Set<Context> contexts) {
+    public PermissionResult setTransientPermission(GDPermissionHolder holder, String permission, Tristate value, Set<Context> contexts) {
         // If no server context exists, add global
         this.checkServerContext(contexts);
         MutableContextSet contextSet = this.getLPContexts(contexts);
         final PermissionHolder permissionHolder = this.getLuckPermsHolder(holder);
         if (permissionHolder == null) {
-            return;
+            return new GDPermissionResult(ResultTypes.FAILURE, TextComponent.builder().append("invalid").build());
         }
 
-        final PermissionNode node = this.luckPermsApi.getNodeBuilderRegistry().forPermission().permission(permission).value(value).context(contextSet).build();
-        permissionHolder.transientData().add(node);
+        DataMutateResult result = null;
+        if (value == Tristate.UNDEFINED) {
+            final Node node = this.luckPermsApi.getNodeBuilderRegistry().forPermission().permission(permission).value(value.asBoolean()).context(contextSet).build();
+            result = permissionHolder.transientData().remove(node);
+        } else {
+            final PermissionNode node = this.luckPermsApi.getNodeBuilderRegistry().forPermission().permission(permission).value(value.asBoolean()).context(contextSet).build();
+            result =  permissionHolder.transientData().add(node);
+        }
+
+        if (result.wasSuccessful()) {
+            return new GDPermissionResult(ResultTypes.SUCCESS, TextComponent.builder().append(result.name()).build());
+        }
+        return new GDPermissionResult(ResultTypes.FAILURE, TextComponent.builder().append(result.name()).build());
     }
 
     public void savePermissionHolder(PermissionHolder holder) {

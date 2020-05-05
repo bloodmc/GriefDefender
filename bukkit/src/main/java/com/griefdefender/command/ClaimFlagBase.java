@@ -170,7 +170,7 @@ public abstract class ClaimFlagBase extends BaseCommand {
         if (claim != null) {
             if (flag == null && value == null && player.hasPermission(GDPermissions.COMMAND_LIST_CLAIM_FLAGS)) {
                 String defaultGroup = "";
-                for (Entry<String, CustomFlagGroupCategory> groupEntry : GriefDefenderPlugin.getGlobalConfig().getConfig().customFlags.getGroups().entrySet()) {
+                for (Entry<String, CustomFlagGroupCategory> groupEntry : GriefDefenderPlugin.getInstance().flagConfig.getConfig().customFlags.getGroups().entrySet()) {
                     final String permission = groupEntry.getValue().isAdminGroup() ? GDPermissions.FLAG_CUSTOM_ADMIN_BASE : GDPermissions.FLAG_CUSTOM_USER_BASE;
                     if (!player.hasPermission(permission + "." + groupEntry.getKey()) && !src.getInternalPlayerData().canIgnoreClaim(claim)) {
                         continue;
@@ -203,16 +203,16 @@ public abstract class ClaimFlagBase extends BaseCommand {
         }
     }
 
-    protected void showCustomFlags(GDPermissionUser src, GDClaim claim, String displayGroup) {
+    protected void showCustomFlags(GDPermissionUser src, GDClaim claim, String flagGroup) {
         final Player player = src.getOnlinePlayer();
         final String lastPermissionMenuType = this.lastActivePresetMenuMap.getIfPresent(player.getUniqueId());
-        if (lastPermissionMenuType != null && !lastPermissionMenuType.equalsIgnoreCase(displayGroup.toLowerCase())) {
+        if (lastPermissionMenuType != null && !lastPermissionMenuType.equalsIgnoreCase(flagGroup.toLowerCase())) {
             PaginationUtil.getInstance().resetActivePage(player.getUniqueId());
         }
 
         TextComponent.Builder flagHeadBuilder = TextComponent.builder()
                 .append(" Displaying :", TextColor.AQUA);
-        final Map<String, CustomFlagGroupCategory> flagGroups = GriefDefenderPlugin.getGlobalConfig().getConfig().customFlags.getGroups();
+        final Map<String, CustomFlagGroupCategory> flagGroups = GriefDefenderPlugin.getInstance().flagConfig.getConfig().customFlags.getGroups();
         List<String> groups = new ArrayList<>();
         for (Map.Entry<String, CustomFlagGroupCategory> flagGroupEntry : flagGroups.entrySet()) {
             final CustomFlagGroupCategory flagGroupCat = flagGroupEntry.getValue();
@@ -220,7 +220,7 @@ public abstract class ClaimFlagBase extends BaseCommand {
                 continue;
             }
             final String groupName = flagGroupEntry.getKey();
-            final boolean isAdminGroup = GriefDefenderPlugin.getGlobalConfig().getConfig().customFlags.getGroups().get(groupName).isAdminGroup();
+            final boolean isAdminGroup = GriefDefenderPlugin.getInstance().flagConfig.getConfig().customFlags.getGroups().get(groupName).isAdminGroup();
             final String permission = isAdminGroup ? GDPermissions.FLAG_CUSTOM_ADMIN_BASE : GDPermissions.FLAG_CUSTOM_USER_BASE;
             if (!player.hasPermission(permission + "." + groupName) && !src.getInternalPlayerData().canIgnoreClaim(claim)) {
                 continue;
@@ -229,15 +229,15 @@ public abstract class ClaimFlagBase extends BaseCommand {
             groups.add(groupName);
         }
 
-        final CustomFlagGroupCategory flagGroupCat = flagGroups.get(displayGroup);
+        final CustomFlagGroupCategory flagGroupCat = flagGroups.get(flagGroup);
         if (flagGroupCat == null || flagGroupCat.getFlagDefinitions().isEmpty()) {
-            TextAdapter.sendComponent(player, TextComponent.of("No custom flag definitions were found for group '" + displayGroup + "'."));
+            TextAdapter.sendComponent(player, TextComponent.of("No custom flag definitions were found for group '" + flagGroup + "'."));
             return;
         }
 
         Collections.sort(groups);
         for (String group : groups) {
-            flagHeadBuilder.append(" ").append(displayGroup.equalsIgnoreCase(group) ? TextComponent.builder()
+            flagHeadBuilder.append(" ").append(flagGroup.equalsIgnoreCase(group) ? TextComponent.builder()
                     .append(whiteOpenBracket)
                     .append(group.toUpperCase(), flagGroups.get(group).isAdminGroup() ? TextColor.RED : TextColor.GOLD)
                     .append(whiteCloseBracket).build() : 
@@ -248,12 +248,14 @@ public abstract class ClaimFlagBase extends BaseCommand {
 
         List<Component> textComponents = new ArrayList<>();
         for (GDFlagDefinition customFlag : flagGroupCat.getFlagDefinitions().values()) {
-            Component flagText = TextComponent.builder()
-                .append(getCustomFlagText(customFlag))
-                .append(" ")
-                .append(this.getCustomClickableText(src, claim, customFlag, displayGroup))
-                .build();
-            textComponents.add(flagText);
+            if (customFlag.isEnabled()) {
+                Component flagText = TextComponent.builder()
+                    .append(getCustomFlagText(customFlag))
+                    .append(" ")
+                    .append(this.getCustomClickableText(src, claim, customFlag, flagGroup))
+                    .build();
+                textComponents.add(flagText);
+            }
         }
 
 
@@ -298,7 +300,7 @@ public abstract class ClaimFlagBase extends BaseCommand {
         if (activePage == null) {
             activePage = 1;
         }
-        this.lastActivePresetMenuMap.put(player.getUniqueId(), displayGroup.toLowerCase());
+        this.lastActivePresetMenuMap.put(player.getUniqueId(), flagGroup.toLowerCase());
         paginationList.sendTo(player, activePage);
     }
 
@@ -543,27 +545,29 @@ public abstract class ClaimFlagBase extends BaseCommand {
     private Component getCustomFlagText(GDFlagDefinition customFlag) {
         TextComponent definitionType = TextComponent.empty();
         TextColor flagColor = TextColor.YELLOW;
-        for (Context context : customFlag.getContexts()) {
-            if (context.getKey().contains("default")) {
-                definitionType = TextComponent.builder()
-                        .append("\n")
-                        .append(MessageCache.getInstance().LABEL_TYPE.color(TextColor.AQUA))
-                        .append(" : ", TextColor.WHITE)
-                        .append("DEFAULT", TextColor.LIGHT_PURPLE)
-                        .append(" ")
-                        .append(context.getValue().toUpperCase(), TextColor.GRAY)
-                        .build();
-                flagColor = TextColor.LIGHT_PURPLE;
-            } else if (context.getKey().contains("override")) {
-                definitionType = TextComponent.builder()
-                        .append("\n")
-                        .append(MessageCache.getInstance().LABEL_TYPE.color(TextColor.AQUA))
-                        .append(" : ", TextColor.WHITE)
-                        .append("OVERRIDE", TextColor.RED)
-                        .append(" ")
-                        .append(context.getValue().toUpperCase(), TextColor.GRAY)
-                        .build();
-                flagColor = TextColor.RED;
+        if (customFlag.isAdmin()) {
+            for (Context context : customFlag.getContexts()) {
+                if (context.getKey().contains("default")) {
+                    definitionType = TextComponent.builder()
+                            .append("\n")
+                            .append(MessageCache.getInstance().LABEL_TYPE.color(TextColor.AQUA))
+                            .append(" : ", TextColor.WHITE)
+                            .append("DEFAULT", TextColor.LIGHT_PURPLE)
+                            .append(" ")
+                            .append(context.getValue().toUpperCase(), TextColor.GRAY)
+                            .build();
+                    flagColor = TextColor.LIGHT_PURPLE;
+                } else if (context.getKey().contains("override")) {
+                    definitionType = TextComponent.builder()
+                            .append("\n")
+                            .append(MessageCache.getInstance().LABEL_TYPE.color(TextColor.AQUA))
+                            .append(" : ", TextColor.WHITE)
+                            .append("OVERRIDE", TextColor.RED)
+                            .append(" ")
+                            .append(context.getValue().toUpperCase(), TextColor.GRAY)
+                            .build();
+                    flagColor = TextColor.RED;
+                }
             }
         }
         if (definitionType == TextComponent.empty()) {
@@ -582,20 +586,6 @@ public abstract class ClaimFlagBase extends BaseCommand {
                         .append(definitionType)
                         .build())).build();
         return baseFlagText;
-    }
-
-    private TextColor getCustomFlagColor(GDFlagDefinition customFlag) {
-        TextColor flagColor = TextColor.GREEN;
-        for (Context context : customFlag.getContexts()) {
-            if (context.getKey().contains("default")) {
-                flagColor = TextColor.LIGHT_PURPLE;
-                break;
-            } else if (context.getKey().contains("override")) {
-                flagColor = TextColor.RED;
-                break;
-            }
-        }
-        return flagColor;
     }
 
     private Component getFlagText(Flag flag, Set<Context> contexts) {
@@ -620,7 +610,7 @@ public abstract class ClaimFlagBase extends BaseCommand {
             hasHover = true;
         }
 
-        final boolean isAdminGroup = GriefDefenderPlugin.getGlobalConfig().getConfig().customFlags.getGroups().get(flagGroup).isAdminGroup();
+        final boolean isAdminGroup = GriefDefenderPlugin.getInstance().flagConfig.getConfig().customFlags.getGroups().get(flagGroup).isAdminGroup();
         final String permission = isAdminGroup ? GDPermissions.FLAG_CUSTOM_ADMIN_BASE : GDPermissions.FLAG_CUSTOM_USER_BASE;
          // check flag perm
         if (!player.hasPermission(permission + "." + flagGroup + "." + customFlag.getName())) {
@@ -629,70 +619,42 @@ public abstract class ClaimFlagBase extends BaseCommand {
             hasHover = true;
         }
 
-        List<GDActiveFlagData> dataResults = new ArrayList<>();
-        boolean hasGDContext = false;
+        final List<GDActiveFlagData> definitionResults = new ArrayList<>();
+        boolean hasClaimContext = false;
         Set<Context> definitionContexts = new HashSet<>(customFlag.getContexts());
-        for (Context context : customFlag.getContexts()) {
+        for (Context context : definitionContexts) {
             if (context.getKey().contains("gd_claim")) {
-                hasGDContext = true;
-                break;
+                // Admins can set 'gd_claim' context value to 'claim' to represent it should be replaced with each claim UUID
+                if (context.getValue().equalsIgnoreCase("claim")) {
+                    definitionContexts.remove(context);
+                    hasClaimContext = true;
+                    break;
+                }
             }
         }
-        if (!hasGDContext) {
+        if (hasClaimContext) {
             definitionContexts.add(claim.getContext());
         }
+        boolean hasOverride = false;
         for (FlagData flagData : customFlag.getFlagData()) {
-            final Set<Context> filteredContexts = new HashSet<>();
-            for (Context context : definitionContexts) {
-                if (context.getKey().contains("gd_claim")) {
-                    continue;
+            if (customFlag.isAdmin()) {
+                definitionResults.add(this.getSpecificDefinitionResult(claim, customFlag, flagData));
+            } else {
+                final GDActiveFlagData activeData = this.getActiveDefinitionResult(claim, customFlag, flagData);
+                definitionResults.add(activeData);
+                if (activeData.getType() == GDActiveFlagData.Type.OVERRIDE) {
+                    hasOverride = true;
+                    hasEditPermission = false;
                 }
-
-                filteredContexts.add(context);
             }
-
-            // Check override
-            filteredContexts.addAll(flagData.getContexts());
-            Set<Context> newContexts = new HashSet<>(filteredContexts);
-            newContexts.add(ClaimContexts.GLOBAL_OVERRIDE_CONTEXT);
-            newContexts.add(claim.getWorldContext());
-            newContexts.add(claim.getOverrideTypeContext());
-            newContexts.add(claim.getOverrideClaimContext());
-            Tristate result = PermissionUtil.getInstance().getPermissionValue(claim, GriefDefenderPlugin.DEFAULT_HOLDER, flagData.getFlag().getPermission(), newContexts);
-            if (result != Tristate.UNDEFINED) {
-                dataResults.add(new GDActiveFlagData(flagData, result, GDActiveFlagData.Type.OVERRIDE));
-                continue;
-            }
-
-            // Check claim
-            newContexts = new HashSet<>(filteredContexts);
-            newContexts.add(claim.getWorldContext());
-            newContexts.add(claim.getContext());
-            result = PermissionUtil.getInstance().getPermissionValue(claim, GriefDefenderPlugin.DEFAULT_HOLDER, flagData.getFlag().getPermission(), newContexts);
-            if (result != Tristate.UNDEFINED) {
-                dataResults.add(new GDActiveFlagData(flagData, result, GDActiveFlagData.Type.CLAIM));
-                continue;
-            }
-
-            // Check default
-            newContexts = new HashSet<>(filteredContexts);
-            newContexts.add(claim.getWorldContext());
-            newContexts.add(ClaimContexts.GLOBAL_DEFAULT_CONTEXT);
-            newContexts.add(claim.getDefaultTypeContext());
-            result = PermissionUtil.getInstance().getPermissionValue(claim, GriefDefenderPlugin.DEFAULT_HOLDER, flagData.getFlag().getPermission(), newContexts);
-            if (result != Tristate.UNDEFINED) {
-                dataResults.add(new GDActiveFlagData(flagData, result, GDActiveFlagData.Type.DEFAULT));
-                continue;
-            }
-            dataResults.add(new GDActiveFlagData(flagData, result, GDActiveFlagData.Type.UNDEFINED));
         }
         boolean properResult = true;
-        Tristate lastResult = null;
-        for (GDActiveFlagData activeFlagData : dataResults) {
-            final Tristate result = activeFlagData.getValue();
-            if (lastResult == null) {
-                lastResult = result;
-            } else if (lastResult != result) {
+        Tristate defaultResult = null;
+        for (GDActiveFlagData definitionFlagData : definitionResults) {
+            final Tristate result = definitionFlagData.getValue();
+            if (defaultResult == null) {
+                defaultResult = result;
+            } else if (defaultResult != result) {
                 properResult = false;
                 break;
             }
@@ -701,53 +663,108 @@ public abstract class ClaimFlagBase extends BaseCommand {
         TextComponent.Builder valueBuilder = TextComponent.builder();
         if (!properResult) {
             if (hasEditPermission) {
-                hoverBuilder.append("Active Data : \n");
-                for (GDActiveFlagData activeFlagData : dataResults) {
-                    hoverBuilder.append(activeFlagData.getComponent())
-                        .append("\n");
+                hoverBuilder.append("Conflict Data : \n");
+                for (GDActiveFlagData definitionFlagData : definitionResults) {
+                    hoverBuilder.append(definitionFlagData.getComponent())
+                                .append("\n");
                 }
                 hasHover = true;
             }
             valueBuilder.append("partial");
-            lastResult = null;
+            defaultResult = null;
         } else {
             TextColor valueColor = TextColor.GRAY;
-            if (lastResult == Tristate.TRUE) {
+            if (defaultResult == Tristate.TRUE) {
                 valueColor = TextColor.GREEN;
-            } else if (lastResult == Tristate.FALSE) {
+            } else if (defaultResult == Tristate.FALSE) {
                 valueColor = TextColor.RED;
             }
-            valueBuilder.append(String.valueOf(lastResult).toLowerCase(), valueColor);
+            valueBuilder.append(String.valueOf(defaultResult).toLowerCase(), valueColor);
         }
 
         if (hasEditPermission) {
-            if (lastResult == Tristate.TRUE) {
+            if (defaultResult == Tristate.TRUE) {
                 hoverBuilder.append(MessageCache.getInstance().FLAG_UI_CLICK_DENY);
             } else {
                 hoverBuilder.append(MessageCache.getInstance().FLAG_UI_CLICK_ALLOW);
             }
 
-            if (!customFlag.getContexts().isEmpty()) {
-                hoverBuilder.append("\nContexts: ");
-            }
-
-            for (Context context : customFlag.getContexts()) {
-                hoverBuilder.append("\n");
-                final String key = context.getKey();
-                final String value = context.getValue();
-                TextColor keyColor = TextColor.AQUA;
-                if (key.contains("default")) {
-                    keyColor = TextColor.LIGHT_PURPLE;
-                } else if (key.contains("override")) {
-                    keyColor = TextColor.RED;
-                } else if (key.contains("server")) {
-                    keyColor = TextColor.GRAY;
+            if (properResult) {
+                hoverBuilder.append("\nDefault Value: ", TextColor.AQUA);
+                final Tristate defaultValue = customFlag.getDefaultValue();
+                if (defaultValue == Tristate.UNDEFINED) {
+                    hoverBuilder.append(customFlag.getDefaultValue().toString().toLowerCase(), TextColor.GRAY);
+                } else if (defaultValue == Tristate.TRUE) {
+                    hoverBuilder.append(customFlag.getDefaultValue().toString().toLowerCase(), TextColor.GREEN);
+                } else {
+                    hoverBuilder.append(customFlag.getDefaultValue().toString().toLowerCase(), TextColor.RED);
                 }
-                hoverBuilder.append(key, keyColor)
+    
+                if (!customFlag.getContexts().isEmpty()) {
+                    hoverBuilder.append("\nDefinition Contexts: ");
+                    if (!customFlag.isAdmin()) {
+                        hoverBuilder.append("gd_claim", TextColor.AQUA)
                         .append("=", TextColor.WHITE)
-                        .append(value.replace("minecraft:", ""), TextColor.GRAY);
+                        .append(claim.getUniqueId().toString(), TextColor.GRAY);
+                    }
+                    for (Context context : customFlag.getContexts()) {
+                        if (!customFlag.isAdmin() && context.getKey().contains("gd_claim")) {
+                            continue;
+                        }
+                        hoverBuilder.append("\n");
+                        final String key = context.getKey();
+                        final String value = context.getValue();
+                        TextColor keyColor = TextColor.AQUA;
+                        if (key.contains("default")) {
+                            keyColor = TextColor.LIGHT_PURPLE;
+                        } else if (key.contains("override")) {
+                            keyColor = TextColor.RED;
+                        } else if (key.contains("server")) {
+                            keyColor = TextColor.GRAY;
+                        }
+                        hoverBuilder.append(key, keyColor)
+                                .append("=", TextColor.WHITE)
+                                .append(value.replace("minecraft:", ""), TextColor.GRAY);
+                    }
+                }
+
+                for (FlagData flagData : customFlag.getFlagData()) {
+                    hoverBuilder.append("\nFlag: ")
+                                .append(flagData.getFlag().getName(), TextColor.GREEN);
+
+                    if (!flagData.getContexts().isEmpty()) {
+                        hoverBuilder.append("\nContexts: ");
+                    }
+                    for (Context context : flagData.getContexts()) {
+                        if (!customFlag.isAdmin() && context.getKey().contains("gd_claim")) {
+                            continue;
+                        }
+                        hoverBuilder.append("\n");
+                        final String key = context.getKey();
+                        final String value = context.getValue();
+                        TextColor keyColor = TextColor.AQUA;
+                        hoverBuilder.append(key, keyColor)
+                                .append("=", TextColor.WHITE)
+                                .append(value.replace("minecraft:", ""), TextColor.GRAY);
+                    }
+                    if (customFlag.isAdmin()) {
+                        // show active value
+                        final GDActiveFlagData activeData = this.getActiveDefinitionResult(claim, customFlag, flagData);
+                        hoverBuilder.append("\n\nActive Result", TextColor.AQUA)
+                                    .append("\nvalue=", TextColor.WHITE)
+                                    .append(activeData.getValue().name().toLowerCase(), TextColor.GOLD)
+                                    .append("\ntype=", TextColor.WHITE)
+                                    .append(activeData.getType().name(), activeData.getColor());
+                    }
+                }
+
+                hasHover = true;
             }
-            hasHover = true;
+        } else {
+            if (hasOverride) {
+                hoverBuilder.append(MessageCache.getInstance().FLAG_UI_OVERRIDE_NO_PERMISSION);
+                hasHover = true;
+            }
         }
 
         if (hasHover) {
@@ -757,7 +774,7 @@ public abstract class ClaimFlagBase extends BaseCommand {
         if (hasEditPermission) {
             textBuilder = TextComponent.builder()
             .append(valueBuilder
-                    .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createCustomFlagConsumer(src, claim, customFlag, lastResult, flagGroup))))
+                    .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createCustomFlagConsumer(src, claim, customFlag, defaultResult, flagGroup))))
                     .build());
         } else {
             textBuilder = TextComponent.builder()
@@ -766,6 +783,144 @@ public abstract class ClaimFlagBase extends BaseCommand {
         }
 
         return textBuilder.build();
+    }
+
+    public GDActiveFlagData getSpecificDefinitionResult(GDClaim claim, GDFlagDefinition flagDefinition, FlagData flagData) {
+        Set<Context> contexts = new HashSet<>(flagData.getContexts());
+        contexts.addAll(flagDefinition.getContexts());
+
+        boolean hasClaimContext = false;
+        boolean hasOverrideClaimContext = false;
+        boolean hasDefaultClaimContext = false;
+        boolean replaceClaimContext = false;
+        final Iterator<Context> iterator = contexts.iterator();
+        while (iterator.hasNext()) {
+            final Context context = iterator.next();
+            if (context.getKey().equalsIgnoreCase("gd_claim")) {
+                hasClaimContext = true;
+                if (context.getValue().equalsIgnoreCase("claim")) {
+                    iterator.remove();
+                    replaceClaimContext = true;
+                }
+            } else if (context.getKey().equalsIgnoreCase("gd_claim_default")) {
+                hasDefaultClaimContext = true;
+            } else if (context.getKey().equalsIgnoreCase("gd_claim_override")) {
+                hasOverrideClaimContext = true;
+            }
+        }
+
+        GDActiveFlagData.Type type = GDActiveFlagData.Type.DEFAULT;
+        if (hasClaimContext) {
+            type = GDActiveFlagData.Type.CLAIM;
+        } else if (hasOverrideClaimContext) {
+            type = GDActiveFlagData.Type.OVERRIDE;
+        }
+
+        if (replaceClaimContext || !flagDefinition.isAdmin()) {
+            contexts.add(claim.getContext());
+        }
+
+        Tristate result = PermissionUtil.getInstance().getPermissionValue(claim, GriefDefenderPlugin.DEFAULT_HOLDER, flagData.getFlag().getPermission(), contexts);
+        if (result != Tristate.UNDEFINED) {
+            return new GDActiveFlagData(flagDefinition, flagData, result, contexts, type);
+        }
+
+        return new GDActiveFlagData(flagDefinition, flagData, result, contexts, GDActiveFlagData.Type.UNDEFINED);
+    }
+
+    public GDActiveFlagData getActiveDefinitionResult(GDClaim claim, GDFlagDefinition flagDefinition, FlagData flagData) {
+        Set<Context> contexts = new HashSet<>(flagData.getContexts());
+        contexts.addAll(flagDefinition.getContexts());
+
+        // check if admin definition has gd_claim contex
+        boolean hasClaimContext = false;
+        boolean hasOverrideClaimContext = false;
+        boolean hasDefaultClaimContext = false;
+        boolean replaceClaimContext = false;
+        final Iterator<Context> iterator = contexts.iterator();
+        Context claimContext = claim.getContext();
+        while (iterator.hasNext()) {
+            final Context context = iterator.next();
+            if (!flagDefinition.isAdmin()) {
+                hasClaimContext = true;
+                if (context.getKey().contains("gd_claim")) {
+                    iterator.remove();
+                }
+            } else {
+                if (context.getKey().equalsIgnoreCase("gd_claim")) {
+                    claimContext = context;
+                    hasClaimContext = true;
+                    if (context.getValue().equalsIgnoreCase("claim")) {
+                        iterator.remove();
+                        replaceClaimContext = true;
+                    }
+                } else if (context.getKey().equalsIgnoreCase("gd_claim_default")) {
+                    hasDefaultClaimContext = true;
+                } else if (context.getKey().equalsIgnoreCase("gd_claim_override")) {
+                    hasOverrideClaimContext = true;
+                }
+            }
+        }
+
+        if (!flagDefinition.isAdmin() || hasClaimContext) {
+            // First check if this permission has been overridden by admin
+            // Check override
+            contexts.remove(claimContext);
+            contexts.add(ClaimContexts.GLOBAL_OVERRIDE_CONTEXT);
+            contexts.add(claim.getWorldContext());
+            contexts.add(claim.getOverrideTypeContext());
+            contexts.add(claim.getOverrideClaimContext());
+            Tristate result = PermissionUtil.getInstance().getPermissionValue(claim, GriefDefenderPlugin.DEFAULT_HOLDER, flagData.getFlag().getPermission(), contexts);
+            if (result != Tristate.UNDEFINED) {
+                return new GDActiveFlagData(flagDefinition, flagData, result, contexts, GDActiveFlagData.Type.OVERRIDE);
+            }
+
+            // Check claim
+            contexts = new HashSet<>(flagData.getContexts());
+            contexts.addAll(flagDefinition.getContexts());
+            if (flagDefinition.isAdmin()) {
+                if (replaceClaimContext) {
+                    contexts.remove(claimContext);
+                    contexts.add(claim.getContext());
+                } else {
+                    contexts.add(claimContext);
+                }
+            } else {
+                contexts.add(claimContext);
+            }
+
+            result = PermissionUtil.getInstance().getPermissionValue(claim, GriefDefenderPlugin.DEFAULT_HOLDER, flagData.getFlag().getPermission(), contexts);
+            if (result != Tristate.UNDEFINED) {
+                return new GDActiveFlagData(flagDefinition, flagData, result, contexts, GDActiveFlagData.Type.CLAIM);
+            }
+
+        }
+
+        if (!hasClaimContext && !hasOverrideClaimContext) {
+            // Direct lookup
+
+            contexts = new HashSet<>(flagData.getContexts());
+            contexts.addAll(flagDefinition.getContexts());
+            Tristate result = PermissionUtil.getInstance().getPermissionValue(claim, GriefDefenderPlugin.DEFAULT_HOLDER, flagData.getFlag().getPermission(), contexts);
+            if (result != Tristate.UNDEFINED) {
+                return new GDActiveFlagData(flagDefinition, flagData, result, contexts, GDActiveFlagData.Type.DEFAULT);
+            }
+        }
+
+        if (!hasDefaultClaimContext) {
+            contexts = new HashSet<>(flagData.getContexts());
+            contexts.addAll(flagDefinition.getContexts());
+            contexts.remove(claimContext);
+            contexts.add(ClaimContexts.GLOBAL_DEFAULT_CONTEXT);
+            contexts.add(claim.getWorldContext());
+            contexts.add(claim.getDefaultTypeContext());
+            Tristate result = PermissionUtil.getInstance().getPermissionValue(claim, GriefDefenderPlugin.DEFAULT_HOLDER, flagData.getFlag().getPermission(), contexts);
+            if (result != Tristate.UNDEFINED) {
+                return new GDActiveFlagData(flagDefinition, flagData, result, contexts, GDActiveFlagData.Type.DEFAULT);
+            }
+        }
+
+        return new GDActiveFlagData(flagDefinition, flagData,Tristate.UNDEFINED, contexts, GDActiveFlagData.Type.UNDEFINED);
     }
 
     private Component getClickableText(GDPermissionUser src, GDClaim claim, Flag flag, FlagContextHolder flagHolder, Set<Context> contexts, MenuType displayType) {
@@ -916,19 +1071,28 @@ public abstract class ClaimFlagBase extends BaseCommand {
         return textBuilder.build();
     }
 
-    private Consumer<CommandSender> createCustomFlagConsumer(GDPermissionUser src, GDClaim claim, GDFlagDefinition customFlag, Tristate currentValue, String displayType) {
+    private Consumer<CommandSender> createCustomFlagConsumer(GDPermissionUser src, GDClaim claim, GDFlagDefinition customFlag, Tristate currentValue, String flagGroup) {
         final Player player = src.getOnlinePlayer();
         return consumer -> {
             GDCauseStackManager.getInstance().pushCause(player);
-            boolean hasGDContext = false;
             Set<Context> definitionContexts = new HashSet<>(customFlag.getContexts());
-            for (Context context : customFlag.getContexts()) {
-                if (context.getKey().contains("gd_claim")) {
-                    hasGDContext = true;
+            boolean addClaimContext = false;
+            final Iterator<Context> iterator = definitionContexts.iterator();
+            while (iterator.hasNext()) {
+                final Context context = iterator.next();
+                if (!customFlag.isAdmin()) {
+                    if (context.getKey().contains("gd_claim")) {
+                        iterator.remove();
+                    }
+                    addClaimContext = true;
+                    break;
+                } else if (context.getKey().equalsIgnoreCase("gd_claim") && context.getValue().equalsIgnoreCase("claim")) {
+                    iterator.remove();
+                    addClaimContext = true;
                     break;
                 }
             }
-            if (!hasGDContext) {
+            if (addClaimContext) {
                 definitionContexts.add(claim.getContext());
             }
             for (FlagData flagData : customFlag.getFlagData()) {
@@ -954,7 +1118,7 @@ public abstract class ClaimFlagBase extends BaseCommand {
             // Save after all permission changes have been made
             GriefDefenderPlugin.getInstance().getPermissionProvider().save(GriefDefenderPlugin.DEFAULT_HOLDER);
             GDCauseStackManager.getInstance().popCause();
-            showCustomFlags(src, claim, displayType);
+            showCustomFlags(src, claim, flagGroup);
         };
     }
 
@@ -963,7 +1127,7 @@ public abstract class ClaimFlagBase extends BaseCommand {
         return consumer -> {
             GDCauseStackManager.getInstance().pushCause(player);
             Set<Context> newContexts = new HashSet<>(contexts);
-            if (displayType == MenuType.CLAIM) {
+            if (displayType == MenuType.CLAIM && newValue != Tristate.UNDEFINED) {
                 final Iterator<Context> iterator = newContexts.iterator();
                 while (iterator.hasNext()) {
                     final Context context = iterator.next();
@@ -1001,6 +1165,13 @@ public abstract class ClaimFlagBase extends BaseCommand {
                 return;
             }
 
+            if (displayType == MenuType.DEFAULT) {
+                PermissionResult result = PermissionUtil.getInstance().setTransientPermission(this.subject, flag.getPermission(), newValue, newContexts);
+                if (result.successful()) {
+                    showFlagPermissions(src, claim, displayType);
+                    return;
+                }
+            }
             PermissionResult result = PermissionUtil.getInstance().setPermissionValue(this.subject, flag, newValue, newContexts);
             if (!result.successful()) {
                 // Try again without server context

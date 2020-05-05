@@ -216,12 +216,12 @@ public class PermissionUtil {
         return PERMISSION_PROVIDER.setPermissionValue(holder, permission, value, contexts, check, save);
     }
 
-    public void setTransientOption(GDPermissionHolder holder, String permission, String value, Set<Context> contexts) {
-        PERMISSION_PROVIDER.setTransientOption(holder, permission, value, contexts);
+    public PermissionResult setTransientOption(GDPermissionHolder holder, String permission, String value, Set<Context> contexts) {
+        return PERMISSION_PROVIDER.setTransientOption(holder, permission, value, contexts);
     }
 
-    public void setTransientPermission(GDPermissionHolder holder, String permission, Boolean value, Set<Context> contexts) {
-        PERMISSION_PROVIDER.setTransientPermission(holder, permission, value, contexts);
+    public PermissionResult setTransientPermission(GDPermissionHolder holder, String permission, Tristate value, Set<Context> contexts) {
+        return PERMISSION_PROVIDER.setTransientPermission(holder, permission, value, contexts);
     }
 
     public void refreshCachedData(GDPermissionHolder holder) {

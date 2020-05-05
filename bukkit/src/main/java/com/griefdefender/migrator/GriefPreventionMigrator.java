@@ -396,7 +396,11 @@ public class GriefPreventionMigrator {
                         PermissionUtil.getInstance().setPermissionValue(DEFAULT_HOLDER, Flags.ENTITY_DAMAGE.getPermission(), Tristate.FALSE, contexts);
                         break;
                     case FLAG_NO_SNOW_FORM :
-                        contexts.add(FlagContexts.TARGET_SNOW_LAYER);
+                        if (GriefDefenderPlugin.getMajorMinecraftVersion() > 12) {
+                            contexts.add(FlagContexts.TARGET_SNOW);
+                        } else {
+                            contexts.add(FlagContexts.TARGET_SNOW_1_12);
+                        }
                         PermissionUtil.getInstance().setPermissionValue(DEFAULT_HOLDER, Flags.BLOCK_MODIFY.getPermission(), Tristate.FALSE, contexts);
                         break;
                     case FLAG_NO_VEHICLE :

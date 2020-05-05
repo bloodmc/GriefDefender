@@ -37,7 +37,7 @@ import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
 @ConfigSerializable
 public class CustomFlagGroupCategory extends ConfigCategory {
 
-    @Setting
+    @Setting(value = "enabled", comment = "Whether flag definition group is enabled.")
     boolean enabled = true;
     @Setting(value = "admin-group", comment = "Set to true if this flag group is for admin use only."
             + "\nNote: If admin group, the permission is 'griefdefender.admin.custom.flag.<groupname>"

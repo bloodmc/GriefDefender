@@ -490,7 +490,11 @@ public class WorldGuardMigrator {
                             }
                             break;
                         case "lava-fire": 
-                            contexts.add(FlagContexts.SOURCE_LAVA);
+                            if (GriefDefenderPlugin.getMajorMinecraftVersion() > 12) {
+                                contexts.add(FlagContexts.SOURCE_LAVA);
+                            } else {
+                                contexts.add(FlagContexts.SOURCE_LAVA_1_12);
+                            }
                             if (valueNode.getString().equals("deny")) {
                                 PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_SPREAD, Tristate.FALSE, contexts);
                             } else {
@@ -506,7 +510,11 @@ public class WorldGuardMigrator {
                             }
                             break;
                         case "water-flow": 
-                            contexts.add(FlagContexts.SOURCE_WATER);
+                            if (GriefDefenderPlugin.getMajorMinecraftVersion() > 12) {
+                                contexts.add(FlagContexts.SOURCE_WATER);
+                            } else {
+                                contexts.add(FlagContexts.SOURCE_WATER_1_12);
+                            }
                             if (valueNode.getString().equals("deny")) {
                                 PERMISSION_MANAGER.setFlagPermission(Flags.LIQUID_FLOW, Tristate.FALSE, contexts);
                             } else {
@@ -514,7 +522,11 @@ public class WorldGuardMigrator {
                             }
                             break;
                         case "lava-flow": 
-                            contexts.add(FlagContexts.SOURCE_LAVA);
+                            if (GriefDefenderPlugin.getMajorMinecraftVersion() > 12) {
+                                contexts.add(FlagContexts.SOURCE_LAVA);
+                            } else {
+                                contexts.add(FlagContexts.SOURCE_LAVA_1_12);
+                            }
                             if (valueNode.getString().equals("deny")) {
                                 PERMISSION_MANAGER.setFlagPermission(Flags.LIQUID_FLOW, Tristate.FALSE, contexts);
                             } else {
@@ -522,7 +534,11 @@ public class WorldGuardMigrator {
                             }
                             break;
                         case "snow-fall": 
-                            contexts.add(FlagContexts.TARGET_SNOW_LAYER);
+                            if (GriefDefenderPlugin.getMajorMinecraftVersion() > 12) {
+                                contexts.add(FlagContexts.TARGET_SNOW);
+                            } else {
+                                contexts.add(FlagContexts.TARGET_SNOW_1_12);
+                            }
                             if (valueNode.getString().equals("deny")) {
                                 PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_PLACE, Tristate.FALSE, contexts);
                             } else {
@@ -530,7 +546,11 @@ public class WorldGuardMigrator {
                             }
                             break;
                         case "snow-melt": 
-                            contexts.add(FlagContexts.TARGET_SNOW_LAYER);
+                            if (GriefDefenderPlugin.getMajorMinecraftVersion() > 12) {
+                                contexts.add(FlagContexts.TARGET_SNOW);
+                            } else {
+                                contexts.add(FlagContexts.TARGET_SNOW_1_12);
+                            }
                             if (valueNode.getString().equals("deny")) {
                                 PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_BREAK, Tristate.FALSE, contexts);
                             } else {

@@ -31,6 +31,7 @@ import com.google.common.collect.ImmutableSet;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.GriefDefender;
+import com.griefdefender.api.Tristate;
 import com.griefdefender.api.claim.Claim;
 import com.griefdefender.api.claim.ClaimContexts;
 import com.griefdefender.api.claim.ClaimResult;
@@ -45,8 +46,10 @@ import com.griefdefender.claim.GDClaim;
 import com.griefdefender.claim.GDClaimManager;
 import com.griefdefender.claim.GDClaimResult;
 import com.griefdefender.configuration.ClaimTemplateStorage;
+import com.griefdefender.configuration.FlagConfig;
 import com.griefdefender.configuration.GriefDefenderConfig;
 import com.griefdefender.configuration.MessageStorage;
+import com.griefdefender.configuration.OptionConfig;
 import com.griefdefender.configuration.type.ConfigBase;
 import com.griefdefender.configuration.type.GlobalConfig;
 import com.griefdefender.event.GDCauseStackManager;
@@ -319,8 +322,9 @@ public abstract class BaseStorage {
         // Admin defaults
         Set<Context> contexts = new HashSet<>();
         contexts.add(ClaimContexts.ADMIN_DEFAULT_CONTEXT);
-        final GriefDefenderConfig<GlobalConfig> activeConfig = GriefDefenderPlugin.getGlobalConfig();
-        final Map<String, Boolean> adminDefaultFlags = activeConfig.getConfig().permissionCategory.getFlagDefaults(ClaimTypes.ADMIN.getName().toLowerCase());
+        final FlagConfig flagConfig = GriefDefenderPlugin.getInstance().flagConfig;
+        final OptionConfig optionConfig = GriefDefenderPlugin.getInstance().optionConfig;
+        final Map<String, Boolean> adminDefaultFlags = flagConfig.getConfig().defaultFlagCategory.getFlagDefaults(ClaimTypes.ADMIN.getName().toLowerCase());
         if (adminDefaultFlags != null && !adminDefaultFlags.isEmpty()) {
             this.setDefaultFlags(contexts, adminDefaultFlags);
         }
@@ -328,11 +332,11 @@ public abstract class BaseStorage {
         // Basic defaults
         contexts = new HashSet<>();
         contexts.add(ClaimContexts.BASIC_DEFAULT_CONTEXT);
-        final Map<String, Boolean> basicDefaultFlags = activeConfig.getConfig().permissionCategory.getFlagDefaults(ClaimTypes.BASIC.getName().toLowerCase());
+        final Map<String, Boolean> basicDefaultFlags = flagConfig.getConfig().defaultFlagCategory.getFlagDefaults(ClaimTypes.BASIC.getName().toLowerCase());
         if (basicDefaultFlags != null && !basicDefaultFlags.isEmpty()) {
             this.setDefaultFlags(contexts, basicDefaultFlags);
         }
-        final Map<String, String> basicDefaultOptions = activeConfig.getConfig().permissionCategory.getBasicOptionDefaults();
+        final Map<String, String> basicDefaultOptions = optionConfig.getConfig().defaultOptionCategory.getBasicOptionDefaults();
         contexts = new HashSet<>();
         contexts.add(ClaimTypes.BASIC.getDefaultContext());
         this.setDefaultOptions(ClaimTypes.BASIC.toString(), contexts, new HashMap<>(basicDefaultOptions));
@@ -340,8 +344,8 @@ public abstract class BaseStorage {
         // Town defaults
         contexts = new HashSet<>();
         contexts.add(ClaimContexts.TOWN_DEFAULT_CONTEXT);
-        final Map<String, Boolean> townDefaultFlags = activeConfig.getConfig().permissionCategory.getFlagDefaults(ClaimTypes.TOWN.getName().toLowerCase());
-        final Map<String, String> townDefaultOptions = activeConfig.getConfig().permissionCategory.getTownOptionDefaults();
+        final Map<String, Boolean> townDefaultFlags = flagConfig.getConfig().defaultFlagCategory.getFlagDefaults(ClaimTypes.TOWN.getName().toLowerCase());
+        final Map<String, String> townDefaultOptions = optionConfig.getConfig().defaultOptionCategory.getTownOptionDefaults();
         if (townDefaultFlags != null && !townDefaultFlags.isEmpty()) {
             this.setDefaultFlags(contexts, townDefaultFlags);
         }
@@ -352,24 +356,25 @@ public abstract class BaseStorage {
         // Subdivision defaults
         contexts = new HashSet<>();
         contexts.add(ClaimTypes.SUBDIVISION.getDefaultContext());
-        final Map<String, String> subdivisionDefaultOptions = activeConfig.getConfig().permissionCategory.getSubdivisionOptionDefaults();
+        final Map<String, String> subdivisionDefaultOptions = optionConfig.getConfig().defaultOptionCategory.getSubdivisionOptionDefaults();
         this.setDefaultOptions(ClaimTypes.SUBDIVISION.toString(), contexts, new HashMap<>(subdivisionDefaultOptions));
 
         // Wilderness defaults
         contexts = new HashSet<>();
         contexts.add(ClaimContexts.WILDERNESS_DEFAULT_CONTEXT);
-        final Map<String, Boolean> wildernessDefaultFlags = activeConfig.getConfig().permissionCategory.getFlagDefaults(ClaimTypes.WILDERNESS.getName().toLowerCase());
+        final Map<String, Boolean> wildernessDefaultFlags = flagConfig.getConfig().defaultFlagCategory.getFlagDefaults(ClaimTypes.WILDERNESS.getName().toLowerCase());
         this.setDefaultFlags(contexts, wildernessDefaultFlags);
 
         // Global default options
         contexts = new HashSet<>();
         contexts.add(ClaimContexts.GLOBAL_DEFAULT_CONTEXT);
-        final Map<String, Boolean> globalDefaultFlags = activeConfig.getConfig().permissionCategory.getFlagDefaults("global");
+        final Map<String, Boolean> globalDefaultFlags = flagConfig.getConfig().defaultFlagCategory.getFlagDefaults("global");
         this.setDefaultFlags(contexts, globalDefaultFlags);
-        final Map<String, String> globalDefaultOptions = activeConfig.getConfig().permissionCategory.getUserOptionDefaults();
+        final Map<String, String> globalDefaultOptions = optionConfig.getConfig().defaultOptionCategory.getUserOptionDefaults();
         this.setDefaultOptions(ClaimContexts.GLOBAL_DEFAULT_CONTEXT.getName(), contexts, new HashMap<>(globalDefaultOptions));
-        GriefDefenderPlugin.getInstance().getPermissionProvider().setTransientPermission(GriefDefenderPlugin.DEFAULT_HOLDER, "griefdefender", false, new HashSet<>());
-        activeConfig.save();
+        GriefDefenderPlugin.getInstance().getPermissionProvider().setTransientPermission(GriefDefenderPlugin.DEFAULT_HOLDER, "griefdefender", Tristate.FALSE, new HashSet<>());
+        flagConfig.save();
+        optionConfig.save();
     }
 
     private void setDefaultFlags(Set<Context> contexts, Map<String, Boolean> defaultFlags) {
@@ -383,13 +388,7 @@ public abstract class BaseStorage {
                 if (flag == null) {
                     continue;
                 }
-                PermissionUtil.getInstance().setTransientPermission(GriefDefenderPlugin.DEFAULT_HOLDER, flag.getPermission(), mapEntry.getValue(), contexts);
-                if (flag == Flags.ENTITY_DAMAGE) {
-                    // allow monsters to be attacked by default
-                    contexts.add(FlagContexts.TARGET_TYPE_MONSTER);
-                    PermissionUtil.getInstance().setTransientPermission(GriefDefenderPlugin.DEFAULT_HOLDER, flag.getPermission(), true, contexts);
-                    contexts.remove(FlagContexts.TARGET_TYPE_MONSTER);
-                }
+                PermissionUtil.getInstance().setTransientPermission(GriefDefenderPlugin.DEFAULT_HOLDER, flag.getPermission(), Tristate.fromBoolean(mapEntry.getValue()), contexts);
             }
             PermissionUtil.getInstance().refreshCachedData(GriefDefenderPlugin.DEFAULT_HOLDER);
         });

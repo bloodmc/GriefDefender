@@ -49,7 +49,9 @@ import net.kyori.text.serializer.plain.PlainComponentSerializer;
 
 public class UIHelper {
 
-    public static Comparator<Component> PLAIN_COMPARATOR = (text1, text2) -> PlainComponentSerializer.INSTANCE.serialize(text1).compareTo(PlainComponentSerializer.INSTANCE.serialize(text2));
+    public static Comparator<Component> PLAIN_COMPARATOR = (text1, text2) -> 
+        PlainComponentSerializer.INSTANCE.serialize(text1).replace("true",  "").replace("false",  "")
+            .compareTo(PlainComponentSerializer.INSTANCE.serialize(text2).replace("true",  "").replace("false",  ""));
 
     public static List<Component> stripeText(List<Component> texts) {
         Collections.sort(texts, PLAIN_COMPARATOR);

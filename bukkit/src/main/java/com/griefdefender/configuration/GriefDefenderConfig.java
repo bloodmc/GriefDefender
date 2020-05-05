@@ -42,6 +42,7 @@ import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.logging.Level;
 
 public class GriefDefenderConfig<T extends ConfigBase> {
 
@@ -100,8 +101,7 @@ public class GriefDefenderConfig<T extends ConfigBase> {
                 save();
             }
         } catch (Exception e) {
-            GriefDefenderPlugin.getInstance().getLogger().severe("Failed to load configuration at path " + path.toAbsolutePath());
-            e.printStackTrace();
+            GriefDefenderPlugin.getInstance().getLogger().log(Level.SEVERE, "Failed to load configuration at path " + path.toAbsolutePath(), e);
         }
     }
 
@@ -133,8 +133,7 @@ public class GriefDefenderConfig<T extends ConfigBase> {
             }
             return true;
         } catch (IOException | ObjectMappingException e) {
-            GriefDefenderPlugin.getInstance().getLogger().severe("Failed to save configuration");
-            e.printStackTrace();
+            GriefDefenderPlugin.getInstance().getLogger().log(Level.SEVERE, "Failed to save configuration", e);
             return false;
         }
     }

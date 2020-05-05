@@ -22,32 +22,16 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.griefdefender.command;
+package com.griefdefender.configuration;
 
-import co.aikar.commands.BaseCommand;
-import co.aikar.commands.annotation.CommandAlias;
-import co.aikar.commands.annotation.CommandPermission;
-import co.aikar.commands.annotation.Description;
-import co.aikar.commands.annotation.Subcommand;
-import com.griefdefender.GDPlayerData;
-import com.griefdefender.GriefDefenderPlugin;
-import com.griefdefender.api.claim.ShovelTypes;
-import com.griefdefender.cache.MessageCache;
-import com.griefdefender.permission.GDPermissions;
-import org.spongepowered.api.entity.living.player.Player;
+import com.griefdefender.configuration.category.ConfigCategory;
+import com.griefdefender.configuration.category.DefaultOptionCategory;
+import ninja.leaping.configurate.objectmapping.Setting;
+import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
 
-@CommandAlias("%griefdefender")
-@CommandPermission(GDPermissions.COMMAND_TOWN_MODE)
-public class CommandClaimTown extends BaseCommand {
+@ConfigSerializable
+public class OptionStorage extends ConfigCategory {
 
-    @CommandAlias("modetown|townclaims")
-    @Description("Switches the shovel tool to town claims mode.")
-    @Subcommand("mode town")
-    public void execute(Player player) {
-
-        final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
-        playerData.shovelMode = ShovelTypes.TOWN;
-        playerData.claimSubdividing = null;
-        GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().MODE_TOWN);
-    }
+    @Setting(value = "default-options")
+    public DefaultOptionCategory defaultOptionCategory = new DefaultOptionCategory();
 }

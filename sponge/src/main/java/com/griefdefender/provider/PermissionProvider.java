@@ -382,7 +382,7 @@ public interface PermissionProvider {
      * @param contexts The contexts
      * @return Whether the set permission operation was successful
      */
-    void setTransientOption(GDPermissionHolder holder, String permission, String value, Set<Context> contexts);
+    PermissionResult setTransientOption(GDPermissionHolder holder, String permission, String value, Set<Context> contexts);
 
     /**
      * Sets a transient permission and value with contexts to a holder.
@@ -393,7 +393,7 @@ public interface PermissionProvider {
      * @param contexts The contexts
      * @return Whether the set permission operation was successful
      */
-    void setTransientPermission(GDPermissionHolder holder, String permission, Boolean value, Set<Context> contexts);
+    PermissionResult setTransientPermission(GDPermissionHolder holder, String permission, Tristate value, Set<Context> contexts);
 
     /**
      * Refreshes all cached permission data of holder.

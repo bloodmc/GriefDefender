@@ -144,11 +144,6 @@ public class GDPermissionManager implements PermissionManager {
             EventContextKeys.FAKE_PLAYER, EventContextKeys.NOTIFIER, EventContextKeys.OWNER, EventContextKeys.PISTON_EXTEND, 
             EventContextKeys.PISTON_RETRACT, EventContextKeys.SERVICE_MANAGER, EventContextKeys.PLAYER_BREAK, EventContextKeys.SPAWN_TYPE);
     private static final Pattern PATTERN_META = Pattern.compile("\\.[\\d+]*$");
-    private static final List<Context> CONTEXT_LIST = Arrays.asList(
-            ClaimContexts.ADMIN_DEFAULT_CONTEXT, ClaimContexts.ADMIN_OVERRIDE_CONTEXT,
-            ClaimContexts.BASIC_DEFAULT_CONTEXT, ClaimContexts.BASIC_OVERRIDE_CONTEXT,
-            ClaimContexts.TOWN_DEFAULT_CONTEXT, ClaimContexts.TOWN_OVERRIDE_CONTEXT,
-            ClaimContexts.WILDERNESS_OVERRIDE_CONTEXT, ClaimContexts.WILDERNESS_DEFAULT_CONTEXT);
 
     private enum BanType {
         BLOCK,
@@ -496,7 +491,7 @@ public class GDPermissionManager implements PermissionManager {
                 }
             }
 
-            GriefDefenderPlugin.addEventLogEntry(this.currentEvent, this.eventLocation, this.eventSourceId, this.eventTargetId, permissionHolder, permission, trust, permissionValue);
+            GriefDefenderPlugin.addEventLogEntry(this.currentEvent, claim, this.eventLocation, this.eventSourceId, this.eventTargetId, this.eventSubject == null ? permissionHolder : this.eventSubject, permission, trust, permissionValue, this.eventContexts);
         }
 
         if (eventPlayerData != null && eventPlayerData.eventResultCache != null) {
@@ -508,23 +503,23 @@ public class GDPermissionManager implements PermissionManager {
         return permissionValue;
     }
 
-    public void addEventLogEntry(Event event, Location<World> location, Object source, Object target, User user, Flag flag, String trust, Tristate result) {
+    public void addEventLogEntry(Event event, Claim claim, Location<World> location, Object source, Object target, User user, Flag flag, String trust, Tristate result) {
         final GDPermissionHolder holder = PermissionHolderCache.getInstance().getOrCreateUser(user);
-        addEventLogEntry(event, location, source, target, holder, flag, trust, result);
+        addEventLogEntry(event, claim, location, source, target, holder, flag, trust, result);
     }
 
     // Used for situations where events are skipped for perf reasons
-    public void addEventLogEntry(Event event, Location<World> location, Object source, Object target, GDPermissionHolder permissionSubject, Flag flag, String trust, Tristate result) {
-        this.addEventLogEntry(event, location, source, target, permissionSubject, flag.getPermission(), trust, result);
+    public void addEventLogEntry(Event event, Claim claim, Location<World> location, Object source, Object target, GDPermissionHolder permissionSubject, Flag flag, String trust, Tristate result) {
+        this.addEventLogEntry(event, claim, location, source, target, permissionSubject, flag.getPermission(), trust, result);
     }
-    public void addEventLogEntry(Event event, Location<World> location, Object source, Object target, GDPermissionHolder permissionSubject, String permission, String trust, Tristate result) {
+    public void addEventLogEntry(Event event, Claim claim, Location<World> location, Object source, Object target, GDPermissionHolder permissionSubject, String permission, String trust, Tristate result) {
         if (GriefDefenderPlugin.debugActive) {
             String sourceId = getPermissionIdentifier(source, true);
             String targetId = getPermissionIdentifier(target);
             if (permissionSubject == null) {
                 permissionSubject = GriefDefenderPlugin.DEFAULT_HOLDER;
             }
-            GriefDefenderPlugin.addEventLogEntry(event, location, sourceId, targetId, permissionSubject, permission, trust, result);
+            GriefDefenderPlugin.addEventLogEntry(event, claim, location, sourceId, targetId, permissionSubject, permission, trust, result, this.eventContexts);
         }
     }
 
@@ -674,7 +669,6 @@ public class GDPermissionManager implements PermissionManager {
                     return null;
                 }
                 final String id = blockstate.getType().getId();
-                contexts.add(new Context("meta", String.valueOf(BlockUtil.getInstance().getBlockStateMeta(blockstate))));
                 this.addBlockPropertyContexts(contexts, blockstate);
                 if (this.isObjectIdBanned(claim, id, BanType.BLOCK)) {
                     return null;

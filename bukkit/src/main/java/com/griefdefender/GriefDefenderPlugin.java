@@ -30,10 +30,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
 import java.util.concurrent.Executor;
@@ -67,6 +69,7 @@ import com.griefdefender.api.claim.ClaimSchematic;
 import com.griefdefender.api.claim.ClaimType;
 import com.griefdefender.api.claim.TrustType;
 import com.griefdefender.api.economy.BankTransaction;
+import com.griefdefender.api.permission.Context;
 import com.griefdefender.api.permission.flag.Flag;
 import com.griefdefender.api.permission.flag.FlagData;
 import com.griefdefender.api.permission.flag.FlagDefinition;
@@ -151,9 +154,11 @@ import com.griefdefender.command.CommandUntrustPlayer;
 import com.griefdefender.command.CommandUntrustPlayerAll;
 import com.griefdefender.command.gphelper.CommandAccessTrust;
 import com.griefdefender.command.gphelper.CommandContainerTrust;
+import com.griefdefender.configuration.FlagConfig;
 import com.griefdefender.configuration.GriefDefenderConfig;
 import com.griefdefender.configuration.MessageDataConfig;
 import com.griefdefender.configuration.MessageStorage;
+import com.griefdefender.configuration.OptionConfig;
 import com.griefdefender.configuration.category.BlacklistCategory;
 import com.griefdefender.configuration.serializer.ClaimTypeSerializer;
 import com.griefdefender.configuration.serializer.ComponentConfigSerializer;
@@ -236,6 +241,8 @@ public class GriefDefenderPlugin {
     public static final String IMPLEMENTATION_NAME = GriefDefenderPlugin.class.getPackage().getImplementationTitle();
     public static final String IMPLEMENTATION_VERSION =  GriefDefenderPlugin.class.getPackage().getImplementationVersion() == null ? "unknown" : GriefDefenderPlugin.class.getPackage().getImplementationVersion();
     private Path configPath = Paths.get(".", "plugins", "GriefDefender");
+    public FlagConfig flagConfig;
+    public OptionConfig optionConfig;
     public MessageStorage messageStorage;
     public MessageDataConfig messageData;
     public Map<UUID, Random> worldGeneratorRandoms = new HashMap<>();
@@ -293,7 +300,7 @@ public class GriefDefenderPlugin {
         return this.configPath;
     }
 
-    public static void addEventLogEntry(Event event, Location location, String sourceId, String targetId, GDPermissionHolder permissionSubject, String permission, String trust, Tristate result) {
+    public static void addEventLogEntry(Event event, Claim claim, Location location, String sourceId, String targetId, GDPermissionHolder permissionSubject, String permission, String trust, Tristate result, Set<Context> contexts) {
         final String eventName = event.getClass().getSimpleName().replace('$', '.').replace(".Impl", "");
         final String eventLocation = location == null ? "none" : VecHelper.toVector3i(location).toString();
         for (GDDebugData debugEntry : GriefDefenderPlugin.getInstance().getDebugUserMap().values()) {
@@ -339,7 +346,37 @@ public class GriefDefenderPlugin {
                 if (parts.length > 1 && parts[0].equalsIgnoreCase("minecraft")) {
                     messageTarget = parts[1];
                 }
-                debugEntry.addRecord(messageFlag, trust, messageSource, messageTarget, eventLocation, messageUser, permission, result);
+                String contextStr = "";
+                final List<String> contextList = new ArrayList<>();
+                for (Context context : contexts) {
+                    contextList.add("<b>" + context.getKey() + "</b>=" + context.getValue());
+                }
+                final String serverName = PermissionUtil.getInstance().getServerName();
+                if (serverName != null) {
+                    contextList.add("<b>server</b>=" + serverName);
+                } else {
+                    contextList.add("<b>server</b>=global");
+                }
+                Collections.sort(contextList);
+                for (String context : contextList) {
+                    contextStr += context + "<br />";
+                }
+
+                String locationStr = "";
+                locationStr += "<b>claim_uuid</b>=" + claim.getUniqueId() + "<br />";
+                locationStr += "<b>claim_type</b>=" + claim.getType().getName().toLowerCase() + "<br />";
+                locationStr += "<b>location</b>=" + eventLocation + "<br />";
+                locationStr += "<b>world</b>=" + location.getWorld().getName().toLowerCase() + "<br />";
+
+                String messageContexts = "<details>" + 
+                        "  <summary><i>" + PlainComponentSerializer.INSTANCE.serialize(MessageCache.getInstance().DEBUG_CLICK_TO_EXPAND) + "</i></summary>" + 
+                        contextStr +
+                        "</details>";
+                String messageLocation = "<details>" + 
+                        "  <summary><i>" + PlainComponentSerializer.INSTANCE.serialize(MessageCache.getInstance().DEBUG_CLICK_TO_EXPAND) + "</i></summary>" + 
+                        locationStr +
+                        "</details>";
+                debugEntry.addRecord(messageFlag, trust, messageSource, messageTarget, messageLocation, messageUser, messageContexts, result);
                 continue;
             }
 
@@ -417,7 +454,6 @@ public class GriefDefenderPlugin {
         ShovelTypeRegistryModule.getInstance().registerDefaults();
         TrustTypeRegistryModule.getInstance().registerDefaults();
         FlagRegistryModule.getInstance().registerDefaults();
-        FlagDefinitionRegistryModule.getInstance().registerDefaults();
         ResultTypeRegistryModule.getInstance().registerDefaults();
         EntityTypeRegistryModule.getInstance().registerDefaults();
         BlockTypeRegistryModule.getInstance().registerDefaults();
@@ -487,7 +523,6 @@ public class GriefDefenderPlugin {
             }
         }
 
-        //this.registerBaseCommands();
         Bukkit.getPluginManager().registerEvents(new BlockEventHandler(dataStore), GDBootstrap.getInstance());
         Bukkit.getPluginManager().registerEvents(new BlockEventTracker(), GDBootstrap.getInstance());
         Bukkit.getPluginManager().registerEvents(new CommandEventHandler(dataStore), GDBootstrap.getInstance());
@@ -496,22 +531,12 @@ public class GriefDefenderPlugin {
         Bukkit.getPluginManager().registerEvents(new WorldEventHandler(), GDBootstrap.getInstance());
         Bukkit.getPluginManager().registerEvents(new NMSUtil(), GDBootstrap.getInstance());
 
-        /*PUBLIC_USER = Sponge.getServiceManager().provide(UserStorageService.class).get()
-                .getOrCreate(GameProfile.of(GriefDefenderPlugin.PUBLIC_UUID, GriefDefenderPlugin.PUBLIC_NAME));
-        WORLD_USER = Sponge.getServiceManager().provide(UserStorageService.class).get()
-                .getOrCreate(GameProfile.of(GriefDefenderPlugin.WORLD_USER_UUID, GriefDefenderPlugin.WORLD_USER_NAME));*/
-
         // run cleanup task
         int cleanupTaskInterval = GriefDefenderPlugin.getGlobalConfig().getConfig().claim.expirationCleanupInterval;
         if (cleanupTaskInterval > 0) {
             new ClaimCleanupTask(cleanupTaskInterval);
         }
 
-
-        /*if (this.permissionService == null) {
-            this.getLogger().severe("Unable to initialize plugin. GriefDefender requires a permissions plugin such as LuckPerms.");
-            return;
-        }*/
 
         final boolean resetMigration = GriefDefenderPlugin.getGlobalConfig().getConfig().playerdata.resetMigrations;
         final boolean resetClaimData = GriefDefenderPlugin.getGlobalConfig().getConfig().playerdata.resetAccruedClaimBlocks;
@@ -840,8 +865,6 @@ public class GriefDefenderPlugin {
 
             Path rootConfigPath = this.getConfigPath().resolve("worlds");
             BaseStorage.globalConfig = new GriefDefenderConfig<>(GlobalConfig.class, this.getConfigPath().resolve("global.conf"), null);
-            BaseStorage.globalConfig.getConfig().permissionCategory.refreshFlags();
-            BaseStorage.globalConfig.getConfig().permissionCategory.checkOptions();
             String localeString = BaseStorage.globalConfig.getConfig().message.locale;
             try {
                 LocaleUtils.toLocale(localeString);
@@ -863,7 +886,16 @@ public class GriefDefenderPlugin {
             messageStorage = new MessageStorage(localePath);
             messageData = messageStorage.getConfig();
             MessageCache.getInstance().loadCache();
-            BaseStorage.globalConfig.getConfig().customFlags.initDefaults();
+            flagConfig = new FlagConfig(this.getConfigPath().resolve("flags.conf"));
+            // FlagDefinition registry needs to init after config load
+            FlagDefinitionRegistryModule.getInstance().registerDefaults();
+            flagConfig.getConfig().customFlags.initDefaults();
+            flagConfig.save();
+            flagConfig.getConfig().defaultFlagCategory.refreshFlags();
+            flagConfig.save();
+            optionConfig = new OptionConfig(this.getConfigPath().resolve("options.conf"));
+            optionConfig.getConfig().defaultOptionCategory.checkOptions();
+            optionConfig.save();
             BaseStorage.globalConfig.save();
             BaseStorage.USE_GLOBAL_PLAYER_STORAGE = !BaseStorage.globalConfig.getConfig().playerdata.useWorldPlayerData();
             GDFlags.populateFlagStatus();
@@ -1117,6 +1149,23 @@ public class GriefDefenderPlugin {
 
     public PermissionProvider getPermissionProvider() {
         return this.permissionProvider;
+    }
+
+    public static int getMajorMinecraftVersion() {
+        final String version = Bukkit.getVersion();
+        if (version.contains("1.8.8")) {
+            return 8;
+        } else if (version.contains("1.12")) {
+            return 12;
+        } else if (version.contains("1.13")) {
+            return 13;
+        } else if (version.contains("1.14")) {
+            return 14;
+        } else if (version.contains("1.15")) {
+            return 15;
+        }
+
+        return -1;
     }
 
     public static MCTiming timing(String name) {

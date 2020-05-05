@@ -100,8 +100,7 @@ public class GriefDefenderConfig<T extends ConfigBase> {
                 save();
             }
         } catch (Exception e) {
-            GriefDefenderPlugin.getInstance().getLogger().error("Failed to load configuration at path " + path.toAbsolutePath());
-            e.printStackTrace();
+            GriefDefenderPlugin.getInstance().getLogger().error("Failed to load configuration at path " + path.toAbsolutePath(), e);
         }
     }
 
@@ -133,8 +132,7 @@ public class GriefDefenderConfig<T extends ConfigBase> {
             }
             return true;
         } catch (IOException | ObjectMappingException e) {
-            GriefDefenderPlugin.getInstance().getLogger().error("Failed to save configuration");
-            e.printStackTrace();
+            GriefDefenderPlugin.getInstance().getLogger().error("Failed to save configuration", e);
             return false;
         }
     }

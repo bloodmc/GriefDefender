@@ -25,11 +25,17 @@
 package com.griefdefender.configuration.category;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
+import com.griefdefender.GriefDefenderPlugin;
+import com.griefdefender.api.permission.Context;
+import com.griefdefender.api.permission.flag.FlagData;
+import com.griefdefender.api.permission.flag.FlagDefinition;
 import com.griefdefender.permission.flag.GDFlagDefinition;
-import com.griefdefender.permission.flag.GDFlagDefinitions;
-
+import com.griefdefender.registry.FlagDefinitionRegistryModule;
+import com.griefdefender.util.PermissionUtil;
 import ninja.leaping.configurate.objectmapping.Setting;
 import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
 
@@ -50,8 +56,10 @@ public class CustomFlagGroupDefinitionCategory extends ConfigCategory {
             userGroup = new CustomFlagGroupCategory();
         }
         if (userGroup.isEnabled() && userGroup.getFlagDefinitions().isEmpty()) {
-            for (GDFlagDefinition definition : GDFlagDefinitions.USER_FLAGS) {
-                userGroup.getFlagDefinitions().put(definition.getName(), definition);
+            for (FlagDefinition definition : FlagDefinitionRegistryModule.getInstance().getAll()) {
+                if (definition.getGroupName().equalsIgnoreCase("user")) {
+                    userGroup.getFlagDefinitions().put(definition.getName(), (GDFlagDefinition) definition);
+                }
             }
             this.groups.put("user", userGroup);
         }
@@ -59,11 +67,47 @@ public class CustomFlagGroupDefinitionCategory extends ConfigCategory {
             adminGroup = new CustomFlagGroupCategory();
         }
         if (adminGroup.isEnabled() && adminGroup.getFlagDefinitions().isEmpty()) {
-            for (GDFlagDefinition definition : GDFlagDefinitions.ADMIN_FLAGS) {
-                adminGroup.getFlagDefinitions().put(definition.getName(), definition);
+            for (FlagDefinition definition : FlagDefinitionRegistryModule.getInstance().getAll()) {
+                if (definition.getGroupName().equalsIgnoreCase("admin")) {
+                    adminGroup.getFlagDefinitions().put(definition.getName(), (GDFlagDefinition) definition);
+                }
             }
             adminGroup.isAdmin = true;
             this.groups.put("admin", adminGroup);
+        }
+
+        for (CustomFlagGroupCategory group : this.groups.values()) {
+            if (!group.isEnabled()) {
+                continue;
+            }
+            for (FlagDefinition flagDefinition : group.definitions.values()) {
+                if (!flagDefinition.isEnabled()) {
+                    continue;
+                }
+                Set<Context> contexts = new HashSet<>(flagDefinition.getContexts());
+                for (FlagData flagData : flagDefinition.getFlagData()) {
+                    Set<Context> permissionContexts = new HashSet<>(contexts);
+                    permissionContexts.addAll(flagData.getContexts());
+                    boolean shouldApply = false;
+                    boolean isOverride = false;
+                    for (Context context : permissionContexts) {
+                        if (context.getKey().equalsIgnoreCase("gd_claim_default")) {
+                            shouldApply = true;
+                            break;
+                        } else if (context.getKey().equalsIgnoreCase("gd_claim_override")) {
+                            shouldApply = true;
+                            isOverride = true;
+                        }
+                    }
+                    if (shouldApply) {
+                        if (isOverride) {
+                            PermissionUtil.getInstance().setPermissionValue(GriefDefenderPlugin.DEFAULT_HOLDER, flagData.getFlag().getPermission(), flagDefinition.getDefaultValue(), permissionContexts);
+                        } else {
+                            PermissionUtil.getInstance().setTransientPermission(GriefDefenderPlugin.DEFAULT_HOLDER, flagData.getFlag().getPermission(), flagDefinition.getDefaultValue(), permissionContexts);
+                        }
+                    }
+                }
+            }
         }
     }
 }

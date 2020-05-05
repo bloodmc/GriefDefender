@@ -24,15 +24,9 @@
  */
 package com.griefdefender.configuration.category;
 
-import com.google.common.collect.Maps;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.claim.ClaimBlockSystem;
-import com.griefdefender.api.claim.ClaimType;
-import com.griefdefender.api.claim.ClaimTypes;
-import com.griefdefender.api.permission.flag.Flag;
 import com.griefdefender.api.permission.option.Options;
-import com.griefdefender.registry.ClaimTypeRegistryModule;
-import com.griefdefender.registry.FlagRegistryModule;
 import ninja.leaping.configurate.objectmapping.Setting;
 import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
 
@@ -40,15 +34,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @ConfigSerializable
-public class DefaultPermissionCategory extends ConfigCategory {
-
-    @Setting(value = "default-claim-flags", comment = "The default flag settings used by claims. The group name represents the claim type."
-            + "\nEx: The group admin will ONLY affect admin claims."
-            + "\nSupported groups are : global, admin, basic, subdivision, town, and wilderness."
-            + "\nNote: Global represents all claim types."
-            + "\nNote: Specific types, such as wilderness, have higher priority than global."
-            + "\nNote: Defaults do not force flags onto user claims. A newly created claim will have no flags set and use these default settings until a claim owner sets flags.")
-    private Map<String, Map<String, Boolean>> defaultClaimFlags = Maps.newHashMap();
+public class DefaultOptionCategory extends ConfigCategory {
 
     @Setting(value = "default-user-options", comment = "The default user options for all players.\nNote: Setting default claim type options will override this.")
     private Map<String, String> defaultUserOptions = new HashMap<>();
@@ -62,18 +48,7 @@ public class DefaultPermissionCategory extends ConfigCategory {
     @Setting(value = "default-user-town-options", comment = "The default options applied to users for towns.\nNote: These options override default global options.")
     private Map<String, String> defaultTownOptions = new HashMap<>();
 
-    public DefaultPermissionCategory() {
-        Map<String, Boolean> globalFlagMap = new HashMap<>();
-        for (Flag flag : FlagRegistryModule.getInstance().getAll()) {
-            globalFlagMap.put(flag.getName(), flag.getDefaultClaimTypeValue(null));
-        }
-        this.defaultClaimFlags.put("global", globalFlagMap);
-        Map<String, Boolean> wildernessFlagMap = new HashMap<>();
-        for (Flag flag : FlagRegistryModule.getInstance().getAll()) {
-            wildernessFlagMap.put(flag.getName(), flag.getDefaultClaimTypeValue(ClaimTypes.WILDERNESS));
-        }
-        this.defaultClaimFlags.put(ClaimTypes.WILDERNESS.getName().toLowerCase(), wildernessFlagMap);
-
+    public DefaultOptionCategory() {
         final int maxAccruedBlocks = GriefDefenderPlugin.CLAIM_BLOCK_SYSTEM == ClaimBlockSystem.VOLUME ? 20480000 : 80000;
         this.defaultUserOptions.put(Options.ABANDON_DELAY.getName(), "0");
         this.defaultUserOptions.put(Options.ABANDON_RETURN_RATIO.getName(), "1.0");
@@ -168,29 +143,6 @@ public class DefaultPermissionCategory extends ConfigCategory {
                 break;
             }
         }
-    }
-
-    public void refreshFlags() {
-        for (ClaimType type : ClaimTypeRegistryModule.getInstance().getAll()) {
-            final Map<String, Boolean> flagTypeMap = this.defaultClaimFlags.get(type.getName().toLowerCase());
-            if (flagTypeMap != null) {
-                for (Flag flag : FlagRegistryModule.getInstance().getAll()) {
-                    if (!flagTypeMap.containsKey(flag.getName())) {
-                        flagTypeMap.put(flag.getName(), flag.getDefaultClaimTypeValue(type));
-                    }
-                }
-            }
-        }
-        final Map<String, Boolean> globalFlagMap = this.defaultClaimFlags.get("global");
-        for (Flag flag : FlagRegistryModule.getInstance().getAll()) {
-            if (!globalFlagMap.containsKey(flag.getName())) {
-                globalFlagMap.put(flag.getName(), flag.getDefaultClaimTypeValue(null));
-            }
-        }
-    }
-
-    public Map<String, Boolean> getFlagDefaults(String type) {
-        return this.defaultClaimFlags.get(type.toLowerCase());
     }
 
     public Map<String, String> getBasicOptionDefaults() {

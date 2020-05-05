@@ -642,7 +642,7 @@ public class PlayerEventHandler implements Listener {
         final ItemStack itemInHand = event.getItem();
         final Location location = clickedBlock == null ? null : clickedBlock.getLocation();
         final GDPlayerData playerData = this.dataStore.getOrCreateGlobalPlayerData(player.getUniqueId());
-        final Object source = itemInHand != null ? itemInHand : player;
+        final Object source = itemInHand != null && !event.isBlockInHand() ? itemInHand : player;
         if (playerData.claimMode) {
             return;
         }

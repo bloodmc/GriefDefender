@@ -227,20 +227,20 @@ public class BlockEventHandler {
                 // If a player successfully interacted with a block recently such as a pressure plate, ignore check
                 // This fixes issues such as pistons not being able to extend
                 if (user != null && !isForgePlayerBreak && playerData != null && playerData.eventResultCache != null && playerData.eventResultCache.checkEventResultCache(targetClaim, "block-pre") == Tristate.TRUE) {
-                    GDPermissionManager.getInstance().addEventLogEntry(event, location, source, blockState, user, Flags.BLOCK_BREAK, playerData.eventResultCache.lastTrust, Tristate.TRUE);
+                    GDPermissionManager.getInstance().addEventLogEntry(event, targetClaim, location, source, blockState, user, Flags.BLOCK_BREAK, playerData.eventResultCache.lastTrust, Tristate.TRUE);
                     continue;
                 }
                 if (user != null && targetClaim.isUserTrusted(user, TrustTypes.BUILDER)) {
-                    GDPermissionManager.getInstance().addEventLogEntry(event, location, source, blockState, user, Flags.BLOCK_BREAK, TrustTypes.BUILDER.getName().toLowerCase(), Tristate.TRUE);
+                    GDPermissionManager.getInstance().addEventLogEntry(event, targetClaim, location, source, blockState, user, Flags.BLOCK_BREAK, TrustTypes.BUILDER.getName().toLowerCase(), Tristate.TRUE);
                     continue;
                 }
                 if (sourceClaim.getOwnerUniqueId().equals(targetClaim.getOwnerUniqueId()) && user == null && sourceEntity == null && !isFireSource && !isLeafDecay) {
-                    GDPermissionManager.getInstance().addEventLogEntry(event, location, source, blockState, user, Flags.BLOCK_BREAK, "owner", Tristate.TRUE);
+                    GDPermissionManager.getInstance().addEventLogEntry(event, targetClaim, location, source, blockState, user, Flags.BLOCK_BREAK, "owner", Tristate.TRUE);
                     continue;
                 }
                 if (user != null && pistonExtend) {
                     if (targetClaim.isUserTrusted(user, TrustTypes.ACCESSOR)) {
-                        GDPermissionManager.getInstance().addEventLogEntry(event, location, source, blockState, user, Flags.BLOCK_BREAK, TrustTypes.ACCESSOR.getName().toLowerCase(), Tristate.TRUE);
+                        GDPermissionManager.getInstance().addEventLogEntry(event, targetClaim, location, source, blockState, user, Flags.BLOCK_BREAK, TrustTypes.ACCESSOR.getName().toLowerCase(), Tristate.TRUE);
                         continue;
                     }
                 }
@@ -289,11 +289,11 @@ public class BlockEventHandler {
                 // If a player successfully interacted with a block recently such as a pressure plate, ignore check
                 // This fixes issues such as pistons not being able to extend
                 if (!isForgePlayerBreak && playerData != null && playerData.eventResultCache != null && playerData.eventResultCache.checkEventResultCache(targetClaim, "block-pre") == Tristate.TRUE) {
-                    GDPermissionManager.getInstance().addEventLogEntry(event, location, source, blockState, user, Flags.BLOCK_BREAK, playerData.eventResultCache.lastTrust, Tristate.TRUE);
+                    GDPermissionManager.getInstance().addEventLogEntry(event, targetClaim, location, source, blockState, user, Flags.BLOCK_BREAK, playerData.eventResultCache.lastTrust, Tristate.TRUE);
                     continue;
                 }
                 if (targetClaim.isUserTrusted(user, TrustTypes.BUILDER)) {
-                    GDPermissionManager.getInstance().addEventLogEntry(event, location, source, blockState, user, Flags.BLOCK_BREAK, TrustTypes.BUILDER.getName().toLowerCase(), Tristate.TRUE);
+                    GDPermissionManager.getInstance().addEventLogEntry(event, targetClaim, location, source, blockState, user, Flags.BLOCK_BREAK, TrustTypes.BUILDER.getName().toLowerCase(), Tristate.TRUE);
                     continue;
                 }
 

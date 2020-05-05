@@ -412,13 +412,13 @@ public class PermissionsExProvider implements PermissionProvider {
     }
 
     @Override
-    public void setTransientOption(GDPermissionHolder holder, String permission, String value, Set<Context> contexts) {
-        holderToPEXSubject(holder).transientData().update(data -> data.setOption(contextsGDToPEX(contexts), permission, value));
+    public PermissionResult setTransientOption(GDPermissionHolder holder, String permission, String value, Set<Context> contexts) {
+        return convertResult(holderToPEXSubject(holder).transientData().update(data -> data.setOption(contextsGDToPEX(contexts), permission, value))).join();
     }
 
     @Override
-    public void setTransientPermission(GDPermissionHolder holder, String permission, Boolean value, Set<Context> contexts) {
-        holderToPEXSubject(holder).transientData().update(data -> data.setPermission(contextsGDToPEX(contexts), permission, pValFromBool(value)));
+    public PermissionResult setTransientPermission(GDPermissionHolder holder, String permission, Tristate value, Set<Context> contexts) {
+        return convertResult(holderToPEXSubject(holder).transientData().update(data -> data.setPermission(contextsGDToPEX(contexts), permission, pValFromBool(value.asBoolean())))).join();
     }
 
     @Override

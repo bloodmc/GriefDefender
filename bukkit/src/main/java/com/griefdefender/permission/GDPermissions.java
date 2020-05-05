@@ -97,7 +97,7 @@ public class GDPermissions {
     // flags
     public static final String USER_CLAIM_FLAGS = "griefdefender.user.claim.flag";
     public static final String COMMAND_FLAGS_CLAIM = "griefdefender.user.claim.command.flag.base";
-    public static final String COMMAND_FLAGS_CLAIM_ARG = "griefdefender.user.claim.command.flag.arg";
+    public static final String COMMAND_FLAGS_CLAIM_ARG = "griefdefender.admin.claim.command.flag.arg";
     public static final String COMMAND_FLAGS_CLAIM_GUI = "griefdefender.user.claim.command.flag.gui";
     public static final String COMMAND_FLAGS_DEBUG = "griefdefender.user.claim.command.flag.debug";
     public static final String COMMAND_FLAGS_PLAYER = "griefdefender.user.claim.command.flag.player";

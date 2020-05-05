@@ -330,7 +330,7 @@ public class CommonEntityEventHandler {
             }
 
             if (player != null) {
-			    if (GDFlags.ENTITY_RIDING && onMount) {
+                if (GDFlags.ENTITY_RIDING && onMount) {
                     if (GDPermissionManager.getInstance().getFinalPermission(event, targetEntity.getLocation(), toClaim, Flags.ENTITY_RIDING, player, targetEntity, player, TrustTypes.ACCESSOR, true) == Tristate.FALSE) {
                         event.setCancelled(true);
                         Location<World> safeLocation = Sponge.getGame().getTeleportHelper()

@@ -82,6 +82,12 @@ public class GDFlagData implements FlagData {
         }
 
         @Override
+        public Builder context(Context context) {
+            this.contexts.add(context);
+            return this;
+        }
+
+        @Override
         public Builder contexts(Set<Context> contexts) {
             this.contexts = contexts;
             return this;

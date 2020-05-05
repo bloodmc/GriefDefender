@@ -27,7 +27,6 @@ package com.griefdefender.configuration.type;
 import com.griefdefender.configuration.category.BanCategory;
 import com.griefdefender.configuration.category.BlacklistCategory;
 import com.griefdefender.configuration.category.ClaimCategory;
-import com.griefdefender.configuration.category.OptionCategory;
 import com.griefdefender.configuration.category.TownCategory;
 import com.griefdefender.configuration.category.VisualCategory;
 
@@ -51,9 +50,6 @@ public class ConfigBase {
 
     @Setting
     public ClaimCategory claim = new ClaimCategory();
-
-    @Setting
-    public OptionCategory options = new OptionCategory();
 
     @Setting
     public TownCategory town = new TownCategory();
