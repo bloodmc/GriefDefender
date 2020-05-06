@@ -145,7 +145,7 @@ public class CauseContextHelper {
     //private static final Pattern CONTEXT_PATTERN = Pattern.compile("^context?\\[ *(?:[\\w.-]+:[\\w.-]+:[\\w\\/.-]+ *(?:, *(?!\\]$)|(?=\\]$)))+ *\\]$"); 
 
     // original = private static final Pattern CONTEXT_PATTERN = Pattern.compile("^context?\\[ *((?:[\\w.-]+:[\\w.-]+(?::[\\w\\/.-]+)? *(?:, *(?!\\]$)|(?=\\]$)))+) *\\]$");
-    private static final Pattern CONTEXT_PATTERN = Pattern.compile("^context?\\[ *((?:[\\w.-]+=[\\w.-]+(?::[\\w\\/.-]+)? *(?:, *(?!\\]$)|(?=\\]$)))+) *\\]$");
+    private static final Pattern CONTEXT_PATTERN = Pattern.compile("^context?\\[ *((?:[\\w.-]+=[#\\w.-]+(?::[#\\w\\/.-]+)? *(?:, *(?!\\]$)|(?=\\]$)))+) *\\]$");
     private static final Pattern CONTEXT_SPLIT = Pattern.compile("^context?\\[ *((?:[\\w.-]+:[\\w.-]+:[\\w\\/.-]+(?: *, *(?!\\]$)|(?= *\\]$)))+) *\\]$");
     private static final List<String> VALID_CONTEXTS = Arrays.asList("world", "server", "mode", "player", "group", "source", "used_item", "type");
     //  final String regex = "^context?\\[ *((?:[\\w.-]+:[\\w.-]+:[\\w\\/.-]+(?: *, *(?!\\]$)|(?= *\\]$)))+) *\\]$";
