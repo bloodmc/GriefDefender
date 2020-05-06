@@ -826,6 +826,9 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                         .build())
                     .build());
 
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.SOURCE_PLAYER);
+        flagContexts.add(FlagContexts.TARGET_PLAYER);
         this.registerCustomType(
                 definitionBuilder
                     .reset()

@@ -747,15 +747,16 @@ public abstract class ClaimFlagBase extends BaseCommand {
                                 .append("=", TextColor.WHITE)
                                 .append(value.replace("minecraft:", ""), TextColor.GRAY);
                     }
-                    if (customFlag.isAdmin()) {
-                        // show active value
-                        final GDActiveFlagData activeData = this.getActiveDefinitionResult(claim, customFlag, flagData);
-                        hoverBuilder.append("\n\nActive Result", TextColor.AQUA)
-                                    .append("\nvalue=", TextColor.WHITE)
-                                    .append(activeData.getValue().name().toLowerCase(), TextColor.GOLD)
-                                    .append("\ntype=", TextColor.WHITE)
-                                    .append(activeData.getType().name(), activeData.getColor());
-                    }
+
+                    // show active value
+                    final GDActiveFlagData activeData = this.getActiveDefinitionResult(claim, customFlag, flagData);
+                    hoverBuilder.append("\nActive Result: ")
+                                .append("\nvalue", TextColor.DARK_AQUA)
+                                .append("=", TextColor.WHITE)
+                                .append(activeData.getValue().name().toLowerCase(), TextColor.GOLD)
+                                .append("\ntype", TextColor.DARK_AQUA)
+                                .append("=", TextColor.WHITE)
+                                .append(activeData.getType().name() + "\n", activeData.getColor());
                 }
 
                 hasHover = true;
