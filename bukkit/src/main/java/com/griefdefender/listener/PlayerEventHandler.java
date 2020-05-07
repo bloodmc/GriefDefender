@@ -625,6 +625,22 @@ public class PlayerEventHandler implements Listener {
         }
 
         GDTimings.PLAYER_INTERACT_BLOCK_SECONDARY_EVENT.stopTiming();
+
+        if (event instanceof PlayerBucketEmptyEvent) {
+            // check block place
+            result = GDPermissionManager.getInstance().getFinalPermission(event, location, claim, Flags.BLOCK_PLACE, source, event.getBucket().name().toLowerCase().replace("_bucket", ""), player, TrustTypes.BUILDER, true);
+            if (result == Tristate.FALSE) {
+                event.setCancelled(true);
+                return;
+            }
+        } else if (event instanceof PlayerBucketFillEvent) {
+            // check block place
+            result = GDPermissionManager.getInstance().getFinalPermission(event, location, claim, Flags.BLOCK_BREAK, source, event.getBlockClicked(), player, TrustTypes.BUILDER, true);
+            if (result == Tristate.FALSE) {
+                event.setCancelled(true);
+                return;
+            }
+        }
     }
 
     public void onPlayerInteractBlockPrimary(PlayerInteractEvent event, Player player) {
