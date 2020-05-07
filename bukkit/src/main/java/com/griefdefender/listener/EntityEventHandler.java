@@ -646,6 +646,9 @@ public class EntityEventHandler implements Listener {
                 user = CauseContextHelper.getEventUser(sourceLocation);
             } else if (source instanceof Player) {
                 user = PermissionHolderCache.getInstance().getOrCreateUser((Player) source);
+            } else if (source instanceof Block) {
+                sourceLocation = ((Block) source).getLocation();
+                user = CauseContextHelper.getEventUser(sourceLocation);
             }
         }
 

@@ -126,6 +126,7 @@ public class BlockEventHandler implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onBlockPistonExtend(BlockPistonExtendEvent event) {
+        GDCauseStackManager.getInstance().pushCause(event.getBlock());
         if (lastBlockPreTick == NMSUtil.getInstance().getRunningServerTicks()) {
             // IGNORE
             event.setCancelled(lastBlockPreCancelled);
