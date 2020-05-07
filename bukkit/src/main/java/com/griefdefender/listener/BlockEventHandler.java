@@ -152,9 +152,6 @@ public class BlockEventHandler implements Listener {
                 // Sticky pistons will attach to next block so we need to check it
                 location = BlockUtil.getInstance().getBlockRelative(location, event.getDirection());
                 targetClaim = this.storage.getClaimAt(location, targetClaim);
-                if (targetClaim.isWilderness()) {
-                    return;
-                }
             }
 
             if (handleBlockBreak(event, location, targetClaim, event.getBlock(), location.getBlock(), user, false)) {
