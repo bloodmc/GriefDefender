@@ -634,7 +634,7 @@ public class PlayerEventHandler implements Listener {
                 return;
             }
         } else if (event instanceof PlayerBucketFillEvent) {
-            // check block place
+            // check block break
             result = GDPermissionManager.getInstance().getFinalPermission(event, location, claim, Flags.BLOCK_BREAK, source, event.getBlockClicked(), player, TrustTypes.BUILDER, true);
             if (result == Tristate.FALSE) {
                 event.setCancelled(true);

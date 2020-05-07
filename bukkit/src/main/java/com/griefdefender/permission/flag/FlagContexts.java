@@ -88,5 +88,6 @@ public class FlagContexts {
     public static final Context TARGET_TYPE_VEHICLE = new Context(ContextKeys.TARGET, "#vehicle");
 
     public static final Context USED_ITEM_LAVA_BUCKET = new Context(ContextKeys.USED_ITEM, "minecraft:lava_bucket");
+    public static final Context USED_ITEM_VEHICLE = new Context(ContextKeys.USED_ITEM, "#vehicle");
     public static final Context USED_ITEM_WATER_BUCKET = new Context(ContextKeys.USED_ITEM, "minecraft:water_bucket");
 }
