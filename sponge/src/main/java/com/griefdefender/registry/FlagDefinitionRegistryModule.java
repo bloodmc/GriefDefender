@@ -171,12 +171,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
         List<FlagData> flagData = new ArrayList<>();
         flagData.add(flagDataBuilder
                         .reset()
-                        .flag(Flags.ENTITY_DAMAGE)
-                        .context(FlagContexts.SOURCE_FIRE)
-                        .build());
-        flagData.add(flagDataBuilder
-                        .reset()
-                        .flag(Flags.BLOCK_MODIFY)
+                        .flag(Flags.BLOCK_SPREAD)
                         .context(FlagContexts.SOURCE_FIRE)
                         .build());
         this.registerCustomType(
@@ -1021,31 +1016,37 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                         .build())
                     .build());
 
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.SOURCE_PLAYER);
+        flagContexts.add(FlagContexts.USED_ITEM_VEHICLE);
         flagData = new ArrayList<>();
         flagData.add(flagDataBuilder
                 .reset()
                 .flag(Flags.INTERACT_BLOCK_SECONDARY)
-                .context(new Context(ContextKeys.USED_ITEM, ContextGroupKeys.VEHICLE))
+                .contexts(flagContexts)
                 .build());
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.SOURCE_PLAYER);
+        flagContexts.add(FlagContexts.TARGET_TYPE_VEHICLE);
         flagData.add(flagDataBuilder
                 .reset()
                 .flag(Flags.INTERACT_ITEM_SECONDARY)
-                .context(FlagContexts.TARGET_TYPE_VEHICLE)
+                .contexts(flagContexts)
                 .build());
         flagData.add(flagDataBuilder
                 .reset()
                 .flag(Flags.ENTITY_DAMAGE)
-                .context(FlagContexts.TARGET_TYPE_VEHICLE)
+                .contexts(flagContexts)
                 .build());
         flagData.add(flagDataBuilder
                 .reset()
                 .flag(Flags.ENTITY_RIDING)
-                .context(FlagContexts.TARGET_TYPE_VEHICLE)
+                .contexts(flagContexts)
                 .build());
         flagData.add(flagDataBuilder
                 .reset()
                 .flag(Flags.INTERACT_ENTITY_SECONDARY)
-                .context(FlagContexts.TARGET_TYPE_VEHICLE)
+                .contexts(flagContexts)
                 .build());
         this.registerCustomType(
                 definitionBuilder
