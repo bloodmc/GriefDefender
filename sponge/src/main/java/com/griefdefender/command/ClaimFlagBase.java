@@ -1147,11 +1147,13 @@ public abstract class ClaimFlagBase extends BaseCommand {
             // Check server context
             final Iterator<Context> iterator = newContexts.iterator();
             boolean hasServerContext = false;
+            boolean hasDefaultContext = false;
             while (iterator.hasNext()) {
                 final Context context = iterator.next();
                 if (context.getKey().equals("server")) {
                     hasServerContext = true;
-                    break;
+                } else if (context.getKey().equalsIgnoreCase("gd_claim_default")) {
+                    hasDefaultContext = true;
                 }
             }
 
@@ -1166,7 +1168,7 @@ public abstract class ClaimFlagBase extends BaseCommand {
                 return;
             }
 
-            if (displayType == MenuType.DEFAULT) {
+            if (displayType == MenuType.DEFAULT || (hasDefaultContext && src.getInternalPlayerData().canManageFlagDefaults)) {
                 PermissionResult result = PermissionUtil.getInstance().setTransientPermission(this.subject, flag.getPermission(), newValue, newContexts);
                 if (result.successful()) {
                     showFlagPermissions(src, claim, displayType);
