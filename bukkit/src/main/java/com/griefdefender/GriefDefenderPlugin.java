@@ -48,11 +48,8 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.LocaleUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Monster;
 import org.bukkit.event.Event;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.plugin.Plugin;
@@ -68,7 +65,7 @@ import com.griefdefender.api.claim.ClaimBlockSystem;
 import com.griefdefender.api.claim.ClaimSchematic;
 import com.griefdefender.api.claim.ClaimType;
 import com.griefdefender.api.claim.TrustType;
-import com.griefdefender.api.economy.BankTransaction;
+import com.griefdefender.api.economy.PaymentTransaction;
 import com.griefdefender.api.permission.Context;
 import com.griefdefender.api.permission.flag.Flag;
 import com.griefdefender.api.permission.flag.FlagData;
@@ -119,6 +116,7 @@ import com.griefdefender.command.CommandClaimOptionGroup;
 import com.griefdefender.command.CommandClaimOptionPlayer;
 import com.griefdefender.command.CommandClaimPermissionGroup;
 import com.griefdefender.command.CommandClaimPermissionPlayer;
+import com.griefdefender.command.CommandClaimRent;
 import com.griefdefender.command.CommandClaimReserve;
 import com.griefdefender.command.CommandClaimSchematic;
 import com.griefdefender.command.CommandClaimSell;
@@ -126,6 +124,7 @@ import com.griefdefender.command.CommandClaimSellBlocks;
 import com.griefdefender.command.CommandClaimSetSpawn;
 import com.griefdefender.command.CommandClaimSpawn;
 import com.griefdefender.command.CommandClaimSubdivision;
+import com.griefdefender.command.CommandClaimTax;
 import com.griefdefender.command.CommandClaimTown;
 import com.griefdefender.command.CommandClaimTransfer;
 import com.griefdefender.command.CommandClaimUnban;
@@ -168,9 +167,10 @@ import com.griefdefender.configuration.serializer.GameModeTypeSerializer;
 import com.griefdefender.configuration.serializer.WeatherTypeSerializer;
 import com.griefdefender.configuration.type.ConfigBase;
 import com.griefdefender.configuration.type.GlobalConfig;
-import com.griefdefender.economy.GDBankTransaction;
+import com.griefdefender.economy.GDPaymentTransaction;
 import com.griefdefender.inject.GriefDefenderImplModule;
-import com.griefdefender.internal.provider.WorldEditProvider;
+import com.griefdefender.internal.provider.GDTagProvider;
+import com.griefdefender.internal.provider.GDWorldEditProvider;
 import com.griefdefender.internal.provider.WorldGuardProvider;
 import com.griefdefender.internal.registry.BlockTypeRegistryModule;
 import com.griefdefender.internal.registry.EntityTypeRegistryModule;
@@ -202,6 +202,7 @@ import com.griefdefender.provider.PlaceholderProvider;
 import com.griefdefender.provider.VaultProvider;
 import com.griefdefender.registry.ChatTypeRegistryModule;
 import com.griefdefender.registry.ClaimTypeRegistryModule;
+import com.griefdefender.registry.ClaimVisualTypeRegistryModule;
 import com.griefdefender.registry.CreateModeTypeRegistryModule;
 import com.griefdefender.registry.FlagDefinitionRegistryModule;
 import com.griefdefender.registry.FlagRegistryModule;
@@ -216,6 +217,10 @@ import com.griefdefender.storage.FileStorage;
 import com.griefdefender.task.ClaimBlockTask;
 import com.griefdefender.task.ClaimCleanupTask;
 import com.griefdefender.task.PlayerTickTask;
+import com.griefdefender.task.RentApplyTask;
+import com.griefdefender.task.RentDelinquentApplyTask;
+import com.griefdefender.task.SignUpdateTask;
+import com.griefdefender.task.TaxApplyTask;
 import com.griefdefender.util.PermissionUtil;
 
 import co.aikar.commands.BaseCommand;
@@ -241,8 +246,8 @@ public class GriefDefenderPlugin {
     public static final String IMPLEMENTATION_NAME = GriefDefenderPlugin.class.getPackage().getImplementationTitle();
     public static final String IMPLEMENTATION_VERSION =  GriefDefenderPlugin.class.getPackage().getImplementationVersion() == null ? "unknown" : GriefDefenderPlugin.class.getPackage().getImplementationVersion();
     private Path configPath = Paths.get(".", "plugins", "GriefDefender");
-    public FlagConfig flagConfig;
-    public OptionConfig optionConfig;
+    private static FlagConfig flagConfig;
+    private static OptionConfig optionConfig;
     public MessageStorage messageStorage;
     public MessageDataConfig messageData;
     public Map<UUID, Random> worldGeneratorRandoms = new HashMap<>();
@@ -271,7 +276,8 @@ public class GriefDefenderPlugin {
 
     private DynmapProvider dynmapProvider;
     private EssentialsProvider essentialsProvider;
-    private WorldEditProvider worldEditProvider;
+    private GDTagProvider tagProvider;
+    private GDWorldEditProvider worldEditProvider;
     private WorldGuardProvider worldGuardProvider;
     private VaultProvider vaultProvider;
     private PermissionProvider permissionProvider;
@@ -305,13 +311,43 @@ public class GriefDefenderPlugin {
         final String eventLocation = location == null ? "none" : VecHelper.toVector3i(location).toString();
         for (GDDebugData debugEntry : GriefDefenderPlugin.getInstance().getDebugUserMap().values()) {
             final CommandSender debugSource = debugEntry.getSource();
-            final OfflinePlayer debugUser = debugEntry.getTarget();
+            final GDPermissionUser debugUser = debugEntry.getUser();
             if (debugUser != null) {
                 if (permissionSubject == null) {
                     continue;
                 }
                 // Check event source user
                 if (!permissionSubject.getIdentifier().equals(debugUser.getUniqueId().toString())) {
+                    continue;
+                }
+            } else if (debugEntry.getClaimUniqueId() != null) {
+                if (!claim.getUniqueId().equals(debugEntry.getClaimUniqueId())) {
+                    continue;
+                }
+            } else if (debugEntry.getFilter() != null) {
+                //check filter
+                final String filter = debugEntry.getFilter();
+                boolean match = false;
+                if (permission.contains(filter)) {
+                    match = true;
+                } else if (targetId.contains(filter)) {
+                    match = true;
+                } else if (sourceId.contains(filter)) {
+                    match = true;
+                } else {
+                    // check contexts
+                    for (Context context : contexts) {
+                        if (context.getKey().contains(filter)) {
+                            match = true;
+                            break;
+                        }
+                        if (context.getValue().contains(filter)) {
+                            match = true;
+                            break;
+                        }
+                    }
+                }
+                if (!match) {
                     continue;
                 }
             }
@@ -358,8 +394,15 @@ public class GriefDefenderPlugin {
                     contextList.add("<b>server</b>=global");
                 }
                 Collections.sort(contextList);
-                for (String context : contextList) {
-                    contextStr += context + "<br />";
+                for (int i = 0; i < contextList.size(); i++) { 
+                    contextStr += contextList.get(i);
+                    if (i % 2 != 0) {
+                        contextStr += "<br />";
+                    } else {
+                        if (i != contextList.size() - 1) {
+                            contextStr += ", ";
+                        }
+                    }
                 }
 
                 String locationStr = "";
@@ -451,6 +494,7 @@ public class GriefDefenderPlugin {
         Guice.createInjector(Stage.PRODUCTION, new GriefDefenderImplModule());
         ChatTypeRegistryModule.getInstance().registerDefaults();
         ClaimTypeRegistryModule.getInstance().registerDefaults();
+        ClaimVisualTypeRegistryModule.getInstance().registerDefaults();
         ShovelTypeRegistryModule.getInstance().registerDefaults();
         TrustTypeRegistryModule.getInstance().registerDefaults();
         FlagRegistryModule.getInstance().registerDefaults();
@@ -462,7 +506,7 @@ public class GriefDefenderPlugin {
         GameModeTypeRegistryModule.getInstance().registerDefaults();
         WeatherTypeRegistryModule.getInstance().registerDefaults();
         OptionRegistryModule.getInstance().registerDefaults();
-        GriefDefender.getRegistry().registerBuilderSupplier(BankTransaction.Builder.class, GDBankTransaction.BankTransactionBuilder::new);
+        GriefDefender.getRegistry().registerBuilderSupplier(PaymentTransaction.Builder.class, GDPaymentTransaction.PaymentTransactionBuilder::new);
         GriefDefender.getRegistry().registerBuilderSupplier(Claim.Builder.class, GDClaim.ClaimBuilder::new);
         GriefDefender.getRegistry().registerBuilderSupplier(FlagData.Builder.class, GDFlagData.FlagDataBuilder::new);
         GriefDefender.getRegistry().registerBuilderSupplier(FlagDefinition.Builder.class, GDFlagDefinition.FlagDefinitionBuilder::new);
@@ -487,8 +531,8 @@ public class GriefDefenderPlugin {
             return;
         }
 
-        if (Bukkit.getPluginManager().getPlugin("WorldEdit") != null || Bukkit.getPluginManager().getPlugin("FastAsyncWorldEdit") != null) {
-            this.worldEditProvider = new WorldEditProvider();
+        if (Bukkit.getPluginManager().getPlugin("WorldEdit") != null || Bukkit.getPluginManager().getPlugin("FastAsyncWorldEdit") != null || Bukkit.getPluginManager().getPlugin("AsyncWorldEdit") != null) {
+            this.worldEditProvider = new GDWorldEditProvider();
             GriefDefender.getRegistry().registerBuilderSupplier(ClaimSchematic.Builder.class, GDClaimSchematic.ClaimSchematicBuilder::new);
         }
 
@@ -509,6 +553,10 @@ public class GriefDefenderPlugin {
             this.getLogger().info("Detected PlaceholderAPI. Enabling GD PlaceholderAPI expansion...");
             new PlaceholderProvider();
             this.getLogger().info("GriefDefender PlaceholderAPI expansion enabled!");
+        }
+
+        if (getMajorMinecraftVersion() > 13) {
+            this.tagProvider = new GDTagProvider();
         }
 
         if (this.dataStore == null) {
@@ -580,13 +628,30 @@ public class GriefDefenderPlugin {
             GriefDefenderPlugin.getGlobalConfig().save();
         }
 
-        new ClaimBlockTask();
+        if (!isEconomyModeEnabled() || GriefDefenderPlugin.getGlobalConfig().getConfig().economy.useClaimBlockTask) {
+            new ClaimBlockTask();
+        }
         new PlayerTickTask();
+        if (GriefDefenderPlugin.getGlobalConfig().getConfig().economy.rentSystem && GriefDefenderPlugin.getGlobalConfig().getConfig().economy.isRentSignEnabled()) {
+            new SignUpdateTask(100);
+        }
+        if (GriefDefenderPlugin.getInstance().getVaultProvider() != null && GriefDefenderPlugin.getGlobalConfig().getConfig().economy.rentSystem) {
+            new RentDelinquentApplyTask();
+            new RentApplyTask();
+        }
+
+        if (GriefDefenderPlugin.getInstance().getVaultProvider() != null) {
+            if (GriefDefenderPlugin.getGlobalConfig().getConfig().economy.taxSystem) {
+                // run tax task
+                new TaxApplyTask();
+            }
+        }
         registerBaseCommands();
         this.getLogger().info("Loaded successfully.");
     }
 
     public void onDisable() {
+        this.getLogger().info("Saving claim data...");
         // Spigot disables plugins before calling world save on shutdown so we need to manually save here
         for (World world : Bukkit.getServer().getWorlds()) {
             if (!GriefDefenderPlugin.getInstance().claimsEnabledForWorld(world.getUID())) {
@@ -599,8 +664,8 @@ public class GriefDefenderPlugin {
             }
     
             claimWorldManager.save();
-            claimWorldManager.playerIndexStorage.savePlayerDatData();
         }
+        this.getLogger().info("Save complete.");
     }
 
     public void registerBaseCommands() {
@@ -646,6 +711,7 @@ public class GriefDefenderPlugin {
         manager.registerCommand(new CommandClaimOptionPlayer());
         manager.registerCommand(new CommandClaimPermissionGroup());
         manager.registerCommand(new CommandClaimPermissionPlayer());
+        manager.registerCommand(new CommandClaimRent());
         manager.registerCommand(new CommandClaimReserve());
         manager.registerCommand(new CommandClaimSchematic());
         manager.registerCommand(new CommandClaimSell());
@@ -653,6 +719,7 @@ public class GriefDefenderPlugin {
         manager.registerCommand(new CommandClaimSetSpawn());
         manager.registerCommand(new CommandClaimSpawn());
         manager.registerCommand(new CommandClaimSubdivision());
+        manager.registerCommand(new CommandClaimTax());
         manager.registerCommand(new CommandClaimTown());
         manager.registerCommand(new CommandClaimTransfer());
         manager.registerCommand(new CommandClaimUnban());
@@ -825,6 +892,26 @@ public class GriefDefenderPlugin {
             for (InventoryType type : InventoryType.values()) {
                 tabList.add(type.name().toLowerCase());
             }
+            if (getMajorMinecraftVersion() > 13) {
+                for (Set<Context> contexts : this.tagProvider.getTagMap().values()) {
+                    for (Context context : contexts) {
+                        tabList.add("#" + context.getKey() + ":" + context.getValue());
+                        if (context.getKey().equalsIgnoreCase("minecraft")) {
+                            tabList.add("#" + context.getValue());
+                        }
+                    }
+                }
+                // Add GD group keys
+                tabList.add(ContextGroupKeys.AMBIENT);
+                tabList.add(ContextGroupKeys.ANIMAL);
+                tabList.add(ContextGroupKeys.AQUATIC);
+                tabList.add(ContextGroupKeys.FOOD);
+                tabList.add(ContextGroupKeys.MISC);
+                tabList.add(ContextGroupKeys.MONSTER);
+                tabList.add(ContextGroupKeys.PET);
+                tabList.add(ContextGroupKeys.VEHICLE);
+                tabList.addAll(this.tagProvider.getTagMap().keySet());
+            }
             return ImmutableList.copyOf(tabList);
         });
         manager.getCommandCompletions().registerCompletion("gdtristates", c -> {
@@ -839,6 +926,12 @@ public class GriefDefenderPlugin {
                 tabList.add(world.getName().toLowerCase());
             }
             return ImmutableList.copyOf(tabList);
+        });
+        manager.getCommandCompletions().registerCompletion("gdrentcommands", c -> {
+            return ImmutableList.of("cancel", "clearbalance", "create", "info", "list");
+        });
+        manager.getCommandCompletions().registerCompletion("gdtaxcommands", c -> {
+            return ImmutableList.of("balance", "pay");
         });
         manager.getCommandCompletions().registerCompletion("gddummy", c -> {
             return ImmutableList.of();
@@ -991,6 +1084,14 @@ public class GriefDefenderPlugin {
         return BaseStorage.globalConfig;
     }
 
+    public static FlagConfig getFlagConfig() {
+        return flagConfig;
+    }
+
+    public static OptionConfig getOptionConfig() {
+        return optionConfig;
+    }
+
     public boolean claimsEnabledForWorld(UUID worldUniqueId) {
         return GriefDefenderPlugin.getActiveConfig(worldUniqueId).getConfig().claim.claimsEnabled != 0;
     }
@@ -1001,15 +1102,6 @@ public class GriefDefenderPlugin {
 
     public Map<String, GDDebugData> getDebugUserMap() {
         return this.debugUserMap;
-    }
-
-    public static boolean isEntityProtected(Entity entity) {
-        // ignore monsters
-        if (entity instanceof Monster) {
-            return false;
-        }
-
-        return true;
     }
 
     public static GDPermissionUser getOrCreateUser(UUID uuid) {
@@ -1131,7 +1223,11 @@ public class GriefDefenderPlugin {
         return this.essentialsProvider;
     }
 
-    public WorldEditProvider getWorldEditProvider() {
+    public GDTagProvider getTagProvider() {
+        return this.tagProvider;
+    }
+
+    public GDWorldEditProvider getWorldEditProvider() {
         return this.worldEditProvider;
     }
 

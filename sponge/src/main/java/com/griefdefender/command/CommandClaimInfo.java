@@ -85,12 +85,12 @@ public class CommandClaimInfo extends BaseCommand {
     private final int DENY_MESSAGES = 2;
     private final int FLAG_OVERRIDES = 3;
     private final int INHERIT_PARENT = 4;
-    private final int PVP_OVERRIDE = 5;
-    private final int RAID_OVERRIDE = 6;
-    private final int RESIZABLE = 7;
-    private final int REQUIRES_CLAIM_BLOCKS = 8;
-    private final int SIZE_RESTRICTIONS = 9;
-    private final int FOR_SALE = 10;
+    private final int RAID_OVERRIDE = 5;
+    private final int RESIZABLE = 6;
+    private final int REQUIRES_CLAIM_BLOCKS = 7;
+    private final int SIZE_RESTRICTIONS = 8;
+    private final int FOR_SALE = 9;
+    private final int IS_EXPIRED = 10;
     private boolean useTownInfo = false;
 
     public CommandClaimInfo() {
@@ -124,7 +124,6 @@ public class CommandClaimInfo extends BaseCommand {
             return;
         }
 
-        boolean isAdmin = src.hasPermission(GDPermissions.COMMAND_ADMIN_CLAIMS);
         final GDPlayerData playerData = player != null ? GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId()) : null;
         Claim claim = null;
         if (claimIdentifier == null) {
@@ -176,10 +175,7 @@ public class CommandClaimInfo extends BaseCommand {
         final GDClaim gdClaim = (GDClaim) claim;
         final GDPermissionUser owner = PermissionHolderCache.getInstance().getOrCreateUser(claim.getOwnerUniqueId());
         final UUID ownerUniqueId = claim.getOwnerUniqueId();
-
-        if (!isAdmin) {
-            isAdmin = playerData.canIgnoreClaim(gdClaim);
-        }
+        final boolean isAdmin = gdClaim.allowEdit(player) == null;
         // if not owner of claim, validate perms
         if (!isAdmin && !player.getUniqueId().equals(claim.getOwnerUniqueId())) {
             if (!gdClaim.getInternalClaimData().getContainers().contains(player.getUniqueId()) 
@@ -295,7 +291,7 @@ public class CommandClaimInfo extends BaseCommand {
         Component bankInfo = null;
         Component forSaleText = null;
         if (GriefDefenderPlugin.getInstance().economyService.isPresent()) {
-             if (GriefDefenderPlugin.getActiveConfig(gdClaim.getWorld().getProperties()).getConfig().claim.bankTaxSystem) {
+             if (GriefDefenderPlugin.getActiveConfig(gdClaim.getWorld().getProperties()).getConfig().economy.bankSystem) {
                  bankInfo = TextComponent.builder()
                          .append(MessageCache.getInstance().CLAIMINFO_UI_BANK_INFO.color(TextColor.GOLD).decoration(TextDecoration.ITALIC, true))
                          .hoverEvent(HoverEvent.showText(MessageCache.getInstance().CLAIMINFO_UI_BANK_INFO))
@@ -328,6 +324,15 @@ public class CommandClaimInfo extends BaseCommand {
                 .append(MessageCache.getInstance().LABEL_OWNER.color(TextColor.YELLOW))
                 .append(" : ")
                 .append(ownerName != null && !claim.isAdminClaim() && !claim.isWilderness() ? ownerName : "administrator", TextColor.GOLD).build();
+        Component renterLine = null;
+        if (claim.getEconomyData() != null && claim.getEconomyData().isRented()) {
+            final UUID uuid = claim.getEconomyData().getRenters().get(0);
+            final GDPermissionUser renter = PermissionHolderCache.getInstance().getOrCreateUser(uuid);
+            renterLine = TextComponent.builder()
+                    .append(MessageCache.getInstance().LABEL_RENTER.color(TextColor.YELLOW))
+                    .append(" : ")
+                    .append(renter.getFriendlyName(), TextColor.AQUA).build();
+        }
         Component adminShowText = TextComponent.empty();
         Component basicShowText = TextComponent.empty();
         Component subdivisionShowText = TextComponent.empty();
@@ -462,10 +467,15 @@ public class CommandClaimInfo extends BaseCommand {
                 .append(MessageCache.getInstance().LABEL_INHERIT.color(TextColor.YELLOW))
                 .append(" : ")
                 .append(getClickableInfoText(src, claim, INHERIT_PARENT, claim.getData().doesInheritParent() ? TextComponent.of("ON", TextColor.GREEN) : TextComponent.of("OFF", TextColor.RED))).build();
-        Component claimExpired = TextComponent.builder()
+        TextComponent.Builder expireBuilder = TextComponent.builder()
                 .append(MessageCache.getInstance().LABEL_EXPIRED.color(TextColor.YELLOW))
-                .append(" : ")
-                .append(claim.getData().isExpired() ? TextComponent.of("YES", TextColor.RED) : TextComponent.of("NO", TextColor.GRAY)).build();
+                .append(" : ");
+        if (isAdmin && claim.getData().isExpired()) {
+            expireBuilder.append(getClickableInfoText(src, claim, IS_EXPIRED, claim.getData().isExpired() ? TextComponent.of("YES", TextColor.RED) : TextComponent.of("NO", TextColor.GRAY)));
+        } else {
+            expireBuilder.append(claim.getData().isExpired() ? TextComponent.of("YES", TextColor.RED) : TextComponent.of("NO", TextColor.GRAY));
+        }
+        Component claimExpired = expireBuilder.build();
         Component claimFarewell = TextComponent.builder()
                 .append(MessageCache.getInstance().LABEL_FAREWELL.color(TextColor.YELLOW))
                 .append(" : ")
@@ -478,16 +488,6 @@ public class CommandClaimInfo extends BaseCommand {
                 .append(MessageCache.getInstance().CLAIMINFO_UI_DENY_MESSAGES.color(TextColor.YELLOW))
                 .append(" : ")
                 .append(getClickableInfoText(src, claim, DENY_MESSAGES, claim.getData().allowDenyMessages() ? TextComponent.of("ON", TextColor.GREEN) : TextComponent.of("OFF", TextColor.RED))).build();
-        Component pvpSetting = TextComponent.of("UNDEFINED", TextColor.GRAY);
-        if (claim.getData().getPvpOverride() == Tristate.TRUE) {
-            pvpSetting = TextComponent.of("ON", TextColor.GREEN);
-        } else if (claim.getData().getPvpOverride() == Tristate.FALSE) {
-            pvpSetting = TextComponent.of("OFF", TextColor.RED);
-        }
-        Component claimPvP = TextComponent.builder()
-                .append("PvP", TextColor.YELLOW)
-                .append(" : ")
-                .append(getClickableInfoText(src, claim, PVP_OVERRIDE, pvpSetting)).build();
        /* Component claimRaid = TextComponent.builder()
                 .append("Raid", TextColor.YELLOW)
                 .append(" : ")
@@ -572,6 +572,9 @@ public class CommandClaimInfo extends BaseCommand {
         }
         textList.add(claimName);
         textList.add(ownerLine);
+        if (claim.getEconomyData() != null && claim.getEconomyData().isRented()) {
+            textList.add(renterLine);
+        }
         textList.add(claimTypeInfo);
         if (!claim.isAdminClaim() && !claim.isWilderness()) {
             textList.add(TextComponent.builder()
@@ -583,8 +586,6 @@ public class CommandClaimInfo extends BaseCommand {
             }
         }
         textList.add(TextComponent.builder()
-                .append(claimPvP)
-                .append("   ")
                 .append(claimDenyMessages)
                 .build());
         if (allowEdit == null) {
@@ -780,19 +781,6 @@ public class CommandClaimInfo extends BaseCommand {
                     gpClaim.getInternalClaimData().setRequiresSave(true);
                     gpClaim.getClaimStorage().save();
                     break;
-                case PVP_OVERRIDE :
-                    Tristate value = gpClaim.getInternalClaimData().getPvpOverride();
-                    if (value == Tristate.UNDEFINED) {
-                        gpClaim.getInternalClaimData().setPvpOverride(Tristate.TRUE);
-                    } else if (value == Tristate.TRUE) {
-                        gpClaim.getInternalClaimData().setPvpOverride(Tristate.FALSE);
-                    } else {
-                        gpClaim.getInternalClaimData().setPvpOverride(Tristate.UNDEFINED);
-                    }
-                    gpClaim.getInternalClaimData().setRequiresSave(true);
-                    gpClaim.getClaimStorage().save();
-                    CommandHelper.executeCommand(src, "claiminfo", gpClaim.getUniqueId().toString());
-                    return;
                 /*case RAID_OVERRIDE :
                     GDPermissionHolder holder = null;
                     final GDPlayerData playerData = ((GDClaim) claim).getOwnerPlayerData();
@@ -832,6 +820,13 @@ public class CommandClaimInfo extends BaseCommand {
                 case FOR_SALE :
                     boolean forSale = gpClaim.getEconomyData().isForSale();
                     gpClaim.getEconomyData().setForSale(!forSale);
+                    gpClaim.getInternalClaimData().setRequiresSave(true);
+                    gpClaim.getClaimStorage().save();
+                    CommandHelper.executeCommand(src, "claiminfo", gpClaim.getUniqueId().toString());
+                    return;
+                case IS_EXPIRED :
+                    boolean isExpired = gpClaim.getInternalClaimData().isExpired();
+                    gpClaim.getInternalClaimData().setExpired(!isExpired);
                     gpClaim.getInternalClaimData().setRequiresSave(true);
                     gpClaim.getClaimStorage().save();
                     CommandHelper.executeCommand(src, "claiminfo", gpClaim.getUniqueId().toString());

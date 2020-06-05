@@ -45,8 +45,8 @@ public class CommandClaimOption extends ClaimOptionBase {
         super(ClaimSubjectType.GLOBAL);
     }
 
-    @CommandCompletion("@gdoptions @gddummy")
-    @CommandAlias("co|claimoption")
+    @CommandCompletion("@gdoptions @gdcontexts @gddummy")
+    @CommandAlias("co|cod|claimoption")
     @Description("Gets/Sets claim options in the claim you are standing in.")
     @Syntax("[<option> <value> [context[key=value]]")
     @Subcommand("option claim")

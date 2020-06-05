@@ -58,8 +58,8 @@ public class DefaultOptionCategory extends ConfigCategory {
         this.defaultUserOptions.put(Options.CHEST_EXPIRATION.getName(), "7");
         this.defaultUserOptions.put(Options.CREATE_LIMIT.getName(), "-1");
         this.defaultUserOptions.put(Options.CREATE_MODE.getName(), "undefined");
-        this.defaultUserOptions.put(Options.ECONOMY_BLOCK_COST.getName(), "0.0");
-        this.defaultUserOptions.put(Options.ECONOMY_BLOCK_SELL_RETURN.getName(), "0.0");
+        this.defaultUserOptions.put(Options.ECONOMY_BLOCK_COST.getName(), "1.0");
+        this.defaultUserOptions.put(Options.ECONOMY_BLOCK_SELL_RETURN.getName(), "1.0");
         this.defaultUserOptions.put(Options.EXPIRATION.getName(), "14");
         this.defaultUserOptions.put(Options.INITIAL_BLOCKS.getName(), "120");
         this.defaultUserOptions.put(Options.MAX_ACCRUED_BLOCKS.getName(), Integer.toString(maxAccruedBlocks));
@@ -68,12 +68,13 @@ public class DefaultOptionCategory extends ConfigCategory {
         this.defaultUserOptions.put(Options.PLAYER_DENY_FLIGHT.getName(), "false");
         this.defaultUserOptions.put(Options.PLAYER_DENY_GODMODE.getName(), "false");
         this.defaultUserOptions.put(Options.PLAYER_DENY_HUNGER.getName(), "false");
+        this.defaultUserOptions.put(Options.PLAYER_FLY_SPEED.getName(), "0");
         this.defaultUserOptions.put(Options.PLAYER_GAMEMODE.getName(), "undefined");
-        this.defaultUserOptions.put(Options.PLAYER_HEALTH_REGEN.getName(), "-1.0");
+        this.defaultUserOptions.put(Options.PLAYER_HEALTH_REGEN.getName(), "0");
         this.defaultUserOptions.put(Options.PLAYER_KEEP_INVENTORY.getName(), "undefined");
         this.defaultUserOptions.put(Options.PLAYER_KEEP_LEVEL.getName(), "undefined");
         this.defaultUserOptions.put(Options.PLAYER_TELEPORT_DELAY.getName(), "0");
-        this.defaultUserOptions.put(Options.PLAYER_WALK_SPEED.getName(), "-1");
+        this.defaultUserOptions.put(Options.PLAYER_WALK_SPEED.getName(), "0");
         this.defaultUserOptions.put(Options.PLAYER_WEATHER.getName(), "undefined");
         this.defaultUserOptions.put(Options.PVP.getName(), "undefined");
         this.defaultUserOptions.put(Options.PVP_COMBAT_COMMAND.getName(), "false");
@@ -81,10 +82,13 @@ public class DefaultOptionCategory extends ConfigCategory {
         this.defaultUserOptions.put(Options.PVP_COMBAT_TIMEOUT.getName(), "15");
         this.defaultUserOptions.put(Options.RAID.getName(), "true");
         this.defaultUserOptions.put(Options.RADIUS_INSPECT.getName(), "100");
+        this.defaultUserOptions.put(Options.RENT_EXPIRATION.getName(), "7");
+        this.defaultUserOptions.put(Options.RENT_EXPIRATION_DAYS_KEEP.getName(), "7");
+        this.defaultUserOptions.put(Options.RENT_RESTORE.getName(), "false");
         this.defaultUserOptions.put(Options.SPAWN_LIMIT.getName(), "-1");
         this.defaultUserOptions.put(Options.TAX_EXPIRATION.getName(), "7");
         this.defaultUserOptions.put(Options.TAX_EXPIRATION_DAYS_KEEP.getName(), "7");
-        this.defaultUserOptions.put(Options.TAX_RATE.getName(), "1.0");
+        this.defaultUserOptions.put(Options.TAX_RATE.getName(), "0.1");
 
         this.defaultBasicOptions.put(Options.MIN_SIZE_X.getName(), "5");
         this.defaultBasicOptions.put(Options.MIN_SIZE_Y.getName(), "5");
@@ -111,7 +115,7 @@ public class DefaultOptionCategory extends ConfigCategory {
         this.defaultTownOptions.put(Options.MAX_SIZE_Z.getName(), "0");
         this.defaultTownOptions.put(Options.TAX_EXPIRATION.getName(), "7");
         this.defaultTownOptions.put(Options.TAX_EXPIRATION_DAYS_KEEP.getName(), "7");
-        this.defaultTownOptions.put(Options.TAX_RATE.getName(), "1.0");
+        this.defaultTownOptions.put(Options.TAX_RATE.getName(), "0.1");
     }
 
     public void checkOptions() {

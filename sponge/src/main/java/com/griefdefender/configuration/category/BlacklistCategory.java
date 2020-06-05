@@ -24,6 +24,8 @@
  */
 package com.griefdefender.configuration.category;
 
+import com.griefdefender.api.permission.flag.Flag;
+import com.griefdefender.registry.FlagRegistryModule;
 import ninja.leaping.configurate.objectmapping.Setting;
 import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
 
@@ -52,6 +54,13 @@ public class BlacklistCategory extends ConfigCategory {
 
     public List<String> getGlobalTargetBlacklist() {
         return this.globalTargetBlacklist;
+    }
+
+    public BlacklistCategory() {
+        for (Flag flag : FlagRegistryModule.getInstance().getAll()) {
+            this.flagIdBlacklist.put(flag.getName().toLowerCase(), new ArrayList<>());
+        }
+        this.flagIdBlacklist.put("block-pre", new ArrayList<>());
     }
 
     // Used by API

@@ -45,6 +45,8 @@ import com.griefdefender.claim.GDClaim;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.permission.GDPermissionManager;
 import com.griefdefender.permission.GDPermissions;
+import com.griefdefender.permission.option.GDOptions;
+
 import net.kyori.text.Component;
 import net.kyori.text.serializer.plain.PlainComponentSerializer;
 
@@ -93,7 +95,7 @@ public class CommandClaimSpawn extends BaseCommand {
 
         if (!srcPlayerData.canIgnoreClaim(claim) && !claim.isUserTrusted(player, TrustTypes.ACCESSOR) && !player.hasPermission(GDPermissions.COMMAND_DELETE_CLAIMS)) {
             GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_ACCESS,
-                    ImmutableMap.of("player", claim.getOwnerName())));
+                    ImmutableMap.of("player", claim.getOwnerDisplayName())));
             return;
         }
 
@@ -104,7 +106,10 @@ public class CommandClaimSpawn extends BaseCommand {
         }
 
         final Location spawnLocation = new Location(claim.getWorld(), spawnPos.getX(), spawnPos.getY(), spawnPos.getZ());
-        int teleportDelay = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), player, Options.PLAYER_TELEPORT_DELAY, claim);
+        int teleportDelay = 0;
+        if (GDOptions.isOptionEnabled(Options.PLAYER_TELEPORT_DELAY)) {
+            teleportDelay = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), player, Options.PLAYER_TELEPORT_DELAY, claim);
+        }
         if (teleportDelay > 0) {
             srcPlayerData.teleportDelay = teleportDelay + 1;
             srcPlayerData.teleportLocation = spawnLocation;

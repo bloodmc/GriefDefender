@@ -58,7 +58,7 @@ public class BlacklistCategory extends ConfigCategory {
 
     public BlacklistCategory() {
         for (Flag flag : FlagRegistryModule.getInstance().getAll()) {
-            this.flagIdBlacklist.put(flag.getId().toLowerCase(), new ArrayList<>());
+            this.flagIdBlacklist.put(flag.getName().toLowerCase(), new ArrayList<>());
         }
         this.flagIdBlacklist.put("block-pre", new ArrayList<>());
     }

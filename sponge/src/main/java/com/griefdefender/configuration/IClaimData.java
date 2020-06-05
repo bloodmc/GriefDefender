@@ -58,8 +58,6 @@ public interface IClaimData extends ClaimData {
 
     void setType(ClaimType type);
 
-    //void setCustomType(ClaimType type);
-
     void setCuboid(boolean cuboid);
 
     void setLesserBoundaryCorner(String location);

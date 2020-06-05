@@ -61,8 +61,6 @@ public class ClaimDataConfig extends ConfigCategory implements IClaimData {
     private UUID ownerUniqueId;
     @Setting(value = ClaimStorageData.MAIN_CLAIM_TYPE)
     private ClaimType claimType = ClaimTypes.BASIC;
-    @Setting(value = ClaimStorageData.MAIN_CLAIM_TYPE)
-    private ClaimType customClaimType;
     @Setting(value = ClaimStorageData.MAIN_CLAIM_CUBOID)
     private boolean isCuboid = false;
     @Setting(value = ClaimStorageData.MAIN_CLAIM_RESIZABLE)
@@ -79,8 +77,6 @@ public class ClaimDataConfig extends ConfigCategory implements IClaimData {
     private boolean allowFlagOverrides = true;
     @Setting(value = ClaimStorageData.MAIN_REQUIRES_CLAIM_BLOCKS)
     private boolean requiresClaimBlocks = true;
-    @Setting(value = ClaimStorageData.MAIN_CLAIM_PVP)
-    private Tristate pvpOverride = Tristate.UNDEFINED;
     @Setting(value = ClaimStorageData.MAIN_CLAIM_DATE_CREATED)
     private String dateCreated = Instant.now().toString();
     @Setting(value = ClaimStorageData.MAIN_CLAIM_DATE_LAST_ACTIVE)
@@ -125,73 +121,8 @@ public class ClaimDataConfig extends ConfigCategory implements IClaimData {
         this.greaterBoundaryCornerPos = BlockUtil.getInstance().posToString(claim.greaterBoundaryCorner);
         this.isCuboid = claim.cuboid;
         this.claimType = claim.getType();
-        //this.customClaimType = claim.getCustomType();
         this.ownerUniqueId = claim.getOwnerUniqueId();
     }
-
-    /*public ClaimDataConfig(LinkedHashMap<String, Object> dataMap) {
-        for (Map.Entry<String, Object> mapEntry : dataMap.entrySet()) {
-            if (mapEntry.getKey().equals("world-uuid")) {
-                this.worldUniqueId = (UUID) UUID.fromString((String) mapEntry.getValue());
-            } else if (mapEntry.getKey().equals("owner-uuid")) {
-                this.ownerUniqueId = (UUID) UUID.fromString((String) mapEntry.getValue());
-            } else if (mapEntry.getKey().equals("claim-type")) {
-                String value = (String) mapEntry.getValue();
-                if (!value.contains(":")) {
-                    value = "griefdefender:" + value;
-                }
-                this.claimType = ClaimTypeRegistryModule.getInstance().getById(value).orElse(ClaimTypes.BASIC);
-            } else if (mapEntry.getKey().equals("cuboid")) {
-                this.isCuboid = (boolean) mapEntry.getValue();
-            } else if (mapEntry.getKey().equals("claim-expiration")) {
-                this.allowClaimExpiration = (boolean) mapEntry.getValue();
-            } else if (mapEntry.getKey().equals("date-created")) {
-                this.dateCreated = (String) mapEntry.getValue();
-            } else if (mapEntry.getKey().equals("date-last-active")) {
-                this.dateLastActive = (String) mapEntry.getValue();
-            } else if (mapEntry.getKey().equals("deny-messages")) {
-                this.allowDenyMessages = (boolean) mapEntry.getValue();
-            } else if (mapEntry.getKey().equals("flag-overrides")) {
-                this.allowFlagOverrides = (boolean) mapEntry.getValue();
-            } else if (mapEntry.getKey().equals("greater-boundary-corner")) {
-                this.greaterBoundaryCornerPos = (String) mapEntry.getValue();
-            } else if (mapEntry.getKey().equals("lesser-boundary-corner")) {
-                this.lesserBoundaryCornerPos = (String) mapEntry.getValue();
-            } else if (mapEntry.getKey().equals("pvp")) {
-                this.pvpOverride = Tristate.valueOf((String) mapEntry.getValue());
-            } else if (mapEntry.getKey().equals("resizeable")) {
-                this.isResizable = (boolean) mapEntry.getValue();
-            } else if (mapEntry.getKey().equals("accessors")) {
-                List<String> stringList = (List<String>) mapEntry.getValue();
-                if (stringList != null) {
-                    for (String str : stringList) {
-                        this.accessors.add(UUID.fromString(str));
-                    }
-                }
-            } else if (mapEntry.getKey().equals("builders")) {
-                List<String> stringList = (List<String>) mapEntry.getValue();
-                if (stringList != null) {
-                    for (String str : stringList) {
-                        this.builders.add(UUID.fromString(str));
-                    }
-                }
-            } else if (mapEntry.getKey().equals("containers")) {
-                List<String> stringList = (List<String>) mapEntry.getValue();
-                if (stringList != null) {
-                    for (String str : stringList) {
-                        this.containers.add(UUID.fromString(str));
-                    }
-                }
-            } else if (mapEntry.getKey().equals("managers")) {
-                List<String> stringList = (List<String>) mapEntry.getValue();
-                if (stringList != null) {
-                    for (String str : stringList) {
-                        this.managers.add(UUID.fromString(str));
-                    }
-                }
-            }
-        }
-    }*/
 
     @Override
     public UUID getWorldUniqueId() {
@@ -224,11 +155,6 @@ public class ClaimDataConfig extends ConfigCategory implements IClaimData {
     }
 
     @Override
-    public Tristate getPvpOverride() {
-        return this.pvpOverride;
-    }
-
-    @Override
     public boolean isResizable() {
         return this.isResizable;
     }
@@ -246,11 +172,6 @@ public class ClaimDataConfig extends ConfigCategory implements IClaimData {
     public ClaimType getType() {
         return this.claimType;
     }
-
-    /*@Override
-    public ClaimType getCustomType() {
-        return this.customClaimType;
-    }*/
 
     @Override
     public Instant getDateCreated() {
@@ -372,12 +293,6 @@ public class ClaimDataConfig extends ConfigCategory implements IClaimData {
     }
 
     @Override
-    public void setPvpOverride(Tristate pvp) {
-        this.requiresSave = true;
-        this.pvpOverride = pvp;
-    }
-
-    @Override
     public void setResizable(boolean resizable) {
         this.requiresSave = true;
         this.isResizable = resizable;
@@ -388,12 +303,6 @@ public class ClaimDataConfig extends ConfigCategory implements IClaimData {
         this.requiresSave = true;
         this.claimType = type;
     }
-
-    /*@Override
-    public void setCustomType(ClaimType type) {
-        this.requiresSave = true;
-        this.customClaimType = type;
-    }*/
 
     @Override
     public void setDateLastActive(Instant date) {
@@ -513,6 +422,13 @@ public class ClaimDataConfig extends ConfigCategory implements IClaimData {
         this.requiresSave = true;
         this.spawnPos = spawnPos;
         this.claimSpawn = BlockUtil.getInstance().posToString(spawnPos);
+    }
+
+    @Override
+    public void setSpawnPos(int x, int y, int z) {
+        this.requiresSave = true;
+        this.spawnPos = new Vector3i(x, y, z);
+        this.claimSpawn = BlockUtil.getInstance().posToString(this.spawnPos);
     }
 
     @Override

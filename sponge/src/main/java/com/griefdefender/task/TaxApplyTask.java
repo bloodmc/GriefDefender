@@ -29,25 +29,25 @@ import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.GriefDefender;
 import com.griefdefender.api.claim.Claim;
-import com.griefdefender.api.economy.BankTransactionType;
+import com.griefdefender.api.economy.TransactionResultType;
+import com.griefdefender.api.economy.TransactionType;
 import com.griefdefender.api.permission.option.Options;
+import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.claim.GDClaimManager;
-import com.griefdefender.configuration.GriefDefenderConfig;
-import com.griefdefender.economy.GDBankTransaction;
+import com.griefdefender.economy.GDPaymentTransaction;
 import com.griefdefender.event.GDTaxClaimEvent;
 import com.griefdefender.permission.GDPermissionManager;
 import com.griefdefender.permission.GDPermissionUser;
+import com.griefdefender.util.EconomyUtil;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.event.CauseStackManager;
 import org.spongepowered.api.service.economy.EconomyService;
 import org.spongepowered.api.service.economy.account.Account;
 import org.spongepowered.api.service.economy.transaction.ResultType;
 import org.spongepowered.api.service.economy.transaction.TransactionResult;
-import org.spongepowered.api.service.permission.Subject;
-import org.spongepowered.api.world.storage.WorldProperties;
+import org.spongepowered.api.world.World;
 
-import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -56,69 +56,64 @@ import java.util.Set;
 
 public class TaxApplyTask implements Runnable {
 
-    final WorldProperties worldProperties;
     final EconomyService economyService;
-    final GriefDefenderConfig<?> activeConfig;
-    private int bankTransactionLogLimit = 60;
 
-    public TaxApplyTask(WorldProperties worldProperties) {
-        this.worldProperties = worldProperties;
+    public TaxApplyTask() {
         this.economyService = GriefDefenderPlugin.getInstance().economyService.get();
-        this.activeConfig = GriefDefenderPlugin.getActiveConfig(this.worldProperties);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
     public void run() {
-        // don't do anything when there are no claims
-        GDClaimManager claimManager = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(this.worldProperties.getUniqueId());
-        ArrayList<Claim> claimList = (ArrayList<Claim>) new ArrayList<>(claimManager.getWorldClaims());
-        if (claimList.size() == 0) {
-            return;
-        }
-
-        this.bankTransactionLogLimit = this.activeConfig.getConfig().claim.bankTransactionLogLimit;
-        Iterator<GDClaim> iterator = ((ArrayList) claimList.clone()).iterator();
-        while (iterator.hasNext()) {
-            GDClaim claim = iterator.next();
-            final GDPlayerData playerData = claim.getOwnerPlayerData();
-            if (claim.isWilderness()) {
-                continue;
-            }
-            if (playerData == null) {
+        for (World world : Sponge.getServer().getWorlds()) {
+            if (!GriefDefenderPlugin.getInstance().claimsEnabledForWorld(world.getUniqueId())) {
                 continue;
             }
 
-            if (!playerData.dataInitialized) {
-                continue;
+            GDClaimManager claimManager = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(world.getUniqueId());
+            ArrayList<Claim> claimList = (ArrayList<Claim>) new ArrayList<>(claimManager.getWorldClaims());
+            if (claimList.size() == 0) {
+                return;
             }
-
-            if (claim.isAdminClaim()) {
-                // search for town
-                final Set<Claim> children = claim.getChildren(false);
-                for (Claim child : children) {
-                    if (child.isTown()) {
-                        handleTownTax((GDClaim) child, playerData);
-                    } else if (child.isBasicClaim()) {
-                        handleClaimTax((GDClaim) child, playerData, false);
-                    }
+    
+            Iterator<GDClaim> iterator = ((ArrayList) claimList.clone()).iterator();
+            while (iterator.hasNext()) {
+                GDClaim claim = iterator.next();
+                final GDPlayerData playerData = claim.getOwnerPlayerData();
+                if (claim.isWilderness()) {
+                    continue;
                 }
-            } else {
-                if (claim.isTown()) {
-                    handleTownTax(claim, playerData);
-                } else if (claim.isBasicClaim()){
-                    handleClaimTax(claim, playerData, false);
+                if (playerData == null) {
+                    continue;
+                }
+    
+                if (!playerData.dataInitialized) {
+                    continue;
+                }
+    
+                if (claim.isAdminClaim()) {
+                    // search for town
+                    final Set<Claim> children = claim.getChildren(false);
+                    for (Claim child : children) {
+                        if (child.isTown()) {
+                            handleTownTax((GDClaim) child, playerData);
+                        } else if (child.isBasicClaim()) {
+                            handleClaimTax((GDClaim) child, playerData, false);
+                        }
+                    }
+                } else {
+                    if (claim.isTown()) {
+                        handleTownTax(claim, playerData);
+                    } else if (claim.isBasicClaim()){
+                        handleClaimTax(claim, playerData, false);
+                    }
                 }
             }
         }
     }
 
     private void handleClaimTax(GDClaim claim, GDPlayerData playerData, boolean inTown) {
-        final GDPermissionUser user = playerData.getSubject();
-        final Account claimAccount = null; //claim.getEconomyAccount().orElse(null);
-        if (claimAccount == null) {
-            return;
-        }
+        final GDPermissionUser user = PermissionHolderCache.getInstance().getOrCreateUser(playerData.getUniqueId());
         double taxRate = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Double.class), user, Options.TAX_RATE, claim);
         double taxOwed = claim.getEconomyData().getTaxBalance() + (claim.getClaimBlocks() * taxRate);
         try (final CauseStackManager.StackFrame frame = Sponge.getCauseStackManager().pushCauseFrame()) {
@@ -131,10 +126,10 @@ public class TaxApplyTask implements Runnable {
             final double taxBalance = claim.getEconomyData().getTaxBalance();
             taxRate = event.getTaxRate();
             taxOwed = taxBalance + (claim.getClaimBlocks() * taxRate);
-            TransactionResult result = claimAccount.withdraw(this.economyService.getDefaultCurrency(), BigDecimal.valueOf(taxOwed), Sponge.getCauseStackManager().getCurrentCause());
+            final TransactionResult result = EconomyUtil.withdrawFunds(user.getUniqueId(), taxOwed);
             if (result.getResult() != ResultType.SUCCESS) {
                 final Instant localNow = Instant.now();
-                Instant taxPastDueDate = claim.getEconomyData().getTaxPastDueDate().orElse(null);
+                Instant taxPastDueDate = claim.getEconomyData().getTaxPastDueDate();
                 if (taxPastDueDate == null) {
                      claim.getEconomyData().setTaxPastDueDate(Instant.now());
                 } else {
@@ -152,9 +147,9 @@ public class TaxApplyTask implements Runnable {
                 }
                 final double totalTaxOwed = taxBalance + taxOwed;
                 claim.getEconomyData().setTaxBalance(totalTaxOwed);
-                claim.getEconomyData().addBankTransaction(new GDBankTransaction(BankTransactionType.TAX_FAIL, Instant.now(), taxOwed));
+                claim.getEconomyData().addPaymentTransaction(new GDPaymentTransaction(TransactionType.TAX, TransactionResultType.FAIL, Instant.now(), taxOwed));
             } else {
-                claim.getEconomyData().addBankTransaction(new GDBankTransaction(BankTransactionType.TAX_SUCCESS, Instant.now(), taxOwed));
+                claim.getEconomyData().addPaymentTransaction(new GDPaymentTransaction(TransactionType.TAX, TransactionResultType.SUCCESS, Instant.now(), taxOwed));
                 claim.getEconomyData().setTaxPastDueDate(null);
                 claim.getEconomyData().setTaxBalance(0);
                 claim.getInternalClaimData().setExpired(false);
@@ -163,10 +158,10 @@ public class TaxApplyTask implements Runnable {
                     final GDClaim town = claim.getTownClaim();
                     town.getData()
                         .getEconomyData()
-                        .addBankTransaction(new GDBankTransaction(BankTransactionType.TAX_SUCCESS, Instant.now(), taxOwed));
-                    //town.getEconomyAccount()
-                     //   .get()
-                     //   .deposit(this.economyService.getDefaultCurrency(), BigDecimal.valueOf(taxOwed), Sponge.getCauseStackManager().getCurrentCause());
+                        .addPaymentTransaction(new GDPaymentTransaction(TransactionType.TAX, TransactionResultType.SUCCESS, Instant.now(), taxOwed));
+                    if (town.getEconomyAccountId().isPresent()) {
+                        EconomyUtil.depositFunds(town.getEconomyAccountId().get(), taxOwed);
+                    }
                 }
                 claim.getData().save();
             }
@@ -174,7 +169,7 @@ public class TaxApplyTask implements Runnable {
     }
 
     private void handleTownTax(GDClaim town, GDPlayerData playerData) {
-        Account townAccount = null;//town.getEconomyAccount().orElse(null);
+        Account townAccount = town.getEconomyAccount();
         if (townAccount == null) {
             // Virtual Accounts not supported by Economy Plugin so ignore
             return;

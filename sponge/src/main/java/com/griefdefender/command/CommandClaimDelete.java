@@ -82,12 +82,12 @@ public class CommandClaimDelete extends BaseCommand {
 
         final Component confirmationText = TextComponent.builder()
                 .append(GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.DELETE_CLAIM_WARNING, 
-                        ImmutableMap.of("player", claim.getOwnerName().color(TextColor.AQUA))))
+                        ImmutableMap.of("player", claim.getOwnerDisplayName().color(TextColor.AQUA))))
                 .append(TextComponent.builder()
                     .append("\n[")
-                    .append("Confirm", TextColor.GREEN)
+                    .append(MessageCache.getInstance().LABEL_CONFIRM.color(TextColor.GREEN))
                     .append("]\n")
-                    .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createConfirmationConsumer(player, claim, deleteTopLevelClaim))))
+                    .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(player, createConfirmationConsumer(player, claim, deleteTopLevelClaim), true)))
                     .hoverEvent(HoverEvent.showText(MessageCache.getInstance().UI_CLICK_CONFIRM)).build())
                 .build();
         TextAdapter.sendComponent(player, confirmationText);
@@ -105,7 +105,7 @@ public class CommandClaimDelete extends BaseCommand {
             }
 
             playerData.onClaimDelete();
-            playerData.revertActiveVisual(player);
+            playerData.revertClaimVisual((GDClaim) claim);
 
             if (claim.isTown()) {
                 playerData.inTown = false;
@@ -113,7 +113,7 @@ public class CommandClaimDelete extends BaseCommand {
             }
 
             final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.DELETE_CLAIM_SUCCESS, 
-                ImmutableMap.of("player", claim.getOwnerName().color(TextColor.AQUA)));
+                ImmutableMap.of("player", claim.getOwnerDisplayName().color(TextColor.AQUA)));
             GriefDefenderPlugin.sendMessage(player, message);
         };
     }

@@ -38,6 +38,7 @@ import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.event.GDCauseStackManager;
 import com.griefdefender.permission.GDPermissionManager;
 import com.griefdefender.permission.flag.GDFlags;
+import com.griefdefender.permission.option.GDOptions;
 import com.griefdefender.storage.BaseStorage;
 import com.griefdefender.util.PaginationUtil;
 import net.kyori.text.Component;
@@ -174,15 +175,17 @@ public class CommandEventHandler implements Listener {
 
         final int combatTimeRemaining = playerData.getPvpCombatTimeRemaining();
         final boolean inPvpCombat = combatTimeRemaining > 0;
-        final boolean pvpCombatCommand = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Boolean.class), player, Options.PVP_COMBAT_COMMAND);
-        if (!pvpCombatCommand && inPvpCombat) {
-            final Component denyMessage = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PVP_IN_COMBAT_NOT_ALLOWED,
-                    ImmutableMap.of(
-                    "time-remaining", combatTimeRemaining));
-            GriefDefenderPlugin.sendMessage(player, denyMessage);
-            event.setCancelled(true);
-            GDTimings.PLAYER_COMMAND_EVENT.stopTiming();
-            return;
+        if (GDOptions.isOptionEnabled(Options.PVP_COMBAT_COMMAND)) {
+            final boolean pvpCombatCommand = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Boolean.class), player, Options.PVP_COMBAT_COMMAND);
+            if (!pvpCombatCommand && inPvpCombat) {
+                final Component denyMessage = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PVP_IN_COMBAT_NOT_ALLOWED,
+                        ImmutableMap.of(
+                        "time-remaining", combatTimeRemaining));
+                GriefDefenderPlugin.sendMessage(player, denyMessage);
+                event.setCancelled(true);
+                GDTimings.PLAYER_COMMAND_EVENT.stopTiming();
+                return;
+            }
         }
 
         String commandBaseTarget = pluginId + ":" + command;
@@ -223,7 +226,7 @@ public class CommandEventHandler implements Listener {
                 final Component denyMessage = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.COMMAND_BLOCKED,
                         ImmutableMap.of(
                         "command", command,
-                        "player", claim.getOwnerName()));
+                        "player", claim.getOwnerDisplayName()));
                 GriefDefenderPlugin.sendMessage(player, denyMessage);
                 event.setCancelled(true);
                 GDTimings.PLAYER_COMMAND_EVENT.stopTiming();
@@ -254,7 +257,7 @@ public class CommandEventHandler implements Listener {
                 final Component denyMessage = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.COMMAND_BLOCKED,
                         ImmutableMap.of(
                         "command", command,
-                        "player", claim.getOwnerName()));
+                        "player", claim.getOwnerDisplayName()));
                 GriefDefenderPlugin.sendMessage(player, denyMessage);
                 event.setCancelled(true);
                 GDTimings.PLAYER_COMMAND_EVENT.stopTiming();

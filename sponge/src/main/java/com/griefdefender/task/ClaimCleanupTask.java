@@ -43,6 +43,7 @@ import net.kyori.text.Component;
 import net.kyori.text.serializer.plain.PlainComponentSerializer;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.event.CauseStackManager;
+import org.spongepowered.api.world.World;
 import org.spongepowered.api.world.storage.WorldProperties;
 
 import java.time.Duration;
@@ -55,14 +56,14 @@ public class ClaimCleanupTask implements Runnable {
 
     @Override
     public void run() {
-        for (WorldProperties worldProperties : Sponge.getServer().getAllWorldProperties()) {
-            GDClaimManager claimManager = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(worldProperties.getUniqueId());
+        for (World world : Sponge.getServer().getWorlds()) {
+            GDClaimManager claimManager = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(world.getUniqueId());
             Set<Claim> claimList = claimManager.getWorldClaims();
             if (claimList.size() == 0) {
                 continue;
             }
 
-            final GriefDefenderConfig<?> activeConfig = GriefDefenderPlugin.getActiveConfig(worldProperties.getUniqueId());
+            final GriefDefenderConfig<?> activeConfig = GriefDefenderPlugin.getActiveConfig(world.getUniqueId());
             final boolean schematicRestore = activeConfig.getConfig().claim.claimAutoSchematicRestore;
             Iterator<Claim> iterator = new HashSet<>(claimList).iterator();
             while (iterator.hasNext()) {
@@ -86,7 +87,7 @@ public class ClaimCleanupTask implements Runnable {
 
                 try (final CauseStackManager.StackFrame frame = Sponge.getCauseStackManager().pushCauseFrame()) {
                     final int claimExpirationChest = playerData.getChestClaimExpiration();
-                    if (claim.getArea() <= areaOfDefaultClaim && claimExpirationChest > 0) {
+                    if (claim.getClaimBlocks() <= areaOfDefaultClaim && claimExpirationChest > 0) {
                         if (claimLastActive.plus(Duration.ofDays(claimExpirationChest))
                             .isBefore(Instant.now())) {
                             playerData.useRestoreSchematic = schematicRestore;
@@ -103,7 +104,7 @@ public class ClaimCleanupTask implements Runnable {
                             // remove all context permissions
                             PermissionUtil.getInstance().clearPermissions(claim);
                         }
-                        return;
+                        continue;
                     }
 
                     if (!claim.isBasicClaim()) {
@@ -115,11 +116,11 @@ public class ClaimCleanupTask implements Runnable {
                         final Instant localNow = Instant.now();
                         final boolean claimNotActive = claimLastActive.plus(Duration.ofDays(optionClaimExpirationBasic)).isBefore(localNow);
                         if (!claimNotActive) {
-                            final boolean taxEnabled = activeConfig.getConfig().claim.bankTaxSystem;
+                            final boolean taxEnabled = activeConfig.getConfig().economy.taxSystem;
                             if (!taxEnabled || !claim.getData().isExpired()) {
                                 continue;
                             }
-                            final Instant taxPastDueDate = claim.getEconomyData().getTaxPastDueDate().orElse(null);
+                            final Instant taxPastDueDate = claim.getEconomyData().getTaxPastDueDate();
                             if (taxPastDueDate == null) {
                                 continue;
                             }

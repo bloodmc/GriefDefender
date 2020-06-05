@@ -79,18 +79,18 @@ public class CommandRestoreClaim extends BaseCommand {
         final Component schematicConfirmationText = TextComponent.builder("")
                 .append("Are you sure you want to restore this claim?")
                 .append("\n[")
-                .append("Confirm", TextColor.GREEN)
+                .append(MessageCache.getInstance().LABEL_CONFIRM.color(TextColor.GREEN))
                 .append("]\n")
-                .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createConfirmationConsumer(src, claim))))
+                .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(src, createConfirmationConsumer(src, claim), true)))
                 .hoverEvent(HoverEvent.showText(TextComponent.of("Clicking confirm will restore ENTIRE claim back to default world gen state. Use cautiously!"))).build();
-        TextAdapter.sendComponent(src, schematicConfirmationText);
+        GriefDefenderPlugin.sendMessage(src, schematicConfirmationText);
     }
 
     private static Consumer<CommandSource> createConfirmationConsumer(CommandSource src, GDClaim claim) {
         return confirm -> {
+            GriefDefenderPlugin.sendMessage(src, MessageCache.getInstance().CLAIM_RESTORE_IN_PROGRESS);
             BlockUtil.getInstance().restoreClaim(claim);
-            final Component message = MessageCache.getInstance().CLAIM_RESTORE_SUCCESS;
-            GriefDefenderPlugin.sendMessage(src, message);
+            GriefDefenderPlugin.sendMessage(src, MessageCache.getInstance().CLAIM_RESTORE_SUCCESS);
         };
     }
 }

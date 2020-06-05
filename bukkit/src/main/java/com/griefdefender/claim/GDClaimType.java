@@ -54,6 +54,9 @@ public class GDClaimType implements ClaimType {
         } else if (name.equalsIgnoreCase("town")) {
             this.defaultContext = ClaimContexts.TOWN_DEFAULT_CONTEXT;
             this.overrideContext = ClaimContexts.TOWN_OVERRIDE_CONTEXT;
+        } else if (name.equalsIgnoreCase("user")) {
+            this.defaultContext = ClaimContexts.USER_DEFAULT_CONTEXT;
+            this.overrideContext = ClaimContexts.USER_OVERRIDE_CONTEXT;
         } else if (name.equalsIgnoreCase("wilderness")) {
             this.defaultContext = ClaimContexts.WILDERNESS_DEFAULT_CONTEXT;
             this.overrideContext = ClaimContexts.WILDERNESS_OVERRIDE_CONTEXT;

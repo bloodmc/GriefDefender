@@ -2,10 +2,16 @@
     "version": "1.12.2",
     "libraries": [
         {
+            "name": "com.griefdefender:adapter-sponge:1.12.2",
+            "sha1": "603829ec198b9aa87e5589238256ce2e0888d2f0",
+            "path": "com/griefdefender/adapter-sponge/1.12.2-SNAPSHOT/adapter-sponge-1.12.2-20200603.052230-4.jar",
+            "url": "https://repo.glaremasters.me/repository/bloodshot/com/griefdefender/adapter-sponge/1.12.2-SNAPSHOT/adapter-sponge-1.12.2-20200603.052230-4.jar"
+        },
+        {
             "name": "com.griefdefender:api:1.0.0",
-            "sha1": "0bb7ec5bb796298ed269e1cd642e6dd29704698d",
-            "path": "com/griefdefender/api/1.0.0-SNAPSHOT/api-1.0.0-20200505.043120-15.jar",
-            "url": "https://repo.glaremasters.me/repository/bloodshot/com/griefdefender/api/1.0.0-SNAPSHOT/api-1.0.0-20200505.043120-15.jar"
+            "sha1": "2a3f820d12a3bd4c03932018567ab3732517aee5",
+            "path": "com/griefdefender/api/1.0.0-SNAPSHOT/api-1.0.0-20200528.202302-24.jar",
+            "url": "https://repo.glaremasters.me/repository/bloodshot/com/griefdefender/api/1.0.0-SNAPSHOT/api-1.0.0-20200528.202302-24.jar"
         },
         {
             "name": "com.griefdefender:reflect-helper:1.0",

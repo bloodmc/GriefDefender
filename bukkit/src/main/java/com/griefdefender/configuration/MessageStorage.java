@@ -185,19 +185,45 @@ public class MessageStorage {
     public static final String ECONOMY_CLAIM_BUY_CONFIRMED = "economy-claim-buy-confirmed";
     public static final String ECONOMY_CLAIM_BUY_NOT_ENOUGH_FUNDS = "economy-claim-buy-not-enough-funds";
     public static final String ECONOMY_CLAIM_BUY_TRANSFER_CANCELLED = "economy-claim-buy-transfer-cancelled";
+    public static final String ECONOMY_CLAIM_RENT_CANCEL_CONFIRMATION_BALANCE = "economy-claim-rent-cancel-confirmation-balance";
+    public static final String ECONOMY_CLAIM_RENT_CONFIRMATION = "economy-claim-rent-confirmation";
+    public static final String ECONOMY_CLAIM_RENT_CONFIRMATION_MAX = "economy-claim-rent-confirmation-max";
+    public static final String ECONOMY_CLAIM_RENT_CONFIRMATION_MIN = "economy-claim-rent-confirmation-min";
+    public static final String ECONOMY_CLAIM_RENT_CONFIRMATION_MIN_MAX = "economy-claim-rent-confirmation-min-max";
+    public static final String ECONOMY_CLAIM_RENT_CONFIRMED = "economy-claim-rent-confirmed";
+    public static final String ECONOMY_CLAIM_RENT_INVALID_PRICE = "economy-claim-rent-invalid-price";
+    public static final String ECONOMY_CLAIM_RENT_NOT_ENOUGH_FUNDS = "economy-claim-rent-not-enough-funds";
+    public static final String ECONOMY_CLAIM_RENT_PAYMENT_FAILURE = "economy-claim-rent-payment-failure";
+    public static final String ECONOMY_CLAIM_RENT_PAYMENT_SUCCESS = "economy-claim-rent-payment-success";
+    public static final String ECONOMY_CLAIM_RENT_RESTORE_CANCEL_CONFIRMATION_BALANCE = "economy-claim-rent-restore-cancel-confirmation-balance";
+    public static final String ECONOMY_CLAIM_RENTED = "economy-claim-rented";
+    public static final String ECONOMY_CLAIM_RENTED_ALREADY = "economy-claim-rented-already";
+    public static final String ECONOMY_CLAIM_RENTED_EXPIRED = "economy-claim-rented-expired";
+    public static final String ECONOMY_CLAIM_RENTER_CONFIRMATION = "economy-claim-renter-confirmation";
+    public static final String ECONOMY_CLAIM_RENTER_CONFIRMATION_MAX = "economy-claim-renter-confirmation-max";
+    public static final String ECONOMY_CLAIM_RENTER_CONFIRMATION_MIN = "economy-claim-renter-confirmation-min";
+    public static final String ECONOMY_CLAIM_RENTER_CONFIRMATION_MIN_MAX = "economy-claim-renter-confirmation-min-max";
+    public static final String ECONOMY_CLAIM_RENTER_CONFIRMED = "economy-claim-renter-confirmed";
+    public static final String ECONOMY_CLAIM_RENTED_TIME_WARNING = "economy-claim-rented-time-warning";
+    public static final String ECONOMY_CLAIM_RENTED_TIME_WARNING_RESTORE_ = "economy-claim-rented-time-warning-restore";
+    public static final String ECONOMY_CLAIM_RENTED_NO_CANCEL = "economy-claim-rented-no-cancel";
     public static final String ECONOMY_CLAIM_SALE_CONFIRMATION = "economy-claim-sale-confirmation";
     public static final String ECONOMY_CLAIM_SALE_CONFIRMED = "economy-claim-sale-confirmed";
     public static final String ECONOMY_CLAIM_SALE_INVALID_PRICE = "economy-claim-sale-invalid-price";
     public static final String ECONOMY_CLAIM_SOLD = "economy-claim-sold";
     public static final String ECONOMY_MODE_BLOCK_SALE_CONFIRMATION = "economy-mode-block-sale-confirmation";
+    public static final String ECONOMY_MODE_BLOCK_COST_NOT_SET = "economy-mode-block-cost-not-set";
     public static final String ECONOMY_MODE_RESIZE_SUCCESS_2D = "economy-mode-resize-success-2d";
     public static final String ECONOMY_MODE_RESIZE_SUCCESS_3D = "economy-mode-resize-success-3d";
     public static final String ECONOMY_NOT_ENOUGH_FUNDS = "economy-not-enough-funds";
     public static final String ECONOMY_PLAYER_NOT_FOUND = "economy-player-not-found";
+    public static final String ECONOMY_SIGN_RENTED_LINE2 = "economy-sign-rented-line2";
+    public static final String ECONOMY_SIGN_SOLD_LINE2 = "economy-sign-sold-line2";
     public static final String ECONOMY_WITHDRAW_ERROR = "economy-withdraw-error";
     public static final String FLAG_INVALID_CONTEXT = "flag-invalid-context";
     public static final String FLAG_INVALID_META = "flag-invalid-meta";
     public static final String FLAG_INVALID_TARGET = "flag-invalid-target";
+    public static final String FLAG_NOT_ENABLED = "flag-not-enabled";
     public static final String FLAG_NOT_FOUND = "flag-not-found";
     public static final String FLAG_NOT_SET = "flag-not-set";
     public static final String FLAG_OVERRIDDEN = "flag-overridden";
@@ -206,6 +232,7 @@ public class MessageStorage {
     public static final String FLAG_UI_CLICK_TOGGLE = "flag-ui-click-toggle";
     public static final String FLAG_UI_INHERIT_PARENT = "flag-ui-inherit-parent";
     public static final String FLAG_UI_OVERRIDE_PERMISSION = "flag-ui-override-permission";
+    public static final String OPTION_APPLY_PLAYER_FLY_SPEED = "option-apply-player-fly-speed";
     public static final String OPTION_APPLY_PLAYER_GAMEMODE = "option-apply-player-gamemode";
     public static final String OPTION_APPLY_PLAYER_WALK_SPEED = "option-apply-player-walk-speed";
     public static final String OPTION_APPLY_PLAYER_WEATHER = "option-apply-player-weather";
@@ -213,6 +240,7 @@ public class MessageStorage {
     public static final String OPTION_INVALID_CONTEXT = "option-invalid-context";
     public static final String OPTION_INVALID_TARGET = "option-invalid-target";
     public static final String OPTION_INVALID_VALUE = "option-invalid-value";
+    public static final String OPTION_NOT_ENABLED = "option-not-enabled";
     public static final String OPTION_NOT_FOUND = "option-not-found";
     public static final String OPTION_NOT_SET = "option-not-set";
     public static final String OPTION_OVERRIDE_NOT_SUPPORTED = "option-override-not-supported";
@@ -245,6 +273,7 @@ public class MessageStorage {
     public static final String PERMISSION_PROTECTED_PORTAL = "permission-protected-portal";
     public static final String PERMISSION_TRUST = "permission-trust";
     public static final String PLAYER_ACCRUED_BLOCKS_EXCEEDED = "player-accrued-blocks-exceeded";
+    public static final String PLAYER_NO_CLAIMS_TO_DELETE = "player-no-claims-to-delete";
     public static final String PLAYER_REMAINING_BLOCKS_2D = "player-remaining-blocks-2d";
     public static final String PLAYER_REMAINING_BLOCKS_3D = "player-remaining-blocks-3d";
     public static final String PLAYERINFO_UI_ABANDON_RETURN_RATIO = "playerinfo-ui-abandon-return-ratio";
@@ -290,11 +319,13 @@ public class MessageStorage {
     public static final String SCHEMATIC_RESTORE_CONFIRMED = "schematic-restore-confirmed";
     public static final String SPAWN_SET_SUCCESS = "spawn-set-success";
     public static final String SPAWN_TELEPORT = "spawn-teleport";
-    public static final String TAX_CLAIM_EXPIRED = "tax-claim-expired";
-    public static final String TAX_CLAIM_PAID_BALANCE = "tax-claim-paid-balance";
-    public static final String TAX_CLAIM_PAID_PARTIAL = "tax-claim-paid-partial";
+    public static final String TAX_EXPIRED = "tax-expired";
+    public static final String TAX_EXPIRED_BANK = "tax-expired-bank";
+    public static final String TAX_PAID_BALANCE = "tax-paid-balance";
+    public static final String TAX_PAID_PARTIAL = "tax-paid-partial";
     public static final String TAX_INFO = "tax-info";
     public static final String TAX_PAST_DUE = "tax-past-due";
+    public static final String TAX_PAY_NO_FUNDS = "tax-pay-no-funds";
     public static final String TELEPORT_CONFIRM = "teleport-confirm";
     public static final String TELEPORT_DELAY_NOTICE = "teleport-delay-notice";
     public static final String TOOL_NOT_EQUIPPED = "tool-not-equipped";
@@ -313,7 +344,7 @@ public class MessageStorage {
     public static final String UNTRUST_INDIVIDUAL_ALL_CLAIMS = "untrust-individual-all-claims";
     public static final String UNTRUST_INDIVIDUAL_SINGLE_CLAIM = "untrust-individual-single-claim";
     public static final String UNTRUST_OWNER = "untrust-owner";
-
+    public static final String VISUAL_UPDATE_IN_PROGRESS = "visual-update-in-progress";
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     public MessageStorage(Path path) {

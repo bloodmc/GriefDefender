@@ -35,11 +35,14 @@ import com.griefdefender.api.Tristate;
 import com.griefdefender.api.claim.Claim;
 import com.griefdefender.api.claim.ClaimResult;
 import com.griefdefender.api.claim.ClaimTypes;
+import com.griefdefender.api.claim.ClaimVisualTypes;
 import com.griefdefender.api.claim.TrustTypes;
+import com.griefdefender.api.economy.PaymentType;
 import com.griefdefender.api.permission.flag.Flags;
 import com.griefdefender.api.permission.option.Options;
 import com.griefdefender.cache.EventResultCache;
 import com.griefdefender.cache.MessageCache;
+import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.claim.GDClaimManager;
 import com.griefdefender.configuration.GriefDefenderConfig;
@@ -47,20 +50,27 @@ import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.event.GDCauseStackManager;
 import com.griefdefender.internal.util.BlockUtil;
 import com.griefdefender.internal.util.NMSUtil;
-import com.griefdefender.internal.visual.ClaimVisual;
+import com.griefdefender.internal.visual.GDClaimVisual;
 import com.griefdefender.permission.GDPermissionManager;
+import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.permission.GDPermissions;
 import com.griefdefender.permission.flag.GDFlags;
 import com.griefdefender.storage.BaseStorage;
 import com.griefdefender.util.BlockPosCache;
 import com.griefdefender.util.CauseContextHelper;
+import com.griefdefender.util.SignUtil;
+import com.griefdefender.util.SpongeUtil;
 import net.kyori.text.Component;
+import net.kyori.text.TextComponent;
+import net.kyori.text.format.TextColor;
+import net.kyori.text.serializer.legacy.LegacyComponentSerializer;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.block.BlockType;
 import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.block.tileentity.Piston;
+import org.spongepowered.api.block.tileentity.Sign;
 import org.spongepowered.api.block.tileentity.TileEntity;
 import org.spongepowered.api.block.tileentity.carrier.Chest;
 import org.spongepowered.api.data.Transaction;
@@ -81,7 +91,9 @@ import org.spongepowered.api.event.cause.EventContext;
 import org.spongepowered.api.event.cause.EventContextKeys;
 import org.spongepowered.api.event.filter.cause.Root;
 import org.spongepowered.api.event.world.ExplosionEvent;
+import org.spongepowered.api.text.Text;
 import org.spongepowered.api.util.Direction;
+import org.spongepowered.api.world.DimensionTypes;
 import org.spongepowered.api.world.LocatableBlock;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
@@ -197,6 +209,12 @@ public class BlockEventHandler {
             return;
         }
 
+        if (source instanceof Player && !hasFakePlayer && tileEntity == null) {
+            // handle in normal events
+            GDTimings.BLOCK_PRE_EVENT.stopTimingIfSync();
+            return;
+        }
+
         if (sourceLocation != null) {
             GDPlayerData playerData = null;
             if (user != null) {
@@ -227,20 +245,20 @@ public class BlockEventHandler {
                 // If a player successfully interacted with a block recently such as a pressure plate, ignore check
                 // This fixes issues such as pistons not being able to extend
                 if (user != null && !isForgePlayerBreak && playerData != null && playerData.eventResultCache != null && playerData.eventResultCache.checkEventResultCache(targetClaim, "block-pre") == Tristate.TRUE) {
-                    GDPermissionManager.getInstance().addEventLogEntry(event, targetClaim, location, source, blockState, user, Flags.BLOCK_BREAK, playerData.eventResultCache.lastTrust, Tristate.TRUE);
+                    GDPermissionManager.getInstance().processEventLog(event, location, targetClaim, Flags.BLOCK_BREAK.getPermission(), source, blockState, user, playerData.eventResultCache.lastTrust, Tristate.TRUE);
                     continue;
                 }
                 if (user != null && targetClaim.isUserTrusted(user, TrustTypes.BUILDER)) {
-                    GDPermissionManager.getInstance().addEventLogEntry(event, targetClaim, location, source, blockState, user, Flags.BLOCK_BREAK, TrustTypes.BUILDER.getName().toLowerCase(), Tristate.TRUE);
+                    GDPermissionManager.getInstance().processEventLog(event, location, targetClaim, Flags.BLOCK_BREAK.getPermission(), source, blockState, user, TrustTypes.BUILDER.getName().toLowerCase(), Tristate.TRUE);
                     continue;
                 }
                 if (sourceClaim.getOwnerUniqueId().equals(targetClaim.getOwnerUniqueId()) && user == null && sourceEntity == null && !isFireSource && !isLeafDecay) {
-                    GDPermissionManager.getInstance().addEventLogEntry(event, targetClaim, location, source, blockState, user, Flags.BLOCK_BREAK, "owner", Tristate.TRUE);
+                    GDPermissionManager.getInstance().processEventLog(event, location, targetClaim, Flags.BLOCK_BREAK.getPermission(), source, blockState, user, "owner", Tristate.TRUE);
                     continue;
                 }
                 if (user != null && pistonExtend) {
                     if (targetClaim.isUserTrusted(user, TrustTypes.ACCESSOR)) {
-                        GDPermissionManager.getInstance().addEventLogEntry(event, targetClaim, location, source, blockState, user, Flags.BLOCK_BREAK, TrustTypes.ACCESSOR.getName().toLowerCase(), Tristate.TRUE);
+                        GDPermissionManager.getInstance().processEventLog(event, location, targetClaim, Flags.BLOCK_BREAK.getPermission(), source, blockState, user, TrustTypes.ACCESSOR.getName().toLowerCase(), Tristate.TRUE);
                         continue;
                     }
                 }
@@ -289,11 +307,11 @@ public class BlockEventHandler {
                 // If a player successfully interacted with a block recently such as a pressure plate, ignore check
                 // This fixes issues such as pistons not being able to extend
                 if (!isForgePlayerBreak && playerData != null && playerData.eventResultCache != null && playerData.eventResultCache.checkEventResultCache(targetClaim, "block-pre") == Tristate.TRUE) {
-                    GDPermissionManager.getInstance().addEventLogEntry(event, targetClaim, location, source, blockState, user, Flags.BLOCK_BREAK, playerData.eventResultCache.lastTrust, Tristate.TRUE);
+                    GDPermissionManager.getInstance().processEventLog(event, location, targetClaim, Flags.BLOCK_BREAK.getPermission(), source, blockState, user, playerData.eventResultCache.lastTrust, Tristate.TRUE);
                     continue;
                 }
                 if (targetClaim.isUserTrusted(user, TrustTypes.BUILDER)) {
-                    GDPermissionManager.getInstance().addEventLogEntry(event, targetClaim, location, source, blockState, user, Flags.BLOCK_BREAK, TrustTypes.BUILDER.getName().toLowerCase(), Tristate.TRUE);
+                    GDPermissionManager.getInstance().processEventLog(event, location, targetClaim, Flags.BLOCK_BREAK.getPermission(), source, blockState, user, TrustTypes.BUILDER.getName().toLowerCase(), Tristate.TRUE);
                     continue;
                 }
 
@@ -351,7 +369,7 @@ public class BlockEventHandler {
             sourceClaim = this.dataStore.getClaimAtPlayer(playerData, player.getLocation());
         } else {
             playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(sourceLocation.getExtent(), user.getUniqueId());
-            sourceClaim = this.dataStore.getClaimAt(sourceLocation, playerData.lastClaim.get());
+            sourceClaim = this.dataStore.getClaimAt(sourceLocation);
         }
 
         if (!GriefDefenderPlugin.getInstance().claimsEnabledForWorld(sourceLocation.getExtent().getUniqueId())) {
@@ -602,18 +620,25 @@ public class BlockEventHandler {
         final User user = CauseContextHelper.getEventUser(event);
         GDClaim targetClaim = null;
         final List<Location<World>> filteredLocations = new ArrayList<>();
+        final String sourceId = GDPermissionManager.getInstance().getPermissionIdentifier(source);
+        final int cancelBlockLimit = GriefDefenderPlugin.getGlobalConfig().getConfig().claim.explosionCancelBlockLimit;
+        boolean denySurfaceExplosion = GriefDefenderPlugin.getActiveConfig(world.getUniqueId()).getConfig().claim.explosionBlockSurfaceBlacklist.contains(sourceId);
+        if (!denySurfaceExplosion) {
+            denySurfaceExplosion = !GriefDefenderPlugin.getActiveConfig(world.getUniqueId()).getConfig().claim.explosionBlockSurfaceBlacklist.contains("any");
+        }
         for (Location<World> location : event.getAffectedLocations()) {
             targetClaim =  GriefDefenderPlugin.getInstance().dataStore.getClaimAt(location, targetClaim);
-            /*if (location.getPosition().getY() > ((net.minecraft.world.World) world).getSeaLevel() && !GriefDefenderPlugin.getActiveConfig(world.getUniqueId()).getConfig().claim.explosionSurface) {
+            if (denySurfaceExplosion && world.getDimension().getType() != DimensionTypes.NETHER && location.getBlockY() >= world.getSeaLevel()) {
                 filteredLocations.add(location);
+                GDPermissionManager.getInstance().processEventLog(event, location, targetClaim, Flags.EXPLOSION_BLOCK.getPermission(), source, location.getBlock(), user, "explosion-surface", Tristate.FALSE);
                 continue;
-            }*/
+            }
 
             Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, Flags.EXPLOSION_BLOCK, source, location.getBlock(), user, true);
 
             if (result == Tristate.FALSE) {
                 // Avoid lagging server from large explosions.
-                if (event.getAffectedLocations().size() > 100) {
+                if (event.getAffectedLocations().size() > cancelBlockLimit) {
                     event.setCancelled(true);
                     break;
                 }
@@ -735,7 +760,7 @@ public class BlockEventHandler {
             locatable = (LocatableBlock) source;
             if (user != null && user instanceof Player) {
                 final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(locatable.getWorld(), user.getUniqueId());
-                sourceClaim = this.dataStore.getClaimAt(locatable.getLocation(), playerData.lastClaim.get());
+                sourceClaim = this.dataStore.getClaimAtPlayer(playerData, locatable.getLocation());
             } else {
                 sourceClaim = this.dataStore.getClaimAt(locatable.getLocation());
             }
@@ -873,7 +898,7 @@ public class BlockEventHandler {
                             } else {
                                 GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().CLAIM_AUTOMATIC_NOTIFICATION);
                                 GDClaim newClaim = this.dataStore.getClaimAt(block.getLocation().get());
-                                ClaimVisual visualization = new ClaimVisual(newClaim, ClaimVisual.BASIC);
+                                GDClaimVisual visualization = new GDClaimVisual(newClaim, ClaimVisualTypes.BASIC);
                                 visualization.createClaimBlockVisuals(block.getPosition().getY(), player.getLocation(), playerData);
                                 visualization.apply(player);
 
@@ -919,6 +944,90 @@ public class BlockEventHandler {
         }
 
         GDTimings.SIGN_CHANGE_EVENT.stopTimingIfSync();
+    }
+
+    @Listener(order = Order.FIRST)
+    public void onSignChangeEvent(ChangeSignEvent event) {
+        if (GriefDefenderPlugin.getInstance().getEconomyService() == null) {
+            return;
+        }
+
+        final GriefDefenderConfig<?> activeConfig = GriefDefenderPlugin.getActiveConfig(event.getTargetTile().getWorld().getUniqueId());
+        if (!activeConfig.getConfig().economy.rentSystem || (!activeConfig.getConfig().economy.isRentSignEnabled() && !activeConfig.getConfig().economy.isSellSignEnabled())) {
+            return;
+        }
+
+        final User eventUser = CauseContextHelper.getEventUser(event);
+        if (eventUser == null) {
+            return;
+        }
+
+        final GDPermissionUser user = PermissionHolderCache.getInstance().getOrCreateUser(eventUser);
+        if (user == null) {
+            return;
+        }
+
+        final Player player = user.getOnlinePlayer();
+        if (player == null) {
+            return;
+        }
+        final Sign sign = event.getTargetTile();
+        final GDClaim claim = this.dataStore.getClaimAt(sign.getLocation());
+        if (claim.isWilderness()) {
+            return;
+        }
+
+        final List<Text> lines = event.getText().asList();
+        final String header = lines.get(0).toPlain();
+        if (header == null || (!header.equalsIgnoreCase("gd") && !header.equalsIgnoreCase("griefdefender"))) {
+            return;
+        }
+
+        final String line1 = lines.get(1).toPlain();
+        final String line2 = lines.get(2).toPlain();
+        final String line3 = lines.get(3).toPlain();
+        if (line1.equalsIgnoreCase("sell") && activeConfig.getConfig().economy.isSellSignEnabled()) {
+            if (!player.hasPermission(GDPermissions.USER_SELL_SIGN)) {
+                return;
+            }
+
+            // check price
+            Double price = null;
+            try {
+                price = Double.valueOf(line2);
+            } catch (NumberFormatException e) {
+                return;
+            }
+
+            SignUtil.setClaimForSale(claim, user.getOnlinePlayer(), sign, price);
+        } else if (line1.equalsIgnoreCase("rent") && activeConfig.getConfig().economy.isRentSignEnabled()) {
+            if (!player.hasPermission(GDPermissions.USER_RENT_SIGN)) {
+                return;
+            }
+
+            Double rate = null;
+            try {
+                rate = Double.valueOf(line2.substring(0, line2.length() - 1));
+            } catch (NumberFormatException e) {
+                return;
+            }
+
+            int rentMin = 0;
+            int rentMax = 0;
+            if (line3 != null) {
+                rentMin = SignUtil.getRentMinTime(line3);
+                rentMax = SignUtil.getRentMaxTime(line3);
+            }
+
+            String rentType = line2;
+            final PaymentType paymentType = SignUtil.getPaymentType(rentType);
+            if (paymentType == PaymentType.UNDEFINED) {
+                // invalid
+                return;
+            }
+
+            SignUtil.setClaimForRent(claim, player, sign, rate, rentMin, rentMax, paymentType);
+        }
     }
 
     public GDClaim getSourceClaim(Cause cause) {

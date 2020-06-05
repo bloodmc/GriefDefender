@@ -3,6 +3,7 @@ package com.griefdefender.util;
 import com.griefdefender.api.Tristate;
 import net.kyori.text.Component;
 import net.kyori.text.serializer.gson.GsonComponentSerializer;
+import net.kyori.text.serializer.legacy.LegacyComponentSerializer;
 import net.luckperms.api.context.ContextSet;
 import org.spongepowered.api.service.context.Context;
 import org.spongepowered.api.service.permission.Subject;
@@ -34,6 +35,7 @@ public class SpongeUtil {
         if (component == null) {
             return Text.EMPTY;
         }
+        //return Text.of(LegacyComponentSerializer.legacy().serialize((Component) component, '&'));
         return TextSerializers.JSON.deserialize(GsonComponentSerializer.INSTANCE.serialize(component));
     }
 

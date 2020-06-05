@@ -28,14 +28,17 @@ import java.lang.ref.WeakReference;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.function.Consumer;
 
 import org.bukkit.Bukkit;
-import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
@@ -54,19 +57,20 @@ import com.griefdefender.api.permission.Context;
 import com.griefdefender.api.permission.option.Options;
 import com.griefdefender.api.permission.option.type.CreateModeType;
 import com.griefdefender.api.permission.option.type.CreateModeTypes;
+import com.griefdefender.api.permission.option.type.GameModeType;
+import com.griefdefender.api.permission.option.type.GameModeTypes;
 import com.griefdefender.cache.EventResultCache;
 import com.griefdefender.cache.MessageCache;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
-import com.griefdefender.configuration.GriefDefenderConfig;
 import com.griefdefender.configuration.MessageStorage;
-import com.griefdefender.configuration.PlayerStorageData;
 import com.griefdefender.internal.block.BlockSnapshot;
 import com.griefdefender.internal.block.BlockTransaction;
 import com.griefdefender.internal.util.NMSUtil;
 import com.griefdefender.permission.GDPermissionManager;
 import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.permission.GDPermissions;
+import com.griefdefender.permission.option.GDOptions;
 import com.griefdefender.provider.VaultProvider;
 import com.griefdefender.storage.BaseStorage;
 import com.griefdefender.util.PermissionUtil;
@@ -85,23 +89,21 @@ public class GDPlayerData implements PlayerData {
     public Location lastShovelLocation;
     public Location endShovelLocation;
     public Location lastValidInspectLocation;
+    public Location lastNonAirInspectLocation;
     public boolean claimMode = false;
     public ShovelType shovelMode = ShovelTypes.BASIC;
 
     public GDClaim claimResizing;
     public GDClaim claimSubdividing;
-
-    public List<BlockTransaction> visualBlocks = new ArrayList<>();
-    public UUID visualClaimId;
+    public Map<UUID, BukkitTask> claimVisualRevertTasks = new HashMap<>();
+    public Map<UUID, List<BlockTransaction>> visualClaimBlocks = new HashMap<>();
+    public List<BlockSnapshot> queuedVisuals = new ArrayList<>();
+    public UUID tempVisualUniqueId = null;
     public UUID petRecipientUniqueId;
-    public BukkitTask visualRevertTask;
     private final VaultProvider vaultProvider = GriefDefenderPlugin.getInstance().getVaultProvider();
 
     public boolean ignoreClaims = false;
-
     public boolean debugClaimPermissions = false;
-    public WeakReference<GDClaim> lastClaim = new WeakReference<>(null);
-
     public boolean inTown = false;
     public boolean townChat = false;
     public List<Component> chatLines = new ArrayList<>();
@@ -124,6 +126,9 @@ public class GDPlayerData implements PlayerData {
 
     public boolean allowFlight = false;
     public boolean ignoreFallDamage = false;
+    public boolean inLiquid = false;
+
+    public GameModeType lastGameMode = GameModeTypes.UNDEFINED;
 
     // teleport data
     public int teleportDelay = 0;
@@ -135,7 +140,6 @@ public class GDPlayerData implements PlayerData {
     // cached global option values
     public int minClaimLevel;
     private CreateModeType optionClaimCreateMode;
-    private Integer optionMaxAccruedBlocks;
 
     // cached permission values
     public boolean canManageAdminClaims = false;
@@ -153,6 +157,7 @@ public class GDPlayerData implements PlayerData {
 
     public boolean dataInitialized = false;
     public boolean showVisualFillers = true;
+    public boolean showNoClaimsFoundMessage = true;
     public boolean useRestoreSchematic = false;
     private boolean checkedDimensionHeight = false;
 
@@ -215,9 +220,13 @@ public class GDPlayerData implements PlayerData {
         });
     }
 
-    public String getPlayerName() {
+    @Override
+    public String getName() {
         if (this.playerName == null) {
-            GDPermissionUser user = this.playerSubject.get();
+            GDPermissionUser user = null;
+            if (this.playerSubject != null) {
+                user = this.playerSubject.get();
+            }
             if (user == null) {
                 user = PermissionHolderCache.getInstance().getOrCreateUser(this.playerID);
             }
@@ -232,27 +241,78 @@ public class GDPlayerData implements PlayerData {
         return this.playerName;
     }
 
-    public void revertActiveVisual(Player player) {
-        if (this.visualRevertTask != null) {
-            this.visualRevertTask.cancel();
-            this.visualRevertTask = null;
+    @Override
+    public void revertAllVisuals() {
+        final Player player = this.getSubject().getOnlinePlayer();
+        if (player == null) {
+            return;
         }
-
-        this.lastShovelLocation = null;
-        GDClaim claim = null;
-        if (this.visualClaimId != null) {
-            claim = (GDClaim) GriefDefenderPlugin.getInstance().dataStore.getClaim(this.worldUniqueId, this.visualClaimId);
-            if (claim != null) {
-                claim.playersWatching.remove(this.playerID);
-            }
-        }
-        this.visualClaimId = null;
-        if (this.visualBlocks.isEmpty()|| !player.getWorld().equals(this.visualBlocks.get(0).getFinal().getLocation().getWorld())) {
+        if (this.visualClaimBlocks.isEmpty()) {
             return;
         }
 
-        for (int i = 0; i < this.visualBlocks.size(); i++) {
-            BlockSnapshot snapshot = this.visualBlocks.get(i).getOriginal();
+        for (Map.Entry<UUID, BukkitTask> mapEntry : this.claimVisualRevertTasks.entrySet()) {
+            mapEntry.getValue().cancel();
+        }
+
+        final List<UUID> visualIds = new ArrayList<>(this.visualClaimBlocks.keySet());
+        for (UUID visualUniqueId : visualIds) {
+            final Claim claim = GriefDefenderPlugin.getInstance().dataStore.getClaim(player.getWorld().getUID(), visualUniqueId);
+            this.revertVisualBlocks(player, (GDClaim) claim, visualUniqueId);
+        }
+        if (GriefDefenderPlugin.getInstance().getWorldEditProvider() != null) {
+            GriefDefenderPlugin.getInstance().getWorldEditProvider().revertAllVisuals(this.playerID);
+        }
+        // Revert any temp visuals
+        if (this.tempVisualUniqueId != null) {
+            this.revertClaimVisual(null, this.tempVisualUniqueId);
+            this.tempVisualUniqueId = null;
+        }
+    }
+
+    @Override
+    public void revertVisual(UUID uuid) {
+        final Claim claim = GriefDefenderPlugin.getInstance().dataStore.getClaim(this.worldUniqueId, uuid);
+        this.revertClaimVisual((GDClaim) claim, uuid);
+    }
+
+    @Override
+    public void revertVisual(Claim claim) {
+        this.revertClaimVisual((GDClaim) claim);
+    }
+
+    public void revertClaimVisual(GDClaim claim) {
+        this.revertClaimVisual(claim, claim.getUniqueId());
+    }
+
+    public void revertClaimVisual(GDClaim claim, UUID visualUniqueId) {
+        final Player player = this.getSubject().getOnlinePlayer();
+        if (player == null) {
+            return;
+        }
+
+        for (Map.Entry<UUID, BukkitTask> mapEntry : this.claimVisualRevertTasks.entrySet()) {
+            if (visualUniqueId.equals(mapEntry.getKey())) {
+                mapEntry.getValue().cancel();
+                break;
+            }
+        }
+        if (GriefDefenderPlugin.getInstance().getWorldEditProvider() != null) {
+            GriefDefenderPlugin.getInstance().getWorldEditProvider().revertClaimCUIVisual(visualUniqueId, this.playerID);
+        }
+
+        this.revertVisualBlocks(player, claim, visualUniqueId);
+    }
+
+    private void revertVisualBlocks(Player player, GDClaim claim, UUID visualUniqueId) {
+        this.lastShovelLocation = null;
+        final List<BlockTransaction> visualTransactions = this.visualClaimBlocks.get(visualUniqueId);
+        if (visualTransactions == null || visualTransactions.isEmpty()) {
+            return;
+        }
+
+        for (int i = 0; i < visualTransactions.size(); i++) {
+            BlockSnapshot snapshot = visualTransactions.get(i).getOriginal();
             // If original block does not exist, do not send to player
             if (!snapshot.matchesWorldState()) {
                 if (claim != null) {
@@ -262,7 +322,17 @@ public class GDPlayerData implements PlayerData {
             }
             NMSUtil.getInstance().sendBlockChange(player, snapshot);
         }
-        this.visualBlocks.clear();
+        if (claim != null) {
+            claim.playersWatching.remove(this.playerID);
+        }
+
+        this.claimVisualRevertTasks.remove(visualUniqueId);
+        this.visualClaimBlocks.remove(visualUniqueId);
+        // Revert any temp visuals
+        if (this.tempVisualUniqueId != null) {
+            this.revertClaimVisual(null, this.tempVisualUniqueId);
+            this.tempVisualUniqueId = null;
+        }
     }
 
     @Override
@@ -611,8 +681,8 @@ public class GDPlayerData implements PlayerData {
     }
 
     @Override
-    public String getSubjectId() {
-        return this.getSubject().getIdentifier();
+    public UUID getUniqueId() {
+        return this.getSubject().getUniqueId();
     }
 
     public GDPermissionUser getSubject() {
@@ -629,7 +699,7 @@ public class GDPlayerData implements PlayerData {
         final double taxRate = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Double.class), player, Options.TAX_RATE, claim);
         final double taxOwed = claim.getClaimBlocks() * taxRate;
         final double remainingDays = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), player, Options.TAX_EXPIRATION_DAYS_KEEP, claim);
-        final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.TAX_CLAIM_EXPIRED, ImmutableMap.of(
+        final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.TAX_EXPIRED, ImmutableMap.of(
                 "days", remainingDays,
                 "amount", taxOwed));
         GriefDefenderPlugin.sendClaimDenyMessage(claim, player, message);
@@ -673,7 +743,10 @@ public class GDPlayerData implements PlayerData {
         }
 
         final Instant now = Instant.now();
-        final int combatTimeout = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), player, Options.PVP_COMBAT_TIMEOUT);
+        int combatTimeout = 0;
+        if (GDOptions.isOptionEnabled(Options.PVP_COMBAT_TIMEOUT)) {
+            combatTimeout = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), player, Options.PVP_COMBAT_TIMEOUT);
+        }
         if (combatTimeout <= 0) {
             return 0;
         }
@@ -737,18 +810,17 @@ public class GDPlayerData implements PlayerData {
     }
 
     public void onDisconnect() {
-        this.visualBlocks.clear();
+        this.claimVisualRevertTasks.clear();
+        this.visualClaimBlocks.clear();
+        this.queuedVisuals.clear();
         this.claimMode = false;
+        this.ignoreClaims = false;
         this.lastShovelLocation = null;
         this.eventResultCache = null;
         this.claimResizing = null;
         this.claimSubdividing = null;
-        this.visualClaimId = null;
         this.commandInputTimestamp = null;
         this.recordChatTimestamp = null;
-        if (this.visualRevertTask != null) {
-            this.visualRevertTask.cancel();
-            this.visualRevertTask = null;
-        }
+        this.tempVisualUniqueId = null;
     }
 }

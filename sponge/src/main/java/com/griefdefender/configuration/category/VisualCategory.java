@@ -36,9 +36,12 @@ public class VisualCategory extends ConfigCategory {
     public boolean hideBorders = false;
     @Setting(value = "hide-wecui-drag-visuals-2d", comment = "Whether drag visuals should be shown while creating a claim in 2D mode.")
     public boolean hideDrag2d = true;
-
+    @Setting(value = "client-visuals-per-tick", comment = "The amount of block visuals a client can receive per tick when showing/hiding claims. Default: 12")
+    public int clientVisualsPerTick = 12;
     @Setting(value = "claim-create-block", comment = "The visual block used during claim creation. (Default: minecraft:diamond_block)")
     public String claimCreateStartBlock = "minecraft:diamond_block";
+    @Setting(value = "filler-spacing", comment = "The space between each filler visual block.")
+    public int fillerSpacing = 10;
 
     @Setting(value = "admin-accent-block", comment = "The visual accent block used for admin claims. (Default: minecraft:pumpkin)")
     public String visualAdminAccentBlock = "minecraft:pumpkin";

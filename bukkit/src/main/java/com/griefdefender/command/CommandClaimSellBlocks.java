@@ -87,7 +87,7 @@ public class CommandClaimSellBlocks extends BaseCommand {
         if (blockCount == null) {
             final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_BLOCK_PURCHASE_COST,
                     ImmutableMap.of(
-                    "amount", playerData.getEconomyClaimBlockReturn(),
+                    "amount", "$" + String.format("%.2f", playerData.getEconomyClaimBlockReturn()),
                     "balance", availableBlocks));
             GriefDefenderPlugin.sendMessage(player, message);
             return;

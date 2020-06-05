@@ -37,12 +37,12 @@ import com.griefdefender.api.permission.option.Options;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.configuration.ClaimDataConfig;
 import com.griefdefender.configuration.ClaimStorageData;
-import com.griefdefender.internal.util.BlockUtil;
 import com.griefdefender.permission.GDPermissionHolder;
 import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.permission.flag.FlagContexts;
 import com.griefdefender.permission.option.OptionContexts;
 import com.griefdefender.storage.BaseStorage;
+import com.griefdefender.util.BlockUtil;
 import com.griefdefender.util.PermissionUtil;
 
 import net.kyori.text.serializer.legacy.LegacyComponentSerializer;
@@ -342,7 +342,7 @@ public class GriefPreventionMigrator {
                         PermissionUtil.getInstance().setPermissionValue(DEFAULT_HOLDER, Flags.EXPLOSION_ENTITY.getPermission(), Tristate.FALSE, contexts);
                         break;
                     case FLAG_NO_FALL_DAMAGE :
-                        contexts.add(new Context(ContextKeys.SOURCE, "fall"));
+                        contexts.add(FlagContexts.SOURCE_FALL);
                         contexts.add(FlagContexts.TARGET_PLAYER);
                         PermissionUtil.getInstance().setPermissionValue(DEFAULT_HOLDER, Flags.ENTITY_DAMAGE.getPermission(), Tristate.FALSE, contexts);
                         break;
@@ -352,7 +352,7 @@ public class GriefPreventionMigrator {
                         PermissionUtil.getInstance().setPermissionValue(DEFAULT_HOLDER, Flags.ENTITY_DAMAGE.getPermission(), Tristate.FALSE, contexts);
                         break;
                     case FLAG_NO_FIRE_SPREAD :
-                        contexts.add(new Context(ContextKeys.SOURCE, "fire"));
+                        contexts.add(FlagContexts.SOURCE_FIRE);
                         PermissionUtil.getInstance().setPermissionValue(DEFAULT_HOLDER, Flags.BLOCK_SPREAD.getPermission(), Tristate.FALSE, contexts);
                         break;
                     case FLAG_NO_FLIGHT :
@@ -384,15 +384,15 @@ public class GriefPreventionMigrator {
                         break;
                     case FLAG_NO_MOB_DAMAGE :
                         contexts.add(FlagContexts.SOURCE_PLAYER);
-                        contexts.add(new Context(ContextKeys.TARGET, "#monster"));
+                        contexts.add(FlagContexts.TARGET_TYPE_MONSTER);
                         PermissionUtil.getInstance().setPermissionValue(DEFAULT_HOLDER, Flags.ENTITY_DAMAGE.getPermission(), Tristate.FALSE, contexts);
                         break;
                     case FLAG_NO_MOB_SPAWNS :
-                        contexts.add(new Context(ContextKeys.TARGET, "#monster"));
+                        contexts.add(FlagContexts.TARGET_TYPE_MONSTER);
                         PermissionUtil.getInstance().setPermissionValue(DEFAULT_HOLDER, Flags.ENTITY_SPAWN.getPermission(), Tristate.FALSE, contexts);
                         break;
                     case FLAG_NO_PLAYER_DAMAGE :
-                        contexts.add(new Context(ContextKeys.TARGET, "player"));
+                        contexts.add(FlagContexts.TARGET_PLAYER);
                         PermissionUtil.getInstance().setPermissionValue(DEFAULT_HOLDER, Flags.ENTITY_DAMAGE.getPermission(), Tristate.FALSE, contexts);
                         break;
                     case FLAG_NO_SNOW_FORM :

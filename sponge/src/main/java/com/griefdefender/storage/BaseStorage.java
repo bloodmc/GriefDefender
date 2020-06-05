@@ -173,7 +173,7 @@ public abstract class BaseStorage {
         }
 
         GDCauseStackManager.getInstance().pushCause(src);
-        GDRemoveClaimEvent event = new GDRemoveClaimEvent(ImmutableList.copyOf(claimsToDelete));
+        GDRemoveClaimEvent.Delete event = new GDRemoveClaimEvent.Delete(ImmutableList.copyOf(claimsToDelete));
         GriefDefender.getEventManager().post(event);
         GDCauseStackManager.getInstance().popCause();
         if (event.cancelled()) {
@@ -198,6 +198,7 @@ public abstract class BaseStorage {
         for (Claim claim : claimsToDelete) {
             GDClaimManager claimWorldManager = this.claimWorldManagers.get(claim.getWorldUniqueId());
             claimWorldManager.deleteClaimInternal(claim, true);
+            user.getInternalPlayerData().revertClaimVisual((GDClaim) claim);
         }
 
         return;
@@ -251,17 +252,12 @@ public abstract class BaseStorage {
 
     public GDClaim getClaimAtPlayer(Location<World> location, GDPlayerData playerData, boolean useBorderBlockRadius) {
         GDClaimManager claimManager = this.getClaimWorldManager(location.getExtent().getUniqueId());
-        return (GDClaim) claimManager.getClaimAt(location, null, playerData, useBorderBlockRadius);
-    }
-
-    public GDClaim getClaimAtPlayer(Location<World> location, GDClaim cachedClaim, GDPlayerData playerData, boolean useBorderBlockRadius) {
-        GDClaimManager claimManager = this.getClaimWorldManager(location.getExtent().getUniqueId());
-        return (GDClaim) claimManager.getClaimAt(location, cachedClaim, playerData, useBorderBlockRadius);
+        return (GDClaim) claimManager.getClaimAt(location, playerData, useBorderBlockRadius);
     }
 
     public GDClaim getClaimAt(Location<World> location, GDClaim cachedClaim) {
         GDClaimManager claimManager = this.getClaimWorldManager(location.getExtent().getUniqueId());
-        return (GDClaim) claimManager.getClaimAt(location, cachedClaim, null, false);
+        return (GDClaim) claimManager.getClaimAt(location, null, false);
     }
 
     public GDPlayerData getPlayerData(World world, UUID playerUniqueId) {
@@ -321,8 +317,8 @@ public abstract class BaseStorage {
         // Admin defaults
         Set<Context> contexts = new HashSet<>();
         contexts.add(ClaimContexts.ADMIN_DEFAULT_CONTEXT);
-        final FlagConfig flagConfig = GriefDefenderPlugin.getInstance().flagConfig;
-        final OptionConfig optionConfig = GriefDefenderPlugin.getInstance().optionConfig;
+        final FlagConfig flagConfig = GriefDefenderPlugin.getFlagConfig();
+        final OptionConfig optionConfig = GriefDefenderPlugin.getOptionConfig();
         final Map<String, Boolean> adminDefaultFlags = flagConfig.getConfig().defaultFlagCategory.getFlagDefaults(ClaimTypes.ADMIN.getName().toLowerCase());
         if (adminDefaultFlags != null && !adminDefaultFlags.isEmpty()) {
             this.setDefaultFlags(contexts, adminDefaultFlags);

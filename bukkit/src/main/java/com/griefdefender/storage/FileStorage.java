@@ -450,7 +450,9 @@ public class FileStorage extends BaseStorage {
     public ClaimResult deleteClaimFromStorage(GDClaim claim) {
         final GDPlayerData ownerData = claim.getOwnerPlayerData();
         try {
-            Files.delete(claim.getClaimStorage().filePath);
+            if (claim.getClaimStorage().filePath.toFile().exists()) {
+                Files.delete(claim.getClaimStorage().filePath);
+            }
             if (GriefDefenderPlugin.getInstance().getWorldEditProvider() != null) {
                 final Path schematicPath = GriefDefenderPlugin.getInstance().getWorldEditProvider().getSchematicWorldMap().get(claim.getWorldUniqueId());
                 if (schematicPath != null && Files.exists(schematicPath.resolve(claim.getUniqueId().toString()))) {
@@ -469,7 +471,7 @@ public class FileStorage extends BaseStorage {
 
             PermissionUtil.getInstance().clearPermissions((GDClaim) claim);
             return new GDClaimResult(claim, ClaimResultType.SUCCESS);
-        } catch (IOException e) {
+        } catch (Throwable e) {
             e.printStackTrace();
             GriefDefenderPlugin.getInstance().getLogger().severe("Error: Unable to delete claim file \"" + claim.getClaimStorage().filePath + "\".");
         }

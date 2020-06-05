@@ -30,6 +30,8 @@ import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.claim.ClaimType;
 import com.griefdefender.api.claim.ClaimTypes;
+import com.griefdefender.api.claim.ClaimVisualType;
+import com.griefdefender.api.claim.ClaimVisualTypes;
 import com.griefdefender.api.claim.ShovelType;
 import com.griefdefender.api.claim.ShovelTypes;
 import com.griefdefender.api.permission.option.type.CreateModeTypes;
@@ -38,15 +40,15 @@ import com.griefdefender.api.permission.option.type.GameModeTypes;
 import com.griefdefender.api.permission.option.type.WeatherType;
 import com.griefdefender.api.permission.option.type.WeatherTypes;
 import com.griefdefender.cache.PermissionHolderCache;
-import com.griefdefender.internal.visual.ClaimVisual;
-import com.griefdefender.internal.visual.GDClaimVisualType;
+import com.griefdefender.internal.util.BlockUtil;
+import com.griefdefender.internal.util.NMSUtil;
 import com.griefdefender.permission.GDPermissionUser;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextColor;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.network.play.server.SPacketChangeGameState;
 import org.spongepowered.api.Sponge;
+import org.spongepowered.api.block.BlockSnapshot;
+import org.spongepowered.api.data.Transaction;
 import org.spongepowered.api.data.property.entity.EyeLocationProperty;
 import org.spongepowered.api.data.type.HandTypes;
 import org.spongepowered.api.entity.living.player.Player;
@@ -57,9 +59,11 @@ import org.spongepowered.api.item.ItemType;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.service.user.UserStorageService;
 import org.spongepowered.api.util.Direction;
-import org.spongepowered.api.world.weather.Weather;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -166,17 +170,17 @@ public class PlayerUtil {
         return TextComponent.of("Basic", TextColor.YELLOW);
     }
 
-    public GDClaimVisualType getVisualTypeFromShovel(ShovelType shovelMode) {
+    public ClaimVisualType getVisualTypeFromShovel(ShovelType shovelMode) {
         if (shovelMode == ShovelTypes.ADMIN) {
-            return ClaimVisual.ADMIN;
+            return ClaimVisualTypes.ADMIN;
         }
         if (shovelMode == ShovelTypes.SUBDIVISION) {
-            return ClaimVisual.SUBDIVISION;
+            return ClaimVisualTypes.SUBDIVISION;
         }
         if (shovelMode == ShovelTypes.TOWN) {
-            return ClaimVisual.TOWN;
+            return ClaimVisualTypes.TOWN;
         }
-        return ClaimVisual.BASIC;
+        return ClaimVisualTypes.BASIC;
     }
 
     @Nullable
@@ -226,26 +230,49 @@ public class PlayerUtil {
         return 0;
     }
 
-    public void setPlayerWeather(GDPermissionUser user, WeatherType type) {
-        final Player player = user.getOnlinePlayer();
-        if (type == WeatherTypes.UNDEFINED) {
-            this.resetPlayerWeather(user);
-            return;
+    public boolean shouldRefreshVisual(GDPlayerData playerData, Location<World> locality, Set<Transaction<BlockSnapshot>> corners, Set<Transaction<BlockSnapshot>> accents) {
+        if (corners.isEmpty()) {
+            return true;
         }
-        if (type == WeatherTypes.DOWNFALL) {
-            ((EntityPlayerMP) player).connection.sendPacket(new SPacketChangeGameState(2, 0));
-        } else {
-            ((EntityPlayerMP) player).connection.sendPacket(new SPacketChangeGameState(1, 0));
+        if (playerData.lastNonAirInspectLocation == null && !corners.isEmpty()) {
+            return false;
         }
-        user.getInternalPlayerData().lastWeatherType = type;
-    }
-
-    public void resetPlayerWeather(GDPermissionUser user) {
-        final Player player = user.getOnlinePlayer();
-        if (player.getWorld().getProperties().isRaining()) {
-            this.setPlayerWeather(user, WeatherTypes.DOWNFALL);
-        } else {
-            this.setPlayerWeather(user, WeatherTypes.CLEAR);
+        Integer lowestY = null;
+        Integer highestY = null;
+        if (!corners.isEmpty() && playerData != null && playerData.lastNonAirInspectLocation != null) {
+            for (Transaction<BlockSnapshot> transaction : corners) {
+                final int cornerHeight = transaction.getFinal().getPosition().getY();
+                if (lowestY == null || (lowestY != null && cornerHeight < lowestY)) {
+                    lowestY = cornerHeight;
+                }
+                if (highestY == null || (highestY != null && cornerHeight > highestY)) {
+                    highestY = cornerHeight;
+                }
+            }
         }
+        if (!accents.isEmpty() && playerData != null && playerData.lastNonAirInspectLocation != null) {
+            for (Transaction<BlockSnapshot> transaction : accents) {
+                final int cornerHeight = transaction.getFinal().getPosition().getY();
+                if (lowestY == null || (lowestY != null && cornerHeight < lowestY)) {
+                    lowestY = cornerHeight;
+                }
+                if (highestY == null || (highestY != null && cornerHeight > highestY)) {
+                    highestY = cornerHeight;
+                }
+            }
+        }
+        if (lowestY != null) {
+            // check if water
+            if (!playerData.inLiquid && NMSUtil.getInstance().isBlockLiquid(playerData.lastNonAirInspectLocation.getBlock())) {
+                if (highestY < playerData.lastNonAirInspectLocation.getBlockY()) {
+                    return true;
+                }
+                return false;
+            }
+            if (locality.getBlockY() < lowestY) {
+                return true;
+            }
+        }
+        return false;
     }
 }

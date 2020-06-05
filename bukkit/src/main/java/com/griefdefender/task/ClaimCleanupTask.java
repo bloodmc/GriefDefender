@@ -35,7 +35,7 @@ import com.griefdefender.claim.GDClaim;
 import com.griefdefender.claim.GDClaimManager;
 import com.griefdefender.configuration.GriefDefenderConfig;
 import com.griefdefender.configuration.MessageStorage;
-import com.griefdefender.internal.util.BlockUtil;
+import com.griefdefender.internal.util.RestoreUtil;
 import com.griefdefender.permission.GDPermissionManager;
 import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.util.PermissionUtil;
@@ -91,7 +91,7 @@ public class ClaimCleanupTask extends BukkitRunnable {
                 Instant claimLastActive = claim.getInternalClaimData().getDateLastActive();
 
                 final int claimExpirationChest = playerData.getChestClaimExpiration();
-                if (claim.getArea() <= areaOfDefaultClaim && claimExpirationChest > 0) {
+                if (claim.getClaimBlocks() <= areaOfDefaultClaim && claimExpirationChest > 0) {
                     if (claimLastActive.plus(Duration.ofDays(claimExpirationChest))
                         .isBefore(Instant.now())) {
                         playerData.useRestoreSchematic = schematicRestore;
@@ -103,10 +103,16 @@ public class ClaimCleanupTask extends BukkitRunnable {
                                 "uuid", claim.getUniqueId().toString()));
                         GriefDefenderPlugin.getInstance().getLogger().info(PlainComponentSerializer.INSTANCE.serialize(message));
                         if (!schematicRestore && activeConfig.getConfig().claim.claimAutoNatureRestore) {
-                            BlockUtil.getInstance().restoreClaim(claim);
+                            if (GriefDefenderPlugin.getMajorMinecraftVersion() <= 12 || GriefDefenderPlugin.getInstance().getWorldEditProvider() == null) {
+                                RestoreUtil.getInstance().restoreClaim(claim);
+                            } else {
+                                GriefDefenderPlugin.getInstance().getWorldEditProvider().regenerateClaim(claim);
+                            }
                         }
+                        // remove all context permissions
+                        PermissionUtil.getInstance().clearPermissions(claim);
                     }
-                    return;
+                    continue;
                 }
 
                 if (!claim.isBasicClaim()) {
@@ -118,11 +124,11 @@ public class ClaimCleanupTask extends BukkitRunnable {
                     final Instant localNow = Instant.now();
                     final boolean claimNotActive = claimLastActive.plus(Duration.ofDays(optionClaimExpirationBasic)).isBefore(localNow);
                     if (!claimNotActive) {
-                        final boolean taxEnabled = activeConfig.getConfig().claim.bankTaxSystem;
+                        final boolean taxEnabled = activeConfig.getConfig().economy.taxSystem;
                         if (!taxEnabled || !claim.getData().isExpired()) {
                             continue;
                         }
-                        final Instant taxPastDueDate = claim.getEconomyData().getTaxPastDueDate().orElse(null);
+                        final Instant taxPastDueDate = claim.getEconomyData().getTaxPastDueDate();
                         if (taxPastDueDate == null) {
                             continue;
                         }
@@ -143,7 +149,7 @@ public class ClaimCleanupTask extends BukkitRunnable {
                             "uuid", claim.getUniqueId().toString()));
                     GriefDefenderPlugin.getInstance().getLogger().info(PlainComponentSerializer.INSTANCE.serialize(message));
                     if (!schematicRestore && activeConfig.getConfig().claim.claimAutoNatureRestore) {
-                        BlockUtil.getInstance().restoreClaim(claim);
+                        RestoreUtil.getInstance().restoreClaim(claim);
                     }
                 }
             }

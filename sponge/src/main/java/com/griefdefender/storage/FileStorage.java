@@ -37,6 +37,7 @@ import com.griefdefender.api.claim.ClaimType;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.claim.GDClaimManager;
 import com.griefdefender.claim.GDClaimResult;
+import com.griefdefender.claim.GDSpongeClaimSchematic;
 import com.griefdefender.configuration.ClaimStorageData;
 import com.griefdefender.configuration.ClaimTemplateStorage;
 import com.griefdefender.configuration.GriefDefenderConfig;
@@ -49,19 +50,27 @@ import com.griefdefender.migrator.WorldGuardMigrator;
 import com.griefdefender.util.PermissionUtil;
 import org.apache.commons.io.FileUtils;
 import org.spongepowered.api.Sponge;
+import org.spongepowered.api.data.DataContainer;
+import org.spongepowered.api.data.persistence.DataFormats;
+import org.spongepowered.api.data.persistence.DataTranslators;
 import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.world.DimensionType;
 import org.spongepowered.api.world.World;
+import org.spongepowered.api.world.schematic.Schematic;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.zip.GZIPInputStream;
 
 public class FileStorage extends BaseStorage {
 
@@ -181,9 +190,7 @@ public class FileStorage extends BaseStorage {
                 Files.createDirectories(newWorldDataPath.resolve("SchematicData"));
             }
 
-            if (GriefDefenderPlugin.getInstance().getWorldEditProvider() != null) {
-                GriefDefenderPlugin.getInstance().getWorldEditProvider().getSchematicWorldMap().put(world.getUniqueId(), newWorldDataPath.resolve("SchematicData"));
-            }
+            GriefDefenderPlugin.getInstance().getSchematicWorldMap().put(world.getUniqueId(), newWorldDataPath.resolve("SchematicData"));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -233,15 +240,57 @@ public class FileStorage extends BaseStorage {
             }
 
             // Load schematics
-            if (GriefDefenderPlugin.getInstance().getWorldEditProvider() != null) {
+            if (GriefDefenderPlugin.getInstance().getWorldEditProvider() != null && GriefDefenderPlugin.getGlobalConfig().getConfig().claim.useWorldEditSchematics) {
                 GriefDefenderPlugin.getInstance().getLogger().info("Loading schematics for world " + world.getName() + "...");
                 GriefDefenderPlugin.getInstance().getWorldEditProvider().loadSchematics(world);
+            } else {
+                GriefDefenderPlugin.getInstance().getLogger().info("Loading sponge schematics for world " + world.getName() + "...");
+                this.loadSpongeSchematics(world);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
 
         this.claimLoadCount = 0;
+    }
+
+    public void loadSpongeSchematics(org.spongepowered.api.world.World world) {
+        GDClaimManager claimWorldManager = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(world.getUniqueId());
+        GriefDefenderPlugin.getInstance().executor.execute(() -> {
+            for (Claim claim : claimWorldManager.getWorldClaims()) {
+                Path path = GriefDefenderPlugin.getInstance().getSchematicWorldMap().get(claim.getWorldUniqueId()).resolve(claim.getUniqueId().toString());
+                if (!Files.exists(path)) {
+                    continue;
+                }
+
+                File files[] = path.toFile().listFiles();
+                for (File file : files) {
+                    DataContainer schematicData = null;
+                    Schematic schematic = null;
+                    final String fileName = file.getName().replaceFirst("[.][^.]+$", "");
+                    try {
+                        schematicData = DataFormats.NBT.readFrom(new GZIPInputStream(new FileInputStream(file)));
+                        schematic = DataTranslators.SCHEMATIC.translate(schematicData);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        continue;
+                    }
+
+                    Instant creationDate = null;
+                    BasicFileAttributes attr;
+                    try {
+                        attr = Files.readAttributes(file.toPath(), BasicFileAttributes.class);
+                        creationDate = attr.creationTime().toInstant();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        creationDate = Instant.now();
+                    }
+
+                    final GDSpongeClaimSchematic claimSchematic = new GDSpongeClaimSchematic(claim, schematic, fileName, creationDate);
+                    ((GDClaim) claim).schematics.put(fileName, claimSchematic);
+                }
+            }
+        });
     }
 
     public void unloadWorldData(World world) {
@@ -457,26 +506,26 @@ public class FileStorage extends BaseStorage {
     public ClaimResult deleteClaimFromStorage(GDClaim claim) {
         final GDPlayerData ownerData = claim.getOwnerPlayerData();
         try {
-            Files.delete(claim.getClaimStorage().filePath);
-            if (GriefDefenderPlugin.getInstance().getWorldEditProvider() != null) {
-                final Path schematicPath = GriefDefenderPlugin.getInstance().getWorldEditProvider().getSchematicWorldMap().get(claim.getWorldUniqueId());
-                if (schematicPath != null && Files.exists(schematicPath.resolve(claim.getUniqueId().toString()))) {
-                    if (ownerData != null && ownerData.useRestoreSchematic) {
-                        final ConfigBase activeConfig = GriefDefenderPlugin.getActiveConfig(claim.getWorldUniqueId()).getConfig();
-                        if (GriefDefenderPlugin.getInstance().getWorldEditProvider() != null && activeConfig.claim.claimAutoSchematicRestore) {
-                            final ClaimSchematic schematic = claim.getSchematics().get("__restore__");
-                            if (schematic != null) {
-                                schematic.apply();
-                            }
+            if (claim.getClaimStorage().filePath.toFile().exists()) {
+                Files.delete(claim.getClaimStorage().filePath);
+            }
+            final Path schematicPath = GriefDefenderPlugin.getInstance().getSchematicWorldMap().get(claim.getWorldUniqueId());
+            if (schematicPath != null && Files.exists(schematicPath.resolve(claim.getUniqueId().toString()))) {
+                if (ownerData != null && ownerData.useRestoreSchematic) {
+                    final ConfigBase activeConfig = GriefDefenderPlugin.getActiveConfig(claim.getWorldUniqueId()).getConfig();
+                    if (GriefDefenderPlugin.getInstance().getWorldEditProvider() != null && activeConfig.claim.claimAutoSchematicRestore) {
+                        final ClaimSchematic schematic = claim.getSchematics().get("__restore__");
+                        if (schematic != null) {
+                            schematic.apply();
                         }
                     }
-                    FileUtils.deleteDirectory(schematicPath.resolve(claim.getUniqueId().toString()).toFile());
                 }
+                FileUtils.deleteDirectory(schematicPath.resolve(claim.getUniqueId().toString()).toFile());
             }
 
             PermissionUtil.getInstance().clearPermissions((GDClaim) claim);
             return new GDClaimResult(claim, ClaimResultType.SUCCESS);
-        } catch (IOException e) {
+        } catch (Throwable e) {
             e.printStackTrace();
             GriefDefenderPlugin.getInstance().getLogger().error("Error: Unable to delete claim file \"" + claim.getClaimStorage().filePath + "\".");
         }

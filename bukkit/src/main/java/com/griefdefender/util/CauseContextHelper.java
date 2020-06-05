@@ -159,6 +159,8 @@ public class CauseContextHelper {
                     contextSet.add(ClaimContexts.SUBDIVISION_DEFAULT_CONTEXT);
                 } else if (arg1.equals("town")) {
                     contextSet.add(ClaimContexts.TOWN_DEFAULT_CONTEXT);
+                } else if (arg1.equalsIgnoreCase("user")) {
+                    contextSet.add(ClaimContexts.USER_DEFAULT_CONTEXT);
                 } else if (arg1.equals("wilderness")) {
                     contextSet.add(ClaimContexts.WILDERNESS_DEFAULT_CONTEXT);
                 } else { 
@@ -184,6 +186,8 @@ public class CauseContextHelper {
                     contextSet.add(ClaimContexts.SUBDIVISION_OVERRIDE_CONTEXT);
                 } else if (arg1.equals("town")) {
                     contextSet.add(ClaimContexts.TOWN_OVERRIDE_CONTEXT);
+                } else if (arg1.equalsIgnoreCase("user")) {
+                    contextSet.add(ClaimContexts.USER_OVERRIDE_CONTEXT);
                 } else if (arg1.equals("wilderness")) {
                     contextSet.add(ClaimContexts.WILDERNESS_OVERRIDE_CONTEXT);
                 } else if (arg1.equals("claim")) {

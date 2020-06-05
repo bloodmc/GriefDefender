@@ -29,7 +29,10 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.griefdefender.api.Tristate;
 import com.griefdefender.cache.MessageCache;
+import com.griefdefender.cache.PermissionHolderCache;
+import com.griefdefender.claim.GDClaim;
 import com.griefdefender.configuration.MessageStorage;
+import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.util.HttpClient;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
@@ -44,7 +47,7 @@ import okhttp3.Response;
 import okhttp3.ResponseBody;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandSource;
-import org.spongepowered.api.entity.living.player.User;
+import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.plugin.PluginContainer;
 
 import java.io.BufferedReader;
@@ -59,6 +62,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 import java.util.zip.GZIPOutputStream;
 
 public class GDDebugData {
@@ -75,11 +79,30 @@ public class GDDebugData {
     private final List<String> records;
     private final long startTime = System.currentTimeMillis();
     private boolean verbose;
-    private User target;
+    private GDPermissionUser user;
+    private String filter;
+    private UUID claimUniqueId;
 
-    public GDDebugData(CommandSource source, User target, boolean verbose) {
+    public GDDebugData(CommandSource source, String filter, boolean verbose) {
         this.source = source;
-        this.target = target;
+        if (filter != null) {
+            if (!filter.equalsIgnoreCase("claim")) {
+                this.user = PermissionHolderCache.getInstance().getOrCreateUser(filter);
+                if (this.user == null) {
+                    this.filter = filter;
+                } else {
+                    this.filter = this.user.getName();
+                }
+            } else {
+                if (source instanceof Player) {
+                    final Player player = (Player) source;
+                    final GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAt(player.getLocation());
+                    this.claimUniqueId = claim.getUniqueId();
+                    this.filter = claim.getUniqueId().toString();
+                }
+            }
+        }
+
         this.verbose = verbose;
         this.records = new ArrayList<>();
         this.header = new ArrayList<>();
@@ -98,7 +121,12 @@ public class GDDebugData {
                 this.header.add("| LuckPerms Version | " + version);
             }
         }
-        this.header.add("| " + PlainComponentSerializer.INSTANCE.serialize(MessageCache.getInstance().LABEL_USER) + " | " + (this.target == null ? "ALL" : this.target.getName()) + "|");
+        if (this.claimUniqueId != null) {
+            this.header.add("| " + PlainComponentSerializer.INSTANCE.serialize(MessageCache.getInstance().LABEL_CLAIM) + " | " + this.claimUniqueId.toString() + "|");
+        } else if (this.filter != null) {
+            this.header.add("| " + PlainComponentSerializer.INSTANCE.serialize(MessageCache.getInstance().LABEL_FILTER) + " | " + filter + "|");
+        }
+        this.header.add("| " + PlainComponentSerializer.INSTANCE.serialize(MessageCache.getInstance().LABEL_USER) + " | " + (this.user == null ? PlainComponentSerializer.INSTANCE.serialize(MessageCache.getInstance().TITLE_ALL) : this.user.getName()) + "|");
         this.header.add("| " + PlainComponentSerializer.INSTANCE.serialize(MessageCache.getInstance().DEBUG_RECORD_START) + " | " + DATE_FORMAT.format(new Date(this.startTime)) + "|");
     }
 
@@ -112,7 +140,12 @@ public class GDDebugData {
                     .append("Pasting output...", TextColor.GREEN).build());
             this.pasteRecords();
             this.records.clear();
-            GriefDefenderPlugin.debugActive = false;
+            if (this.user != null) {
+                GriefDefenderPlugin.getInstance().getDebugUserMap().remove(this.user.getName());
+            }
+            if (GriefDefenderPlugin.getInstance().getDebugUserMap().isEmpty()) {
+                GriefDefenderPlugin.debugActive = false;
+            }
             TextAdapter.sendComponent(this.source, TextComponent.builder("").append(GD_TEXT).append("Debug ", TextColor.GRAY).append("OFF", TextColor.RED).build());
         }
     }
@@ -121,20 +154,20 @@ public class GDDebugData {
         return this.source;
     }
 
-    public User getTarget() {
-        return this.target;
+    public GDPermissionUser getUser() {
+        return this.user;
+    }
+
+    public String getFilter() {
+        return this.filter;
+    }
+
+    public UUID getClaimUniqueId() {
+        return this.claimUniqueId;
     }
 
     public boolean isRecording() {
         return !this.verbose;
-    }
-
-    public void setTarget(User user) {
-        this.target = user;
-    }
-
-    public void setVerbose(boolean verbose) {
-        this.verbose = verbose;
     }
 
     public void pasteRecords() {
@@ -190,6 +223,10 @@ public class GDDebugData {
                 .append(MessageCache.getInstance().DEBUG_PASTE_SUCCESS)
                 .append(" : " + url, TextColor.GREEN)
                 .clickEvent(ClickEvent.openUrl(jUrl.toString())).build());
+    }
+
+    public void stop() {
+        this.records.clear();
     }
 
     private static String postContent(String content) throws IOException {

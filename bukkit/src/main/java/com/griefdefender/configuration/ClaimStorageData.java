@@ -61,12 +61,12 @@ public class ClaimStorageData {
     public static final String MAIN_CLAIM_TYPE = "claim-type";
     public static final String MAIN_CLAIM_CUBOID = "cuboid";
     public static final String MAIN_CLAIM_RESIZABLE = "resizable";
-    public static final String MAIN_CLAIM_PVP = "pvp";
     public static final String MAIN_CLAIM_DATE_CREATED = "date-created";
     public static final String MAIN_CLAIM_DATE_LAST_ACTIVE = "date-last-active";
     public static final String MAIN_CLAIM_MAX_WIDTH = "max-width";
     public static final String MAIN_CLAIM_FOR_SALE = "for-sale";
-    public static final String MAIN_CLAIM_SALE_PRICE = "sale-price";
+    public static final String MAIN_RENT_PRICE = "rent-price";
+    public static final String MAIN_SALE_PRICE = "sale-price";
     public static final String MAIN_REQUIRES_CLAIM_BLOCKS = "requires-claim-blocks";
     public static final String MAIN_SUBDIVISION_UUID = "uuid";
     public static final String MAIN_PARENT_CLAIM_UUID = "parent-claim-uuid";
@@ -83,6 +83,13 @@ public class ClaimStorageData {
     public static final String MAIN_ALLOW_DENY_MESSAGES = "deny-messages";
     public static final String MAIN_ALLOW_FLAG_OVERRIDES = "flag-overrides";
     public static final String MAIN_ALLOW_CLAIM_EXPIRATION = "claim-expiration";
+    public static final String MAIN_RENT_BALANCE = "rent-balance";
+    public static final String MAIN_RENT_PAST_DUE_DATE = "rent-past-due-date";
+    public static final String MAIN_RENT_START_DATE = "rent-start-date";
+    public static final String MAIN_RENT_END_DATE = "rent-end-date";
+    public static final String MAIN_RENT_SIGN_POS = "rent-sign-pos";
+    public static final String MAIN_SALE_SIGN_POS = "sale-sign-pos";
+    public static final String MAIN_SALE_END_DATE = "sale-end-date";
     public static final String MAIN_TAX_PAST_DUE_DATE = "tax-past-due-date";
     public static final String MAIN_TAX_BALANCE = "tax-balance";
     // SUB

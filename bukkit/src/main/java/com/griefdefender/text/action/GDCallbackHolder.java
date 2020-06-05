@@ -31,9 +31,17 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.cache.RemovalListener;
 import com.google.common.cache.RemovalNotification;
-import org.bukkit.command.CommandSender;
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 
-import java.util.Optional;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -44,6 +52,7 @@ public class GDCallbackHolder {
     public static final String CALLBACK_COMMAND = "callback";
     public static final String CALLBACK_COMMAND_QUALIFIED = "/gd:" + CALLBACK_COMMAND;
     private static final GDCallbackHolder INSTANCE = new GDCallbackHolder();
+    private static final BiMap<UUID, UUID> confirmConsumerMap = HashBiMap.create();
 
     static final ConcurrentMap<UUID, Consumer<CommandSender>> reverseMap = new ConcurrentHashMap<>();
     private static final LoadingCache<Consumer<CommandSender>, UUID> callbackCache = CacheBuilder.newBuilder().expireAfterAccess(10, TimeUnit.MINUTES)
@@ -72,12 +81,41 @@ public class GDCallbackHolder {
         return callbackCache.getUnchecked(checkNotNull(callback, "callback"));
     }
 
-    public Optional<Consumer<CommandSender>> getCallbackForUUID(UUID id) {
-        return Optional.of(reverseMap.get(id));
+    @Nullable
+    public Consumer<CommandSender> getCallbackForUUID(UUID id) {
+        final Consumer<CommandSender> consumer = reverseMap.get(id);
+        final UUID playerUniqueId = confirmConsumerMap.inverse().get(id);
+        if (playerUniqueId != null) {
+            reverseMap.remove(id);
+            confirmConsumerMap.remove(playerUniqueId);
+        }
+        return consumer;
     }
 
     public String createCallbackRunCommand(Consumer<CommandSender> consumer) {
+        return this.createCallbackRunCommand(null, consumer, false);
+    }
+
+    public String createCallbackRunCommand(CommandSender src, Consumer<CommandSender> consumer, boolean isConfirm) {
         UUID callbackId = getOrCreateIdForCallback(consumer);
+        if (isConfirm) {
+            if (src instanceof Player) {
+                final UUID playerUniqueId = ((Player) src).getUniqueId();
+                final UUID existingConfirmId = confirmConsumerMap.get(playerUniqueId);
+                if (existingConfirmId != null) {
+                    reverseMap.remove(existingConfirmId);
+                }
+                confirmConsumerMap.put(playerUniqueId, callbackId);
+            }
+        }
         return CALLBACK_COMMAND_QUALIFIED + " " + callbackId;
+    }
+
+    public void onPlayerDisconnect(Player player) {
+        confirmConsumerMap.remove(player.getUniqueId());
+        final UUID existingConfirmId = confirmConsumerMap.get(player.getUniqueId());
+        if (existingConfirmId != null) {
+            reverseMap.remove(existingConfirmId);
+        }
     }
 }

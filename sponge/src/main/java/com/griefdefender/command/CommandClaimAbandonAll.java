@@ -94,9 +94,9 @@ public class CommandClaimAbandonAll extends BaseCommand {
                 .append(autoSchematicRestore ? MessageCache.getInstance().SCHEMATIC_ABANDON_ALL_RESTORE_WARNING : MessageCache.getInstance().ABANDON_ALL_WARNING)
                 .append(TextComponent.builder()
                     .append("\n[")
-                    .append("Confirm", TextColor.GREEN)
+                    .append(MessageCache.getInstance().LABEL_CONFIRM.color(TextColor.GREEN))
                     .append("]\n")
-                    .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createConfirmationConsumer(user))))
+                    .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(player, createConfirmationConsumer(user), true)))
                     .hoverEvent(HoverEvent.showText(MessageCache.getInstance().UI_CLICK_CONFIRM)).build())
                 .build();
         TextAdapter.sendComponent(player, confirmationText);
@@ -173,8 +173,6 @@ public class CommandClaimAbandonAll extends BaseCommand {
                                 "amount", remainingBlocks));
                     TextAdapter.sendComponent(player, message);
                  }
-
-                playerData.revertActiveVisual(player);
             }
 
             if (!delayedClaims.isEmpty()) {

@@ -26,30 +26,27 @@ package com.griefdefender.task;
 
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
+import com.griefdefender.api.claim.Claim;
+import com.griefdefender.claim.GDClaim;
 import org.spongepowered.api.entity.living.player.Player;
+
+import java.util.UUID;
 
 class ClaimVisualRevertTask implements Runnable {
 
     private Player player;
     private GDPlayerData playerData;
+    private UUID visualUniqueId;
 
-    public ClaimVisualRevertTask(Player player, GDPlayerData playerData) {
+    public ClaimVisualRevertTask(UUID visualUniqueId, Player player, GDPlayerData playerData) {
+        this.visualUniqueId = visualUniqueId;
         this.playerData = playerData;
         this.player = player;
     }
 
     @Override
     public void run() {
-        // don't do anything if the player's current visualization is different
-        // from the one scheduled to revert
-        if (this.playerData.visualBlocks.isEmpty()) {
-            return;
-        }
-
-        // check for any active WECUI visuals
-        if (GriefDefenderPlugin.getInstance().getWorldEditProvider() != null) {
-            GriefDefenderPlugin.getInstance().getWorldEditProvider().revertVisuals(this.player, this.playerData, this.playerData.visualClaimId);
-        }
-        this.playerData.revertActiveVisual(this.player);
+        final Claim claim = GriefDefenderPlugin.getInstance().dataStore.getClaim(this.player.getWorld().getUniqueId(), this.visualUniqueId);
+        this.playerData.revertClaimVisual((GDClaim) claim, this.visualUniqueId);
     }
 }

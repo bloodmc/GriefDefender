@@ -83,9 +83,9 @@ public class CommandClaimFlagReset extends BaseCommand {
                 .append(MessageCache.getInstance().FLAG_RESET_WARNING)
                 .append(TextComponent.builder()
                     .append("\n[")
-                    .append("Confirm", TextColor.GREEN)
+                    .append(MessageCache.getInstance().LABEL_CONFIRM.color(TextColor.GREEN))
                     .append("]\n")
-                    .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createConfirmationConsumer(player, claim))))
+                    .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(player, createConfirmationConsumer(player, claim), true)))
                     .hoverEvent(HoverEvent.showText(MessageCache.getInstance().UI_CLICK_CONFIRM)).build())
                 .build();
         TextAdapter.sendComponent(player, confirmationText);

@@ -39,12 +39,15 @@ import com.griefdefender.api.claim.ClaimResult;
 import com.griefdefender.api.claim.ClaimResultType;
 import com.griefdefender.api.claim.ClaimTypes;
 import com.griefdefender.api.permission.option.Options;
+import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.configuration.ClaimDataConfig;
 import com.griefdefender.configuration.ClaimStorageData;
 import com.griefdefender.event.GDRemoveClaimEvent;
+import com.griefdefender.event.GDRemoveClaimEvent.Delete;
 import com.griefdefender.internal.util.BlockUtil;
 import com.griefdefender.internal.util.VecHelper;
 import com.griefdefender.permission.GDPermissionManager;
+import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.storage.BaseStorage;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.kyori.text.Component;
@@ -115,16 +118,16 @@ public class GDClaimManager implements ClaimManager {
             for (World world : Sponge.getServer().getWorlds()) {
                 GDClaimManager claimmanager = DATASTORE.getClaimWorldManager(world.getUniqueId());
                 for (Claim claim : claimmanager.worldClaims) {
-                    GDClaim gpClaim = (GDClaim) claim;
-                    if (gpClaim.isAdminClaim()) {
+                    GDClaim gdClaim = (GDClaim) claim;
+                    if (gdClaim.isAdminClaim()) {
                         continue;
                     }
-                    if (gpClaim.parent != null) {
-                       if (gpClaim.parent.getOwnerUniqueId().equals(playerUniqueId)) {
+                    if (gdClaim.parent != null) {
+                       if (gdClaim.parent.getOwnerUniqueId().equals(playerUniqueId)) {
                            claimList.add(claim);
                        }
                     } else {
-                        if (gpClaim.getOwnerUniqueId().equals(playerUniqueId)) {
+                        if (gdClaim.getOwnerUniqueId().equals(playerUniqueId)) {
                             claimList.add(claim);
                         }
                     }
@@ -132,16 +135,16 @@ public class GDClaimManager implements ClaimManager {
             }
         } else {
             for (Claim claim : this.worldClaims) {
-                GDClaim gpClaim = (GDClaim) claim;
-                if (gpClaim.isAdminClaim()) {
+                GDClaim gdClaim = (GDClaim) claim;
+                if (gdClaim.isAdminClaim()) {
                     continue;
                 }
-                if (gpClaim.parent != null) {
-                   if (gpClaim.parent.getOwnerUniqueId().equals(playerUniqueId)) {
+                if (gdClaim.parent != null) {
+                   if (gdClaim.parent.getOwnerUniqueId().equals(playerUniqueId)) {
                        claimList.add(claim);
                    }
                 } else {
-                    if (gpClaim.getOwnerUniqueId().equals(playerUniqueId)) {
+                    if (gdClaim.getOwnerUniqueId().equals(playerUniqueId)) {
                         claimList.add(claim);
                     }
                 }
@@ -249,7 +252,7 @@ public class GDClaimManager implements ClaimManager {
 
     @Override
     public ClaimResult deleteClaim(Claim claim, boolean deleteChildren) {
-        GDRemoveClaimEvent event = new GDRemoveClaimEvent(claim);
+        GDRemoveClaimEvent.Delete event = new GDRemoveClaimEvent.Delete(claim);
         GriefDefender.getEventManager().post(event);
         if (event.cancelled()) {
             return new GDClaimResult(claim, ClaimResultType.CLAIM_EVENT_CANCELLED, event.getMessage().orElse(null));
@@ -259,10 +262,10 @@ public class GDClaimManager implements ClaimManager {
     }
 
     public ClaimResult deleteClaimInternal(Claim claim, boolean deleteChildren) {
-        final GDClaim gpClaim = (GDClaim) claim;
+        final GDClaim gdClaim = (GDClaim) claim;
         Set<Claim> subClaims = claim.getChildren(false);
         for (Claim child : subClaims) {
-            if (deleteChildren || (gpClaim.parent == null && child.isSubdivision())) {
+            if (deleteChildren || (gdClaim.parent == null && child.isSubdivision())) {
                 this.deleteClaimInternal(child, true);
                 continue;
             }
@@ -295,8 +298,14 @@ public class GDClaimManager implements ClaimManager {
         this.worldClaims.remove(claim);
         this.claimUniqueIdMap.remove(claim.getUniqueId());
         this.deleteChunkHashes((GDClaim) claim);
-        if (gpClaim.parent != null) {
-            gpClaim.parent.children.remove(claim);
+        if (gdClaim.parent != null) {
+            gdClaim.parent.children.remove(claim);
+        }
+        for (UUID playerUniqueId : gdClaim.playersWatching) {
+            final GDPermissionUser user = PermissionHolderCache.getInstance().getOrCreateUser(playerUniqueId);
+            if (user != null && user.getOnlinePlayer() != null) {
+                user.getInternalPlayerData().revertClaimVisual(gdClaim);
+            }
         }
 
         return DATASTORE.deleteClaimFromStorage((GDClaim) claim);
@@ -346,9 +355,6 @@ public class GDClaimManager implements ClaimManager {
         GDPlayerData playerData = this.getPlayerDataMap().get(claim.getOwnerUniqueId());
         if (playerData != null) {
             playerData.getInternalClaims().remove(claim);
-            if (playerData.lastClaim != null) {
-                playerData.lastClaim.clear();
-            }
         }
 
         // revert visuals for all players watching this claim
@@ -357,12 +363,9 @@ public class GDClaimManager implements ClaimManager {
             Player player = Sponge.getServer().getPlayer(playerUniqueId).orElse(null);
             if (player != null) {
                 playerData = this.getOrCreatePlayerData(playerUniqueId);
-                playerData.revertActiveVisual(player);
-                if (playerData.lastClaim != null) {
-                    playerData.lastClaim.clear();
-                }
-                if (GriefDefenderPlugin.getInstance().worldEditProvider != null) {
-                    GriefDefenderPlugin.getInstance().worldEditProvider.revertVisuals(player, playerData, claim.getUniqueId());
+                playerData.revertClaimVisual((GDClaim) claim);
+                if (GriefDefenderPlugin.getInstance().getWorldEditProvider() != null) {
+                    GriefDefenderPlugin.getInstance().getWorldEditProvider().revertVisuals(player, playerData, claim.getUniqueId());
                 }
             }
         }
@@ -469,8 +472,8 @@ public class GDClaimManager implements ClaimManager {
 
     public void save() {
         for (Claim claim : this.worldClaims) {
-            GDClaim gpClaim = (GDClaim) claim;
-            gpClaim.save();
+            GDClaim gdClaim = (GDClaim) claim;
+            gdClaim.save();
         }
         this.getWildernessClaim().save();
     }
@@ -487,36 +490,36 @@ public class GDClaimManager implements ClaimManager {
         this.worldUniqueId = null;
     }
 
-    @Override
-    public Claim getClaimAt(Vector3i pos) {
-        final World world = Sponge.getServer().getWorld(this.worldUniqueId).orElse(null);
-        return this.getClaimAt(VecHelper.toLocation(world, pos), null, null, false);
-    }
 
     public Claim getClaimAt(Location<World> location, boolean useBorderBlockRadius) {
-        return this.getClaimAt(location, null, null, useBorderBlockRadius);
+        return this.getClaimAt(location, null, useBorderBlockRadius);
     }
 
     public Claim getClaimAtPlayer(Location<World> location, GDPlayerData playerData) {
-        return this.getClaimAt(location, (GDClaim) playerData.lastClaim.get(), playerData, false);
+        return this.getClaimAt(location, playerData, false);
     }
 
     public Claim getClaimAtPlayer(Location<World> location, GDPlayerData playerData, boolean useBorderBlockRadius) {
-        return this.getClaimAt(location, (GDClaim) playerData.lastClaim.get(), playerData, useBorderBlockRadius);
+        return this.getClaimAt(location, playerData, useBorderBlockRadius);
+    }
+
+    @Override
+    public Claim getClaimAt(Vector3i pos) {
+        final World world = Sponge.getServer().getWorld(this.worldUniqueId).orElse(null);
+        return this.getClaimAt(VecHelper.toLocation(world, pos), null, false);
+    }
+
+    @Override
+    public Claim getClaimAt(int x, int y, int z) {
+        final World world = Sponge.getServer().getWorld(this.worldUniqueId).orElse(null);
+        return this.getClaimAt(VecHelper.toLocation(world, new Vector3i(x, y, z)), null, false);
     }
 
     public Claim getClaimAt(Location<World> location) {
         return this.getClaimAt(location, false);
     }
 
-    public Claim getClaimAt(Location<World> location, GDClaim cachedClaim, GDPlayerData playerData, boolean useBorderBlockRadius) {
-        //GPTimings.CLAIM_GETCLAIM.startTimingIfSync();
-        // check cachedClaim guess first. if the location is inside it, we're done
-        if (cachedClaim != null && !cachedClaim.isWilderness() && cachedClaim.contains(location, true)) {
-           // GPTimings.CLAIM_GETCLAIM.stopTimingIfSync();
-            return cachedClaim;
-        }
-
+    public Claim getClaimAt(Location<World> location, GDPlayerData playerData, boolean useBorderBlockRadius) {
         Set<Claim> claimsInChunk = this.getInternalChunksToClaimsMap().get(BlockUtil.getInstance().asLong(location.getBlockX() >> 4, location.getBlockZ() >> 4));
         if (useBorderBlockRadius && (playerData != null && !playerData.bypassBorderCheck)) {
             final int borderBlockRadius = GriefDefenderPlugin.getActiveConfig(location.getExtent().getUniqueId()).getConfig().claim.borderBlockRadius;
@@ -538,7 +541,6 @@ public class GDClaimManager implements ClaimManager {
             }
         }
         if (claimsInChunk == null) {
-            //GPTimings.CLAIM_GETCLAIM.stopTimingIfSync();
             return this.getWildernessClaim();
         }
 
@@ -549,7 +551,6 @@ public class GDClaimManager implements ClaimManager {
             }
         }
 
-        //GPTimings.CLAIM_GETCLAIM.stopTimingIfSync();
         // if no claim found, return the world claim
         return this.getWildernessClaim();
     }

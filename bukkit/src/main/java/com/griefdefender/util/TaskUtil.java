@@ -25,9 +25,18 @@
 package com.griefdefender.util;
 
 import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.Date;
+
+import org.bukkit.Bukkit;
+
+import com.griefdefender.GDBootstrap;
+import com.griefdefender.task.ClaimVisualApplyTask;
 
 public class TaskUtil {
 
@@ -54,5 +63,30 @@ public class TaskUtil {
             zonedNextTarget = zonedNextTarget.plusDays(1);
         }
         return zonedNextTarget;
+    }
+
+    public static long getDaysFrom(Instant from) {
+        LocalDateTime start = LocalDateTime.ofInstant(from, ZoneId.systemDefault());
+        LocalDateTime end = LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault());
+        LocalDate startDate = start.toLocalDate();
+        LocalDate endDate = end.toLocalDate();
+        long days = startDate.until(endDate, ChronoUnit.DAYS);
+        return days;
+    }
+
+    public static LocalDate convertToLocalDate(Date date) {
+        return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+    }
+
+    public static Date convertToDate(LocalDateTime date) {
+        return java.sql.Timestamp.valueOf(date);
+    }
+
+    public static Instant convertToInstant(LocalDate localDate) {
+        return localDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
+    }
+
+    public static void runTaskLater(Runnable task, long delay) {
+        Bukkit.getServer().getScheduler().runTaskLater(GDBootstrap.getInstance(), task, delay);
     }
 }

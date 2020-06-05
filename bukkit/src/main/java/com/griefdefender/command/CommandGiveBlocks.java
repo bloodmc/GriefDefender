@@ -10,7 +10,9 @@ import com.google.common.collect.ImmutableMap;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.cache.MessageCache;
+import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.configuration.MessageStorage;
+import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.permission.GDPermissions;
 import com.griefdefender.text.action.GDCallbackHolder;
 
@@ -39,7 +41,13 @@ public class CommandGiveBlocks extends BaseCommand {
     @Subcommand("giveblocks")
     public void execute(Player src, OfflinePlayer targetPlayer, int amount) {
         if (amount <= 0) {
-            TextAdapter.sendComponent(src, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.COMMAND_INVALID_AMOUNT));
+            TextAdapter.sendComponent(src, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.COMMAND_INVALID_AMOUNT, 
+                    ImmutableMap.of("amount", TextComponent.of(amount, TextColor.GOLD))));
+            return;
+        }
+        if (targetPlayer.getUniqueId().equals(src.getUniqueId())) {
+            TextAdapter.sendComponent(src, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.COMMAND_INVALID_PLAYER, 
+                    ImmutableMap.of("player", TextComponent.of(src.getName(), TextColor.GOLD))));
             return;
         }
 
@@ -51,45 +59,70 @@ public class CommandGiveBlocks extends BaseCommand {
             return;
         }
 
+        final GDPermissionUser targetUser = PermissionHolderCache.getInstance().getOrCreateUser(targetPlayer);
+        if ((targetUser.getInternalPlayerData().getAccruedClaimBlocks() + amount) >= targetUser.getInternalPlayerData().getMaxAccruedClaimBlocks()) {
+            TextAdapter.sendComponent(src, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PLAYER_ACCRUED_BLOCKS_EXCEEDED,
+                    ImmutableMap.of(
+                        "player", targetPlayer.getName(),
+                        "total", targetUser.getInternalPlayerData().getAccruedClaimBlocks(),
+                        "amount", amount)));
+            return;
+        }
+
         final Component confirmationText = TextComponent.builder()
                 .append(MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.COMMAND_GIVEBLOCKS_CONFIRMATION, 
                         ImmutableMap.of("player", TextComponent.of(targetPlayer.getName(), TextColor.AQUA),
                                         "amount", TextComponent.of(amount, TextColor.GREEN))))
                     .append(TextComponent.builder()
                     .append("\n[")
-                    .append("Confirm", TextColor.GREEN)
+                    .append(MessageCache.getInstance().LABEL_CONFIRM.color(TextColor.GREEN))
                     .append("]\n")
-                    .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createConfirmationConsumer(src, targetPlayer, amount))))
+                    .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(src, createConfirmationConsumer(src, targetUser, amount), true)))
                     .hoverEvent(HoverEvent.showText(MessageCache.getInstance().UI_CLICK_CONFIRM)).build())
                 .build();
         TextAdapter.sendComponent(src, confirmationText);
     }
 
-    private static Consumer<CommandSender> createConfirmationConsumer(Player src, OfflinePlayer targetPlayer, int amount) {
+    private static Consumer<CommandSender> createConfirmationConsumer(Player src, GDPermissionUser targetUser, int amount) {
         return confirm -> {
             final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(src.getWorld(), src.getUniqueId());
             final int accruedTotal = playerData.getAccruedClaimBlocks();
             final int bonusTotal = playerData.getBonusClaimBlocks();
+            int availableBlocks = accruedTotal + bonusTotal;
+            if (amount > availableBlocks) {
+                TextAdapter.sendComponent(src, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.COMMAND_GIVEBLOCKS_NOT_ENOUGH, 
+                        ImmutableMap.of("amount", TextComponent.of(availableBlocks, TextColor.GOLD))));
+                return;
+            }
+            if ((targetUser.getInternalPlayerData().getAccruedClaimBlocks() + amount) >= targetUser.getInternalPlayerData().getMaxAccruedClaimBlocks()) {
+                TextAdapter.sendComponent(src, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PLAYER_ACCRUED_BLOCKS_EXCEEDED,
+                        ImmutableMap.of(
+                            "player", targetUser.getName(),
+                            "total", targetUser.getInternalPlayerData().getAccruedClaimBlocks(),
+                            "amount", amount)));
+                return;
+            }
+
             if (bonusTotal >= amount) {
                 playerData.setBonusClaimBlocks(bonusTotal - amount);
             } else if (accruedTotal >= amount) {
-                playerData.setAccruedClaimBlocks(accruedTotal- amount);
+                playerData.setAccruedClaimBlocks(accruedTotal - amount);
             } else {
                 int remaining = amount - bonusTotal;
                 playerData.setBonusClaimBlocks(0);
                 int newAccrued = accruedTotal - remaining;
                 playerData.setAccruedClaimBlocks(newAccrued);
             }
-            final GDPlayerData targetPlayerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(src.getWorld(), targetPlayer.getUniqueId());
-            targetPlayerData.setBonusClaimBlocks(targetPlayerData.getBonusClaimBlocks() + amount);
+
+            targetUser.getInternalPlayerData().setAccruedClaimBlocks(targetUser.getInternalPlayerData().getAccruedClaimBlocks() + amount);
             final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.COMMAND_GIVEBLOCKS_CONFIRMED);
             TextAdapter.sendComponent(src, message);
 
-            if (targetPlayer.isOnline()) {
+            if (targetUser.getOnlinePlayer() != null) {
                 final Component targetMessage = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.COMMAND_GIVEBLOCKS_RECEIVED, 
                         ImmutableMap.of("amount", TextComponent.of(amount, TextColor.GOLD),
                                         "player", TextComponent.of(src.getName(), TextColor.AQUA)));
-                TextAdapter.sendComponent((Player) targetPlayer, targetMessage);
+                TextAdapter.sendComponent((Player) targetUser.getOnlinePlayer(), targetMessage);
             }
         };
     }

@@ -88,50 +88,54 @@ public class OptionRegistryModule implements CatalogRegistryModule<Option> {
 
     @Override
     public void registerDefaults() {
-        this.createKey("griefdefender:abandon-delay", "abandon-delay", Integer.class);
-        this.createKey("griefdefender:abandon-return-ratio", "abandon-return-ratio", Double.class);
-        this.createKey("griefdefender:accrued-blocks", "accrued-blocks", Integer.class);
-        this.createKey("griefdefender:bonus-blocks", "bonus-blocks", Integer.class);
-        this.createKey("griefdefender:create-limit", "create-limit", Integer.class);
-        this.createKey("griefdefender:expiration", "expiration", Integer.class);
-        this.createKey("griefdefender:max-size-x", "max-size-x", Integer.class);
-        this.createKey("griefdefender:max-size-y", "max-size-y", Integer.class);
-        this.createKey("griefdefender:max-size-z", "max-size-z", Integer.class);
-        this.createKey("griefdefender:min-size-x", "min-size-x", Integer.class);
-        this.createKey("griefdefender:min-size-y", "min-size-y", Integer.class);
-        this.createKey("griefdefender:min-size-z", "min-size-z", Integer.class);
-        this.createKey("griefdefender:tax-expiration", "tax-expiration", Integer.class);
-        this.createKey("griefdefender:tax-expiration-days-keep", "tax-expiration-days-keep", Integer.class);
-        this.createKey("griefdefender:tax-rate", "tax-rate", Double.class);
-        this.createKey("griefdefender:blocks-accrued-per-hour", "blocks-accrued-per-hour", Integer.class);
-        this.createKey("griefdefender:chest-expiration", "chest-expiration", Integer.class);
-        this.createKey("griefdefender:create-mode", "create-mode", CreateModeType.class);
-        this.createKey("griefdefender:economy-block-cost", "economy-block-cost", Double.class);
-        this.createKey("griefdefender:economy-block-sell-return", "economy-block-sell-return", Double.class);
-        this.createKey("griefdefender:initial-blocks", "initial-blocks", Integer.class);
-        this.createKey("griefdefender:max-accrued-blocks", "max-accrued-blocks", Integer.class);
-        this.createKey("griefdefender:max-level", "max-level", Integer.class);
-        this.createKey("griefdefender:min-level", "min-level", Integer.class);
-        this.createKey("griefdefender:radius-list", "radius-list", Integer.class);
-        this.createKey("griefdefender:radius-inspect", "radius-inspect", Integer.class);
-        this.createKey("griefdefender:raid", "raid", Boolean.class);
-        this.createKey("griefdefender:spawn-limit", "spawn-limit", Integer.class);
-        this.createKey("griefdefender:player-command-enter", "player-command-enter", true, List.class);
-        this.createKey("griefdefender:player-command-exit", "player-command-exit", true, List.class);
-        this.createKey("griefdefender:player-deny-flight", "player-deny-flight", Boolean.class);
-        this.createKey("griefdefender:player-deny-godmode", "player-deny-godmode", Boolean.class);
-        this.createKey("griefdefender:player-deny-hunger", "player-deny-hunger", Boolean.class);
-        this.createKey("griefdefender:player-gamemode", "player-gamemode", GameModeType.class);
-        this.createKey("griefdefender:player-health-regen", "player-health-regen", Double.class);
-        this.createKey("griefdefender:player-keep-inventory", "player-keep-inventory", Tristate.class);
-        this.createKey("griefdefender:player-keep-level", "player-keep-level", Tristate.class);
-        this.createKey("griefdefender:player-teleport-delay", "player-teleport-delay", Integer.class);
-        this.createKey("griefdefender:player-walk-speed", "player-walk-speed", Double.class);
-        this.createKey("griefdefender:player-weather", "player-weather", WeatherType.class);
-        this.createKey("griefdefender:pvp", "pvp", Tristate.class);
-        this.createKey("griefdefender:pvp-combat-command", "pvp-combat-command", Boolean.class);
-        this.createKey("griefdefender:pvp-combat-teleport", "pvp-combat-teleport", Boolean.class);
-        this.createKey("griefdefender:pvp-combat-timeout", "pvp-combat-timeout", Integer.class);
+        this.createKey("griefdefender:abandon-delay", Integer.class);
+        this.createKey("griefdefender:abandon-return-ratio", Double.class);
+        this.createKey("griefdefender:accrued-blocks", Integer.class);
+        this.createKey("griefdefender:blocks-accrued-per-hour", Integer.class);
+        this.createKey("griefdefender:bonus-blocks", Integer.class);
+        this.createKey("griefdefender:chest-expiration", Integer.class);
+        this.createKey("griefdefender:create-limit", Integer.class);
+        this.createKey("griefdefender:create-mode", CreateModeType.class);
+        this.createKey("griefdefender:economy-block-cost", Double.class);
+        this.createKey("griefdefender:economy-block-sell-return", Double.class);
+        this.createKey("griefdefender:expiration", Integer.class);
+        this.createKey("griefdefender:initial-blocks", Integer.class);
+        this.createKey("griefdefender:max-accrued-blocks", Integer.class);
+        this.createKey("griefdefender:max-level", Integer.class);
+        this.createKey("griefdefender:max-size-x",  Integer.class);
+        this.createKey("griefdefender:max-size-y", Integer.class);
+        this.createKey("griefdefender:max-size-z", Integer.class);
+        this.createKey("griefdefender:min-size-x",  Integer.class);
+        this.createKey("griefdefender:min-size-y", Integer.class);
+        this.createKey("griefdefender:min-size-z", Integer.class);
+        this.createKey("griefdefender:min-level", Integer.class);
+        this.createKey("griefdefender:player-command-enter", true, List.class);
+        this.createKey("griefdefender:player-command-exit", true, List.class);
+        this.createKey("griefdefender:player-deny-flight", Boolean.class);
+        this.createKey("griefdefender:player-deny-godmode", Boolean.class);
+        this.createKey("griefdefender:player-deny-hunger", Boolean.class);
+        this.createKey("griefdefender:player-fly-speed", Double.class);
+        this.createKey("griefdefender:player-gamemode", GameModeType.class);
+        this.createKey("griefdefender:player-health-regen", Double.class);
+        this.createKey("griefdefender:player-keep-inventory", Tristate.class);
+        this.createKey("griefdefender:player-keep-level", Tristate.class);
+        this.createKey("griefdefender:player-teleport-delay", Integer.class);
+        this.createKey("griefdefender:player-walk-speed", Double.class);
+        this.createKey("griefdefender:player-weather", WeatherType.class);
+        this.createKey("griefdefender:pvp", Tristate.class);
+        this.createKey("griefdefender:pvp-combat-command", Boolean.class);
+        this.createKey("griefdefender:pvp-combat-teleport", Boolean.class);
+        this.createKey("griefdefender:pvp-combat-timeout", Integer.class);
+        this.createKey("griefdefender:radius-inspect", Integer.class);
+        this.createKey("griefdefender:raid", Boolean.class);
+        this.createKey("griefdefender:rent-balance", Double.class);
+        this.createKey("griefdefender:rent-expiration", Integer.class);
+        this.createKey("griefdefender:rent-expiration-days-keep", Integer.class);
+        this.createKey("griefdefender:rent-restore", Boolean.class);
+        this.createKey("griefdefender:spawn-limit", Integer.class);
+        this.createKey("griefdefender:tax-expiration", Integer.class);
+        this.createKey("griefdefender:tax-expiration-days-keep", Integer.class);
+        this.createKey("griefdefender:tax-rate", Double.class);
 
         RegistryHelper.mapFields(Options.class, input -> {
             final String name = input.replace("_", "-");
@@ -139,8 +143,16 @@ public class OptionRegistryModule implements CatalogRegistryModule<Option> {
         });
     }
 
+    private void createKey(String id, Class<?> clazz) {
+        this.createKey(id, id.replace("griefdefender:", ""), false, new HashSet<>(), clazz);
+    }
+
     private void createKey(String id, String name, Class<?> clazz) {
         this.createKey(id, name, false, new HashSet<>(), clazz);
+    }
+
+    private void createKey(String id, boolean multiValued, Class<?> clazz) {
+        this.createKey(id, id.replace("griefdefender:", ""), multiValued, new HashSet<>(), clazz);
     }
 
     private void createKey(String id, String name, boolean multiValued, Class<?> clazz) {

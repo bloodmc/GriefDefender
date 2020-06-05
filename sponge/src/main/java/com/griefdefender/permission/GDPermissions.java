@@ -51,6 +51,7 @@ public class GDPermissions {
     public static final String COMMAND_CLAIM_INFO_TELEPORT_BASE = "griefdefender.user.claim.command.info.teleport.base";
     public static final String COMMAND_CLAIM_MODE = "griefdefender.user.claim.command.claim-mode";
     public static final String COMMAND_CLAIM_OPTIONS_BASE = "griefdefender.user.claim.option.base";
+    public static final String COMMAND_CLAIM_RENT = "griefdefender.user.claim.command.rent";
     public static final String COMMAND_CLAIM_SELL = "griefdefender.user.claim.command.sell";
     public static final String COMMAND_CLAIM_SPAWN = "griefdefender.user.claim.command.spawn";
     public static final String COMMAND_CLAIM_SET_SPAWN = "griefdefender.user.claim.command.set-spawn";
@@ -116,6 +117,11 @@ public class GDPermissions {
     public static final String USER_OPTION_PERK_OWNER_FLY_TOWN = "griefdefender.user.option.perk.owner-fly.town";
     public static final String OPTION_BASE = "griefdefender";
 
+    // Economy
+    public static final String USER_RENT_BASE = "griefdefender.user.claim.rent.base";
+    public static final String USER_RENT_SIGN = "griefdefender.user.claim.rent.sign";
+    public static final String USER_SELL_SIGN = "griefdefender.user.claim.sell.sign";
+
     // Admin
     public static final String ADVANCED_FLAGS = "griefdefender.admin.advanced-flags";
     public static final String BYPASS_BAN = "griefdefender.admin.bypass.ban";
@@ -123,6 +129,7 @@ public class GDPermissions {
     public static final String BYPASS_CLAIM_RESIZE = "griefdefender.admin.bypass.override.resize";
     public static final String BYPASS_CLAIM_LIMIT = "griefdefender.admin.bypass.override.limit";
     public static final String BYPASS_OPTION = "griefdefender.admin.bypass.option";
+    public static final String BYPASS_PVP_CREATIVE = "griefdefender.admin.bypass.pvp-creative";
     public static final String CLAIM_CUBOID_ADMIN = "griefdefender.admin.claim.cuboid";
     public static final String CLAIM_RESIZE_ALL = "griefdefender.admin.claim.resize";
     public static final String CLAIM_RESIZE_ADMIN = "griefdefender.admin.claim.resize.admin";

@@ -116,6 +116,7 @@ sourceSets {
 dependencies {
     compileOnly(project(path: ":GriefDefenderAPI"))
     compile project (':common')
+    compileOnly "com.griefdefender:adapter-sponge:$adapterSpongeVersion"
     compileOnly "com.griefdefender:reflect-helper:1.0"
     // Sponge
     apiCompile "org.spongepowered:spongeapi:$apiVersion"

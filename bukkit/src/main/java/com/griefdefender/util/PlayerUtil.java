@@ -24,6 +24,8 @@
  */
 package com.griefdefender.util;
 
+import com.google.common.collect.BiMap;
+import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.reflect.TypeToken;
 import com.griefdefender.GDPlayerData;
@@ -31,6 +33,8 @@ import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.Tristate;
 import com.griefdefender.api.claim.ClaimType;
 import com.griefdefender.api.claim.ClaimTypes;
+import com.griefdefender.api.claim.ClaimVisualType;
+import com.griefdefender.api.claim.ClaimVisualTypes;
 import com.griefdefender.api.claim.ShovelType;
 import com.griefdefender.api.claim.ShovelTypes;
 import com.griefdefender.api.permission.flag.Flags;
@@ -43,11 +47,11 @@ import com.griefdefender.api.permission.option.type.WeatherTypes;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.configuration.MessageStorage;
+import com.griefdefender.internal.block.BlockTransaction;
 import com.griefdefender.internal.util.NMSUtil;
-import com.griefdefender.internal.visual.ClaimVisual;
-import com.griefdefender.internal.visual.GDClaimVisualType;
 import com.griefdefender.permission.GDPermissionManager;
 import com.griefdefender.permission.GDPermissionUser;
+import com.griefdefender.permission.option.GDOptions;
 
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
@@ -66,6 +70,7 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -73,7 +78,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class PlayerUtil {
 
     private static BlockFace[] faces = { BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST};
-    public static Map<GameModeType, GameMode> GAMEMODE_MAP = ImmutableMap.of(
+    public static BiMap<GameModeType, GameMode> GAMEMODE_MAP = ImmutableBiMap.of(
         GameModeTypes.ADVENTURE, GameMode.ADVENTURE,
         GameModeTypes.CREATIVE, GameMode.CREATIVE,
         GameModeTypes.SPECTATOR, GameMode.SPECTATOR,
@@ -152,17 +157,17 @@ public class PlayerUtil {
         return TextComponent.of("Basic", TextColor.YELLOW);
     }
 
-    public GDClaimVisualType getVisualTypeFromShovel(ShovelType shovelMode) {
+    public ClaimVisualType getVisualTypeFromShovel(ShovelType shovelMode) {
         if (shovelMode == ShovelTypes.ADMIN) {
-            return ClaimVisual.ADMIN;
+            return ClaimVisualTypes.ADMIN;
         }
         if (shovelMode == ShovelTypes.SUBDIVISION) {
-            return ClaimVisual.SUBDIVISION;
+            return ClaimVisualTypes.SUBDIVISION;
         }
         if (shovelMode == ShovelTypes.TOWN) {
-            return ClaimVisual.TOWN;
+            return ClaimVisualTypes.TOWN;
         }
-        return ClaimVisual.BASIC;
+        return ClaimVisualTypes.BASIC;
     }
 
     @Nullable
@@ -213,7 +218,7 @@ public class PlayerUtil {
 
         if (playerItem == null || playerItem.getType() == Material.AIR) {
             final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_INTERACT_ENTITY, ImmutableMap.of(
-                    "player", claim.getOwnerName(),
+                    "player", claim.getOwnerDisplayName(),
                     "entity", entity.getName()));
             GriefDefenderPlugin.sendClaimDenyMessage(claim, player, message);
         } else {
@@ -245,26 +250,69 @@ public class PlayerUtil {
     }
 
     public boolean canPlayerPvP(GDClaim claim, GDPermissionUser source) {
-        final Player sourcePlayer = source.getOnlinePlayer();
-
-        Tristate sourceResult = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Tristate.class), source, Options.PVP, claim);
-        if (sourceResult == Tristate.UNDEFINED) {
-            sourceResult = Tristate.fromBoolean(claim.getWorld().getPVP());
-        }
-
-        if (sourceResult == Tristate.FALSE) {
-            return false;
-        }
-
-        final GDClaim sourceClaim = GriefDefenderPlugin.getInstance().dataStore.getClaimAtPlayer(source.getInternalPlayerData(), sourcePlayer.getLocation());
-        if (!sourceClaim.isPvpEnabled()) {
-            return false;
-        }
-        if (!claim.isPvpEnabled()) {
+        if (!claim.getWorld().getPVP()) {
             return false;
         }
 
         final Tristate flagResult = GDPermissionManager.getInstance().getActiveFlagPermissionValue(claim, source, Flags.ENTITY_DAMAGE, source, "minecraft:player", new HashSet<>());
-        return flagResult.asBoolean();
+        if (flagResult == Tristate.FALSE) {
+            return false;
+        }
+
+        Tristate sourceResult = Tristate.UNDEFINED;
+        if (GDOptions.isOptionEnabled(Options.PVP)) {
+            sourceResult = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Tristate.class), source, Options.PVP, claim);
+        }
+        if (sourceResult == Tristate.FALSE) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public boolean shouldRefreshVisual(GDPlayerData playerData, Location locality, Set<BlockTransaction> corners, Set<BlockTransaction> accents) {
+        if (corners.isEmpty()) {
+            return true;
+        }
+        if (playerData.lastNonAirInspectLocation == null && !corners.isEmpty()) {
+            return false;
+        }
+        Integer lowestY = null;
+        Integer highestY = null;
+        if (!corners.isEmpty() && playerData != null && playerData.lastNonAirInspectLocation != null) {
+            for (BlockTransaction transaction : corners) {
+                final int cornerHeight = transaction.getFinal().getBlockPos().getY();
+                if (lowestY == null || (lowestY != null && cornerHeight < lowestY)) {
+                    lowestY = cornerHeight;
+                }
+                if (highestY == null || (highestY != null && cornerHeight > highestY)) {
+                    highestY = cornerHeight;
+                }
+            }
+        }
+        if (!accents.isEmpty() && playerData != null && playerData.lastNonAirInspectLocation != null) {
+            for (BlockTransaction transaction : accents) {
+                final int cornerHeight = transaction.getFinal().getBlockPos().getY();
+                if (lowestY == null || (lowestY != null && cornerHeight < lowestY)) {
+                    lowestY = cornerHeight;
+                }
+                if (highestY == null || (highestY != null && cornerHeight > highestY)) {
+                    highestY = cornerHeight;
+                }
+            }
+        }
+        if (lowestY != null) {
+            // check if water
+            if (!playerData.inLiquid && playerData.lastNonAirInspectLocation.getBlock().isLiquid()) {
+                if (highestY < playerData.lastNonAirInspectLocation.getBlockY()) {
+                    return true;
+                }
+                return false;
+            }
+            if (locality.getBlockY() < lowestY) {
+                return true;
+            }
+        }
+        return false;
     }
 }

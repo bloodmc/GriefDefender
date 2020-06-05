@@ -24,9 +24,9 @@
  */
 package com.griefdefender.util;
 
-import net.minecraft.entity.IEntityOwnable;
-import net.minecraft.entity.player.EntityPlayer;
+import com.griefdefender.internal.util.NMSUtil;
 import org.spongepowered.api.entity.Entity;
+import org.spongepowered.api.entity.living.player.Player;
 
 import java.util.UUID;
 
@@ -35,14 +35,13 @@ import javax.annotation.Nullable;
 public class EntityUtils {
 
     public static UUID getOwnerUniqueId(Entity entity) {
-        if (entity instanceof EntityPlayer) {
+        if (entity instanceof Player) {
             return null;
         }
 
         UUID ownerUniqueId = entity.getCreator().orElse(null);
-        if (ownerUniqueId == null && entity instanceof IEntityOwnable) {
-            IEntityOwnable ownable = (IEntityOwnable) entity;
-            ownerUniqueId = ownable.getOwnerId();
+        if (ownerUniqueId == null) {
+            ownerUniqueId = NMSUtil.getInstance().getEntityOwnerUUID(entity);
         }
 
         return ownerUniqueId;

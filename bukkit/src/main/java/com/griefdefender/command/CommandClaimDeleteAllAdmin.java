@@ -65,9 +65,9 @@ public class CommandClaimDeleteAllAdmin extends BaseCommand {
                         ImmutableMap.of("type", TextComponent.of("ADMIN").color(TextColor.RED))))
                 .append(TextComponent.builder()
                     .append("\n[")
-                    .append("Confirm", TextColor.GREEN)
+                    .append(MessageCache.getInstance().LABEL_CONFIRM.color(TextColor.GREEN))
                     .append("]\n")
-                    .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createConfirmationConsumer(player))))
+                    .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(player, createConfirmationConsumer(player), true)))
                     .hoverEvent(HoverEvent.showText(MessageCache.getInstance().UI_CLICK_CONFIRM)).build())
                 .build();
         TextAdapter.sendComponent(player, confirmationText);
@@ -88,7 +88,6 @@ public class CommandClaimDeleteAllAdmin extends BaseCommand {
                     ImmutableMap.of("type", TextComponent.of("ADMIN").color(TextColor.RED))));
             final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
             playerData.onClaimDelete();
-            playerData.revertActiveVisual(player);
         };
     }
 }

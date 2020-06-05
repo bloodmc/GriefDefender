@@ -111,9 +111,9 @@ public class CommandClaimSell extends BaseCommand {
 
         final Component saleConfirmationText = TextComponent.builder("")
                 .append("\n[")
-                .append("Confirm", TextColor.GREEN)
+                .append(MessageCache.getInstance().LABEL_CONFIRM.color(TextColor.GREEN))
                 .append("]\n")
-                .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createSaleConfirmationConsumer(player, claim, salePrice))))
+                .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(player, createSaleConfirmationConsumer(player, claim, salePrice), true)))
                 .build();
         GriefDefenderPlugin.sendMessage(player, saleConfirmationText);
     }

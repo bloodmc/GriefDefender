@@ -138,9 +138,9 @@ public class CommandClaimAbandon extends BaseCommand {
                 .append(autoSchematicRestore ? MessageCache.getInstance().SCHEMATIC_ABANDON_RESTORE_WARNING : MessageCache.getInstance().ABANDON_WARNING)
                     .append(TextComponent.builder()
                     .append("\n[")
-                    .append("Confirm", TextColor.GREEN)
+                    .append(MessageCache.getInstance().LABEL_CONFIRM.color(TextColor.GREEN))
                     .append("]\n")
-                    .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createConfirmationConsumer(player, playerData, claim, this.abandonTopClaim))))
+                    .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(player, createConfirmationConsumer(player, playerData, claim, this.abandonTopClaim), true)))
                     .hoverEvent(HoverEvent.showText(MessageCache.getInstance().UI_CLICK_CONFIRM)).build())
                 .build();
         TextAdapter.sendComponent(player, confirmationText);
@@ -178,7 +178,7 @@ public class CommandClaimAbandon extends BaseCommand {
             }
 
             playerData.onClaimDelete();
-            playerData.revertActiveVisual(player);
+            playerData.revertClaimVisual(claim);
 
             if (claim.isTown()) {
                 playerData.inTown = false;

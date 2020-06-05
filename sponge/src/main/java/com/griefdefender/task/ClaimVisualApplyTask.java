@@ -26,27 +26,30 @@ package com.griefdefender.task;
 
 import com.griefdefender.GDBootstrap;
 import com.griefdefender.GDPlayerData;
-import com.griefdefender.GriefDefenderPlugin;
-import com.griefdefender.internal.visual.ClaimVisual;
+import com.griefdefender.internal.visual.GDClaimVisual;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.BlockSnapshot;
+import org.spongepowered.api.data.Transaction;
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.scheduler.Task;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public class ClaimVisualApplyTask implements Runnable {
 
-    private ClaimVisual visualization;
+    private GDClaimVisual visualization;
     private Player player;
     private GDPlayerData playerData;
     private boolean resetActive;
 
-    public ClaimVisualApplyTask(Player player, GDPlayerData playerData, ClaimVisual visualization) {
+    public ClaimVisualApplyTask(Player player, GDPlayerData playerData, GDClaimVisual visualization) {
         this(player, playerData, visualization, true);
     }
 
-    public ClaimVisualApplyTask(Player player, GDPlayerData playerData, ClaimVisual visualization, boolean resetActive) {
+    public ClaimVisualApplyTask(Player player, GDPlayerData playerData, GDClaimVisual visualization, boolean resetActive) {
         this.visualization = visualization;
         this.playerData = playerData;
         this.player = player;
@@ -55,32 +58,50 @@ public class ClaimVisualApplyTask implements Runnable {
 
     @Override
     public void run() {
+        if (!this.player.isOnline()) {
+            this.playerData.revertAllVisuals();
+            return;
+        }
         // Only revert active visual if we are not currently creating a claim
-        if (!this.playerData.visualBlocks.isEmpty() && this.playerData.lastShovelLocation == null) {
+        if (!this.playerData.visualClaimBlocks.isEmpty() && this.playerData.lastShovelLocation == null) {
             if (this.resetActive) {
-                this.playerData.revertActiveVisual(this.player);
+                this.playerData.revertAllVisuals();
             }
         }
 
-        for (int i = 0; i < this.visualization.getVisualTransactions().size(); i++) {
-            BlockSnapshot snapshot = this.visualization.getVisualTransactions().get(i).getFinal();
-            this.player.sendBlockChange(snapshot.getPosition(), snapshot.getState());
+        for (Transaction<BlockSnapshot> transaction : this.visualization.getVisualTransactions()) {
+            this.playerData.queuedVisuals.add(transaction.getFinal());
         }
 
         if (this.visualization.getClaim() != null) {
-            this.playerData.visualClaimId = this.visualization.getClaim().getUniqueId();
             this.visualization.getClaim().playersWatching.add(this.player.getUniqueId());
         }
-        // If we still have active visuals to revert, combine with new
-        if (!this.playerData.visualBlocks.isEmpty()) {
-            this.playerData.visualBlocks.addAll(this.visualization.getVisualTransactions());
+
+        UUID visualUniqueId = null;
+        if (this.visualization.getClaim() == null) {
+            visualUniqueId = UUID.randomUUID();
+            playerData.tempVisualUniqueId = visualUniqueId;
         } else {
-            this.playerData.visualBlocks = new ArrayList<>(this.visualization.getVisualTransactions());
+            visualUniqueId = this.visualization.getClaim().getUniqueId();
         }
 
-        if (playerData.lastShovelLocation == null) {
-            this.playerData.visualRevertTask = Sponge.getGame().getScheduler().createTaskBuilder().delay(1, TimeUnit.MINUTES)
-                    .execute(new ClaimVisualRevertTask(this.player, this.playerData)).submit(GDBootstrap.getInstance());
+        final List<Transaction<BlockSnapshot>> blockTransactions = this.playerData.visualClaimBlocks.get(visualUniqueId);
+        if (blockTransactions == null) {
+            this.playerData.visualClaimBlocks.put(visualUniqueId, new ArrayList<>(this.visualization.getVisualTransactions()));
+        } else {
+            // support multi layer visuals i.e. water
+            blockTransactions.addAll(this.visualization.getVisualTransactions());
+            // cancel existing task
+            final Task task = this.playerData.claimVisualRevertTasks.get(visualUniqueId);
+            if (task != null) {
+                task.cancel();
+                this.playerData.claimVisualRevertTasks.remove(visualUniqueId);
+            }
+        }
+
+        if (this.playerData.lastShovelLocation == null) {
+            this.playerData.claimVisualRevertTasks.put(visualUniqueId, Sponge.getGame().getScheduler().createTaskBuilder().delay(1, TimeUnit.MINUTES)
+                    .execute(new ClaimVisualRevertTask(visualUniqueId, this.player, this.playerData)).submit(GDBootstrap.getInstance()));
         }
     }
 }

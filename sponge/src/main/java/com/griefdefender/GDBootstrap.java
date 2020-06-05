@@ -59,7 +59,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-@Plugin(id = "griefdefender", name = "GriefDefender", version = "1.2.6", description = "Designed to defend servers from all forms of grief.",
+@Plugin(id = "griefdefender", name = "GriefDefender", version = "1.3.0", description = "Designed to defend servers from all forms of grief.",
     authors = {"bloodmc"}, dependencies = {@Dependency(id = "luckperms")})
 public class GDBootstrap {
 
@@ -87,7 +87,7 @@ public class GDBootstrap {
         if (Sponge.getPlatform().getMinecraftVersion().getName().contains("1.12.2")) {
             bukkitJsonVersion = "1.12.2";
         } else {
-            this.getLogger().error("Detected unsupported version '" + version.getName() + "'. GriefDefender only 1.12.2. GriefDefender will NOT load.");
+            this.getLogger().error("Detected unsupported version '" + version.getName() + "'. GriefDefender only supports 1.12.2 on Sponge. GriefDefender will NOT load.");
             return;
         }
         try {

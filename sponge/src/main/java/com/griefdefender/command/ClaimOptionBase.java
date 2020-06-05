@@ -59,6 +59,7 @@ import com.griefdefender.permission.GDPermissionHolder;
 import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.permission.GDPermissions;
 import com.griefdefender.permission.option.GDOption;
+import com.griefdefender.permission.option.GDOptions;
 import com.griefdefender.permission.ui.ClaimClickData;
 import com.griefdefender.permission.ui.MenuType;
 import com.griefdefender.permission.ui.OptionData;
@@ -141,6 +142,11 @@ public abstract class ClaimOptionBase extends BaseCommand {
             option = GriefDefender.getRegistry().getType(Option.class, commandOption).orElse(null);
             if (option == null) {
                 TextAdapter.sendComponent(player, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.OPTION_NOT_FOUND, ImmutableMap.of(
+                        "option", commandOption)));
+                return;
+            }
+            if (option != null && !GDOptions.isOptionEnabled(option)) {
+                TextAdapter.sendComponent(player, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.OPTION_NOT_ENABLED, ImmutableMap.of(
                         "option", commandOption)));
                 return;
             }
@@ -268,7 +274,7 @@ public abstract class ClaimOptionBase extends BaseCommand {
         boolean isAdmin = false;
         final Player player = src.getOnlinePlayer();
         final GDPlayerData playerData = src.getInternalPlayerData();
-        final boolean isTaxEnabled = GriefDefenderPlugin.getActiveConfig(player.getWorld().getProperties()).getConfig().claim.bankTaxSystem;
+        final boolean isTaxEnabled = GriefDefenderPlugin.getGlobalConfig().getConfig().economy.taxSystem;
         if (player.hasPermission(GDPermissions.DELETE_CLAIM_ADMIN)) {
             isAdmin = true;
         }
@@ -366,6 +372,10 @@ public abstract class ClaimOptionBase extends BaseCommand {
             defaultContexts.add(ClaimContexts.WILDERNESS_DEFAULT_CONTEXT);
             overrideContexts.add(ClaimContexts.WILDERNESS_OVERRIDE_CONTEXT);
         }
+        if (!claim.isWilderness() && !claim.isAdminClaim()) {
+            defaultContexts.add(ClaimContexts.USER_DEFAULT_CONTEXT);
+            overrideContexts.add(ClaimContexts.USER_OVERRIDE_CONTEXT);
+        }
         defaultContexts.add(ClaimContexts.GLOBAL_DEFAULT_CONTEXT);
         overrideContexts.add(ClaimContexts.GLOBAL_OVERRIDE_CONTEXT);
         overrideContexts.add(claim.getOverrideClaimContext());
@@ -383,6 +393,9 @@ public abstract class ClaimOptionBase extends BaseCommand {
             contexts.add(ClaimContexts.GLOBAL_DEFAULT_CONTEXT);
             for (Option option : OptionRegistryModule.getInstance().getAll()) {
                 if (option.isGlobal() && displayType == MenuType.CLAIM) {
+                    continue;
+                }
+                if (!GDOptions.isOptionEnabled(option)) {
                     continue;
                 }
                 // commands are special-cased as they use a List and cannot show up with no data
@@ -445,7 +458,7 @@ public abstract class ClaimOptionBase extends BaseCommand {
         for (Entry<String, OptionData> mapEntry : filteredContextMap.entrySet()) {
             final OptionData optionData = mapEntry.getValue();
             final Option option = optionData.option;
-            if (option.getName().contains("tax") && !GriefDefenderPlugin.getGlobalConfig().getConfig().claim.bankTaxSystem) {
+            if (option.getName().contains("tax") && !GriefDefenderPlugin.getGlobalConfig().getConfig().economy.taxSystem) {
                 continue;
             }
             if (option.isGlobal() && displayType == MenuType.CLAIM) {
@@ -507,7 +520,7 @@ public abstract class ClaimOptionBase extends BaseCommand {
             if (option == null) {
                 continue;
             }
-            if (option.getName().contains("tax") && !GriefDefenderPlugin.getGlobalConfig().getConfig().claim.bankTaxSystem) {
+            if (option.getName().contains("tax") && !GriefDefenderPlugin.getGlobalConfig().getConfig().economy.taxSystem) {
                 continue;
             }
 
@@ -570,8 +583,7 @@ public abstract class ClaimOptionBase extends BaseCommand {
                         hoverEventText = MessageCache.getInstance().PERMISSION_OPTION_USE;
                         hasEditPermission = false;
                     }
-                }
-                else {
+                } else {
                     if (!player.hasPermission(GDPermissions.USER_CLAIM_OPTIONS +"." + option.getName().toLowerCase())) {
                         hoverEventText = MessageCache.getInstance().PERMISSION_OPTION_USE;
                         hasEditPermission = false;
@@ -599,12 +611,23 @@ public abstract class ClaimOptionBase extends BaseCommand {
                             .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(newOptionValueConsumer(src, claim, option, optionHolder, contexts, displayType, true)))))
                     .append(currentValue.toLowerCase(), color);
         } else {
+            if (hoverEventText == TextComponent.empty() && hasEditPermission) {
+                hoverEventText = MessageCache.getInstance().CLAIMINFO_UI_CLICK_TOGGLE;
+            }
+            final TextComponent valueNoHover = 
+                    TextComponent.builder()
+                        .append(currentValue.toLowerCase(), color).build();
+            final TextComponent valueHover = 
+                    TextComponent.builder()
+                        .append(currentValue.toLowerCase(), color)
+                        .hoverEvent(HoverEvent.showText(
+                                hoverEventText
+                                    .append(this.getHoverContextComponent(contexts))))
+                        .build();
             builder = TextComponent.builder()
                     .append(getOptionText(option, contexts))
                     .append(" ")
-                    .append(TextComponent.builder()
-                            .append(currentValue.toLowerCase(), color)
-                            .hoverEvent(HoverEvent.showText(hoverEventText)));
+                    .append(hoverEventText != TextComponent.empty() ? valueHover : valueNoHover);
         }
         if (hasEditPermission) {
             if (!option.getAllowedType().isAssignableFrom(Integer.class) && !option.getAllowedType().isAssignableFrom(Double.class)) {
@@ -637,6 +660,27 @@ public abstract class ClaimOptionBase extends BaseCommand {
                         .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(removeOptionValueConsumer(src, claim, option, optionHolder, contexts, displayType))))
                         .build())
                 .append("]", TextColor.WHITE);
+        }
+
+        return builder.build();
+    }
+
+    private Component getHoverContextComponent(Set<Context> contexts) {
+        if (contexts.isEmpty()) {
+            return TextComponent.empty();
+        }
+
+        TextComponent.Builder builder = TextComponent.builder()
+                    .append("\n\nContexts: \n");
+
+        for (Context context : contexts) {
+            final String key = context.getKey();
+            final String value = context.getValue();
+            TextColor keyColor = TextColor.AQUA;
+            builder.append(key, keyColor)
+                    .append("=", TextColor.WHITE)
+                    .append(value.replace("minecraft:", ""), TextColor.GRAY)
+                    .append("\n");
         }
 
         return builder.build();
@@ -685,10 +729,13 @@ public abstract class ClaimOptionBase extends BaseCommand {
                 Tristate value = getMenuTypeValue(TypeToken.of(Tristate.class), currentValue);
                 if (value == Tristate.TRUE) {
                     newValue = "false";
-                } else if (value == Tristate.FALSE) {
+                } else if (value == Tristate.FALSE && optionHolder.getType() != MenuType.DEFAULT) {
                     newValue = "undefined";
                 } else {
                     newValue = "true";
+                }
+                if (displayType == MenuType.CLAIM && optionHolder.getType() == MenuType.DEFAULT && newValue.equalsIgnoreCase(currentValue)) {
+                    newValue = "undefined";
                 }
             }
             if (option.getAllowedType().isAssignableFrom(Boolean.class)) {
@@ -771,10 +818,10 @@ public abstract class ClaimOptionBase extends BaseCommand {
             if (option.getAllowedType().isAssignableFrom(Double.class)) {
                 Double value = getMenuTypeValue(TypeToken.of(Double.class), currentValue);
                 if (leftArrow) {
-                    if (value == null || value < 1) {
+                    if (value == null || value < 0) {
                         TextAdapter.sendComponent(src.getOnlinePlayer(), TextComponent.of("This value is NOT defined and cannot go any lower."));
                     } else {
-                        value -= 1;
+                        value -= 0.1;
                         if (option == Options.ABANDON_RETURN_RATIO && value <= 0) {
                             value = null;
                         } else {
@@ -787,10 +834,10 @@ public abstract class ClaimOptionBase extends BaseCommand {
                     if (value == null) {
                         value = 1.0;
                     } else {
-                        value += 1;
+                        value += 0.1;
                     }
                 }
-                newValue = value == null ? "undefined" :String.valueOf(value);
+                newValue = value == null ? "undefined" : String.format("%.1f", value);
             }
 
             Set<Context> newContexts = new HashSet<>(contexts);

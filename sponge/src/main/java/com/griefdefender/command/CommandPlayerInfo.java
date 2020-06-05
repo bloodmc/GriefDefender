@@ -211,7 +211,7 @@ public class CommandPlayerInfo extends BaseCommand {
                 .append(subLimitText, TextColor.GREEN)
                 .build();
         claimsTextList.add(claimCreateLimits);
-        if (GriefDefenderPlugin.getGlobalConfig().getConfig().claim.bankTaxSystem) {
+        if (GriefDefenderPlugin.getActiveConfig(playerData.worldUniqueId).getConfig().economy.taxSystem) {
             Component townTaxRate = TextComponent.builder("")
                     .append("TOWN", TextColor.GRAY)
                     .append(" : ")

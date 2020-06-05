@@ -1,7 +1,7 @@
 /*
- * This file is part of Sponge, licensed under the MIT License (MIT).
+ * This file is part of GriefDefender, licensed under the MIT License (MIT).
  *
- * Copyright (c) SpongePowered <https://www.spongepowered.org>
+ * Copyright (c) bloodmc
  * Copyright (c) contributors
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -67,6 +67,11 @@ public class GDClaimType implements ClaimType {
             this.overrideContext = ClaimContexts.TOWN_OVERRIDE_CONTEXT;
             this.spongeDefaultContext = SpongeContexts.TOWN_DEFAULT_CONTEXT;
             this.spongeOverrideContext = SpongeContexts.TOWN_OVERRIDE_CONTEXT;
+        } else if (name.equalsIgnoreCase("user")) {
+            this.defaultContext = ClaimContexts.USER_DEFAULT_CONTEXT;
+            this.overrideContext = ClaimContexts.USER_OVERRIDE_CONTEXT;
+            this.spongeDefaultContext = SpongeContexts.USER_DEFAULT_CONTEXT;
+            this.spongeOverrideContext = SpongeContexts.USER_OVERRIDE_CONTEXT;
         } else if (name.equalsIgnoreCase("wilderness")) {
             this.defaultContext = ClaimContexts.WILDERNESS_DEFAULT_CONTEXT;
             this.overrideContext = ClaimContexts.WILDERNESS_OVERRIDE_CONTEXT;

@@ -91,7 +91,7 @@ public class DynmapProvider {
         } else {
             info = "<div class=\"regioninfo\">" + this.cfg.infoWindowBasic + "</div>";
         }
-        info = info.replace("%owner%", ((GDClaim) claim).getOwnerFriendlyName());
+        info = info.replace("%owner%", ((GDClaim) claim).getOwnerName());
         info = info.replace("%area%", Integer.toString(claim.getArea()));
         info = info.replace("%claimname%",
                 claim.getData().getName().isPresent()
@@ -218,7 +218,7 @@ public class DynmapProvider {
             return;
         }
         final String worldName = world.getName();
-        final String owner = ((GDClaim) claim).getOwnerFriendlyName();
+        final String owner = ((GDClaim) claim).getOwnerName();
         if (isVisible((GDClaim) claim, owner, worldName)) {
             final Vector3i lesserPos = claim.getLesserBoundaryCorner();
             final Vector3i greaterPos = claim.getGreaterBoundaryCorner();
@@ -259,7 +259,12 @@ public class DynmapProvider {
         Map<String, AreaMarker> newmap = new HashMap<String, AreaMarker>();
         Sponge.getServer().getWorlds().stream().map(w -> GriefDefender.getCore().getClaimManager(w.getUniqueId()))
                 .map(ClaimManager::getWorldClaims).forEach(claims -> {
-                    claims.forEach(claim -> updateClaimMarker(claim, newmap));
+                    for (Claim claim : claims) {
+                        updateClaimMarker(claim, newmap);
+                        for (Claim child : claim.getChildren(true)) {
+                            updateClaimMarker(child, newmap);
+                        }
+                    }
                 });
 
         for (AreaMarker oldm : this.areaMarkers.values()) {

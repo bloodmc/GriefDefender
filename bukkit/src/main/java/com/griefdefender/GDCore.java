@@ -27,11 +27,11 @@ package com.griefdefender;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.World;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Singleton;
@@ -44,8 +44,8 @@ import com.griefdefender.api.claim.ClaimBlockSystem;
 import com.griefdefender.api.claim.ClaimManager;
 import com.griefdefender.api.data.PlayerData;
 import com.griefdefender.api.permission.flag.Flag;
+import com.griefdefender.api.provider.WorldEditProvider;
 import com.griefdefender.cache.PermissionHolderCache;
-import com.griefdefender.claim.GDClaim;
 import com.griefdefender.storage.BaseStorage;
 
 @Singleton
@@ -68,7 +68,7 @@ public class GDCore implements Core {
 
     @Override
     public boolean isProtectionModuleEnabled(Flag flag) {
-        return GriefDefenderPlugin.getGlobalConfig().getConfig().modules.isProtectionModuleEnabled(flag.toString());
+        return GriefDefenderPlugin.getFlagConfig().getConfig().isFlagEnabled(flag.toString());
     }
 
     @Override
@@ -79,6 +79,37 @@ public class GDCore implements Core {
     @Override
     public Optional<PlayerData> getPlayerData(UUID worldUniqueId, UUID playerUniqueId) {
         return Optional.ofNullable(GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(worldUniqueId, playerUniqueId));
+    }
+
+    @Override
+    public @Nullable Claim getClaim(UUID uuid) {
+        for (World world : Bukkit.getServer().getWorlds()) {
+            final ClaimManager claimManager = this.getClaimManager(world.getUID());
+            if (claimManager == null) {
+                continue;
+            }
+            if (claimManager.getWildernessClaim().getUniqueId().equals(uuid)) {
+                return claimManager.getWildernessClaim();
+            }
+            for (Claim claim : claimManager.getWorldClaims()) {
+                if (claim.getUniqueId().equals(uuid)) {
+                    return claim;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    @Override
+    public List<Claim> getAllClaims() {
+        List<Claim> claimList = new ArrayList<>();
+
+        for (World world : Bukkit.getServer().getWorlds()) {
+            claimList.addAll(this.getClaimManager(world.getUID()).getWorldClaims());
+        }
+
+        return ImmutableList.copyOf(claimList);
     }
 
     @Override
@@ -116,5 +147,10 @@ public class GDCore implements Core {
     @Override
     public Group getGroup(String name) {
         return PermissionHolderCache.getInstance().getOrCreateGroup(name);
+    }
+
+    @Override
+    public @Nullable WorldEditProvider getWorldEditProvider() {
+        return GriefDefenderPlugin.getInstance().getWorldEditProvider();
     }
 }

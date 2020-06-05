@@ -64,7 +64,6 @@ public class WorldEventHandler implements Listener {
         }
 
         claimWorldManager.save();
-        claimWorldManager.playerIndexStorage.savePlayerDatData();
 
         GDTimings.WORLD_SAVE_EVENT.stopTiming();
     }

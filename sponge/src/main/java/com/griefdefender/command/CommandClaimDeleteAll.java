@@ -69,7 +69,9 @@ public class CommandClaimDeleteAll extends BaseCommand {
         int originalClaimCount = playerData.getInternalClaims().size();
 
         if (originalClaimCount == 0) {
-            TextAdapter.sendComponent(src, TextComponent.of("Player " + otherPlayer.getName() + " has no claims to delete.", TextColor.RED));
+            final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PLAYER_NO_CLAIMS_TO_DELETE, ImmutableMap.of(
+                    "player", otherPlayer.getName()));
+            TextAdapter.sendComponent(src, message);
             return;
         }
 
@@ -78,9 +80,9 @@ public class CommandClaimDeleteAll extends BaseCommand {
                         ImmutableMap.of("player", TextComponent.of(otherPlayer.getName()).color(TextColor.AQUA))))
                 .append(TextComponent.builder()
                     .append("\n[")
-                    .append("Confirm", TextColor.GREEN)
+                    .append(MessageCache.getInstance().LABEL_CONFIRM.color(TextColor.GREEN))
                     .append("]\n")
-                    .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createConfirmationConsumer(src, otherPlayer, playerData))))
+                    .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(src, createConfirmationConsumer(src, otherPlayer, playerData), true)))
                     .hoverEvent(HoverEvent.showText(MessageCache.getInstance().UI_CLICK_CONFIRM)).build())
                 .build();
         TextAdapter.sendComponent(src, confirmationText);
@@ -89,7 +91,7 @@ public class CommandClaimDeleteAll extends BaseCommand {
     private static Consumer<CommandSource> createConfirmationConsumer(Player src, User otherPlayer, GDPlayerData playerData) {
         return confirm -> {
             GDCauseStackManager.getInstance().pushCause(src);
-            GDRemoveClaimEvent event = new GDRemoveClaimEvent(ImmutableList.copyOf(playerData.getInternalClaims()));
+            GDRemoveClaimEvent.Delete event = new GDRemoveClaimEvent.Delete(ImmutableList.copyOf(playerData.getInternalClaims()));
             GriefDefender.getEventManager().post(event);
             GDCauseStackManager.getInstance().popCause();
             if (event.cancelled()) {
@@ -103,8 +105,6 @@ public class CommandClaimDeleteAll extends BaseCommand {
                 final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.DELETE_ALL_PLAYER_SUCCESS, ImmutableMap.of(
                         "player", TextComponent.of(otherPlayer.getName()).color(TextColor.AQUA)));
                 GriefDefenderPlugin.sendMessage(src, message);
-                // revert any current visualization
-                playerData.revertActiveVisual(src);
             }
         };
     }

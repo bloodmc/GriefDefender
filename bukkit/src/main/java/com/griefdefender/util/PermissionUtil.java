@@ -289,7 +289,7 @@ public class PermissionUtil {
                 if (!claim.isUserTrusted(player, TrustTypes.ACCESSOR)) {
                     if (GriefDefenderPlugin.getInstance().getVaultProvider() != null) {
                         // Allow non-trusted to TP to claims for sale
-                        if (!claim.getEconomyData().isForSale()) {
+                        if (!claim.getEconomyData().isForSale() && !claim.getEconomyData().isForRent()) {
                             return false;
                         }
                     } else {
