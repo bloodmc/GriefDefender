@@ -67,7 +67,7 @@ public class CommandDebug extends BaseCommand {
         } else if (command.equalsIgnoreCase("paste")) {
             paste = true;
         } else if (command.equalsIgnoreCase("off")) {
-            GriefDefenderPlugin.getInstance().getDebugUserMap().remove(src.getIdentifier());
+            GriefDefenderPlugin.getInstance().getDebugUserMap().remove(src.getName());
             if (GriefDefenderPlugin.getInstance().getDebugUserMap().isEmpty()) {
                 GriefDefenderPlugin.debugActive = false;
             }
@@ -75,7 +75,7 @@ public class CommandDebug extends BaseCommand {
 
         if (debugData == null) {
             if (paste) {
-                debugData = GriefDefenderPlugin.getInstance().getDebugUserMap().get(src.getIdentifier());
+                debugData = GriefDefenderPlugin.getInstance().getDebugUserMap().get(src.getName());
                 if (debugData == null) {
                     TextAdapter.sendComponent(src, TextComponent.of("Nothing to paste!", TextColor.RED));
                 } else {
@@ -87,7 +87,7 @@ public class CommandDebug extends BaseCommand {
                     .append("Debug ", TextColor.GRAY)
                     .append("OFF", TextColor.RED)
                     .build());
-            GriefDefenderPlugin.getInstance().getDebugUserMap().remove(src.getIdentifier());
+            GriefDefenderPlugin.getInstance().getDebugUserMap().remove(src.getName());
             if (GriefDefenderPlugin.getInstance().getDebugUserMap().isEmpty()) {
                 GriefDefenderPlugin.debugActive = false;
             }
@@ -126,7 +126,7 @@ public class CommandDebug extends BaseCommand {
         }
 
         debugData = new GDDebugData(src, filter, verbose);
-        GriefDefenderPlugin.getInstance().getDebugUserMap().put(src.getIdentifier(), debugData);
+        GriefDefenderPlugin.getInstance().getDebugUserMap().put(src.getName(), debugData);
         GriefDefenderPlugin.debugActive = true;
         return debugData;
     }

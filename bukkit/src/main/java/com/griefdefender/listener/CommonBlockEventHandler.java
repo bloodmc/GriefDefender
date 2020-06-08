@@ -142,9 +142,15 @@ public class CommonBlockEventHandler {
                 }
             }
         }
-        if (!(source instanceof Player) && user == null && !NMSUtil.getInstance().isBlockIce(newState.getType())) {
-            // always allow
-            return;
+        if (!(source instanceof Player) && user == null) {
+            if (source instanceof Block) {
+                if (!NMSUtil.getInstance().isBlockIce(((Block) source).getType())) {
+                    return;
+                }
+            } else {
+                // always allow
+                return;
+            }
         }
 
         final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, Flags.BLOCK_MODIFY, source, newState, user, TrustTypes.BUILDER, true);

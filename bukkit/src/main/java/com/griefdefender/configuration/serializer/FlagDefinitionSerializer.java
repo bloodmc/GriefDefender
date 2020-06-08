@@ -144,13 +144,13 @@ public class FlagDefinitionSerializer implements TypeSerializer<FlagDefinition> 
                 final String value = parts[1];
                 if (key.equalsIgnoreCase("default") || key.equalsIgnoreCase("gd_claim_default")) {
                     if (!value.equalsIgnoreCase("global") && !value.equalsIgnoreCase("basic") && !value.equalsIgnoreCase("admin")
-                            && !value.equalsIgnoreCase("subdivision") && !value.equalsIgnoreCase("town")) {
+                            && !value.equalsIgnoreCase("subdivision") && !value.equalsIgnoreCase("town") && !value.equalsIgnoreCase("wilderness")) {
                         throw new ObjectMappingException("Invalid context '" + key + "' with value '" + value + "'.");
                     }
                     contexts.add(new Context("gd_claim_default", value));
                 } else if (key.equalsIgnoreCase("override") || key.equalsIgnoreCase("gd_claim_override")) {
                     if (!value.equalsIgnoreCase("global") && !value.equalsIgnoreCase("basic") && !value.equalsIgnoreCase("admin")
-                            && !value.equalsIgnoreCase("subdivision") && !value.equalsIgnoreCase("town") && !value.equalsIgnoreCase("claim")) {
+                            && !value.equalsIgnoreCase("subdivision") && !value.equalsIgnoreCase("town") && !value.equalsIgnoreCase("claim")  && !value.equalsIgnoreCase("wilderness")) {
                         // try UUID
                         if (value.length() == 36) {
                             try {

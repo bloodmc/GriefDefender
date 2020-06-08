@@ -82,18 +82,22 @@ public class CommandEventHandler implements Listener {
        // CauseTracker.getInstance().getCauseStack().add(event.getSender());
     }
 
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onPlayerChatPost(AsyncPlayerChatEvent event) {
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onPlayerChatInput(AsyncPlayerChatEvent event) {
         final Player player = event.getPlayer();
         final GDPlayerData playerData = this.dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
-        final Iterator<Player> iterator = event.getRecipients().iterator();
         // check for command input
         if (playerData.isWaitingForInput()) {
             playerData.commandInput = event.getMessage();
             playerData.commandConsumer.accept(player);
             event.setCancelled(true);
-            return;
         }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onPlayerChatPost(AsyncPlayerChatEvent event) {
+        final Player player = event.getPlayer();
+        final Iterator<Player> iterator = event.getRecipients().iterator();
 
         while (iterator.hasNext()) {
             final Player receiver = iterator.next();

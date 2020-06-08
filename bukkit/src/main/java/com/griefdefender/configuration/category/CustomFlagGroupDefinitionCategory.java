@@ -88,21 +88,20 @@ public class CustomFlagGroupDefinitionCategory extends ConfigCategory {
                     continue;
                 }
                 Set<Context> contexts = new HashSet<>(flagDefinition.getContexts());
-                boolean shouldApply = false;
-                boolean isOverride = false;
+                Set<Context> defaultContexts = new HashSet<>();
+                Set<Context> overrideContexts = new HashSet<>();
                 String groupStr = null;
                 final Iterator<Context> iterator = contexts.iterator();
                 while (iterator.hasNext()) {
                     final Context context = iterator.next();
                     if (context.getKey().equalsIgnoreCase("gd_claim_default")) {
-                        shouldApply = true;
+                        defaultContexts.add(context);
                     } else if (context.getKey().equalsIgnoreCase("gd_claim_override")) {
                         if (context.getValue().equalsIgnoreCase("claim")) {
                             iterator.remove();
                             continue;
                         }
-                        shouldApply = true;
-                        isOverride = true;
+                        overrideContexts.add(context);
                     } else if (context.getKey().equalsIgnoreCase("group")) {
                         groupStr = context.getValue();
                     }
@@ -117,14 +116,19 @@ public class CustomFlagGroupDefinitionCategory extends ConfigCategory {
                     }
                 }
                 for (FlagData flagData : flagDefinition.getFlagData()) {
-                    Set<Context> permissionContexts = new HashSet<>(contexts);
+                    Set<Context> permissionContexts = new HashSet<>();
                     permissionContexts.addAll(flagData.getContexts());
-                    if (shouldApply) {
-                        if (isOverride) {
-                            PermissionUtil.getInstance().setPermissionValue(holder, flagData.getFlag().getPermission(), flagDefinition.getDefaultValue(), permissionContexts);
-                        } else {
-                            PermissionUtil.getInstance().setTransientPermission(holder, flagData.getFlag().getPermission(), flagDefinition.getDefaultValue(), permissionContexts);
-                        }
+                    // apply defaults
+                    for (Context context : defaultContexts) {
+                        permissionContexts.add(context);
+                        PermissionUtil.getInstance().setTransientPermission(holder, flagData.getFlag().getPermission(), flagDefinition.getDefaultValue(), permissionContexts);
+                        permissionContexts.remove(context);
+                    }
+                    // apply overrides
+                    for (Context context : overrideContexts) {
+                        permissionContexts.add(context);
+                        PermissionUtil.getInstance().setPermissionValue(holder, flagData.getFlag().getPermission(), flagDefinition.getDefaultValue(), permissionContexts);
+                        permissionContexts.remove(context);
                     }
                 }
             }

@@ -156,7 +156,7 @@ public class EntityEventHandler implements Listener {
                 user = PermissionHolderCache.getInstance().getOrCreateUser(uuid);
             }
         }
-        if (user == null) {
+        if (user == null && !NMSUtil.getInstance().isEntityMonster(event.getEntity())) {
             final GDEntity gdEntity = EntityTracker.getCachedEntity(event.getEntity().getEntityId());
             if (gdEntity != null) {
                 user = PermissionHolderCache.getInstance().getOrCreateUser(gdEntity.getOwnerUUID());

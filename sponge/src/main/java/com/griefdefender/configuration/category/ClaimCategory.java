@@ -46,7 +46,6 @@ public class ClaimCategory extends ConfigCategory {
             + "\nNote: To disable, set value to '0'.")
     public int explosionCancelBlockLimit = 50;
     @Setting(value = "worldedit-schematics", comment = "Whether to use WorldEdit for schematics. Default: false"
-            + "\nNote: Sponge schematics do not support Entities. If you want entities, then you must set this to true to use WorldEdit instead."
             + "\nNote: If you were using schematics in older GD/GP versions and want old schematics to work then you should keep this setting disabled.")
     public boolean useWorldEditSchematics = false;
     @Setting(value = "auto-chest-claim-block-radius", comment = "Radius used (in blocks) for auto-created claim when a chest is placed. Set to -1 to disable chest claim creation.")

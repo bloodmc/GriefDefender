@@ -631,7 +631,7 @@ public class CommonEntityEventHandler {
         }
 
         final GDPlayerData playerData = user.getInternalPlayerData();
-        final double currentFlySpeed = player.get(Keys.FLYING_SPEED).get();
+        final double currentFlySpeed = Math.round(player.get(Keys.FLYING_SPEED).get() * 100.0) / 100.0;
         final double flySpeed = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Double.class), playerData.getSubject(), Options.PLAYER_FLY_SPEED, toClaim);
         if (flySpeed <= 0) {
             String configValue = GriefDefenderPlugin.getOptionConfig().getConfig().vanillaFallbackMap.get(Options.PLAYER_FLY_SPEED.getName().toLowerCase());
@@ -679,7 +679,7 @@ public class CommonEntityEventHandler {
         }
 
         final GDPlayerData playerData = user.getInternalPlayerData();
-        final double currentWalkSpeed = player.get(Keys.WALKING_SPEED).get();
+        final double currentWalkSpeed = Math.round(player.get(Keys.WALKING_SPEED).get() * 100.0) / 100.0;
         final double walkSpeed = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Double.class), playerData.getSubject(), Options.PLAYER_WALK_SPEED, toClaim);
         if (walkSpeed <= 0) {
             String configValue = GriefDefenderPlugin.getOptionConfig().getConfig().vanillaFallbackMap.get(Options.PLAYER_WALK_SPEED.getName().toLowerCase());
