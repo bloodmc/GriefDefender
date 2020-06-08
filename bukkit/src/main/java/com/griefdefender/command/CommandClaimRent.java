@@ -110,6 +110,9 @@ public class CommandClaimRent extends BaseCommand {
             if (subCommand.equalsIgnoreCase("cancel")) {
                 final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
                 final GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAtPlayer(playerData, player.getLocation());
+                if (claim.isWilderness()) {
+                    return;
+                }
                 boolean isRenter = false;
                 for (UUID uuid : claim.getEconomyData().getRenters()) {
                     if (player.getUniqueId().equals(uuid)) {
@@ -135,6 +138,9 @@ public class CommandClaimRent extends BaseCommand {
 
                 final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
                 final GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAtPlayer(playerData, player.getLocation());
+                if (claim.isWilderness()) {
+                    return;
+                }
                 if (playerData.canIgnoreClaim(claim) || player.hasPermission(GDPermissions.COMMAND_DELETE_ADMIN_CLAIMS)) {
                     final GDPermissionUser renter = PermissionHolderCache.getInstance().getOrCreateUser(args[1]);
                     if (renter != null) {
@@ -217,6 +223,9 @@ public class CommandClaimRent extends BaseCommand {
             } else if (subCommand.equalsIgnoreCase("info")) {
                 final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
                 final GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAtPlayer(playerData, player.getLocation());
+                if (claim.isWilderness()) {
+                    return;
+                }
                 final UUID ownerUniqueId = claim.getOwnerUniqueId();
                 final boolean isAdmin = player.getUniqueId().equals(ownerUniqueId) || player.hasPermission(GDPermissions.COMMAND_DELETE_ADMIN_CLAIMS) || claim.allowEdit(player) == null;
                 List<Component> textList = new ArrayList<>();

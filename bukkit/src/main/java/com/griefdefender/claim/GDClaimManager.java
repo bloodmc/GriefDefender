@@ -387,9 +387,9 @@ public class GDClaimManager implements ClaimManager {
             Set<Claim> claimsInChunk = this.chunksToClaimsMap.get(chunkHash);
             if (claimsInChunk != null) {
                 claimsInChunk.remove(claim);
-            }
-            if (claimsInChunk.isEmpty()) {
-                this.chunksToClaimsMap.remove(chunkHash);
+                if (claimsInChunk.isEmpty()) {
+                    this.chunksToClaimsMap.remove(chunkHash);
+                }
             }
         }
     }
