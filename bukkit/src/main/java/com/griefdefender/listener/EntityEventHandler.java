@@ -282,7 +282,8 @@ public class EntityEventHandler implements Listener {
     @EventHandler(priority = EventPriority.LOWEST)
     public void onVehicleDamage(VehicleDamageEvent event) {
         GDTimings.ENTITY_DAMAGE_EVENT.startTiming();
-        if (protectEntity(event, event.getAttacker(), (Entity) event.getVehicle())) {
+        final Object source = event.getAttacker() != null ? event.getAttacker() : NMSUtil.getInstance().getBlockDamager();
+        if (protectEntity(event, source, (Entity) event.getVehicle())) {
             event.setCancelled(true);
         }
         GDTimings.ENTITY_DAMAGE_EVENT.stopTiming();

@@ -610,7 +610,7 @@ public class PlayerEventHandler implements Listener {
         }
 
         // Item permission checks passed, check entity
-        final Object source = activeItem != null && activeItem.getType() != Material.AIR ? activeItem : player;
+        final Object source = player;
         if (GriefDefenderPlugin.isTargetIdBlacklisted(Flags.INTERACT_ENTITY_SECONDARY.getName(), targetEntity, player.getWorld().getUID())) {
             return;
         }
@@ -1152,15 +1152,18 @@ public class PlayerEventHandler implements Listener {
         if (!player.hasPermission(GDPermissions.BYPASS_CLAIM_LIMIT)) {
             int createClaimLimit = -1;
             if (playerData.shovelMode == ShovelTypes.BASIC && (claim.isAdminClaim() || claim.isTown() || claim.isWilderness())) {
-                createClaimLimit = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), player, Options.CREATE_LIMIT, claim).intValue();
+                createClaimLimit = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), player, Options.CREATE_LIMIT, type).intValue();
             } else if (playerData.shovelMode == ShovelTypes.TOWN && (claim.isAdminClaim() || claim.isWilderness())) {
-                createClaimLimit = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), player, Options.CREATE_LIMIT, claim).intValue();
+                createClaimLimit = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), player, Options.CREATE_LIMIT, type).intValue();
             } else if (playerData.shovelMode == ShovelTypes.SUBDIVISION && !claim.isWilderness()) {
-                createClaimLimit = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), player, Options.CREATE_LIMIT, claim).intValue();
+                createClaimLimit = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), player, Options.CREATE_LIMIT, type).intValue();
             }
 
             if (createClaimLimit > 0 && createClaimLimit < (playerData.getClaimTypeCount(type) + 1)) {
-                GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CREATE_FAILED_CLAIM_LIMIT));
+                final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CREATE_FAILED_CLAIM_LIMIT, ImmutableMap.of(
+                        "limit", createClaimLimit,
+                        "type", type.getName()));
+                GriefDefenderPlugin.sendMessage(player, message);
                 return;
             }
         }

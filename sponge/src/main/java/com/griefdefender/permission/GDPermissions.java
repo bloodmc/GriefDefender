@@ -113,8 +113,11 @@ public class GDPermissions {
     public static final String COMMAND_OPTIONS_CLAIM = "griefdefender.user.claim.command.option.base";
     public static final String COMMAND_OPTIONS_PLAYER = "griefdefender.user.claim.command.option.player";
     public static final String COMMAND_OPTIONS_GROUP = "griefdefender.user.claim.command.option.group";
-    public static final String USER_OPTION_PERK_OWNER_FLY_BASIC = "griefdefender.user.option.perk.owner-fly.basic";
-    public static final String USER_OPTION_PERK_OWNER_FLY_TOWN = "griefdefender.user.option.perk.owner-fly.town";
+    public static final String USER_OPTION_PERK_FLY_OWNER = "griefdefender.user.option.perk.fly.owner";
+    public static final String USER_OPTION_PERK_FLY_ACCESSOR = "griefdefender.user.option.perk.fly.accessor";
+    public static final String USER_OPTION_PERK_FLY_BUILDER = "griefdefender.user.option.perk.fly.builder";
+    public static final String USER_OPTION_PERK_FLY_CONTAINER = "griefdefender.user.option.perk.fly.container";
+    public static final String USER_OPTION_PERK_FLY_MANAGER = "griefdefender.user.option.perk.fly.manager";
     public static final String OPTION_BASE = "griefdefender";
 
     // Economy

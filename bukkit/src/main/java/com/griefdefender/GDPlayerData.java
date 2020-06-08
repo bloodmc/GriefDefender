@@ -142,6 +142,7 @@ public class GDPlayerData implements PlayerData {
     private CreateModeType optionClaimCreateMode;
 
     // cached permission values
+    // admin cache
     public boolean canManageAdminClaims = false;
     public boolean canManageWilderness = false;
     public boolean canManageGlobalOptions = false;
@@ -154,6 +155,15 @@ public class GDPlayerData implements PlayerData {
     public boolean ignoreBasicClaims = false;
     public boolean ignoreTowns = false;
     public boolean ignoreWilderness = false;
+    // user cache
+    public boolean userOptionPerkFlyOwner = false;
+    public boolean userOptionPerkFlyAccessor = false;
+    public boolean userOptionPerkFlyBuilder = false;
+    public boolean userOptionPerkFlyContainer = false;
+    public boolean userOptionPerkFlyManager = false;
+    public boolean userOptionBypassPlayerDenyFlight = false;
+    public boolean userOptionBypassPlayerDenyGodmode = false;
+    public boolean userOptionBypassPlayerGamemode = false;
 
     public boolean dataInitialized = false;
     public boolean showVisualFillers = true;
@@ -195,7 +205,7 @@ public class GDPlayerData implements PlayerData {
             final GDPermissionUser subject = this.playerSubject.get();
             final Set<Context> activeContexts = new HashSet<>();
             PermissionUtil.getInstance().addActiveContexts(activeContexts, subject);
-            // permissions
+            // admin permissions
             this.bypassBorderCheck = PermissionUtil.getInstance().getPermissionValue(subject, GDPermissions.BYPASS_BORDER_CHECK, activeContexts).asBoolean();
             this.ignoreAdminClaims = PermissionUtil.getInstance().getPermissionValue(subject, GDPermissions.IGNORE_CLAIMS_ADMIN, activeContexts).asBoolean();
             this.ignoreTowns = PermissionUtil.getInstance().getPermissionValue(subject, GDPermissions.IGNORE_CLAIMS_TOWN, activeContexts).asBoolean();
@@ -208,13 +218,16 @@ public class GDPlayerData implements PlayerData {
             this.canManageAdminOptions = PermissionUtil.getInstance().getPermissionValue(subject, GDPermissions.MANAGE_ADMIN_OPTIONS, activeContexts).asBoolean();
             this.canManageFlagDefaults = PermissionUtil.getInstance().getPermissionValue(subject, GDPermissions.MANAGE_FLAG_DEFAULTS, activeContexts).asBoolean();
             this.canManageFlagOverrides = PermissionUtil.getInstance().getPermissionValue(subject, GDPermissions.MANAGE_FLAG_OVERRIDES, activeContexts).asBoolean();
+            // user permissions
+            this.userOptionPerkFlyOwner = PermissionUtil.getInstance().getPermissionValue(subject, GDPermissions.USER_OPTION_PERK_FLY_OWNER, activeContexts).asBoolean();
+            this.userOptionPerkFlyManager = PermissionUtil.getInstance().getPermissionValue(subject, GDPermissions.USER_OPTION_PERK_FLY_MANAGER, activeContexts).asBoolean();
+            this.userOptionPerkFlyBuilder = PermissionUtil.getInstance().getPermissionValue(subject, GDPermissions.USER_OPTION_PERK_FLY_BUILDER, activeContexts).asBoolean();
+            this.userOptionPerkFlyContainer = PermissionUtil.getInstance().getPermissionValue(subject, GDPermissions.USER_OPTION_PERK_FLY_CONTAINER, activeContexts).asBoolean();
+            this.userOptionPerkFlyAccessor = PermissionUtil.getInstance().getPermissionValue(subject, GDPermissions.USER_OPTION_PERK_FLY_ACCESSOR, activeContexts).asBoolean();
+            this.userOptionBypassPlayerDenyFlight = PermissionUtil.getInstance().getPermissionValue(subject, GDPermissions.BYPASS_OPTION + "." + Options.PLAYER_DENY_FLIGHT.getName().toLowerCase(), activeContexts).asBoolean();
+            this.userOptionBypassPlayerDenyGodmode = PermissionUtil.getInstance().getPermissionValue(subject, GDPermissions.BYPASS_OPTION + "." + Options.PLAYER_DENY_GODMODE.getName().toLowerCase(), activeContexts).asBoolean();
+            this.userOptionBypassPlayerGamemode = PermissionUtil.getInstance().getPermissionValue(subject, GDPermissions.BYPASS_OPTION + "." + Options.PLAYER_GAMEMODE.getName().toLowerCase(), activeContexts).asBoolean();
             this.playerID = subject.getUniqueId();
-            /*if (this.optionMaxClaimLevel > 255 || this.optionMaxClaimLevel <= 0 || this.optionMaxClaimLevel < this.optionMinClaimLevel) {
-                this.optionMaxClaimLevel = 255;
-            }
-            if (this.optionMinClaimLevel < 0 || this.optionMinClaimLevel >= 255 || this.optionMinClaimLevel > this.optionMaxClaimLevel) {
-                this.optionMinClaimLevel = 0;
-            }*/
             this.dataInitialized = true;
             this.checkedDimensionHeight = false;
         });

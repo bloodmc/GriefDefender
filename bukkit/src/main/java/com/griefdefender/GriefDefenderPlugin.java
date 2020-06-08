@@ -195,7 +195,6 @@ import com.griefdefender.permission.flag.GDFlagData;
 import com.griefdefender.permission.flag.GDFlagDefinition;
 import com.griefdefender.permission.flag.GDFlags;
 import com.griefdefender.provider.DynmapProvider;
-import com.griefdefender.provider.EssentialsProvider;
 import com.griefdefender.provider.LuckPermsProvider;
 import com.griefdefender.provider.PermissionProvider;
 import com.griefdefender.provider.PlaceholderProvider;
@@ -275,7 +274,6 @@ public class GriefDefenderPlugin {
     public BaseStorage dataStore;
 
     private DynmapProvider dynmapProvider;
-    private EssentialsProvider essentialsProvider;
     private GDTagProvider tagProvider;
     private GDWorldEditProvider worldEditProvider;
     private WorldGuardProvider worldGuardProvider;
@@ -538,10 +536,6 @@ public class GriefDefenderPlugin {
 
         if (Bukkit.getPluginManager().getPlugin("WorldGuard") != null) {
             this.worldGuardProvider = new WorldGuardProvider();
-        }
-
-        if (Bukkit.getPluginManager().getPlugin("Essentials") != null) {
-            this.essentialsProvider = new EssentialsProvider();
         }
 
         if (Bukkit.getPluginManager().getPlugin("dynmap") != null
@@ -1217,10 +1211,6 @@ public class GriefDefenderPlugin {
 
     public DynmapProvider getDynmapProvider() {
         return this.dynmapProvider;
-    }
-
-    public EssentialsProvider getEssentialsProvider() {
-        return this.essentialsProvider;
     }
 
     public GDTagProvider getTagProvider() {

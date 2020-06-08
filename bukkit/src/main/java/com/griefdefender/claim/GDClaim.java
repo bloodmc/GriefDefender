@@ -52,7 +52,6 @@ import com.griefdefender.api.claim.ShovelTypes;
 import com.griefdefender.api.claim.TrustType;
 import com.griefdefender.api.claim.TrustTypes;
 import com.griefdefender.api.data.ClaimData;
-import com.griefdefender.api.data.EconomyData;
 import com.griefdefender.api.permission.Context;
 import com.griefdefender.api.permission.option.Options;
 import com.griefdefender.cache.MessageCache;
@@ -72,6 +71,8 @@ import com.griefdefender.event.GDSaveClaimEvent;
 import com.griefdefender.event.GDTransferClaimEvent;
 import com.griefdefender.event.GDUserTrustClaimEvent;
 import com.griefdefender.internal.provider.WorldGuardProvider;
+import com.griefdefender.internal.registry.GDEntityType;
+import com.griefdefender.internal.tracking.chunk.GDChunk;
 import com.griefdefender.internal.util.VecHelper;
 import com.griefdefender.internal.visual.GDClaimVisual;
 import com.griefdefender.permission.GDPermissionHolder;
@@ -97,7 +98,6 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -145,10 +145,11 @@ public class GDClaim implements Claim {
     protected IClaimData claimData;
 
     public GDClaim parent = null;
-    public Set<Claim> children = new HashSet<>();
     public GDClaimVisual claimVisual;
-    public Set<UUID> playersWatching = new HashSet<>();
     public Map<String, ClaimSchematic> schematics = new HashMap<>();
+    public Set<UUID> playersWatching = new HashSet<>();
+    public Set<Claim> children = new HashSet<>();
+    public Set<Long> loadedChunkHashes = new HashSet<>();
 
     private GDPlayerData ownerPlayerData;
 
@@ -760,12 +761,27 @@ public class GDClaim implements Claim {
         return chunkPositions;
     }
 
-    public ArrayList<Chunk> getChunks() {
+    public List<Chunk> getLoadedChunks() {
+        List<Chunk> chunks = new ArrayList<>();
+        for (long chunkHash : this.getChunkHashes()) {
+            final GDChunk gdChunk = this.worldClaimManager.getChunk(chunkHash);
+            if (gdChunk != null) {
+                chunks.add(gdChunk.getHandle());
+            }
+        }
+        return chunks;
+    }
+
+    public List<Chunk> getChunks() {
         return this.getChunks(false);
     }
 
-    public ArrayList<Chunk> getChunks(boolean force) {
-        ArrayList<Chunk> chunks = new ArrayList<Chunk>();
+    public List<Chunk> getChunks(boolean force) {
+        if (!force || this.isWilderness()) {
+            return this.getLoadedChunks();
+        }
+
+        List<Chunk> chunks = new ArrayList<Chunk>();
 
         Chunk lesserChunk = this.world
                 .getChunkAt(this.getLesserBoundaryCorner().getX() >> 4, this.getLesserBoundaryCorner().getZ() >> 4);
@@ -775,9 +791,6 @@ public class GDClaim implements Claim {
         if (lesserChunk != null && greaterChunk != null) {
             for (int x = lesserChunk.getX(); x <= greaterChunk.getX(); x++) {
                 for (int z = lesserChunk.getZ(); z <= greaterChunk.getZ(); z++) {
-                    if (!force && !this.world.isChunkLoaded(x, z)) {
-                        continue;
-                    }
                     final Chunk chunk = this.world.getChunkAt(x, z);
                     if (chunk != null) {
                         chunks.add(chunk);
@@ -830,20 +843,28 @@ public class GDClaim implements Claim {
 
     @Override
     public Set<Long> getChunkHashes() {
-        return this.getChunkHashes(true);
+        return this.getChunkHashes(false);
     }
 
     public Set<Long> getChunkHashes(boolean refresh) {
+        if (this.isWilderness()) {
+            return this.loadedChunkHashes;
+        }
         if (this.chunkHashes == null || refresh) {
             this.chunkHashes = new HashSet<Long>();
             int smallX = this.lesserBoundaryCorner.getX() >> 4;
             int smallZ = this.lesserBoundaryCorner.getZ() >> 4;
             int largeX = this.greaterBoundaryCorner.getX() >> 4;
             int largeZ = this.greaterBoundaryCorner.getZ() >> 4;
-    
+
+            this.loadedChunkHashes.clear();
             for (int x = smallX; x <= largeX; x++) {
                 for (int z = smallZ; z <= largeZ; z++) {
                     this.chunkHashes.add(BlockUtil.getInstance().asLong(x, z));
+                    final GDChunk gdChunk = this.worldClaimManager.getChunkIfLoaded(x, z);
+                    if (gdChunk != null) {
+                        this.loadedChunkHashes.add(gdChunk.getChunkKey());
+                    }
                 }
             }
         }
@@ -1974,11 +1995,23 @@ public class GDClaim implements Claim {
         return new GDClaimResult(ClaimResultType.SUCCESS);
     }
 
-    public int countEntities(EntityType type) {
+    public int getSpawnLimit(Set<Context> contexts) {
+        final List<Claim> parents = this.getParents(true);
+        for (Claim claim : parents) {
+            final int parentSpawnLimit = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), GriefDefenderPlugin.DEFAULT_HOLDER, Options.SPAWN_LIMIT, claim, new HashSet<>(contexts));
+            if (parentSpawnLimit > -1) {
+                return parentSpawnLimit;
+            }
+        }
+
+        return GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), GriefDefenderPlugin.DEFAULT_HOLDER, Options.SPAWN_LIMIT, this, new HashSet<>(contexts));
+    }
+
+    public int countEntities(Entity spawnedEntity) {
         int count = 0;
         for (Chunk chunk : this.getChunks()) {
             for (Entity entity : chunk.getEntities()) {
-                if (entity.getType() == type) {
+                if (spawnedEntity.getType() == entity.getType()) {
                     count++;
                 }
             }

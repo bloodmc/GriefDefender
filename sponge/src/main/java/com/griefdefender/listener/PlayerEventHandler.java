@@ -1387,15 +1387,18 @@ public class PlayerEventHandler {
         if (!player.hasPermission(GDPermissions.BYPASS_CLAIM_LIMIT)) {
             int createClaimLimit = -1;
             if (playerData.shovelMode == ShovelTypes.BASIC && (claim.isAdminClaim() || claim.isTown() || claim.isWilderness())) {
-                createClaimLimit = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), player, Options.CREATE_LIMIT, claim).intValue();
+                createClaimLimit = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), player, Options.CREATE_LIMIT, type).intValue();
             } else if (playerData.shovelMode == ShovelTypes.TOWN && (claim.isAdminClaim() || claim.isWilderness())) {
-                createClaimLimit = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), player, Options.CREATE_LIMIT, claim).intValue();
+                createClaimLimit = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), player, Options.CREATE_LIMIT, type).intValue();
             } else if (playerData.shovelMode == ShovelTypes.SUBDIVISION && !claim.isWilderness()) {
-                createClaimLimit = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), player, Options.CREATE_LIMIT, claim).intValue();
+                createClaimLimit = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), player, Options.CREATE_LIMIT, type).intValue();
             }
 
             if (createClaimLimit > 0 && createClaimLimit < (playerData.getClaimTypeCount(type) + 1)) {
-                GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CREATE_FAILED_CLAIM_LIMIT));
+                final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CREATE_FAILED_CLAIM_LIMIT, ImmutableMap.of(
+                        "limit", createClaimLimit,
+                        "type", type.getName()));
+                GriefDefenderPlugin.sendMessage(player, message);
                 return;
             }
         }
@@ -1425,7 +1428,7 @@ public class PlayerEventHandler {
         if ((type == ClaimTypes.BASIC || type == ClaimTypes.TOWN) && GriefDefenderPlugin.getGlobalConfig().getConfig().economy.economyMode) {
             // Check current economy mode cost
             final Double economyBlockCost = playerData.getInternalEconomyBlockCost();
-            if (economyBlockCost == null || economyBlockCost <= 0) {
+            if (economyBlockCost == null || economyBlockCost < 0) {
                 final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_MODE_BLOCK_COST_NOT_SET,
                         ImmutableMap.of(
                         "price", economyBlockCost == null ? "not set" : economyBlockCost));

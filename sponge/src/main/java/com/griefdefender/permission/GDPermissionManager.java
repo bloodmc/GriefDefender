@@ -274,13 +274,14 @@ public class GDPermissionManager implements PermissionManager {
         this.eventPlayerData = playerData;
         final String targetPermission = flag.getPermission();
 
-        if (flag == Flags.ENTITY_SPAWN && GDOptions.isOptionEnabled(Options.SPAWN_LIMIT)) {
+        if (flag == Flags.ENTITY_SPAWN && GDOptions.isOptionEnabled(Options.SPAWN_LIMIT) && target instanceof Living) {
             // Check spawn limit
-            final int spawnLimit = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), GriefDefenderPlugin.DEFAULT_HOLDER, Options.SPAWN_LIMIT, claim, new HashSet<>(contexts));
+            final GDClaim gdClaim = (GDClaim) claim;
+            final int spawnLimit = gdClaim.getSpawnLimit(contexts);
             if (spawnLimit > -1) {
                 if (target instanceof Entity) {
                     final Entity entity = (Entity) target;
-                    final int currentEntityCount = ((GDClaim) claim).countEntities(entity .getType());
+                    final int currentEntityCount = gdClaim.countEntities(entity);
                     if (currentEntityCount >= spawnLimit) {
                         if (source instanceof Player) {
                             final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.OPTION_APPLY_SPAWN_LIMIT,
@@ -1112,7 +1113,7 @@ public class GDPermissionManager implements PermissionManager {
     }
 
     public <T> T getInternalOptionValue(TypeToken<T> type, User player, Option<T> option) {
-        return getInternalOptionValue(type, player, option, null);
+        return this.getInternalOptionValue(type, player, option, (ClaimType) null);
     }
 
     public <T> T getInternalOptionValue(TypeToken<T> type, User player, Option<T> option, Claim claim) {
@@ -1121,6 +1122,11 @@ public class GDPermissionManager implements PermissionManager {
             return this.getInternalOptionValue(type, holder, option, claim, claim.getType(), new HashSet<>());
         }
         return this.getInternalOptionValue(type, holder, option, (ClaimType) null);
+    }
+
+    public <T> T getInternalOptionValue(TypeToken<T> type, User player, Option<T> option, ClaimType claimType) {
+        final GDPermissionHolder holder = PermissionHolderCache.getInstance().getOrCreateHolder(player.getUniqueId().toString());
+        return this.getInternalOptionValue(type, holder, option, null, claimType, new HashSet<>());
     }
 
     public <T> T getInternalOptionValue(TypeToken<T> type, GDPermissionHolder holder, Option<T> option) {

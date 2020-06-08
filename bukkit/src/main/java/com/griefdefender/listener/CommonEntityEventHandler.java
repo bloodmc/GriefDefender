@@ -455,9 +455,26 @@ public class CommonEntityEventHandler {
         }
 
         final Boolean noFly = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Boolean.class), playerData.getSubject(), Options.PLAYER_DENY_FLIGHT, toClaim);
-        final boolean adminFly = player.hasPermission(GDPermissions.BYPASS_OPTION + "." + Options.PLAYER_DENY_FLIGHT.getName().toLowerCase());
-        final boolean ownerFly = toClaim.isBasicClaim() ? player.hasPermission(GDPermissions.USER_OPTION_PERK_OWNER_FLY_BASIC) : toClaim.isTown() ? player.hasPermission(GDPermissions.USER_OPTION_PERK_OWNER_FLY_TOWN) : false;
-        if (player.getUniqueId().equals(toClaim.getOwnerUniqueId()) && ownerFly) {
+        final boolean adminFly = playerData.userOptionBypassPlayerDenyFlight;
+        boolean trustFly = false;
+        if (toClaim.isBasicClaim() || (toClaim.parent != null && toClaim.parent.isBasicClaim()) || toClaim.isInTown()) {
+            // check owner
+            if (playerData.userOptionPerkFlyOwner && toClaim.allowEdit(player) == null) {
+                trustFly = true;
+            } else {
+                if (playerData.userOptionPerkFlyAccessor && toClaim.isUserTrusted(player, TrustTypes.ACCESSOR)) {
+                    trustFly = true;
+                } else if (playerData.userOptionPerkFlyBuilder && toClaim.isUserTrusted(player, TrustTypes.BUILDER)) {
+                    trustFly = true;
+                } else if (playerData.userOptionPerkFlyContainer && toClaim.isUserTrusted(player, TrustTypes.CONTAINER)) {
+                    trustFly = true;
+                } else if (playerData.userOptionPerkFlyManager && toClaim.isUserTrusted(player, TrustTypes.MANAGER)) {
+                    trustFly = true;
+                }
+             }
+        }
+
+        if (trustFly) {
             return;
         }
         if (!adminFly && noFly) {
@@ -488,7 +505,7 @@ public class CommonEntityEventHandler {
         }
 
         final Boolean noGodMode = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Boolean.class), playerData.getSubject(), Options.PLAYER_DENY_GODMODE, toClaim);
-        final boolean bypassOption = player.hasPermission(GDPermissions.BYPASS_OPTION + "." + Options.PLAYER_DENY_GODMODE.getName().toLowerCase());
+        final boolean bypassOption = playerData.userOptionBypassPlayerDenyGodmode;
         if (!bypassOption && noGodMode) {
             player.setInvulnerable(false);
             GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().OPTION_APPLY_PLAYER_DENY_GODMODE);
@@ -516,7 +533,7 @@ public class CommonEntityEventHandler {
             return;
         }
 
-        final boolean bypassOption = player.hasPermission(GDPermissions.BYPASS_OPTION + "." + Options.PLAYER_GAMEMODE.getName().toLowerCase());
+        final boolean bypassOption = playerData.userOptionBypassPlayerGamemode;
         if (!bypassOption && gameModeType != null && gameModeType != GameModeTypes.UNDEFINED) {
             final GameMode newGameMode = PlayerUtil.GAMEMODE_MAP.get(gameModeType);
             if (currentGameMode != newGameMode) {

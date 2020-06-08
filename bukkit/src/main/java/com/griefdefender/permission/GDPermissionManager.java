@@ -216,20 +216,21 @@ public class GDPermissionManager implements PermissionManager {
         this.eventPlayerData = playerData;
         final String targetPermission = flag.getPermission();
 
-        if (flag == Flags.ENTITY_SPAWN && GDOptions.isOptionEnabled(Options.SPAWN_LIMIT)) {
+        if (flag == Flags.ENTITY_SPAWN && GDOptions.isOptionEnabled(Options.SPAWN_LIMIT) && target instanceof LivingEntity) {
             // Check spawn limit
-            final int spawnLimit = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), GriefDefenderPlugin.DEFAULT_HOLDER, Options.SPAWN_LIMIT, claim, new HashSet<>(contexts));
+            final GDClaim gdClaim = (GDClaim) claim;
+            final int spawnLimit = gdClaim.getSpawnLimit(contexts);
             if (spawnLimit > -1) {
                 if (target instanceof Entity) {
                     final Entity entity = (Entity) target;
-                    final int currentEntityCount = ((GDClaim) claim).countEntities(entity.getType());
+                    final int currentEntityCount = gdClaim.countEntities(entity);
                     if (currentEntityCount >= spawnLimit) {
                         if (user != null && user.getOnlinePlayer() != null && source == SpawnReason.ENDER_PEARL || source == SpawnReason.SPAWNER_EGG || source == SpawnReason.SPAWNER) {
                             final String name = entity.getType().getName() == null ? entity.getType().name().toLowerCase() : entity.getType().getName();
                             final GDEntityType entityType = EntityTypeRegistryModule.getInstance().getById(name).orElse(null);
                             final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.OPTION_APPLY_SPAWN_LIMIT,
                                     ImmutableMap.of(
-                                    "type", entityType.getName(),
+                                    "type", entityType.getId(),
                                     "limit", spawnLimit));
                             GriefDefenderPlugin.sendMessage(user.getOnlinePlayer(), message);
                         }
@@ -907,6 +908,8 @@ public class GDPermissionManager implements PermissionManager {
     }
 
     private Set<Context> populateEventSourceTargetContext(Set<Context> contexts, String id, boolean isSource) {
+        contexts = this.populateTagContextsForId(contexts, id, isSource);
+
         if (!id.contains(":")) {
             id = "minecraft:" + id;
         }
@@ -922,7 +925,7 @@ public class GDPermissionManager implements PermissionManager {
             contexts.add(new Context("target", modId + ":any"));
         }
 
-        return this.populateTagContextsForId(contexts, modId, isSource);
+        return contexts;
     }
 
     public Set<Context> populateTagContextsForId(Set<Context> contexts, String id, boolean isSource) {
@@ -1119,7 +1122,7 @@ public class GDPermissionManager implements PermissionManager {
     }
 
     public <T> T getInternalOptionValue(TypeToken<T> type, OfflinePlayer player, Option<T> option) {
-        return getInternalOptionValue(type, player, option, null);
+        return getInternalOptionValue(type, player, option, (ClaimType) null);
     }
 
     public <T> T getInternalOptionValue(TypeToken<T> type, OfflinePlayer player, Option<T> option, Claim claim) {
@@ -1128,6 +1131,11 @@ public class GDPermissionManager implements PermissionManager {
             return this.getInternalOptionValue(type, holder, option, claim, claim.getType(), new HashSet<>());
         }
         return this.getInternalOptionValue(type, holder, option, (ClaimType) null);
+    }
+
+    public <T> T getInternalOptionValue(TypeToken<T> type, OfflinePlayer player, Option<T> option, ClaimType claimType) {
+        final GDPermissionHolder holder = PermissionHolderCache.getInstance().getOrCreateHolder(player.getUniqueId().toString());
+        return this.getInternalOptionValue(type, holder, option, null, claimType, new HashSet<>());
     }
 
     public <T> T getInternalOptionValue(TypeToken<T> type, GDPermissionHolder holder, Option<T> option) {

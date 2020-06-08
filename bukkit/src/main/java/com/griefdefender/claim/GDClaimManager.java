@@ -648,16 +648,45 @@ public class GDClaimManager implements ClaimManager {
     }
 
     public GDChunk getChunk(Chunk chunk) {
-        GDChunk gdChunk = this.chunksToGDChunks.get(getChunkKey(chunk));
+        final long chunkKey = getChunkKey(chunk);
+        GDChunk gdChunk = this.chunksToGDChunks.get(chunkKey);
         if (gdChunk == null) {
             gdChunk = new GDChunk(chunk);
-            this.chunksToGDChunks.put(getChunkKey(chunk), gdChunk);
+            this.chunksToGDChunks.put(chunkKey, gdChunk);
+            if (this.chunksToClaimsMap.get(chunkKey) == null) {
+                this.theWildernessClaim.loadedChunkHashes.add(chunkKey);
+            }
         }
         return gdChunk;
     }
 
-    public void removeChunk(Chunk chunk) {
-        this.chunksToGDChunks.remove(getChunkKey(chunk));
+    public GDChunk getChunkIfLoaded(int cx, int cz) {
+        return this.chunksToGDChunks.get(getChunkKey(cx, cz));
+    }
+
+    public GDChunk getChunk(long key) {
+        return this.chunksToGDChunks.get(key);
+    }
+
+    public boolean isChunkLoaded(Chunk chunk) {
+        return this.chunksToGDChunks.get(getChunkKey(chunk)) != null;
+    }
+
+    public boolean isChunkLoaded(int cx, int cz) {
+        return this.chunksToGDChunks.get(getChunkKey(cx, cz)) != null;
+    }
+
+    public boolean isChunkLoaded(long key) {
+        return this.chunksToGDChunks.get(key) != null;
+    }
+
+    public void removeChunk(long key) {
+        this.chunksToGDChunks.remove(key);
+        this.theWildernessClaim.loadedChunkHashes.remove(key);
+    }
+
+    private long getChunkKey(int cx, int cz) {
+        return (long) cx & 0xffffffffL | ((long) cz & 0xffffffffL) << 32;
     }
 
     private long getChunkKey(Chunk chunk) {

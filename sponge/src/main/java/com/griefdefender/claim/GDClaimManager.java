@@ -43,7 +43,7 @@ import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.configuration.ClaimDataConfig;
 import com.griefdefender.configuration.ClaimStorageData;
 import com.griefdefender.event.GDRemoveClaimEvent;
-import com.griefdefender.event.GDRemoveClaimEvent.Delete;
+import com.griefdefender.internal.tracking.chunk.GDChunk;
 import com.griefdefender.internal.util.BlockUtil;
 import com.griefdefender.internal.util.VecHelper;
 import com.griefdefender.permission.GDPermissionManager;
@@ -61,6 +61,7 @@ import org.spongepowered.api.service.economy.EconomyService;
 import org.spongepowered.api.service.economy.account.Account;
 import org.spongepowered.api.service.economy.account.UniqueAccount;
 import org.spongepowered.api.util.Direction;
+import org.spongepowered.api.world.Chunk;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
@@ -89,6 +90,7 @@ public class GDClaimManager implements ClaimManager {
     private Map<UUID, Claim> claimUniqueIdMap = Maps.newHashMap();
     // String -> Claim
     private Map<Long, Set<Claim>> chunksToClaimsMap = new Long2ObjectOpenHashMap<>(4096);
+    private Map<Long, GDChunk> chunksToGDChunks = new Long2ObjectOpenHashMap<>(4096);
     private GDClaim theWildernessClaim;
 
     public GDClaimManager(World world) {
@@ -639,5 +641,51 @@ public class GDClaimManager implements ClaimManager {
     @Override
     public UUID getWorldId() {
         return this.worldUniqueId;
+    }
+
+    public GDChunk getChunk(Chunk chunk) {
+        final long chunkKey = getChunkKey(chunk);
+        GDChunk gdChunk = this.chunksToGDChunks.get(chunkKey);
+        if (gdChunk == null) {
+            gdChunk = new GDChunk(chunk);
+            this.chunksToGDChunks.put(chunkKey, gdChunk);
+            if (this.chunksToClaimsMap.get(chunkKey) == null) {
+                this.theWildernessClaim.loadedChunkHashes.add(chunkKey);
+            }
+        }
+        return gdChunk;
+    }
+
+    public GDChunk getChunkIfLoaded(int cx, int cz) {
+        return this.chunksToGDChunks.get(getChunkKey(cx, cz));
+    }
+
+    public GDChunk getChunk(long key) {
+        return this.chunksToGDChunks.get(key);
+    }
+
+    public boolean isChunkLoaded(Chunk chunk) {
+        return this.chunksToGDChunks.get(getChunkKey(chunk)) != null;
+    }
+
+    public boolean isChunkLoaded(int cx, int cz) {
+        return this.chunksToGDChunks.get(getChunkKey(cx, cz)) != null;
+    }
+
+    public boolean isChunkLoaded(long key) {
+        return this.chunksToGDChunks.get(key) != null;
+    }
+
+    public void removeChunk(long key) {
+        this.chunksToGDChunks.remove(key);
+        this.theWildernessClaim.loadedChunkHashes.remove(key);
+    }
+
+    private long getChunkKey(int cx, int cz) {
+        return (long) cx & 0xffffffffL | ((long) cz & 0xffffffffL) << 32;
+    }
+
+    private long getChunkKey(Chunk chunk) {
+        return (long) chunk.getPosition().getX() & 0xffffffffL | ((long) chunk.getPosition().getZ() & 0xffffffffL) << 32;
     }
 }

@@ -626,6 +626,14 @@ public class EconomyUtil {
     }
 
     public void sellCancelConfirmation(CommandSource src, Claim claim, Sign sign) {
+        final Player player = (Player) src;
+        final GDClaim gdClaim = (GDClaim) claim;
+        // check sell access
+        if (gdClaim.allowEdit(player) != null) {
+            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().CLAIM_NOT_YOURS);
+            return;
+        }
+
         final Component sellCancelConfirmationText = TextComponent.builder()
                 .append("\n[")
                 .append(MessageCache.getInstance().LABEL_CONFIRM.color(TextColor.GREEN))

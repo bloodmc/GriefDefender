@@ -150,7 +150,7 @@ public class EntityEventHandler {
         if (!denySurfaceExplosion) {
             denySurfaceExplosion = GriefDefenderPlugin.getActiveConfig(event.getTargetWorld().getUniqueId()).getConfig().claim.explosionEntitySurfaceBlacklist.contains("any");
         }
-        System.out.println("entity size = " + event.getEntities().size());
+
         while (iterator.hasNext()) {
             Entity entity = iterator.next();
             final Location<World> location = entity.getLocation();

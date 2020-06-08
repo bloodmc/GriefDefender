@@ -27,12 +27,15 @@ package com.griefdefender.listener;
 import com.griefdefender.GDTimings;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.claim.GDClaimManager;
+import com.griefdefender.internal.tracking.chunk.GDChunk;
 import com.griefdefender.internal.util.NMSUtil;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.Order;
 import org.spongepowered.api.event.world.LoadWorldEvent;
 import org.spongepowered.api.event.world.SaveWorldEvent;
 import org.spongepowered.api.event.world.UnloadWorldEvent;
+import org.spongepowered.api.event.world.chunk.LoadChunkEvent;
+import org.spongepowered.api.event.world.chunk.UnloadChunkEvent;
 import org.spongepowered.common.SpongeImpl;
 
 public class WorldEventHandler {
@@ -74,5 +77,20 @@ public class WorldEventHandler {
 
         claimWorldManager.save();
         GDTimings.WORLD_SAVE_EVENT.stopTimingIfSync();
+    }
+
+    @Listener(order = Order.EARLY)
+    public void onChunkLoad(LoadChunkEvent event) {
+        final GDClaimManager claimWorldManager = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(event.getTargetChunk().getWorld().getUniqueId());
+        claimWorldManager.getChunk(event.getTargetChunk());
+    }
+
+    @Listener
+    public void onChunkUnload(UnloadChunkEvent event) {
+        final GDClaimManager claimWorldManager = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(event.getTargetChunk().getWorld().getUniqueId());
+        final GDChunk gdChunk = claimWorldManager.getChunk(event.getTargetChunk());
+        if (gdChunk != null) {
+            claimWorldManager.removeChunk(gdChunk.getChunkKey());
+        }
     }
 }
