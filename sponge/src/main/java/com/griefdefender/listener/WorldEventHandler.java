@@ -81,12 +81,20 @@ public class WorldEventHandler {
 
     @Listener(order = Order.EARLY)
     public void onChunkLoad(LoadChunkEvent event) {
+        if (!GriefDefenderPlugin.getInstance().claimsEnabledForWorld(event.getTargetChunk().getWorld().getUniqueId())) {
+            return;
+        }
+
         final GDClaimManager claimWorldManager = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(event.getTargetChunk().getWorld().getUniqueId());
         claimWorldManager.getChunk(event.getTargetChunk());
     }
 
     @Listener
     public void onChunkUnload(UnloadChunkEvent event) {
+        if (!GriefDefenderPlugin.getInstance().claimsEnabledForWorld(event.getTargetChunk().getWorld().getUniqueId())) {
+            return;
+        }
+
         final GDClaimManager claimWorldManager = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(event.getTargetChunk().getWorld().getUniqueId());
         final GDChunk gdChunk = claimWorldManager.getChunk(event.getTargetChunk());
         if (gdChunk != null) {

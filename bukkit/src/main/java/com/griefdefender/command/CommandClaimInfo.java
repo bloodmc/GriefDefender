@@ -183,7 +183,7 @@ public class CommandClaimInfo extends BaseCommand {
         final GDClaim gdClaim = (GDClaim) claim;
         final GDPermissionUser owner = PermissionHolderCache.getInstance().getOrCreateUser(claim.getOwnerUniqueId());
         final UUID ownerUniqueId = claim.getOwnerUniqueId();
-        final boolean isAdmin = gdClaim.allowEdit(player) == null;
+        final boolean isAdmin = playerData.canManageAdminClaims;
         // if not owner of claim, validate perms
         if (!isAdmin && !player.getUniqueId().equals(claim.getOwnerUniqueId())) {
             if (!gdClaim.getInternalClaimData().getContainers().contains(player.getUniqueId()) 

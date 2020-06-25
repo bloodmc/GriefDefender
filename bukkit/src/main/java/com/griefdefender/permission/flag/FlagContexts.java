@@ -70,9 +70,14 @@ public class FlagContexts {
     public static final Context TARGET_CHEST = new Context(ContextKeys.TARGET, "minecraft:chest");
     public static final Context TARGET_CHORUS_FRUIT = new Context(ContextKeys.TARGET, "minecraft:chorus_fruit");
     public static final Context TARGET_ENDERPEARL = new Context(ContextKeys.TARGET, "minecraft:enderpearl");
+    public static final Context TARGET_ENTITY_ARMOR_STAND = new Context(ContextKeys.TARGET, "minecraft:armorstand");
+    public static final Context TARGET_ENTITY_ENDER_CRYSTAL = new Context(ContextKeys.TARGET, "minecraft:endercrystal");
     public static final Context TARGET_FARMLAND = new Context(ContextKeys.TARGET, "minecraft:farmland");
     public static final Context TARGET_FLINTANDSTEEL = new Context(ContextKeys.TARGET, "minecraft:flint_and_steel");
     public static final Context TARGET_GRASS= new Context(ContextKeys.TARGET, "minecraft:grass");
+    public static final Context TARGET_HANGING = new Context(ContextKeys.TARGET, "#hanging");
+    public static final Context TARGET_ITEM_ARMOR_STAND = new Context(ContextKeys.TARGET, "minecraft:armor_stand");
+    public static final Context TARGET_ITEM_END_CRYSTAL = new Context(ContextKeys.TARGET, "minecraft:end_crystal");
     public static final Context TARGET_ITEM_FRAME = new Context(ContextKeys.TARGET, "minecraft:item_frame");
     public static final Context TARGET_LAVA_BUCKET = new Context(ContextKeys.TARGET, "minecraft:lava_bucket");
     public static final Context TARGET_MINECART = new Context(ContextKeys.TARGET, "minecraft:minecart");
@@ -93,6 +98,7 @@ public class FlagContexts {
     public static final Context TARGET_TYPE_CROP = new Context(ContextKeys.TARGET, "#crops");
     public static final Context TARGET_TYPE_AMBIENT = new Context(ContextKeys.TARGET, "#ambient");
     public static final Context TARGET_TYPE_AQUATIC = new Context(ContextKeys.TARGET, "#aquatic");
+    public static final Context TARGET_TYPE_FOOD = new Context(ContextKeys.TARGET, "#food");
     public static final Context TARGET_TYPE_MONSTER = new Context(ContextKeys.TARGET, "#monster");
     public static final Context TARGET_TYPE_MUSHROOM = new Context(ContextKeys.TARGET, "#mushroom");
     public static final Context TARGET_TYPE_PORTAL = new Context(ContextKeys.TARGET, "#portal");

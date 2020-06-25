@@ -130,7 +130,7 @@ dependencies {
     }
     compile "com.github.bloodmc:mcclans-api:develop-SNAPSHOT"
     compileOnly "com.sk89q.worldedit:worldedit-core:6.1.4-SNAPSHOT"
-    compileOnly "net.luckperms:api:5.0"
+    compileOnly "com.github.lucko:luckperms:master-SNAPSHOT"
     compileOnly "us.dynmap:dynmap-api:3.0-SNAPSHOT"
 
     // required for bootstrap

@@ -140,12 +140,8 @@ public class GDDebugData {
                     .append("Pasting output...", TextColor.GREEN).build());
             this.pasteRecords();
             this.records.clear();
-            if (this.user != null) {
-                GriefDefenderPlugin.getInstance().getDebugUserMap().remove(this.user.getName());
-            }
-            if (GriefDefenderPlugin.getInstance().getDebugUserMap().isEmpty()) {
-                GriefDefenderPlugin.debugActive = false;
-            }
+            GriefDefenderPlugin.getInstance().getDebugUserMap().clear();
+            GriefDefenderPlugin.debugActive = false;
             TextAdapter.sendComponent(this.source, TextComponent.builder("").append(GD_TEXT).append("Debug ", TextColor.GRAY).append("OFF", TextColor.RED).build());
         }
     }

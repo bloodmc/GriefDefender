@@ -26,6 +26,7 @@ package com.griefdefender.task;
 
 import com.griefdefender.GDBootstrap;
 import com.griefdefender.GDPlayerData;
+import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.internal.visual.GDClaimVisual;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.BlockSnapshot;
@@ -99,9 +100,16 @@ public class ClaimVisualApplyTask implements Runnable {
             }
         }
 
-        if (this.playerData.lastShovelLocation == null) {
-            this.playerData.claimVisualRevertTasks.put(visualUniqueId, Sponge.getGame().getScheduler().createTaskBuilder().delay(1, TimeUnit.MINUTES)
-                    .execute(new ClaimVisualRevertTask(visualUniqueId, this.player, this.playerData)).submit(GDBootstrap.getInstance()));
+        int seconds = (this.playerData.lastShovelLocation != null && this.visualization.getClaim() == null ? GriefDefenderPlugin.getGlobalConfig().getConfig().visual.createBlockVisualTime : GriefDefenderPlugin.getGlobalConfig().getConfig().visual.claimVisualTime);
+        if (seconds <= 0) {
+            seconds = this.playerData.lastShovelLocation == null ? 60 : 180;
         }
+        final ClaimVisualRevertTask runnable = new ClaimVisualRevertTask(visualUniqueId, this.player, this.playerData);
+        if (this.playerData.lastShovelLocation != null && this.visualization.getClaim() == null) {
+            this.playerData.createBlockVisualTransactions.put(visualUniqueId, new ArrayList<>(this.visualization.getVisualTransactions()));
+            this.playerData.createBlockVisualRevertRunnables.put(visualUniqueId, runnable);
+        }
+        this.playerData.claimVisualRevertTasks.put(visualUniqueId, Sponge.getGame().getScheduler().createTaskBuilder().delay(seconds, TimeUnit.SECONDS)
+                .execute(runnable).submit(GDBootstrap.getInstance()));
     }
 }

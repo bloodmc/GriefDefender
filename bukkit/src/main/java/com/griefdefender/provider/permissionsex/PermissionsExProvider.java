@@ -370,27 +370,16 @@ public class PermissionsExProvider implements PermissionProvider {
 
     @Override
     public Tristate getPermissionValue(GDClaim claim, GDPermissionHolder holder, String permission, Set<Context> contexts) {
-        return getPermissionValue(claim, holder, permission, contexts, true);
+        return tristateFromInt(holderToPEXSubject(holder).getPermission(contextsGDToPEX(contexts), permission));
     }
 
-    /*
-     * The checkTransient value is ignored here -- we shouldn't need to use it since PEX already prioritizes
-     * transient permissions appropriately based on the subject type
-     */
     @Override
-    public Tristate getPermissionValue(GDClaim claim, GDPermissionHolder holder, String permission, Set<Context> contexts, boolean checkTransient) {
+    public Tristate getPermissionValue(GDClaim claim, GDPermissionHolder holder, String permission, Set<Context> contexts, PermissionDataType type) {
         return tristateFromInt(holderToPEXSubject(holder).getPermission(contextsGDToPEX(contexts), permission));
     }
 
     @Override
     public Tristate getPermissionValue(GDPermissionHolder holder, String permission, Set<Context> contexts) {
-        return tristateFromInt(holderToPEXSubject(holder).getPermission(contextsGDToPEX(contexts), permission));
-    }
-
-    @Override
-    public Tristate getPermissionValueWithRequiredContexts(GDClaim claim, GDPermissionHolder holder, String permission,
-            Set<Context> contexts, String contextFilter) {
-        // TODO
         return tristateFromInt(holderToPEXSubject(holder).getPermission(contextsGDToPEX(contexts), permission));
     }
 

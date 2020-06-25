@@ -156,8 +156,8 @@ public abstract class BaseStorage {
         return claimResult;
     }
 
-    public ClaimResult deleteAllAdminClaims(CommandSender src, World world) {
-        GDClaimManager claimWorldManager = this.claimWorldManagers.get(world.getUID());
+    public ClaimResult deleteAllAdminClaims(CommandSender src, UUID worldUniqueId) {
+        GDClaimManager claimWorldManager = this.claimWorldManagers.get(worldUniqueId);
         if (claimWorldManager == null) {
             return new GDClaimResult(ClaimResultType.CLAIMS_DISABLED);
         }
@@ -208,19 +208,33 @@ public abstract class BaseStorage {
     }
 
     public void deleteClaimsForPlayer(UUID playerID) {
+        this.deleteClaimsForPlayer(playerID, null);
+    }
+
+    public void deleteClaimsForPlayer(UUID playerID, UUID worldUniqueId) {
         if (BaseStorage.USE_GLOBAL_PLAYER_STORAGE && playerID != null) {
-            final GDPlayerData playerData = BaseStorage.GLOBAL_PLAYER_DATA.get(playerID);
-            List<Claim> claimsToDelete = new ArrayList<>(playerData.getInternalClaims());
+            Set<Claim> claims = new HashSet<>();
+            if (worldUniqueId != null) {
+                final GDClaimManager claimManager = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(worldUniqueId);
+                claims = claimManager.getInternalPlayerClaims(playerID);
+            } else {
+                final GDPlayerData playerData = BaseStorage.GLOBAL_PLAYER_DATA.get(playerID);
+                claims = playerData.getInternalClaims();
+            }
+            List<Claim> claimsToDelete = new ArrayList<>(claims);
             for (Claim claim : claimsToDelete) {
                 GDClaimManager claimWorldManager = this.claimWorldManagers.get(claim.getWorldUniqueId());
                 claimWorldManager.deleteClaimInternal(claim, true);
             }
 
-            playerData.getInternalClaims().clear();
+            claims.clear();
             return;
         }
 
         for (GDClaimManager claimWorldManager : this.claimWorldManagers.values()) {
+            if (worldUniqueId != null && !claimWorldManager.getWorldId().equals(worldUniqueId)) {
+                continue;
+            }
             Set<Claim> claims = claimWorldManager.getInternalPlayerClaims(playerID);
             if (claims == null) {
                 continue;
@@ -331,7 +345,7 @@ public abstract class BaseStorage {
         final Map<String, String> basicDefaultOptions = optionConfig.getConfig().defaultOptionCategory.getBasicOptionDefaults();
         contexts = new HashSet<>();
         contexts.add(ClaimTypes.BASIC.getDefaultContext());
-        this.setDefaultOptions(ClaimTypes.BASIC.toString(), contexts, new HashMap<>(basicDefaultOptions));
+        this.setDefaultOptions(contexts, new HashMap<>(basicDefaultOptions));
 
         // Town defaults
         contexts = new HashSet<>();
@@ -343,13 +357,13 @@ public abstract class BaseStorage {
         }
         contexts = new HashSet<>();
         contexts.add(ClaimTypes.TOWN.getDefaultContext());
-        this.setDefaultOptions(ClaimTypes.TOWN.toString(), contexts, new HashMap<>(townDefaultOptions));
+        this.setDefaultOptions(contexts, new HashMap<>(townDefaultOptions));
 
         // Subdivision defaults
         contexts = new HashSet<>();
         contexts.add(ClaimTypes.SUBDIVISION.getDefaultContext());
         final Map<String, String> subdivisionDefaultOptions = optionConfig.getConfig().defaultOptionCategory.getSubdivisionOptionDefaults();
-        this.setDefaultOptions(ClaimTypes.SUBDIVISION.toString(), contexts, new HashMap<>(subdivisionDefaultOptions));
+        this.setDefaultOptions(contexts, new HashMap<>(subdivisionDefaultOptions));
 
         // Wilderness defaults
         contexts = new HashSet<>();
@@ -359,11 +373,13 @@ public abstract class BaseStorage {
 
         // Global default options
         contexts = new HashSet<>();
-        contexts.add(ClaimContexts.GLOBAL_DEFAULT_CONTEXT);
-        final Map<String, Boolean> globalDefaultFlags = flagConfig.getConfig().defaultFlagCategory.getFlagDefaults("global");
+        contexts.add(ClaimContexts.USER_DEFAULT_CONTEXT);
+        final Map<String, Boolean> globalDefaultFlags = flagConfig.getConfig().defaultFlagCategory.getFlagDefaults("user");
         this.setDefaultFlags(contexts, globalDefaultFlags);
+        contexts = new HashSet<>();
+        contexts.add(ClaimContexts.GLOBAL_DEFAULT_CONTEXT);
         final Map<String, String> globalDefaultOptions = optionConfig.getConfig().defaultOptionCategory.getUserOptionDefaults();
-        this.setDefaultOptions(ClaimContexts.GLOBAL_DEFAULT_CONTEXT.getName(), contexts, new HashMap<>(globalDefaultOptions));
+        this.setDefaultOptions(contexts, new HashMap<>(globalDefaultOptions));
         GriefDefenderPlugin.getInstance().getPermissionProvider().setTransientPermission(GriefDefenderPlugin.DEFAULT_HOLDER, "griefdefender", Tristate.FALSE, new HashSet<>());
         flagConfig.save();
         optionConfig.save();
@@ -386,7 +402,7 @@ public abstract class BaseStorage {
         });
     }
 
-    private void setDefaultOptions(String type, Set<Context> contexts, Map<String, String> defaultOptions) {
+    private void setDefaultOptions(Set<Context> contexts, Map<String, String> defaultOptions) {
         final Map<Set<Context>, Map<String, String>> permanentOptions = PermissionUtil.getInstance().getPermanentOptions(GriefDefenderPlugin.DEFAULT_HOLDER);
         final Map<String, String> options = permanentOptions.get(contexts);
         GriefDefenderPlugin.getInstance().executor.execute(() -> {

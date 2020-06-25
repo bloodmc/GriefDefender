@@ -140,6 +140,7 @@ public class GDPermissions {
     public static final String CLAIM_RESIZE_BASIC = "griefdefender.admin.claim.resize.basic";
     public static final String CLAIM_RESIZE_BASIC_SUBDIVISION = "griefdefender.admin.claim.resize.basic.subdivision";
     public static final String CLAIM_RESIZE_TOWN = "griefdefender.admin.claim.resize.town";
+    public static final String COMMAND_ABANDON_WORLD_CLAIMS = "griefdefender.admin.claim.command.abandon-world";
     public static final String COMMAND_ADJUST_CLAIM_BLOCKS = "griefdefender.admin.claim.command.adjust-claim-blocks";
     public static final String COMMAND_ADMIN_CLAIMS = "griefdefender.admin.claim.command.admin-mode";
     public static final String COMMAND_ADMIN_DEBUG = "griefdefender.admin.claim.command.debug";

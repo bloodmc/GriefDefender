@@ -38,7 +38,9 @@ public class TownCategory extends ConfigCategory {
     public double cost = 0;
     @Setting(value = "clan-require-town", comment = "If true, requires a town to be owned for MCClans.")
     public boolean clanRequireTown = true;
-
+    @Setting(value = "town-chat-enabled", comment = "Whether town chat can be used. (Default: false)"
+            + "\nNote: This also affects use of town tags.")
+    public boolean townChatEnabled = false;
     public TownCategory() {
 
     }

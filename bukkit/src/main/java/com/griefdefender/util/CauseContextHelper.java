@@ -35,8 +35,8 @@ import com.griefdefender.claim.GDClaimManager;
 import com.griefdefender.event.GDCauseStackManager;
 import com.griefdefender.internal.registry.GDItemType;
 import com.griefdefender.internal.registry.ItemTypeRegistryModule;
+import com.griefdefender.internal.tracking.PlayerTracker;
 import com.griefdefender.internal.tracking.chunk.GDChunk;
-import com.griefdefender.permission.ContextGroups;
 import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.permission.GDPermissions;
 
@@ -59,6 +59,11 @@ public class CauseContextHelper {
 
     @Nullable
     public static GDPermissionUser getEventUser(Location location) {
+        return getEventUser(location, null);
+    }
+
+    @Nullable
+    public static GDPermissionUser getEventUser(Location location, PlayerTracker.Type trackerType) {
         final GDPermissionUser user = GDCauseStackManager.getInstance().getCurrentCause().first(GDPermissionUser.class).orElse(null);
         if (user != null) {
             return user;
@@ -66,9 +71,17 @@ public class CauseContextHelper {
         if (location == null) {
             return null;
         }
+
         final GDClaimManager claimWorldManager = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(location.getWorld().getUID());
-        final GDChunk gpChunk = claimWorldManager.getChunk(location.getChunk());
-        return gpChunk.getBlockUser(location);
+        final GDChunk gdChunk = claimWorldManager.getChunk(location.getChunk());
+        if (trackerType != null) {
+            if (trackerType == PlayerTracker.Type.OWNER) {
+                return gdChunk.getBlockOwner(location);
+            }
+            return gdChunk.getBlockNotifier(location);
+        }
+
+        return gdChunk.getBlockUser(location);
     }
 
     // Credit to digitok of freenode for the regex assistance
@@ -231,14 +244,6 @@ public class CauseContextHelper {
             }
         }
 
-        if (permission.equals(Options.SPAWN_LIMIT.getPermission())) {
-            if (!hasSourceContext) {
-                contextSet.add(ContextGroups.SOURCE_ALL);
-            }
-            if (!hasTargetContext) {
-                contextSet.add(ContextGroups.TARGET_ALL);
-            }
-        }
         return contextSet;
     }
 }

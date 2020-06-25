@@ -167,6 +167,7 @@ public class MessageCache {
     public Component ECONOMY_SIGN_SOLD_LINE4;
     public Component ECONOMY_VIRTUAL_NOT_SUPPORTED;
     public Component FEATURE_NOT_AVAILABLE;
+    public Component FLAG_DESCRIPTION_CUSTOM_ARMOR_STAND_USE;
     public Component FLAG_DESCRIPTION_CUSTOM_BLOCK_TRAMPLING;
     public Component FLAG_DESCRIPTION_CUSTOM_CHEST_ACCESS;
     public Component FLAG_DESCRIPTION_CUSTOM_CHORUS_FRUIT_TELEPORT;
@@ -174,6 +175,7 @@ public class MessageCache {
     public Component FLAG_DESCRIPTION_CUSTOM_CREEPER_ENTITY_EXPLOSION;
     public Component FLAG_DESCRIPTION_CUSTOM_CROP_GROWTH;
     public Component FLAG_DESCRIPTION_CUSTOM_DAMAGE_ANIMALS;
+    public Component FLAG_DESCRIPTION_CUSTOM_END_CRYSTAL_USE;
     public Component FLAG_DESCRIPTION_CUSTOM_ENDERMAN_GRIEF;
     public Component FLAG_DESCRIPTION_CUSTOM_EXP_DROP;
     public Component FLAG_DESCRIPTION_CUSTOM_FALL_ENTITY_DAMAGE;
@@ -204,6 +206,7 @@ public class MessageCache {
     public Component FLAG_DESCRIPTION_CUSTOM_PLAYER_EXIT;
     public Component FLAG_DESCRIPTION_CUSTOM_PLAYER_INVENTORY_INTERACT;
     public Component FLAG_DESCRIPTION_CUSTOM_PLAYER_ITEMFRAME_INTERACT;
+    public Component FLAG_DESCRIPTION_CUSTOM_PLAYER_ITEMHANGING_PLACE;
     public Component FLAG_DESCRIPTION_CUSTOM_PLAYER_ITEM_DROP;
     public Component FLAG_DESCRIPTION_CUSTOM_PLAYER_ITEM_PICKUP;
     public Component FLAG_DESCRIPTION_CUSTOM_PLAYER_TELEPORT_FROM;
@@ -614,6 +617,7 @@ public class MessageCache {
         ECONOMY_SIGN_SOLD_LINE4 = MessageStorage.MESSAGE_DATA.getMessage("economy-sign-sold-line4");
         ECONOMY_VIRTUAL_NOT_SUPPORTED = MessageStorage.MESSAGE_DATA.getMessage("economy-virtual-not-supported");
         FEATURE_NOT_AVAILABLE = MessageStorage.MESSAGE_DATA.getMessage("feature-not-available");
+        FLAG_DESCRIPTION_CUSTOM_ARMOR_STAND_USE = MessageStorage.MESSAGE_DATA.getMessage("flag-description-custom-armorstand-use");
         FLAG_DESCRIPTION_CUSTOM_BLOCK_TRAMPLING = MessageStorage.MESSAGE_DATA.getMessage("flag-description-custom-block-trampling");
         FLAG_DESCRIPTION_CUSTOM_CHEST_ACCESS = MessageStorage.MESSAGE_DATA.getMessage("flag-description-custom-chest-access");
         FLAG_DESCRIPTION_CUSTOM_CHORUS_FRUIT_TELEPORT = MessageStorage.MESSAGE_DATA.getMessage("flag-description-custom-chorus-fruit-teleport");
@@ -621,6 +625,7 @@ public class MessageCache {
         FLAG_DESCRIPTION_CUSTOM_CREEPER_ENTITY_EXPLOSION = MessageStorage.MESSAGE_DATA.getMessage("flag-description-custom-creeper-entity-explosion");
         FLAG_DESCRIPTION_CUSTOM_CROP_GROWTH = MessageStorage.MESSAGE_DATA.getMessage("flag-description-custom-crop-growth");
         FLAG_DESCRIPTION_CUSTOM_DAMAGE_ANIMALS = MessageStorage.MESSAGE_DATA.getMessage("flag-description-custom-damage-animals");
+        FLAG_DESCRIPTION_CUSTOM_END_CRYSTAL_USE = MessageStorage.MESSAGE_DATA.getMessage("flag-description-custom-endcrystal-use");
         FLAG_DESCRIPTION_CUSTOM_ENDERMAN_GRIEF = MessageStorage.MESSAGE_DATA.getMessage("flag-description-custom-enderman-grief");
         FLAG_DESCRIPTION_CUSTOM_EXP_DROP = MessageStorage.MESSAGE_DATA.getMessage("flag-description-custom-exp-drop");
         FLAG_DESCRIPTION_CUSTOM_FALL_ENTITY_DAMAGE = MessageStorage.MESSAGE_DATA.getMessage("flag-description-custom-fall-entity-damage");
@@ -653,6 +658,7 @@ public class MessageCache {
         FLAG_DESCRIPTION_CUSTOM_PLAYER_EXIT = MessageStorage.MESSAGE_DATA.getMessage("flag-description-custom-player-exit");
         FLAG_DESCRIPTION_CUSTOM_PLAYER_INVENTORY_INTERACT = MessageStorage.MESSAGE_DATA.getMessage("flag-description-custom-player-inventory-interact");
         FLAG_DESCRIPTION_CUSTOM_PLAYER_ITEMFRAME_INTERACT = MessageStorage.MESSAGE_DATA.getMessage("flag-description-custom-player-itemframe-interact");
+        FLAG_DESCRIPTION_CUSTOM_PLAYER_ITEMHANGING_PLACE = MessageStorage.MESSAGE_DATA.getMessage("flag-description-custom-player-itemhanging-place");
         FLAG_DESCRIPTION_CUSTOM_PLAYER_ITEM_DROP = MessageStorage.MESSAGE_DATA.getMessage("flag-description-custom-player-item-drop");
         FLAG_DESCRIPTION_CUSTOM_PLAYER_ITEM_PICKUP = MessageStorage.MESSAGE_DATA.getMessage("flag-description-custom-player-item-pickup");
         FLAG_DESCRIPTION_CUSTOM_PLAYER_PORTAL_USE = MessageStorage.MESSAGE_DATA.getMessage("flag-description-custom-player-portal-use");

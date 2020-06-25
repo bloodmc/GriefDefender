@@ -301,14 +301,6 @@ public class CauseContextHelper {
             }
         }
 
-        if (permission.equals(Options.SPAWN_LIMIT.getPermission())) {
-            if (!hasSourceContext) {
-                contextSet.add(ContextGroups.SOURCE_ALL);
-            }
-            if (!hasTargetContext) {
-                contextSet.add(ContextGroups.TARGET_ALL);
-            }
-        }
         return contextSet;
     }
 }

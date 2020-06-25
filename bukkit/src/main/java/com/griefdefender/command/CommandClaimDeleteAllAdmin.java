@@ -28,14 +28,17 @@ import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Description;
+import co.aikar.commands.annotation.Optional;
 import co.aikar.commands.annotation.Subcommand;
 
 import com.google.common.collect.ImmutableMap;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
+import com.griefdefender.api.claim.Claim;
 import com.griefdefender.api.claim.ClaimResult;
 import com.griefdefender.api.claim.ClaimTypes;
 import com.griefdefender.cache.MessageCache;
+import com.griefdefender.claim.GDClaimManager;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.permission.GDPermissions;
 import com.griefdefender.text.action.GDCallbackHolder;
@@ -47,8 +50,12 @@ import net.kyori.text.event.ClickEvent;
 import net.kyori.text.event.HoverEvent;
 import net.kyori.text.format.TextColor;
 
+import java.util.Set;
+import java.util.UUID;
 import java.util.function.Consumer;
 
+import org.bukkit.Bukkit;
+import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -59,23 +66,48 @@ public class CommandClaimDeleteAllAdmin extends BaseCommand {
     @CommandAlias("deletealladmin")
     @Description("Deletes all administrative claims.")
     @Subcommand("delete alladmin")
-    public void execute(Player player) {
+    public void execute(Player player, @Optional String worldName) {
+        World world = null;
+        if (worldName != null) {
+            world = Bukkit.getWorld(worldName);
+            if (world == null) {
+                TextAdapter.sendComponent(player, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.COMMAND_WORLD_NOT_FOUND,
+                        ImmutableMap.of("world", worldName)));
+                return;
+            }
+            final GDClaimManager claimManager = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(world.getUID());
+            final Set<Claim> claims = claimManager.getPlayerClaims(player.getUniqueId());
+            if (claims == null || claims.isEmpty()) {
+                TextAdapter.sendComponent(player, MessageCache.getInstance().CLAIM_NO_CLAIMS);
+                return;
+            }
+        }
+
+        Component message = null;
+        if (world != null) {
+            message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.DELETE_ALL_TYPE_WARNING_WORLD, ImmutableMap.of(
+                    "type", TextComponent.of("ADMIN").color(TextColor.RED),
+                    "world", world.getName()));
+        } else {
+            message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.DELETE_ALL_TYPE_WARNING, ImmutableMap.of(
+                    "type", TextComponent.of("ADMIN").color(TextColor.RED)));
+        }
         final Component confirmationText = TextComponent.builder("")
-                .append(GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.DELETE_ALL_TYPE_WARNING, 
-                        ImmutableMap.of("type", TextComponent.of("ADMIN").color(TextColor.RED))))
+                .append(message)
                 .append(TextComponent.builder()
                     .append("\n[")
                     .append(MessageCache.getInstance().LABEL_CONFIRM.color(TextColor.GREEN))
                     .append("]\n")
-                    .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(player, createConfirmationConsumer(player), true)))
+                    .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(player, createConfirmationConsumer(player, world), true)))
                     .hoverEvent(HoverEvent.showText(MessageCache.getInstance().UI_CLICK_CONFIRM)).build())
                 .build();
         TextAdapter.sendComponent(player, confirmationText);
     }
 
-    private static Consumer<CommandSender> createConfirmationConsumer(Player player) {
+    private static Consumer<CommandSender> createConfirmationConsumer(Player player, World world) {
         return confirm -> {
-            ClaimResult claimResult = GriefDefenderPlugin.getInstance().dataStore.deleteAllAdminClaims(player, player.getWorld());
+            final UUID worldUniqueId = world != null ? world.getUID() : null;
+            ClaimResult claimResult = GriefDefenderPlugin.getInstance().dataStore.deleteAllAdminClaims(player, worldUniqueId);
             if (!claimResult.successful()) {
                 final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_TYPE_NOT_FOUND,
                         ImmutableMap.of(
@@ -84,8 +116,17 @@ public class CommandClaimDeleteAllAdmin extends BaseCommand {
                 return;
             }
 
-            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.DELETE_ALL_TYPE_SUCCESS,
-                    ImmutableMap.of("type", TextComponent.of("ADMIN").color(TextColor.RED))));
+            Component message = null;
+            if (world != null) {
+                message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.DELETE_ALL_TYPE_SUCCESS_WORLD, ImmutableMap.of(
+                        "type", TextComponent.of("ADMIN").color(TextColor.RED),
+                        "world", world.getName()));
+            } else {
+                message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.DELETE_ALL_TYPE_SUCCESS, ImmutableMap.of(
+                        "type", TextComponent.of("ADMIN").color(TextColor.RED)));
+            }
+
+            TextAdapter.sendComponent(player, message);
             final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
             playerData.onClaimDelete();
         };

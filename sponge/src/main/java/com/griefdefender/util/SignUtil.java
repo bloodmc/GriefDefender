@@ -152,6 +152,11 @@ public class SignUtil {
     }
 
     public static void setClaimForSale(Claim claim, Player player, Sign sign, double price) {
+        if (claim.isWilderness()) {
+            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().ECONOMY_CLAIM_NOT_FOR_SALE);
+            return;
+        }
+
         // if not owner of claim, validate perms
         if (((GDClaim) claim).allowEdit(player) != null || !player.hasPermission(GDPermissions.COMMAND_CLAIM_INFO_OTHERS)) {
             TextAdapter.sendComponent(player, MessageCache.getInstance().CLAIM_NOT_YOURS);

@@ -41,9 +41,9 @@ public class DefaultFlagCategory extends ConfigCategory {
 
     @Setting(value = "default-claim-flags", comment = "The default flag settings used by claims. The group name represents the claim type."
             + "\nEx: The group admin will ONLY affect admin claims."
-            + "\nSupported groups are : global, admin, basic, subdivision, town, and wilderness."
-            + "\nNote: Global represents all claim types."
-            + "\nNote: Specific types, such as wilderness, have higher priority than global."
+            + "\nSupported groups are : user, admin, basic, subdivision, town, and wilderness."
+            + "\nNote: User represents all claim types EXCEPT wilderness."
+            + "\nNote: Specific types, such as wilderness, have higher priority than user."
             + "\nNote: Defaults do not force flags onto user claims. A newly created claim will have no flags set and use these default settings until a claim owner sets flags.")
     private Map<String, Map<String, Boolean>> defaultClaimFlags = Maps.newHashMap();
 
@@ -52,7 +52,7 @@ public class DefaultFlagCategory extends ConfigCategory {
         for (Flag flag : FlagRegistryModule.getInstance().getAll()) {
             globalFlagMap.put(flag.getName(), flag.getDefaultClaimTypeValue(null));
         }
-        this.defaultClaimFlags.put("global", globalFlagMap);
+        this.defaultClaimFlags.put("user", globalFlagMap);
         Map<String, Boolean> wildernessFlagMap = new HashMap<>();
         for (Flag flag : FlagRegistryModule.getInstance().getAll()) {
             wildernessFlagMap.put(flag.getName(), flag.getDefaultClaimTypeValue(ClaimTypes.WILDERNESS));
@@ -71,7 +71,14 @@ public class DefaultFlagCategory extends ConfigCategory {
                 }
             }
         }
-        final Map<String, Boolean> globalFlagMap = this.defaultClaimFlags.get("global");
+        Map<String, Boolean> globalFlagMap = this.defaultClaimFlags.get("user");
+        if (globalFlagMap == null) {
+            globalFlagMap = new HashMap<>();
+            for (Flag flag : FlagRegistryModule.getInstance().getAll()) {
+                globalFlagMap.put(flag.getName(), flag.getDefaultClaimTypeValue(null));
+            }
+            this.defaultClaimFlags.put("user", globalFlagMap);
+        }
         for (Flag flag : FlagRegistryModule.getInstance().getAll()) {
             if (!globalFlagMap.containsKey(flag.getName())) {
                 globalFlagMap.put(flag.getName(), flag.getDefaultClaimTypeValue(null));

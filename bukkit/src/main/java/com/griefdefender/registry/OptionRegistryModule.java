@@ -166,5 +166,6 @@ public class OptionRegistryModule implements CatalogRegistryModule<Option> {
     @Override
     public void registerCustomType(Option type) {
         this.customMap.put(type.getId(), type);
+        this.registryMap.put(type.getId(), type);
     }
 }

@@ -42,11 +42,13 @@ import com.griefdefender.api.permission.flag.Flags;
 import com.griefdefender.api.permission.option.Options;
 import com.griefdefender.cache.EventResultCache;
 import com.griefdefender.cache.MessageCache;
+import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.claim.GDClaimManager;
 import com.griefdefender.configuration.GriefDefenderConfig;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.event.GDCauseStackManager;
+import com.griefdefender.internal.tracking.PlayerTracker;
 import com.griefdefender.internal.tracking.chunk.GDChunk;
 import com.griefdefender.internal.util.NMSUtil;
 import com.griefdefender.internal.util.VecHelper;
@@ -59,6 +61,7 @@ import com.griefdefender.storage.BaseStorage;
 import com.griefdefender.util.BlockUtil;
 import com.griefdefender.util.CauseContextHelper;
 import com.griefdefender.util.Direction;
+import com.griefdefender.util.PlayerUtil;
 import com.griefdefender.util.SignUtil;
 import net.kyori.text.Component;
 import net.kyori.text.serializer.legacy.LegacyComponentSerializer;
@@ -291,7 +294,7 @@ public class BlockEventHandler implements Listener {
             return;
         }
 
-        final GDPermissionUser user = CauseContextHelper.getEventUser(fromBlock.getLocation());
+        final GDPermissionUser user = CauseContextHelper.getEventUser(fromBlock.getLocation(), PlayerTracker.Type.NOTIFIER);
         if (user == null) {
             return;
         }
@@ -377,17 +380,17 @@ public class BlockEventHandler implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onBlockNotify(BlockPhysicsEvent event) {
         final Block source = NMSUtil.getInstance().getSourceBlock(event);
-        if (source != null && GriefDefenderPlugin.isSourceIdBlacklisted("block-notify", source, event.getBlock().getWorld().getUID())) {
+        if (source == null) {
             return;
         }
 
-        final Location sourceLocation = source != null ? source.getLocation() : null;
+        final Location sourceLocation = source.getLocation();
         if (sourceLocation != null && sourceLocation.equals(event.getBlock().getLocation())) {
             return;
         }
 
         final GDPermissionUser user = CauseContextHelper.getEventUser(sourceLocation);
-        Location location = event.getBlock().getLocation();
+        final Location location = event.getBlock().getLocation();
         if (user == null) {
             return;
         }
@@ -397,36 +400,31 @@ public class BlockEventHandler implements Listener {
             return;
         }
 
-        GDTimings.BLOCK_NOTIFY_EVENT.startTiming();
-        GDPlayerData playerData =  GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(world, user.getUniqueId());
-        GDClaim sourceClaim = null;
-        if (source != null) {
-            sourceClaim = this.storage.getClaimAt(sourceLocation);
-        }
-        Vector3i pos = VecHelper.toVector3i(location);
-        GDClaim targetClaim = this.storage.getClaimAt(location);
-        if (sourceClaim != null && sourceClaim.isWilderness() && targetClaim.isWilderness()) {
+        final GDPlayerData playerData =  GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(world, user.getUniqueId());
+        final GDClaim sourceClaim = this.storage.getClaimAt(sourceLocation);
+        final Vector3i pos = VecHelper.toVector3i(location);
+        final GDClaim targetClaim = this.storage.getClaimAt(location);
+        if (sourceClaim.isWilderness() && targetClaim.isWilderness()) {
             if (playerData != null) {
                 playerData.eventResultCache = new EventResultCache(targetClaim, "block-notify", Tristate.TRUE);
             }
-            GDTimings.BLOCK_NOTIFY_EVENT.stopTiming();
+
             return;
-        } else if (sourceClaim != null && !sourceClaim.isWilderness() && targetClaim.isWilderness()) {
+        } else if (!sourceClaim.isWilderness() && targetClaim.isWilderness()) {
             if (playerData != null) {
                 playerData.eventResultCache = new EventResultCache(targetClaim, "block-notify", Tristate.TRUE);
             }
-            GDTimings.BLOCK_NOTIFY_EVENT.stopTiming();
+
             return;
         } // Redstone sources can end up in target
-        else if (sourceClaim != null && sourceClaim.getUniqueId().equals(targetClaim.getUniqueId())) {
+        else if (sourceClaim.getUniqueId().equals(targetClaim.getUniqueId())) {
             if (playerData != null) {
                 playerData.eventResultCache = new EventResultCache(targetClaim, "block-notify", Tristate.TRUE);
             }
-            GDTimings.BLOCK_NOTIFY_EVENT.stopTiming();
+
             return;
         } else {
             if (playerData.eventResultCache != null && playerData.eventResultCache.checkEventResultCache(targetClaim) == Tristate.TRUE) {
-                GDTimings.BLOCK_NOTIFY_EVENT.stopTiming();
                 return;
             }
             // Needed to handle levers notifying doors to open etc.
@@ -434,12 +432,11 @@ public class BlockEventHandler implements Listener {
                 if (playerData != null) {
                     playerData.eventResultCache = new EventResultCache(targetClaim, "block-notify", Tristate.TRUE);
                 }
-                GDTimings.BLOCK_NOTIFY_EVENT.stopTiming();
                 return;
             }
         }
+
         event.setCancelled(true);
-        GDTimings.BLOCK_NOTIFY_EVENT.stopTiming();
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
@@ -455,7 +452,7 @@ public class BlockEventHandler implements Listener {
             return;
         }
 
-        final GDPermissionUser user = CauseContextHelper.getEventUser(event.getBlock().getLocation());
+        final GDPermissionUser user = CauseContextHelper.getEventUser(event.getBlock().getLocation(), PlayerTracker.Type.OWNER);
         GDTimings.EXPLOSION_EVENT.startTiming();
         GDClaim targetClaim = null;
         final List<Block> filteredLocations = new ArrayList<>();
@@ -499,6 +496,7 @@ public class BlockEventHandler implements Listener {
         }
 
         final Player player = event.getPlayer();
+        final GDPermissionUser user = PermissionHolderCache.getInstance().getOrCreateUser(player);
         GDCauseStackManager.getInstance().pushCause(player);
         final World world = event.getPlayer().getWorld();
         if (!GriefDefenderPlugin.getInstance().claimsEnabledForWorld(world.getUID())) {
@@ -522,7 +520,7 @@ public class BlockEventHandler implements Listener {
         // check overrides
         final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, Flags.BLOCK_BREAK, player, event.getBlock(), player, TrustTypes.BUILDER, true);
         if (result == Tristate.FALSE) {
-            if (player != null) {
+            if (!PlayerUtil.getInstance().isFakePlayer(player)) {
                 Component message = GDPermissionManager.getInstance().getEventMessage();
                 if (message == null) {
                     message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_BUILD,
@@ -585,6 +583,16 @@ public class BlockEventHandler implements Listener {
             // check overrides
             final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, Flags.BLOCK_PLACE, player, block, player, TrustTypes.BUILDER, true);
             if (result == Tristate.FALSE) {
+                if (!PlayerUtil.getInstance().isFakePlayer(player)) {
+                    Component message = GDPermissionManager.getInstance().getEventMessage();
+                    if (message == null) {
+                        message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_BUILD,
+                                ImmutableMap.of(
+                                "player", targetClaim.getOwnerDisplayName()
+                        ));
+                    }
+                    GriefDefenderPlugin.sendClaimDenyMessage(targetClaim, player, message);
+                }
                 event.setCancelled(true);
                 GDTimings.BLOCK_PLACE_EVENT.stopTiming();
                 return;

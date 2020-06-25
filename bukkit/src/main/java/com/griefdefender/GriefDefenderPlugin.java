@@ -50,9 +50,11 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
@@ -83,6 +85,7 @@ import com.griefdefender.command.CommandCallback;
 import com.griefdefender.command.CommandClaimAbandon;
 import com.griefdefender.command.CommandClaimAbandonAll;
 import com.griefdefender.command.CommandClaimAbandonTop;
+import com.griefdefender.command.CommandClaimAbandonWorld;
 import com.griefdefender.command.CommandClaimAdmin;
 import com.griefdefender.command.CommandClaimBan;
 import com.griefdefender.command.CommandClaimBank;
@@ -280,6 +283,8 @@ public class GriefDefenderPlugin {
     private VaultProvider vaultProvider;
     private PermissionProvider permissionProvider;
 
+    private List<BukkitRunnable> runningTasks = new ArrayList<>();
+
     public Executor executor;
 
     public GDBlockType createVisualBlock;
@@ -474,6 +479,13 @@ public class GriefDefenderPlugin {
     }
 
     public void onEnable() {
+        this.onEnable(false);
+    }
+
+    public void onEnable(boolean reload) {
+        if (reload) {
+            this.cleanup();
+        }
         this.getLogger().info("GriefDefender boot start.");
         Plugin permissionPlugin = Bukkit.getPluginManager().getPlugin("LuckPerms");
         if (permissionPlugin != null) {
@@ -504,10 +516,12 @@ public class GriefDefenderPlugin {
         GameModeTypeRegistryModule.getInstance().registerDefaults();
         WeatherTypeRegistryModule.getInstance().registerDefaults();
         OptionRegistryModule.getInstance().registerDefaults();
-        GriefDefender.getRegistry().registerBuilderSupplier(PaymentTransaction.Builder.class, GDPaymentTransaction.PaymentTransactionBuilder::new);
-        GriefDefender.getRegistry().registerBuilderSupplier(Claim.Builder.class, GDClaim.ClaimBuilder::new);
-        GriefDefender.getRegistry().registerBuilderSupplier(FlagData.Builder.class, GDFlagData.FlagDataBuilder::new);
-        GriefDefender.getRegistry().registerBuilderSupplier(FlagDefinition.Builder.class, GDFlagDefinition.FlagDefinitionBuilder::new);
+        if (!reload) {
+            GriefDefender.getRegistry().registerBuilderSupplier(PaymentTransaction.Builder.class, GDPaymentTransaction.PaymentTransactionBuilder::new);
+            GriefDefender.getRegistry().registerBuilderSupplier(Claim.Builder.class, GDClaim.ClaimBuilder::new);
+            GriefDefender.getRegistry().registerBuilderSupplier(FlagData.Builder.class, GDFlagData.FlagDataBuilder::new);
+            GriefDefender.getRegistry().registerBuilderSupplier(FlagDefinition.Builder.class, GDFlagDefinition.FlagDefinitionBuilder::new);
+        }
 
         this.loadConfig();
 
@@ -531,7 +545,9 @@ public class GriefDefenderPlugin {
 
         if (Bukkit.getPluginManager().getPlugin("WorldEdit") != null || Bukkit.getPluginManager().getPlugin("FastAsyncWorldEdit") != null || Bukkit.getPluginManager().getPlugin("AsyncWorldEdit") != null) {
             this.worldEditProvider = new GDWorldEditProvider();
-            GriefDefender.getRegistry().registerBuilderSupplier(ClaimSchematic.Builder.class, GDClaimSchematic.ClaimSchematicBuilder::new);
+            if (!reload) {
+                GriefDefender.getRegistry().registerBuilderSupplier(ClaimSchematic.Builder.class, GDClaimSchematic.ClaimSchematicBuilder::new);
+            }
         }
 
         if (Bukkit.getPluginManager().getPlugin("WorldGuard") != null) {
@@ -623,21 +639,21 @@ public class GriefDefenderPlugin {
         }
 
         if (!isEconomyModeEnabled() || GriefDefenderPlugin.getGlobalConfig().getConfig().economy.useClaimBlockTask) {
-            new ClaimBlockTask();
+            this.runningTasks.add(new ClaimBlockTask());
         }
         new PlayerTickTask();
         if (GriefDefenderPlugin.getGlobalConfig().getConfig().economy.rentSystem && GriefDefenderPlugin.getGlobalConfig().getConfig().economy.isRentSignEnabled()) {
-            new SignUpdateTask(100);
+            this.runningTasks.add(new SignUpdateTask(100));
         }
         if (GriefDefenderPlugin.getInstance().getVaultProvider() != null && GriefDefenderPlugin.getGlobalConfig().getConfig().economy.rentSystem) {
-            new RentDelinquentApplyTask();
-            new RentApplyTask();
+            this.runningTasks.add(new RentDelinquentApplyTask());
+            this.runningTasks.add(new RentApplyTask());
         }
 
         if (GriefDefenderPlugin.getInstance().getVaultProvider() != null) {
             if (GriefDefenderPlugin.getGlobalConfig().getConfig().economy.taxSystem) {
                 // run tax task
-                new TaxApplyTask();
+                this.runningTasks.add(new TaxApplyTask());
             }
         }
         registerBaseCommands();
@@ -662,6 +678,21 @@ public class GriefDefenderPlugin {
         this.getLogger().info("Save complete.");
     }
 
+    private void cleanup() {
+        for (BukkitRunnable task : this.runningTasks) {
+            task.cancel();
+        }
+        for (World world : Bukkit.getServer().getWorlds()) {
+            for (Player player : world.getPlayers()) {
+                if (player.isDead()) {
+                    continue;
+                }
+                final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
+                playerData.onDisconnect();
+            }
+        }
+    }
+
     public void registerBaseCommands() {
         PaperCommandManager manager = new PaperCommandManager(GDBootstrap.getInstance());
         this.commandManager = manager;
@@ -672,6 +703,7 @@ public class GriefDefenderPlugin {
         manager.registerCommand(new CommandClaimAbandon());
         manager.registerCommand(new CommandClaimAbandonAll());
         manager.registerCommand(new CommandClaimAbandonTop());
+        manager.registerCommand(new CommandClaimAbandonWorld());
         manager.registerCommand(new CommandClaimAdmin());
         manager.registerCommand(new CommandClaimBan());
         manager.registerCommand(new CommandClaimBank());
@@ -1031,6 +1063,9 @@ public class GriefDefenderPlugin {
                 // refresh default permissions
                 this.dataStore.setDefaultGlobalPermissions();
             }
+            if (this.tagProvider != null) {
+                this.tagProvider.refresh();
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -1249,6 +1284,8 @@ public class GriefDefenderPlugin {
             return 14;
         } else if (version.contains("1.15")) {
             return 15;
+        } else if (version.contains("1.16")) {
+            return 16;
         }
 
         return -1;

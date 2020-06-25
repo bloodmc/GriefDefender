@@ -90,10 +90,14 @@ public class MessageStorage {
     public static String DESCRIPTION_PLAYER_INFO = "player-info";
 
     // messages with parameters
+    public static final String ABANDON_ALL_WARNING_WORLD = "abandon-all-warning-world";
     public static final String ABANDON_CLAIM_DELAY_WARNING = "abandon-claim-delay-warning";
     public static final String ABANDON_FAILED = "abandon-failed";
     public static final String ABANDON_OTHER_SUCCESS = "abandon-other-success";
     public static final String ABANDON_SUCCESS = "abandon-success";
+    public static final String ABANDON_SUCCESS_WORLD = "abandon-success";
+    public static final String ABANDON_WORLD_SUCCESS = "abandon-world-success";
+    public static final String ABANDON_WORLD_WARNING = "abandon-world-warning";
     public static final String ADJUST_ACCRUED_BLOCKS_SUCCESS = "adjust-accrued-blocks-success";
     public static final String ADJUST_BONUS_BLOCKS_SUCCESS = "adjust-bonus-blocks-success";
     public static final String BANK_DEPOSIT = "bank-deposit";
@@ -167,9 +171,13 @@ public class MessageStorage {
     public static final String DEBUG_ERROR_UPLOAD = "debug-error-upload";
     public static final String DELETE_ALL_TYPE_DENY = "delete-all-type-deny";
     public static final String DELETE_ALL_TYPE_SUCCESS = "delete-all-type-success";
+    public static final String DELETE_ALL_TYPE_SUCCESS_WORLD = "delete-all-type-success-world";
     public static final String DELETE_ALL_TYPE_WARNING = "delete-all-type-warning";
+    public static final String DELETE_ALL_TYPE_WARNING_WORLD = "delete-all-type-warning-world";
     public static final String DELETE_ALL_PLAYER_SUCCESS = "delete-all-player-success";
+    public static final String DELETE_ALL_PLAYER_SUCCESS_WORLD = "delete-all-player-success-world";
     public static final String DELETE_ALL_PLAYER_WARNING = "delete-all-player-warning";
+    public static final String DELETE_ALL_PLAYER_WARNING_WORLD = "delete-all-player-warning-world";
     public static final String DELETE_CLAIM_SUCCESS = "delete-claim-success";
     public static final String DELETE_CLAIM_WARNING = "delete-claim-warning";
     public static final String ECONOMY_BLOCK_AVAILABLE_PURCHASE_2D = "economy-block-available-purchase-2d";
@@ -180,6 +188,7 @@ public class MessageStorage {
     public static final String ECONOMY_BLOCK_SALE_CONFIRMATION = "economy-block-sale-confirmation";
     public static final String ECONOMY_BLOCK_SELL_ERROR = "economy-block-sell-error";
     public static final String ECONOMY_CLAIM_ABANDON_SUCCESS = "economy-claim-abandon-success";
+    public static final String ECONOMY_CLAIM_ABANDON_SUCCESS_WORLD = "economy-claim-abandon-success-world";
     public static final String ECONOMY_CLAIM_BUY_CANCELLED = "economy-claim-buy-cancelled";
     public static final String ECONOMY_CLAIM_BUY_CONFIRMATION = "economy-claim-buy-confirmation";
     public static final String ECONOMY_CLAIM_BUY_CONFIRMED = "economy-claim-buy-confirmed";
@@ -312,6 +321,7 @@ public class MessageStorage {
     public static final String RESULT_TYPE_NO_CHILDREN = "result-type-no-children";
     public static final String RESULT_TYPE_ONLY_SUBDIVISION = "result-type-only-subdivision";
     public static final String RESULT_TYPE_REQUIRES_OWNER = "result-type-requires-owner";
+    public static final String SCHEMATIC_ABANDON_ALL_RESTORE_WARNING_WORLD = "schematic-abandon-all-restore-warning-world";
     public static final String SCHEMATIC_DELETED = "schematic-deleted";
     public static final String SCHEMATIC_NONE = "schematic-none";
     public static final String SCHEMATIC_RESTORE_CLICK = "schematic-restore-click"; 

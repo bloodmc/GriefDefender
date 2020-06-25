@@ -146,7 +146,13 @@ public class FileStorage extends BaseStorage {
                     final Path path = Paths.get("plugins", "GriefPreventionData", "ClaimData");
                     if (path.toFile().exists()) {
                         GPBukkitMigrator.migrate(world, path);
-                        Files.createFile(dimPath.resolve(world.getName()).resolve("_bukkitMigrated"));
+                        final Path bukkitMigratedFile = dimPath.resolve(world.getName()).resolve("_bukkitMigrated");
+                        if (Files.notExists(bukkitMigratedFile.getParent())) {
+                            Files.createDirectories(bukkitMigratedFile.getParent());
+                        }
+                        if (Files.notExists(bukkitMigratedFile)) {
+                            Files.createFile(bukkitMigratedFile);
+                        }
                     }
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();

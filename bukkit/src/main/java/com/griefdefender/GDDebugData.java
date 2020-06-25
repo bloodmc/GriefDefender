@@ -114,7 +114,7 @@ public class GDDebugData {
         this.header.add("### Metadata");
         this.header.add("| Key | Value |");
         this.header.add("|-----|-------|");
-        this.header.add("| GD Version | " + GriefDefenderPlugin.IMPLEMENTATION_VERSION + "|");
+        this.header.add("| GD Version | " + GDBootstrap.getInstance().getDescription().getVersion() + "|");
         this.header.add("| Bukkit Version | " + Bukkit.getVersion() + "|");
         final Plugin lpContainer = Bukkit.getPluginManager().getPlugin("luckperms");
         if (lpContainer != null) {
@@ -142,12 +142,8 @@ public class GDDebugData {
                     .append("Pasting output...", TextColor.GREEN).build());
             this.pasteRecords();
             this.records.clear();
-            if (this.user != null) {
-                GriefDefenderPlugin.getInstance().getDebugUserMap().remove(this.user.getName());
-            }
-            if (GriefDefenderPlugin.getInstance().getDebugUserMap().isEmpty()) {
-                GriefDefenderPlugin.debugActive = false;
-            }
+            GriefDefenderPlugin.getInstance().getDebugUserMap().clear();
+            GriefDefenderPlugin.debugActive = false;
             TextAdapter.sendComponent(this.source, TextComponent.builder("").append(GD_TEXT).append("Debug ", TextColor.GRAY).append("OFF", TextColor.RED).build());
         }
     }

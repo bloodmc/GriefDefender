@@ -138,10 +138,10 @@ public class GDActiveFlagData {
 
         final boolean contextNewLine = this.flagDefinition.getFlagData().size() <= 2;
         for (Context context : this.contexts) {
-            if ((!this.flagDefinition.isAdmin() || flagGroup.equalsIgnoreCase("user")) && context.getKey().contains("gd_claim")) {
+            if (context.getKey().contains("default") || context.getKey().contains("override")) {
+                // Only used in config for startup
                 continue;
             }
-
             final String key = context.getKey();
             final String value = context.getValue();
             TextColor keyColor = TextColor.AQUA;

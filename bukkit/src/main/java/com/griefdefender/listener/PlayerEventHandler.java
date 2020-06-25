@@ -57,6 +57,7 @@ import com.griefdefender.event.GDCauseStackManager;
 import com.griefdefender.internal.provider.GDWorldEditProvider;
 import com.griefdefender.internal.provider.WorldGuardProvider;
 import com.griefdefender.internal.registry.BlockTypeRegistryModule;
+import com.griefdefender.internal.registry.GDBlockType;
 import com.griefdefender.internal.registry.ItemTypeRegistryModule;
 import com.griefdefender.internal.util.NMSUtil;
 import com.griefdefender.internal.util.VecHelper;
@@ -68,6 +69,7 @@ import com.griefdefender.permission.flag.GDFlags;
 import com.griefdefender.permission.option.GDOptions;
 import com.griefdefender.provider.VaultProvider;
 import com.griefdefender.storage.BaseStorage;
+import com.griefdefender.task.ClaimVisualRevertTask;
 import com.griefdefender.text.action.GDCallbackHolder;
 import com.griefdefender.util.BlockRay;
 import com.griefdefender.util.BlockRayHit;
@@ -126,12 +128,15 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -313,6 +318,7 @@ public class PlayerEventHandler implements Listener {
             playerData.lastShovelLocation = null;
             playerData.endShovelLocation = null;
             playerData.claimResizing = null;
+            playerData.claimSubdividing = null;
             // always reset to basic claims mode
             if (playerData.shovelMode != ShovelTypes.BASIC) {
                 playerData.shovelMode = ShovelTypes.BASIC;
@@ -330,6 +336,23 @@ public class PlayerEventHandler implements Listener {
                        ImmutableMap.of(
                         "block-amount", playerData.getRemainingClaimBlocks()));
                 GriefDefenderPlugin.sendMessage(player, message);
+            }
+        } else {
+            // check for shovel start visuals
+            if (!playerData.createBlockVisualRevertRunnables.isEmpty()) {
+                final Iterator<Entry<UUID, Runnable>> iterator = new HashMap<>(playerData.createBlockVisualRevertRunnables).entrySet().iterator();
+                while (iterator.hasNext()) {
+                    final Entry<UUID, Runnable> revertEntry = iterator.next();
+                    final ClaimVisualRevertTask revertTask = (ClaimVisualRevertTask) revertEntry.getValue();
+                    if (revertTask.isShovelStartVisual()) {
+                        revertTask.run();
+                        final BukkitTask task = playerData.claimVisualRevertTasks.get(revertEntry.getKey());
+                        if (task != null) {
+                            task.cancel();
+                            playerData.claimVisualRevertTasks.remove(revertEntry.getKey());
+                        }
+                    }
+                }
             }
         }
         GDTimings.PLAYER_CHANGE_HELD_ITEM_EVENT.stopTiming();
@@ -503,10 +526,19 @@ public class PlayerEventHandler implements Listener {
             return;
         }
 
-        if (playerData.claimMode || (GriefDefenderPlugin.getInstance().modificationTool != null && NMSUtil.getInstance().itemsEqual(itemInHand, GriefDefenderPlugin.getInstance().modificationTool) ||
-                GriefDefenderPlugin.getInstance().investigationTool != null && NMSUtil.getInstance().itemsEqual(itemInHand, GriefDefenderPlugin.getInstance().investigationTool))) {
+        final boolean primaryEvent = event.getAction() == Action.LEFT_CLICK_AIR ? true : false;
+        final Flag flag = primaryEvent ? Flags.INTERACT_ITEM_PRIMARY : Flags.INTERACT_ITEM_SECONDARY;
+
+        if ((playerData.claimMode && (NMSUtil.getInstance().isMainHand(event) && event.getAction() == Action.LEFT_CLICK_AIR|| event.getAction() == Action.LEFT_CLICK_BLOCK)) || (!playerData.claimMode && GriefDefenderPlugin.getInstance().investigationTool != null && NMSUtil.getInstance().itemsEqual(itemInHand, GriefDefenderPlugin.getInstance().investigationTool))) {
             investigateClaim(event, player, clickedBlock, itemInHand);
             event.setCancelled(true);
+            return;
+        }
+
+        if ((playerData.claimMode && (NMSUtil.getInstance().isMainHand(event) && (event.getAction() == Action.RIGHT_CLICK_AIR|| event.getAction() == Action.RIGHT_CLICK_BLOCK))) || (!playerData.claimMode && itemInHand != null && GriefDefenderPlugin.getInstance().modificationTool != null && NMSUtil.getInstance().itemsEqual(itemInHand, GriefDefenderPlugin.getInstance().modificationTool))) {
+            onPlayerHandleClaimCreateAction(event, clickedBlock, player, itemInHand, playerData);
+            // avoid changing blocks after using a shovel
+            event.setUseInteractedBlock(Result.DENY);
             return;
         }
 
@@ -516,11 +548,8 @@ public class PlayerEventHandler implements Listener {
             return;
         }
 
-        final boolean primaryEvent = event.getAction() == Action.LEFT_CLICK_AIR ? true : false;
         final Location location = clickedBlock == null ? event.getPlayer().getLocation() : clickedBlock.getLocation();
-
         final GDClaim claim = this.dataStore.getClaimAt(location);
-        final Flag flag = primaryEvent ? Flags.INTERACT_ITEM_PRIMARY : Flags.INTERACT_ITEM_SECONDARY;
         if ((itemPrimaryBlacklisted && flag == Flags.INTERACT_ITEM_PRIMARY) || (itemSecondaryBlacklisted && flag == Flags.INTERACT_ITEM_SECONDARY)) {
             return;
         }
@@ -534,6 +563,19 @@ public class PlayerEventHandler implements Listener {
             event.setCancelled(true);
             lastInteractItemCancelled = true;
             return;
+        }
+
+        if (clickedBlock != null && !clickedBlock.isEmpty()) {
+            if (GDPermissionManager.getInstance().getFinalPermission(event, location, claim, flag, itemInHand, clickedBlock, player, TrustTypes.ACCESSOR, true) == Tristate.FALSE) {
+                final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_INTERACT_ITEM_BLOCK,
+                        ImmutableMap.of(
+                        "item", ItemTypeRegistryModule.getInstance().getNMSKey(itemInHand),
+                        "block", BlockTypeRegistryModule.getInstance().getNMSKey(clickedBlock)));
+                GriefDefenderPlugin.sendClaimDenyMessage(claim, player, message);
+                event.setCancelled(true);
+                lastInteractItemCancelled = true;
+                return;
+            }
         }
     }
 
@@ -762,6 +804,20 @@ public class PlayerEventHandler implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerInteractBlockSecondary(PlayerInteractEvent event) {
+        final Block clickedBlock = event.getClickedBlock();
+        if (clickedBlock == null) {
+            return;
+        }
+
+        final String id = GDPermissionManager.getInstance().getPermissionIdentifier(clickedBlock);
+        final GDBlockType gdBlock = BlockTypeRegistryModule.getInstance().getById(id).orElse(null);
+        if (gdBlock == null || (!gdBlock.isInteractable() && event.getAction() != Action.PHYSICAL)) {
+            return;
+        }
+        if (NMSUtil.getInstance().isBlockStairs(clickedBlock) && event.getAction() != Action.PHYSICAL) {
+            return;
+        }
+
         final Player player = event.getPlayer();
         GDCauseStackManager.getInstance().pushCause(player);
         final GDPlayerData playerData = this.dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
@@ -770,29 +826,22 @@ public class PlayerEventHandler implements Listener {
             return;
         }
 
-        final Block clickedBlock = event.getClickedBlock();
-        final Location location = event.getClickedBlock() != null ? event.getClickedBlock().getLocation() : null;
-        GDClaim claim = null;
-        if (location != null) {
-            claim = this.dataStore.getClaimAt(location);
-            final Sign sign = SignUtil.getSign(location);
-            // check sign
-            if (SignUtil.isSellSign(sign)) {
-                EconomyUtil.getInstance().buyClaimConsumerConfirmation(player, claim, sign);
-                return;
-            }
-            if (SignUtil.isRentSign(claim, sign)) {
-                EconomyUtil.getInstance().rentClaimConsumerConfirmation(player, claim, sign);
-                return;
-            }
+        final Location location = clickedBlock.getLocation();
+        GDClaim claim = this.dataStore.getClaimAt(location);
+        final Sign sign = SignUtil.getSign(location);
+        // check sign
+        if (SignUtil.isSellSign(sign)) {
+            EconomyUtil.getInstance().buyClaimConsumerConfirmation(player, claim, sign);
+            return;
+        }
+        if (SignUtil.isRentSign(claim, sign)) {
+            EconomyUtil.getInstance().rentClaimConsumerConfirmation(player, claim, sign);
+            return;
         }
 
-        BlockState state = null;
-        if (clickedBlock != null) {
-            state = clickedBlock.getState();
-        }
+        final BlockState state = clickedBlock.getState();
         final ItemStack itemInHand = event.getItem();
-        final boolean hasInventory = clickedBlock == null ? false : NMSUtil.getInstance().isTileInventory(location) || clickedBlock.getType() == Material.ENDER_CHEST;
+        final boolean hasInventory = NMSUtil.getInstance().isTileInventory(location) || clickedBlock.getType() == Material.ENDER_CHEST;
         if (hasInventory) {
             onInventoryOpen(event, state.getLocation(), state, player);
             return;
@@ -808,20 +857,7 @@ public class PlayerEventHandler implements Listener {
         GDTimings.PLAYER_INTERACT_BLOCK_SECONDARY_EVENT.startTiming();
         final Object source = player;
 
-        if (NMSUtil.getInstance().isMainHandSlot(event.getHand()) && (playerData.claimMode || (itemInHand != null && GriefDefenderPlugin.getInstance().modificationTool != null && NMSUtil.getInstance().itemsEqual(itemInHand, GriefDefenderPlugin.getInstance().modificationTool)))) {
-            onPlayerHandleClaimCreateAction(event, clickedBlock, player, itemInHand, playerData);
-            // avoid changing blocks after using a shovel
-            event.setUseInteractedBlock(Result.DENY);
-            GDTimings.PLAYER_INTERACT_BLOCK_SECONDARY_EVENT.stopTiming();
-            return;
-        }
-
-        if (location == null) {
-            GDTimings.PLAYER_INTERACT_BLOCK_SECONDARY_EVENT.stopTiming();
-            return;
-        }
-
-        final TrustType trustType = NMSUtil.getInstance().isTileInventory(location) || clickedBlock != null && clickedBlock.getType() == Material.ENDER_CHEST ? TrustTypes.CONTAINER : TrustTypes.ACCESSOR;
+        final TrustType trustType = NMSUtil.getInstance().isTileInventory(location) || clickedBlock.getType() == Material.ENDER_CHEST ? TrustTypes.CONTAINER : TrustTypes.ACCESSOR;
         if (GDFlags.INTERACT_BLOCK_SECONDARY && playerData != null) {
             Flag flag = Flags.INTERACT_BLOCK_SECONDARY;
             if (event.getAction() == Action.PHYSICAL) {
@@ -848,12 +884,14 @@ public class PlayerEventHandler implements Listener {
                                 this.sendInteractBlockDenyMessage(itemInHand, clickedBlock, claim, player, playerData);
                             }
                         } else {
-                            this.sendInteractBlockDenyMessage(itemInHand, clickedBlock, claim, player, playerData);
+                            if (gdBlock != null && gdBlock.isInteractable()) {
+                                this.sendInteractBlockDenyMessage(itemInHand, clickedBlock, claim, player, playerData);
+                            }
                         }
                     }
                 }
 
-                event.setCancelled(true);
+                event.setUseInteractedBlock(Result.DENY);
                 GDTimings.PLAYER_INTERACT_BLOCK_SECONDARY_EVENT.stopTiming();
                 return;
             }
@@ -1024,22 +1062,18 @@ public class PlayerEventHandler implements Listener {
         }
 
         GDTimings.PLAYER_HANDLE_SHOVEL_ACTION.startTiming();
-        Location location = clickedBlock != null ? clickedBlock.getLocation() : null;
-
+        boolean ignoreAir = false;
+        if (this.worldEditProvider != null) {
+            // Ignore air so players can use client-side WECUI block target which uses max reach distance
+            if (this.worldEditProvider.hasCUISupport(player) && playerData.getClaimCreateMode() == CreateModeTypes.VOLUME && playerData.lastShovelLocation != null) {
+                ignoreAir = true;
+            }
+        }
+        final int distance = !ignoreAir ? 100 : 5;
+        final Location location = BlockUtil.getInstance().getTargetBlock(player, playerData, distance, ignoreAir).orElse(null);
         if (location == null) {
-            boolean ignoreAir = false;
-            if (this.worldEditProvider != null) {
-                // Ignore air so players can use client-side WECUI block target which uses max reach distance
-                if (this.worldEditProvider.hasCUISupport(player) && playerData.getClaimCreateMode() == CreateModeTypes.VOLUME && playerData.lastShovelLocation != null) {
-                    ignoreAir = true;
-                }
-            }
-            final int distance = !ignoreAir ? 100 : 5;
-            location = BlockUtil.getInstance().getTargetBlock(player, playerData, distance, ignoreAir).orElse(null);
-            if (location == null) {
-                GDTimings.PLAYER_HANDLE_SHOVEL_ACTION.stopTiming();
-                return;
-            }
+            GDTimings.PLAYER_HANDLE_SHOVEL_ACTION.stopTiming();
+            return;
         }
 
         // Always cancel to avoid breaking blocks such as grass
@@ -1121,7 +1155,6 @@ public class PlayerEventHandler implements Listener {
             return;
         } else if (playerData.shovelMode == ShovelTypes.SUBDIVISION && playerData.lastShovelLocation != null) {
             GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().CREATE_SUBDIVISION_FAIL);
-            playerData.lastShovelLocation = null;
             GDTimings.PLAYER_HANDLE_SHOVEL_ACTION.stopTiming();
             return;
         }
@@ -1215,6 +1248,7 @@ public class PlayerEventHandler implements Listener {
                     "item", ItemTypeRegistryModule.getInstance().getNMSKey(event.getItem())));
         }
         GriefDefenderPlugin.sendMessage(player, message);
+        playerData.revertTempVisuals();
         GDClaimVisual visual = GDClaimVisual.fromClick(location, location.getBlockY(), PlayerUtil.getInstance().getVisualTypeFromShovel(playerData.shovelMode), player, playerData);
         visual.apply(player, false);
     }
@@ -1281,7 +1315,6 @@ public class PlayerEventHandler implements Listener {
             }
             return;
         } else {
-            playerData.lastShovelLocation = null;
             final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CREATE_SUCCESS,
                     ImmutableMap.of(
                     "type", gdClaim.getFriendlyNameType(true)));
@@ -1290,11 +1323,16 @@ public class PlayerEventHandler implements Listener {
                 this.worldEditProvider.stopDragVisual(player);
                 this.worldEditProvider.displayClaimCUIVisual(gdClaim, player, playerData, false);
             }
+            playerData.revertTempVisuals();
             final GDClaimVisual visual = gdClaim.getVisualizer();
             if (visual.getVisualTransactions().isEmpty()) {
                 visual.createClaimBlockVisuals(location.getBlockY(), player.getLocation(), playerData);
             }
             visual.apply(player, false);
+            playerData.claimSubdividing = null;
+            playerData.claimResizing = null;
+            playerData.lastShovelLocation = null;
+            playerData.endShovelLocation = null;
         }
     }
 
@@ -1333,6 +1371,7 @@ public class PlayerEventHandler implements Listener {
             GriefDefenderPlugin.sendMessage(player, message);
             playerData.lastShovelLocation = location;
             playerData.claimSubdividing = claim;
+            playerData.revertTempVisuals();
             GDClaimVisual visualization = GDClaimVisual.fromClick(location, location.getBlockY(), PlayerUtil.getInstance().getVisualTypeFromShovel(playerData.shovelMode), player, playerData);
             visualization.apply(player, false);
         }
@@ -1374,11 +1413,10 @@ public class PlayerEventHandler implements Listener {
             event.setCancelled(true);
             return;
         } else {
-            playerData.lastShovelLocation = null;
-            playerData.claimSubdividing = null;
             final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CREATE_SUCCESS, ImmutableMap.of(
                     "type", gdClaim.getFriendlyNameType(true)));
             GriefDefenderPlugin.sendMessage(player, message);
+            playerData.revertTempVisuals();
             final GDClaimVisual visual = gdClaim.getVisualizer();
             if (visual.getVisualTransactions().isEmpty()) {
                 visual.createClaimBlockVisuals(location.getBlockY(), player.getLocation(), playerData);
@@ -1388,6 +1426,10 @@ public class PlayerEventHandler implements Listener {
                 this.worldEditProvider.stopDragVisual(player);
                 this.worldEditProvider.displayClaimCUIVisual(gdClaim, player, playerData, false);
             }
+            playerData.claimSubdividing = null;
+            playerData.claimResizing = null;
+            playerData.lastShovelLocation = null;
+            playerData.endShovelLocation = null;
         }
     }
 
@@ -1441,6 +1483,7 @@ public class PlayerEventHandler implements Listener {
             this.worldEditProvider.displayClaimCUIVisual(claim, new Vector3i(x, y, z), VecHelper.toVector3i(playerData.lastShovelLocation), player, playerData, false);
         }
         // Show visual block for resize corner click
+        playerData.revertTempVisuals();
         GDClaimVisual visual = GDClaimVisual.fromClick(location, location.getBlockY(), PlayerUtil.getInstance().getVisualTypeFromShovel(playerData.shovelMode), player, playerData);
         visual.apply(player, false);
         GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().RESIZE_START);
@@ -1511,6 +1554,7 @@ public class PlayerEventHandler implements Listener {
                 }
             }
 
+            playerData.claimSubdividing = null;
             playerData.claimResizing = null;
             playerData.lastShovelLocation = null;
             playerData.endShovelLocation = null;
@@ -1545,6 +1589,7 @@ public class PlayerEventHandler implements Listener {
                 }
             }
             playerData.revertClaimVisual((GDClaim) claim);
+            playerData.revertTempVisuals();
             final GDClaimVisual visual = ((GDClaim) claim).getVisualizer();
             visual.resetVisuals();
             visual.createClaimBlockVisuals(location.getBlockY(), player.getLocation(), playerData);
@@ -1559,13 +1604,8 @@ public class PlayerEventHandler implements Listener {
                 Set<Claim> claims = new HashSet<>();
                 claims.add(overlapClaim);
                 CommandHelper.showOverlapClaims(player, claims, location.getBlockY());
-            } else {
-                if (!claimResult.getMessage().isPresent()) {
-                    GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().CLAIM_NOT_YOURS);
-                }
             }
 
-            playerData.claimSubdividing = null;
             event.setCancelled(true);
         }
     }

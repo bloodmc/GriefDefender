@@ -26,12 +26,13 @@ package com.griefdefender.permission;
 
 public class ContextGroupKeys {
 
-    public static final String ALL = "#all";
+    public static final String ANY = "#any";
     public static final String AMBIENT = "#ambient";
     public static final String ANIMAL = "#animal";
     public static final String AQUATIC = "#aquatic";
     public static final String CROPS = "#crops";
     public static final String FOOD = "#food";
+    public static final String HANGING = "#hanging";
     public static final String MISC = "#misc";
     public static final String MONSTER = "#monster";
     public static final String PET = "#pet";

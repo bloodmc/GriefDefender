@@ -26,6 +26,7 @@ package com.griefdefender.task;
 
 import com.griefdefender.GDBootstrap;
 import com.griefdefender.GDPlayerData;
+import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.internal.block.BlockSnapshot;
 import com.griefdefender.internal.block.BlockTransaction;
 import com.griefdefender.internal.visual.GDClaimVisual;
@@ -99,8 +100,15 @@ public class ClaimVisualApplyTask implements Runnable {
             }
         }
 
-        if (playerData.lastShovelLocation == null) {
-            this.playerData.claimVisualRevertTasks.put(visualUniqueId, Bukkit.getServer().getScheduler().runTaskLaterAsynchronously(GDBootstrap.getInstance(), new ClaimVisualRevertTask(visualUniqueId, this.player, this.playerData), 1200));
+        int tickTime = (this.playerData.lastShovelLocation != null && this.visualization.getClaim() == null ? GriefDefenderPlugin.getGlobalConfig().getConfig().visual.createBlockVisualTime : GriefDefenderPlugin.getGlobalConfig().getConfig().visual.claimVisualTime) * 20;
+        if (tickTime <= 0) {
+            tickTime = this.playerData.lastShovelLocation == null ? 1200 : 3600;
         }
+        final ClaimVisualRevertTask runnable = new ClaimVisualRevertTask(visualUniqueId, this.player, this.playerData);
+        if (this.playerData.lastShovelLocation != null && this.visualization.getClaim() == null) {
+            this.playerData.createBlockVisualTransactions.put(visualUniqueId, new ArrayList<>(this.visualization.getVisualTransactions()));
+            this.playerData.createBlockVisualRevertRunnables.put(visualUniqueId, runnable);
+        }
+        this.playerData.claimVisualRevertTasks.put(visualUniqueId, Bukkit.getServer().getScheduler().runTaskLaterAsynchronously(GDBootstrap.getInstance(), runnable, tickTime));
     }
 }

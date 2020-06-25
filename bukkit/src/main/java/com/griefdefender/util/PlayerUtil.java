@@ -281,7 +281,7 @@ public class PlayerUtil {
         Integer highestY = null;
         if (!corners.isEmpty() && playerData != null && playerData.lastNonAirInspectLocation != null) {
             for (BlockTransaction transaction : corners) {
-                final int cornerHeight = transaction.getFinal().getBlockPos().getY();
+                final int cornerHeight = transaction.getFinal().getPosition().getY();
                 if (lowestY == null || (lowestY != null && cornerHeight < lowestY)) {
                     lowestY = cornerHeight;
                 }
@@ -292,7 +292,7 @@ public class PlayerUtil {
         }
         if (!accents.isEmpty() && playerData != null && playerData.lastNonAirInspectLocation != null) {
             for (BlockTransaction transaction : accents) {
-                final int cornerHeight = transaction.getFinal().getBlockPos().getY();
+                final int cornerHeight = transaction.getFinal().getPosition().getY();
                 if (lowestY == null || (lowestY != null && cornerHeight < lowestY)) {
                     lowestY = cornerHeight;
                 }
@@ -314,5 +314,13 @@ public class PlayerUtil {
             }
         }
         return false;
+    }
+
+    public boolean isFakePlayer(Player player) {
+        if (player == null) {
+            return false;
+        }
+
+        return GriefDefenderPlugin.getGlobalConfig().getConfig().mod.isFakePlayer(player);
     }
 }

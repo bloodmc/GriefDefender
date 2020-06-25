@@ -24,7 +24,6 @@
  */
 package com.griefdefender.provider;
 
-import com.github.benmanes.caffeine.cache.Cache;
 import com.google.common.collect.ImmutableSet;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
@@ -61,6 +60,8 @@ import net.luckperms.api.query.QueryMode;
 import net.luckperms.api.query.QueryOptions;
 import net.luckperms.api.query.dataorder.DataQueryOrder;
 import net.luckperms.api.query.dataorder.DataQueryOrderFunction;
+import net.luckperms.api.query.dataorder.DataTypeFilter;
+import net.luckperms.api.query.dataorder.DataTypeFilterFunction;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -69,15 +70,15 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
 import java.util.Map.Entry;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Predicate;
 
-import org.apache.commons.io.FilenameUtils;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.service.ProviderRegistration;
 
@@ -98,6 +99,9 @@ public class LuckPermsProvider implements PermissionProvider {
 
     private final LuckPerms luckPermsApi;
     private final static DefaultDataQueryOrderFunction DEFAULT_DATA_QUERY_ORDER = new DefaultDataQueryOrderFunction();
+    private final static DefaultPersistentOnlyDataFilter DEFAULT_PERSISTENT_ONLY = new DefaultPersistentOnlyDataFilter();
+    private final static DefaultTransientOnlyDataFilter DEFAULT_TRANSIENT_ONLY = new DefaultTransientOnlyDataFilter();
+    private final static UserPersistentOnlyDataFilter USER_PERSISTENT_ONLY = new UserPersistentOnlyDataFilter();
 
     public LuckPermsProvider() {
         final ProviderRegistration<LuckPerms> service = Sponge.getServiceManager().getRegistration(LuckPerms.class).orElse(null);
@@ -138,13 +142,18 @@ public class LuckPermsProvider implements PermissionProvider {
             } catch (IllegalArgumentException e) {
                 e.printStackTrace();
             }
+        } else {
+            user = this.luckPermsApi.getUserManager().getUser(identifier);
+            if (user == null) {
+                try {
+                    uuid = this.luckPermsApi.getUserManager().lookupUniqueId(identifier).get();
+                } catch (Throwable t) {
+                    // ignore
+                }
+            }
         }
         if (uuid != null) {
             user = this.getUserSubject(uuid);
-        }
-
-        if (user == null) {
-            user = this.luckPermsApi.getUserManager().getUser(identifier);
         }
 
         return user;
@@ -556,6 +565,21 @@ public class LuckPermsProvider implements PermissionProvider {
         return gpContexts;
     }
 
+    @Override
+    public Tristate getPermissionValue(GDPermissionHolder holder, String permission, Set<Context> contexts) {
+        return this.getPermissionValue(holder, permission, contexts, PermissionDataType.ALL);
+    }
+
+    @Override
+    public Tristate getPermissionValue(GDClaim claim, GDPermissionHolder holder, String permission, Set<Context> contexts) {
+        return this.getPermissionValue(holder, permission, contexts);
+    }
+
+    @Override
+    public Tristate getPermissionValue(GDClaim claim, GDPermissionHolder holder, String permission, Set<Context> contexts, PermissionDataType type) {
+        return this.getPermissionValue(holder, permission, contexts, type);
+    }
+
     public Tristate getPermissionValue(GDPermissionHolder holder, String permission) {
         final Set<Context> contexts = new HashSet<>();
         this.checkServerContext(contexts);
@@ -563,136 +587,36 @@ public class LuckPermsProvider implements PermissionProvider {
         return this.getPermissionValue(holder, permission, set);
     }
 
-    
-    public Tristate getPermissionValue(GDClaim claim, GDPermissionHolder holder, String permission, MutableContextSet contexts) {
-        return this.getPermissionValue(claim, holder, permission, this.getGDContexts(contexts));
+    public Tristate getPermissionValue(GDPermissionHolder holder, String permission, MutableContextSet contexts) {
+        return this.getPermissionValue(holder, permission, this.getGDContexts(contexts));
     }
 
-    public Tristate getPermissionValue(GDClaim claim, GDPermissionHolder holder, String permission, Set<Context> contexts) {
+    public Tristate getPermissionValue(GDPermissionHolder holder, String permission, Set<Context> contexts, PermissionDataType type) {
         this.checkServerContext(contexts);
         ImmutableContextSet contextSet = this.getLPContexts(contexts).immutableCopy();
-        return this.getPermissionValue(holder, permission, contextSet);
-    }
-
-    public Tristate getPermissionValue(GDClaim claim, GDPermissionHolder holder, String permission, Set<Context> contexts, boolean checkTransient) {
-        final Set<Context> activeContexts = new HashSet<>();
-        this.addActiveContexts(activeContexts, holder, null, claim);
-        contexts.addAll(activeContexts);
-        this.checkServerContext(contexts);
-        final int contextHash =  Objects.hash(claim, holder, permission, contexts);
-        final Cache<Integer, Tristate> cache = PermissionHolderCache.getInstance().getOrCreatePermissionCache(holder);
-        Tristate result = cache.getIfPresent(contextHash);
-        if (result != null) {
-            return result;
-        }
-        // check persistent permissions first
-        Map<Set<Context>, Map<String, Boolean>> permanentPermissions = getPermanentPermissions(holder);
-        for (Entry<Set<Context>, Map<String, Boolean>> entry : permanentPermissions.entrySet()) {
-            if (entry.getKey().isEmpty()) {
-                continue;
-            }
-            boolean match = true;
-            for (Context context : entry.getKey()) {
-                if (!contexts.contains(context)) {
-                    match = false;
-                    break;
-                }
-            }
-            if (match) {
-                for (Map.Entry<String, Boolean> permEntry : entry.getValue().entrySet()) {
-                    if (FilenameUtils.wildcardMatch(permission, permEntry.getKey())) {
-                        final Tristate value = Tristate.fromBoolean(permEntry.getValue());
-                        cache.put(contextHash, value);
-                        return value;
-                    }
-                }
-                // If we get here, continue on normally
-                continue;
-            }
-        }
-
-        if (!checkTransient) {
-            return Tristate.UNDEFINED;
-        }
-
-        // check transient permissions last
-        Map<Set<Context>, Map<String, Boolean>> transientPermissions = getTransientPermissions(holder);
-        for (Entry<Set<Context>, Map<String, Boolean>> entry : transientPermissions.entrySet()) {
-            if (entry.getKey().isEmpty()) {
-                continue;
-            }
-            boolean match = true;
-            for (Context context : entry.getKey()) {
-                if (!contexts.contains(context)) {
-                    match = false;
-                    break;
-                }
-            }
-            if (match) {
-                for (Map.Entry<String, Boolean> permEntry : entry.getValue().entrySet()) {
-                    if (FilenameUtils.wildcardMatch(permission, permEntry.getKey())) {
-                        final Tristate value = Tristate.fromBoolean(permEntry.getValue());
-                        cache.put(contextHash, value);
-                        return value;
-                    }
-                }
-                // If we get here, continue on normally
-                continue;
-            }
-        }
-
-        cache.put(contextHash, Tristate.UNDEFINED);
-        return Tristate.UNDEFINED;
-    }
-
-    public Tristate getPermissionValueWithRequiredContexts(GDClaim claim, GDPermissionHolder holder, String permission, Set<Context> contexts, String contextFilter) {
-        Map<Set<Context>, Map<String, Boolean>> permanentPermissions = getPermanentPermissions(holder);
-        for (Entry<Set<Context>, Map<String, Boolean>> entry : permanentPermissions.entrySet()) {
-            if (entry.getKey().isEmpty()) {
-                continue;
-            }
-            boolean match = true;
-            for (Context context : entry.getKey()) {
-                if (!contexts.contains(context)) {
-                    match = false;
-                    break;
-                }
-            }
-
-            // Check for required contexts
-            for (Context context : contexts) {
-                if (!context.getKey().contains(contextFilter) && !context.getKey().equalsIgnoreCase("world")) {
-                    if (!entry.getKey().contains(context)) {
-                        match = false;
-                        break;
-                    }
-                }
-            }
-            if (match) {
-                for (Map.Entry<String, Boolean> permEntry : entry.getValue().entrySet()) {
-                    if (FilenameUtils.wildcardMatch(permission, permEntry.getKey())) {
-                        final Tristate value = Tristate.fromBoolean(permEntry.getValue());
-                        return value;
-                    }
-                }
-            }
-        }
-        return Tristate.UNDEFINED;
-    }
-
-    public Tristate getPermissionValue(GDPermissionHolder holder, String permission, Set<Context> contexts) {
-        this.checkServerContext(contexts);
-        ImmutableContextSet contextSet = this.getLPContexts(contexts).immutableCopy();
-        return this.getPermissionValue(holder, permission, contextSet);
+        return this.getPermissionValue(holder, permission, contextSet, type);
     }
 
     public Tristate getPermissionValue(GDPermissionHolder holder, String permission, ContextSet contexts) {
+        return this.getPermissionValue(holder, permission, contexts, PermissionDataType.ALL);
+    }
+
+    public Tristate getPermissionValue(GDPermissionHolder holder, String permission, ContextSet contexts, PermissionDataType type) {
         final PermissionHolder permissionHolder = this.getLuckPermsHolder(holder);
         if (permissionHolder == null) {
             return Tristate.UNDEFINED;
         }
 
-        final QueryOptions query = QueryOptions.builder(QueryMode.CONTEXTUAL).option(DataQueryOrderFunction.KEY, DEFAULT_DATA_QUERY_ORDER).context(contexts).build();
+        QueryOptions query = null;
+        if (type == PermissionDataType.TRANSIENT) {
+            query = QueryOptions.builder(QueryMode.CONTEXTUAL).option(DataQueryOrderFunction.KEY, DEFAULT_DATA_QUERY_ORDER).option(DataTypeFilterFunction.KEY, DEFAULT_TRANSIENT_ONLY).context(contexts).build();
+        } else if (type == PermissionDataType.PERSISTENT) {
+            query = QueryOptions.builder(QueryMode.CONTEXTUAL).option(DataQueryOrderFunction.KEY, DEFAULT_DATA_QUERY_ORDER).option(DataTypeFilterFunction.KEY, DEFAULT_PERSISTENT_ONLY).context(contexts).build();
+        } else if (type == PermissionDataType.USER_PERSISTENT) {
+            query = QueryOptions.builder(QueryMode.CONTEXTUAL).option(DataQueryOrderFunction.KEY, DEFAULT_DATA_QUERY_ORDER).option(DataTypeFilterFunction.KEY, USER_PERSISTENT_ONLY).context(contexts).build();
+        } else {
+            query = QueryOptions.builder(QueryMode.CONTEXTUAL).option(DataQueryOrderFunction.KEY, DEFAULT_DATA_QUERY_ORDER).context(contexts).build();
+        }
         CachedPermissionData cachedData = permissionHolder.getCachedData().getPermissionData(query);
         return getGDTristate(cachedData.checkPermission(permission));
     }
@@ -949,6 +873,40 @@ public class LuckPermsProvider implements PermissionProvider {
             }
 
             return DataQueryOrder.TRANSIENT_FIRST;
+        }
+    }
+
+    private static class DefaultTransientOnlyDataFilter implements DataTypeFilterFunction {
+
+        @Override
+        public @NonNull Predicate<DataType> getTypeFilter(@NonNull Identifier identifier) {
+            if (identifier.getType() == Identifier.GROUP_TYPE && identifier.getName().equalsIgnoreCase("default")) {
+                return DataTypeFilter.TRANSIENT_ONLY;
+            }
+            return DataTypeFilter.ALL;
+        }
+        
+    }
+
+    private static class DefaultPersistentOnlyDataFilter implements DataTypeFilterFunction {
+
+        @Override
+        public @NonNull Predicate<DataType> getTypeFilter(@NonNull Identifier identifier) {
+            if (identifier.getType() == Identifier.GROUP_TYPE && identifier.getName().equalsIgnoreCase("default")) {
+                return DataTypeFilter.NORMAL_ONLY;
+            }
+            return DataTypeFilter.ALL;
+        }
+    }
+
+    private static class UserPersistentOnlyDataFilter implements DataTypeFilterFunction {
+
+        @Override
+        public @NonNull Predicate<DataType> getTypeFilter(@NonNull Identifier identifier) {
+            if (identifier.getType() == Identifier.GROUP_TYPE && identifier.getName().equalsIgnoreCase("default")) {
+                return DataTypeFilter.NONE;
+            }
+            return DataTypeFilter.NORMAL_ONLY;
         }
     }
 }

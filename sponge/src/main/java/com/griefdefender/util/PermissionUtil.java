@@ -26,6 +26,7 @@ package com.griefdefender.util;
 
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
+import com.griefdefender.api.Group;
 import com.griefdefender.api.Tristate;
 import com.griefdefender.api.claim.Claim;
 import com.griefdefender.api.claim.TrustTypes;
@@ -38,6 +39,7 @@ import com.griefdefender.claim.GDClaim;
 import com.griefdefender.permission.GDPermissionHolder;
 import com.griefdefender.permission.GDPermissions;
 import com.griefdefender.provider.PermissionProvider;
+import com.griefdefender.provider.PermissionProvider.PermissionDataType;
 import org.spongepowered.api.entity.living.player.Player;
 
 import java.util.List;
@@ -168,20 +170,16 @@ public class PermissionUtil {
         return PERMISSION_PROVIDER.getPermissionValue(holder, permission);
     }
 
+    public Tristate getPermissionValue(GDClaim claim, GDPermissionHolder holder, String permission, Set<Context> contexts, PermissionDataType type) {
+        return PERMISSION_PROVIDER.getPermissionValue(claim, holder, permission, contexts, type);
+    }
+
     public Tristate getPermissionValue(GDClaim claim, GDPermissionHolder holder, String permission, Set<Context> contexts) {
         return PERMISSION_PROVIDER.getPermissionValue(claim, holder, permission, contexts);
     }
 
-    public Tristate getPermissionValue(GDClaim claim, GDPermissionHolder holder, String permission, Set<Context> contexts, boolean checkTransient) {
-        return PERMISSION_PROVIDER.getPermissionValue(claim, holder, permission, contexts, checkTransient);
-    }
-
     public Tristate getPermissionValue(GDPermissionHolder holder, String permission, Set<Context> contexts) {
         return PERMISSION_PROVIDER.getPermissionValue(holder, permission, contexts);
-    }
-
-    public Tristate getPermissionValueWithRequiredContexts(GDClaim claim, GDPermissionHolder holder, String permission, Set<Context> contexts, String contextFilter) {
-        return PERMISSION_PROVIDER.getPermissionValueWithRequiredContexts(claim, holder, permission, contexts, contextFilter);
     }
 
     public String getOptionValue(GDPermissionHolder holder, Option option, Set<Context> contexts) {

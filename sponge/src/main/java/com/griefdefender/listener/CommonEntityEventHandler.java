@@ -259,7 +259,7 @@ public class CommonEntityEventHandler {
                         }
     
                         Component farewellMessage = gpEvent.getExitMessage().orElse(null);
-                        if (farewellMessage != null && !farewellMessage.equals(Text.of())) {
+                        if (farewellMessage != null && farewellMessage != TextComponent.empty() && !toClaim.isParent(fromClaim)) {
                             ChatType chatType = gpEvent.getExitMessageChatType();
                             if (showGpPrefix) {
                                 TextAdapter.sendComponent(player, TextComponent.builder("")
@@ -365,7 +365,7 @@ public class CommonEntityEventHandler {
                 }
 
                 Component farewellMessage = gpEvent.getExitMessage().orElse(null);
-                if (farewellMessage != null && !farewellMessage.equals(Text.of())) {
+                if (farewellMessage != null && farewellMessage != TextComponent.empty() && !toClaim.isParent(fromClaim)) {
                     ChatType chatType = gpEvent.getExitMessageChatType();
                     if (showGpPrefix) {
                         TextAdapter.sendComponent(player, TextComponent.builder("")

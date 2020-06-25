@@ -148,10 +148,17 @@ public class BlockUtil {
         return false;
     }
 
-    public int getClaimBlockCost(World world, Vector3i lesser, Vector3i greater, boolean cuboid) {
-        final int claimWidth = greater.getX() - lesser.getX() + 1;
-        final int claimHeight = greater.getY() - lesser.getY() + 1;
-        final int claimLength = greater.getZ() - lesser.getZ() + 1;
+    public int getClaimBlockCost(World world, Vector3i point1, Vector3i point2, boolean cuboid) {
+        int minx = Math.min(point1.getX(), point2.getX());
+        int miny = Math.min(point1.getY(), point2.getY());
+        int minz = Math.min(point1.getZ(), point2.getZ());
+        int maxx = Math.max(point1.getX(), point2.getX());
+        int maxy = Math.max(point1.getY(), point2.getY());
+        int maxz = Math.max(point1.getZ(), point2.getZ());
+
+        final int claimWidth = Math.abs(maxx - minx) + 1;
+        final int claimHeight = Math.abs(maxy - miny) + 1;
+        final int claimLength = Math.abs(maxz - minz) + 1;
         if (GriefDefenderPlugin.CLAIM_BLOCK_SYSTEM == ClaimBlockSystem.AREA) {
             return claimWidth * claimLength;
         }
@@ -160,7 +167,7 @@ public class BlockUtil {
     }
 
     public long asLong(int x, int z) {
-        return (long)x & 4294967295L | ((long)z & 4294967295L) << 32;
+        return (long) x & 0xffffffffL | ((long) z & 0xffffffffL) << 32;
     }
 
     public short blockPosToShort(Location location) {

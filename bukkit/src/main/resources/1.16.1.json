@@ -1,11 +1,11 @@
 {
-    "version": "1.12.2",
+    "version": "1.16.1",
     "libraries": [
         {
-            "name": "com.griefdefender:adapter-sponge:1.12.2",
-            "sha1": "adc9ccc6363cd932728803bd7a47195d81ca22df",
-            "path": "com/griefdefender/adapter-sponge/1.12.2-SNAPSHOT/adapter-sponge-1.12.2-20200620.004815-11.jar",
-            "url": "https://repo.glaremasters.me/repository/bloodshot/com/griefdefender/adapter-sponge/1.12.2-SNAPSHOT/adapter-sponge-1.12.2-20200620.004815-11.jar"
+            "name": "com.griefdefender:adapter:1.16.1",
+            "sha1": "15eec491a9e4d40d0deae04fff009983d960cac0",
+            "path": "com/griefdefender/adapter/1.16.1-SNAPSHOT/adapter-1.16.1-20200625.044010-2.jar",
+            "url": "https://repo.glaremasters.me/repository/bloodshot/com/griefdefender/adapter/1.16.1-SNAPSHOT/adapter-1.16.1-20200625.044010-2.jar"
         },
         {
             "name": "com.griefdefender:api:1.0.0",
@@ -20,10 +20,17 @@
             "url": "https://repo.glaremasters.me/repository/bloodshot/com/griefdefender/reflect-helper/1.0/reflect-helper-1.0.jar"
         },
         {
-            "name": "com.googlecode.json-simple:json-simple:1.1.1",
-            "sha1": "c9ad4a0850ab676c5c64461a05ca524cdfff59f1",
-            "path": "com/googlecode/json-simple/json-simple/1.1.1/json-simple-1.1.1.jar",
-            "url": "https://repo1.maven.org/maven2/com/googlecode/json-simple/json-simple/1.1.1/json-simple-1.1.1.jar"
+            "name": "com.griefdefender:reflect-helper:2.0",
+            "sha1": "ee45d077344ae67e155e37eb61025401944ffabc",
+            "path": "com/griefdefender/reflect-helper/2.0/reflect-helper-2.0.jar",
+            "url": "https://repo.glaremasters.me/repository/bloodshot/com/griefdefender/reflect-helper/2.0/reflect-helper-2.0.jar"
+        },
+        {
+            "name": "org.checkerframework:checker-qual:2.10.0",
+            "sha1": "5786699a0cb71f9dc32e6cca1d665eef07a0882f",
+            "path": "org/checkerframework/checker-qual/2.10.0/checker-qual-2.10.0.jar",
+            "relocate": "javax.inject:javaxinject",
+            "url": "https://repo1.maven.org/maven2/org/checkerframework/checker-qual/2.10.0/checker-qual-2.10.0.jar"
         },
         {
             "name": "org.ow2.asm:asm-debug-all:5.2",
@@ -41,15 +48,21 @@
         },
         {
             "name": "co.aikar:acf-core:0.5.0-SNAPSHOT",
-            "sha1": "72aff420c92e4cb381ba8bccceb0b37cba7a9496",
-            "path": "co/aikar/acf-core/0.5.0-SNAPSHOT/acf-core-0.5.0-20190722.233344-152.jar",
-            "url": "https://repo.glaremasters.me/repository/public/co/aikar/acf-core/0.5.0-SNAPSHOT/acf-core-0.5.0-20190722.233344-152.jar"
+            "sha1": "d640d058f08da1be6b4483ac7a665d0b4bb22044",
+            "path": "co/aikar/acf-core/0.5.0-SNAPSHOT/acf-core-0.5.0-20190617.211117-148.jar",
+            "url": "https://repo.glaremasters.me/repository/public/co/aikar/acf-core/0.5.0-SNAPSHOT/acf-core-0.5.0-20190617.211117-148.jar"
         },
         {
-            "name": "co.aikar:acf-sponge:0.5.0-SNAPSHOT",
-            "sha1": "c73413c215cfad8f0c2306ed156df74ebdf18d47",
-            "path": "co/aikar/acf-sponge/0.5.0-SNAPSHOT/acf-sponge-0.5.0-20190722.233405-145.jar",
-            "url": "https://repo.glaremasters.me/repository/public/co/aikar/acf-sponge/0.5.0-SNAPSHOT/acf-sponge-0.5.0-20190722.233405-145.jar"
+            "name": "co.aikar:acf-bukkit:0.5.0-SNAPSHOT",
+            "sha1": "0af5d53de31ebf4e19100cc0654b88cc9c9c07fb",
+            "path": "co/aikar/acf-bukkit/0.5.0-SNAPSHOT/acf-bukkit-0.5.0-20190607.112608-152.jar",
+            "url": "https://repo.glaremasters.me/repository/public/co/aikar/acf-bukkit/0.5.0-SNAPSHOT/acf-bukkit-0.5.0-20190607.112608-152.jar"
+        },
+        {
+            "name": "co.aikar:acf-paper:0.5.0-SNAPSHOT",
+            "sha1": "5df2f2f0c7190f4b867af20ff57f9fde012a4e2c",
+            "path": "co/aikar/acf-paper/0.5.0-SNAPSHOT/acf-paper-0.5.0-20190607.112622-147.jar",
+            "url": "https://repo.glaremasters.me/repository/public/co/aikar/acf-paper/0.5.0-SNAPSHOT/acf-paper-0.5.0-20190607.112622-147.jar"
         },
         {
             "name": "co.aikar:locales:1.0-SNAPSHOT",
@@ -93,12 +106,14 @@
             "name": "com.google.inject:guice:4.1.0",
             "sha1": "eeb69005da379a10071aa4948c48d89250febb07",
             "path": "com/google/inject/guice/4.1.0/guice-4.1.0.jar",
+            "relocate": "com.google.inject:googleinject",
             "url": "https://repo1.maven.org/maven2/com/google/inject/guice/4.1.0/guice-4.1.0.jar"
         },
         {
             "name": "javax.inject:javax.inject:1",
             "sha1": "6975da39a7040257bd51d21a231b76c915872d38",
             "path": "javax/inject/javax.inject/1/javax.inject-1.jar",
+            "relocate": "javax.inject:javaxinject",
             "url": "https://repo1.maven.org/maven2/javax/inject/javax.inject/1/javax.inject-1.jar"
         },
         {

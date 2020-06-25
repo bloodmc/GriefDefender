@@ -34,7 +34,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.block.BlockBurnEvent;
-import org.bukkit.event.block.BlockFormEvent;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.Tristate;
 import com.griefdefender.api.claim.TrustTypes;
@@ -42,6 +41,7 @@ import com.griefdefender.api.permission.flag.Flags;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.event.GDCauseStackManager;
+import com.griefdefender.internal.tracking.PlayerTracker;
 import com.griefdefender.internal.util.NMSUtil;
 import com.griefdefender.permission.GDPermissionManager;
 import com.griefdefender.permission.GDPermissionUser;
@@ -78,12 +78,12 @@ public class CommonBlockEventHandler {
         }
 
         final Location sourceLocation = fromBlock != null ? fromBlock.getLocation() : null;
-        final GDPermissionUser user = CauseContextHelper.getEventUser(sourceLocation);
+        final GDPermissionUser user = CauseContextHelper.getEventUser(sourceLocation, PlayerTracker.Type.NOTIFIER);
 
         Location location = newState.getLocation();
         GDClaim targetClaim = this.storage.getClaimAt(location);
 
-        final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, Flags.BLOCK_SPREAD, fromBlock, newState, user, TrustTypes.BUILDER, true);
+        final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, Flags.BLOCK_SPREAD, fromBlock, newState.getBlock().isEmpty() ? newState.getType() : newState, user, TrustTypes.BUILDER, true);
         if (result == Tristate.FALSE) {
             ((Cancellable) event).setCancelled(true);
         }
@@ -114,6 +114,9 @@ public class CommonBlockEventHandler {
 
         if (newState.getType() == Material.AIR) {
             // Block -> Air should always be recorded as break
+            // pass original state for target since AIR is the end result
+            // In some cases both source and newState will be the same
+            // ex. turtle egg hatching
             handleBlockBreak(event, source, newState);
             return;
         }
@@ -153,7 +156,7 @@ public class CommonBlockEventHandler {
             }
         }
 
-        final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, Flags.BLOCK_MODIFY, source, newState, user, TrustTypes.BUILDER, true);
+        final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, Flags.BLOCK_MODIFY, source, newState.getBlock().isEmpty() ? newState.getType() : newState, user, TrustTypes.BUILDER, true);
         if (result == Tristate.FALSE) {
             ((Cancellable) event).setCancelled(true);
         }
@@ -186,12 +189,11 @@ public class CommonBlockEventHandler {
         GDPermissionUser user = player != null ? PermissionHolderCache.getInstance().getOrCreateUser(player.getUniqueId()) : GDCauseStackManager.getInstance().getCurrentCause().first(GDPermissionUser.class).orElse(null);
         if (user == null && source != null && source instanceof Block) {
             final Block sourceBlock = (Block) source;
-            user = CauseContextHelper.getEventUser(sourceBlock.getLocation());
+            user = CauseContextHelper.getEventUser(sourceBlock.getLocation(), PlayerTracker.Type.OWNER);
         }
 
         GDClaim targetClaim = this.storage.getClaimAt(location);
-
-        final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, Flags.BLOCK_PLACE, source, newState, user, TrustTypes.BUILDER, true);
+        final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, Flags.BLOCK_PLACE, source, newState.getBlock().isEmpty() ? newState.getType() : newState, user, TrustTypes.BUILDER, true);
         if (result == Tristate.FALSE) {
             ((Cancellable) event).setCancelled(true);
         }

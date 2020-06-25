@@ -47,6 +47,8 @@ import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.util.PlayerUtil;
 
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
+import net.kyori.text.Component;
+import net.kyori.text.serializer.plain.PlainComponentSerializer;
 
 public class PlaceholderProvider {
 
@@ -97,6 +99,19 @@ public class PlaceholderProvider {
                     return this.getAllPlayerClaims(playerData, ClaimTypes.SUBDIVISION);
                 case "claims_town" :
                     return this.getAllPlayerClaims(playerData, ClaimTypes.TOWN);
+                case "claim_town_tag" :
+                    if (claim == null || !playerData.inTown) {
+                        return "";
+                    }
+                    final GDClaim town = (GDClaim) claim.getTown().orElse(null);
+                    if (town == null) {
+                        return "";
+                    }
+                    final Component tag = town.getTownData().getTownTag().orElse(null);
+                    if (tag == null) {
+                        return "";
+                    }
+                    return PlainComponentSerializer.INSTANCE.serialize(tag);
                 case "claims_town_basic" :
                     return this.getAllTownChildrenClaims(playerData, ClaimTypes.BASIC);
                 case "claims_town_subdivision" :
@@ -113,12 +128,12 @@ public class PlaceholderProvider {
                     return String.valueOf(claim.getEconomyData().isForSale());
                 case "claim_name" :
                     if (claim == null) {
-                        return "none";
+                        return "";
                     }
                     return ((GDClaim) claim).getFriendlyName();
                 case "claim_owner" :
                     if (claim == null) {
-                        return "none";
+                        return "";
                     }
                     if (claim.isWilderness()) {
                         return "wilderness";
@@ -126,17 +141,17 @@ public class PlaceholderProvider {
                     return ((GDClaim) claim).getOwnerName();
                 case "claim_trust" : 
                     if (claim == null) {
-                        return "[unknown]";
+                        return "";
                     }
                     return String.valueOf(claim.isUserTrusted(player.getUniqueId(), TrustTypes.ACCESSOR));
                 case "claim_type" :
                     if (claim == null) {
-                        return "none";
+                        return "";
                     }
                     return claim.getType().getName();
                 case "pvp" : 
                     if (claim == null) {
-                        return "[unknown]";
+                        return "";
                     }
                     return String.valueOf(PlayerUtil.getInstance().canPlayerPvP((GDClaim) claim, user));
                 case "blocks_total" :

@@ -50,6 +50,13 @@ import com.griefdefender.permission.GDPermissionHolder;
  */
 public interface PermissionProvider {
 
+    public enum PermissionDataType {
+        ALL,
+        TRANSIENT,
+        PERSISTENT,
+        USER_PERSISTENT
+    }
+
     /**
      * Get server name.
      * 
@@ -243,10 +250,10 @@ public interface PermissionProvider {
      * @param holder The holder
      * @param permission The permission to check
      * @param contexts The contexts
-     * @param checkTransient Whether to check transient permissions
+     * @param type The data type
      * @return The permission value
      */
-    Tristate getPermissionValue(GDClaim claim, GDPermissionHolder holder, String permission, Set<Context> contexts, boolean checkTransient);
+    Tristate getPermissionValue(GDClaim claim, GDPermissionHolder holder, String permission, Set<Context> contexts, PermissionDataType type);
 
     /**
      * Gets the current value of a permission assigned to a holder.
@@ -257,19 +264,6 @@ public interface PermissionProvider {
      * @return The permission value
      */
     Tristate getPermissionValue(GDPermissionHolder holder, String permission, Set<Context> contexts);
-
-    /**
-     * Gets the current value of a permission that contains all passed contexts
-     * assigned to a holder.
-     * 
-     * @param claim The current claim
-     * @param holder The holder
-     * @param permission The permission to check
-     * @param contexts The contexts required
-     * @param contextFilter The context key to ignore for required contexts
-     * @return The permission value
-     */
-    Tristate getPermissionValueWithRequiredContexts(GDClaim claim, GDPermissionHolder holder, String permission, Set<Context> contexts, String contextFilter);
 
     /**
      * Gets the current value of an option assigned to a holder.

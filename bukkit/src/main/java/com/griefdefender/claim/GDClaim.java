@@ -864,6 +864,7 @@ public class GDClaim implements Claim {
                     final GDChunk gdChunk = this.worldClaimManager.getChunkIfLoaded(x, z);
                     if (gdChunk != null) {
                         this.loadedChunkHashes.add(gdChunk.getChunkKey());
+                        ((GDClaim) this.wildernessClaim).loadedChunkHashes.remove(gdChunk.getChunkKey());
                     }
                 }
             }
@@ -997,7 +998,7 @@ public class GDClaim implements Claim {
         }
 
         this.claimData.setOwnerUniqueId(newOwnerID);
-        if (this.isBasicClaim()) {
+        if (!this.isAdminClaim()) {
             ownerData.getInternalClaims().remove(this);
             newOwnerData.getInternalClaims().add(this);
         }
@@ -1358,6 +1359,9 @@ public class GDClaim implements Claim {
             }
         }
 
+        // The current values must be used in order for getClaimBlocks to return current cost
+        this.lesserBoundaryCorner = currentLesserCorner;
+        this.greaterBoundaryCorner = currentGreaterCorner;
         if (!this.cuboid || GriefDefenderPlugin.CLAIM_BLOCK_SYSTEM == ClaimBlockSystem.VOLUME) {
             // check player has enough claim blocks
             if ((this.isBasicClaim() || this.isTown()) && this.claimData.requiresClaimBlocks()) {
@@ -1381,8 +1385,8 @@ public class GDClaim implements Claim {
                                 GriefDefenderPlugin.sendMessage(player, message);
                             }
         
-                            playerData.lastShovelLocation = null;
-                            playerData.claimResizing = null;
+                            this.lesserBoundaryCorner = currentLesserCorner;
+                            this.greaterBoundaryCorner = currentGreaterCorner;
                             return new GDClaimResult(ClaimResultType.ECONOMY_NOT_ENOUGH_FUNDS, message);
                         }
                     } else {
@@ -1402,8 +1406,7 @@ public class GDClaim implements Claim {
                                         "block-amount", Math.abs(remainingClaimBlocks))));
                             }
                         }
-                        playerData.lastShovelLocation = null;
-                        playerData.claimResizing = null;
+
                         this.lesserBoundaryCorner = currentLesserCorner;
                         this.greaterBoundaryCorner = currentGreaterCorner;
                         return new GDClaimResult(ClaimResultType.INSUFFICIENT_CLAIM_BLOCKS);
@@ -1468,16 +1471,12 @@ public class GDClaim implements Claim {
             if (playerData.claimResizing != null) {
                 final Component message = MessageCache.getInstance().RESIZE_SAME_LOCATION;
                 GriefDefenderPlugin.sendMessage(player, message);
-                playerData.lastShovelLocation = null;
-                playerData.claimResizing = null;
                 // TODO: Add new result type for this
                 return new GDClaimResult(ClaimResultType.BELOW_MIN_SIZE_X, message);
             }
             if (playerData.claimSubdividing == null) {
                 final Component message = MessageCache.getInstance().CREATE_SUBDIVISION_ONLY;
                 GriefDefenderPlugin.sendMessage(player, message);
-                playerData.lastShovelLocation = null;
-                playerData.claimResizing = null;
                 // TODO: Add new result type for this
                 return new GDClaimResult(ClaimResultType.BELOW_MIN_SIZE_X, message);
             }

@@ -42,6 +42,13 @@ public class VisualCategory extends ConfigCategory {
     public String claimCreateStartBlock = "minecraft:diamond_block";
     @Setting(value = "filler-spacing", comment = "The space between each filler visual block.")
     public int fillerSpacing = 10;
+    @Setting(value = "active-claim-visual-time", comment = "The active time, in seconds, to keep a claim's visuals shown to a player. (Default: 60)"
+            + "\nNote: If value is <= 0, GD will use the default value.")
+    public int claimVisualTime = 60;
+    @Setting(value = "active-create-block-visual-time", comment = "The active time, in seconds, to keep a claim's create block visual shown to a player. (Default: 180)"
+            + "\nNote: This only applies during claim creation."
+            + "\nNote: If value is <= 0, GD will use the default value.")
+    public int createBlockVisualTime = 180;
 
     @Setting(value = "admin-accent-block", comment = "The visual accent block used for admin claims. (Default: minecraft:pumpkin)")
     public String visualAdminAccentBlock = "minecraft:pumpkin";

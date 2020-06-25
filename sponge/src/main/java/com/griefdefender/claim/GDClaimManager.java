@@ -206,9 +206,11 @@ public class GDClaimManager implements ClaimManager {
             this.deleteChunkHashes((GDClaim) claim);
             if (!claim.isAdminClaim() && (!claim.isInTown() || !claim.getTownClaim().getOwnerUniqueId().equals(claim.getOwnerUniqueId()))) {
                 final GDPlayerData playerData = this.getPlayerDataMap().get(claim.getOwnerUniqueId());
-                Set<Claim> playerClaims = playerData.getInternalClaims();
-                if (!playerClaims.contains(claim)) {
-                    playerClaims.add(claim);
+                if (playerData != null) {
+                    Set<Claim> playerClaims = playerData.getInternalClaims();
+                    if (!playerClaims.contains(claim)) {
+                        playerClaims.add(claim);
+                    }
                 }
             }
             return;
@@ -374,7 +376,7 @@ public class GDClaimManager implements ClaimManager {
     }
 
     private void deleteChunkHashes(GDClaim claim) {
-        Set<Long> chunkHashes = claim.getChunkHashes(false);
+        Set<Long> chunkHashes = claim.getChunkHashes(true);
         if (chunkHashes == null) {
             return;
         }
@@ -653,7 +655,7 @@ public class GDClaimManager implements ClaimManager {
             gdChunk = new GDChunk(chunk);
             this.chunksToGDChunks.put(chunkKey, gdChunk);
             if (this.chunksToClaimsMap.get(chunkKey) == null) {
-                this.theWildernessClaim.loadedChunkHashes.add(chunkKey);
+                this.getWildernessClaim().loadedChunkHashes.add(chunkKey);
             }
         }
         return gdChunk;
@@ -681,7 +683,7 @@ public class GDClaimManager implements ClaimManager {
 
     public void removeChunk(long key) {
         this.chunksToGDChunks.remove(key);
-        this.theWildernessClaim.loadedChunkHashes.remove(key);
+        this.getWildernessClaim().loadedChunkHashes.remove(key);
     }
 
     private long getChunkKey(int cx, int cz) {

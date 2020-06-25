@@ -47,6 +47,7 @@ import com.griefdefender.event.GDCauseStackManager;
 import com.griefdefender.internal.registry.EntityTypeRegistryModule;
 import com.griefdefender.internal.registry.GDEntityType;
 import com.griefdefender.internal.tracking.EntityTracker;
+import com.griefdefender.internal.tracking.PlayerTracker;
 import com.griefdefender.internal.tracking.entity.GDEntity;
 import com.griefdefender.internal.util.NMSUtil;
 import com.griefdefender.permission.GDPermissionManager;
@@ -67,6 +68,7 @@ import org.bukkit.World.Environment;
 import org.bukkit.block.Block;
 import org.bukkit.block.CreatureSpawner;
 import org.bukkit.entity.Creeper;
+import org.bukkit.entity.EnderCrystal;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.ExperienceOrb;
 import org.bukkit.entity.FallingBlock;
@@ -95,6 +97,8 @@ import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntitySpawnEvent;
 import org.bukkit.event.entity.ExplosionPrimeEvent;
+import org.bukkit.event.entity.ItemSpawnEvent;
+import org.bukkit.event.entity.ProjectileLaunchEvent;
 import org.bukkit.event.entity.SlimeSplitEvent;
 import org.bukkit.event.entity.SpawnerSpawnEvent;
 import org.bukkit.event.hanging.HangingBreakByEntityEvent;
@@ -176,19 +180,20 @@ public class EntityEventHandler implements Listener {
     @EventHandler(priority = EventPriority.LOWEST)
     public void onExplosionPrimeEvent(ExplosionPrimeEvent event) {
         final World world = event.getEntity().getLocation().getWorld();
+        final Entity source = event.getEntity();
         if (!GDFlags.EXPLOSION_BLOCK && !GDFlags.EXPLOSION_ENTITY) {
             return;
         }
         if (!GriefDefenderPlugin.getInstance().claimsEnabledForWorld(world.getUID())) {
             return;
         }
-        if (event.getEntity() instanceof Creeper) {
+        if (source instanceof Creeper || source instanceof EnderCrystal) {
             return;
         }
 
-        GDCauseStackManager.getInstance().pushCause(event.getEntity());
+        GDCauseStackManager.getInstance().pushCause(source);
         GDTimings.ENTITY_EXPLOSION_PRE_EVENT.startTiming();
-        final GDEntity gdEntity = EntityTracker.getCachedEntity(event.getEntity().getEntityId());
+        final GDEntity gdEntity = EntityTracker.getCachedEntity(source.getEntityId());
         GDPermissionUser user = null;
         if (gdEntity != null) {
             user = PermissionHolderCache.getInstance().getOrCreateUser(gdEntity.getOwnerUUID());
@@ -206,10 +211,10 @@ public class EntityEventHandler implements Listener {
             // Use any location for permission check
             final Vector3i pos = claim.getLesserBoundaryCorner();
             Location targetLocation = new Location(location.getWorld(), pos.getX(), pos.getY(), pos.getZ());
-            Tristate blockResult = GDPermissionManager.getInstance().getFinalPermission(event, location, claim, Flags.EXPLOSION_BLOCK, event.getEntity(), targetLocation, user, true);
+            Tristate blockResult = GDPermissionManager.getInstance().getFinalPermission(event, location, claim, Flags.EXPLOSION_BLOCK, source, targetLocation, user, true);
             if (blockResult == Tristate.FALSE) {
                 // Check explosion entity
-                if (GDPermissionManager.getInstance().getFinalPermission(event, location, claim, Flags.EXPLOSION_ENTITY, event.getEntity(), targetLocation, user, true) == Tristate.FALSE) {
+                if (GDPermissionManager.getInstance().getFinalPermission(event, location, claim, Flags.EXPLOSION_ENTITY, source, targetLocation, user, true) == Tristate.FALSE) {
                     event.setCancelled(true);
                     break;
                 }
@@ -292,7 +297,8 @@ public class EntityEventHandler implements Listener {
     @EventHandler(priority = EventPriority.LOWEST)
     public void onVehicleDestroy(VehicleDestroyEvent event) {
         GDTimings.ENTITY_DAMAGE_EVENT.startTiming();
-        if (protectEntity(event, event.getAttacker(), (Entity) event.getVehicle())) {
+        final Object source = event.getAttacker() != null ? event.getAttacker() : NMSUtil.getInstance().getBlockDamager();
+        if (protectEntity(event, source, (Entity) event.getVehicle())) {
             event.setCancelled(true);
         }
         GDTimings.ENTITY_DAMAGE_EVENT.stopTiming();
@@ -301,7 +307,11 @@ public class EntityEventHandler implements Listener {
     @EventHandler(priority = EventPriority.LOWEST)
     public void onEntityDamage(EntityCombustByBlockEvent event) {
         GDTimings.ENTITY_DAMAGE_EVENT.startTiming();
-        if (protectEntity(event, event.getCombuster(), event.getEntity())) {
+        Object source = event.getCombuster();
+        if (source == null) {
+            source = NMSUtil.getInstance().getFlameableBlock(event.getEntity());
+        }
+        if (protectEntity(event, source, event.getEntity())) {
             event.setCancelled(true);
         }
         GDTimings.ENTITY_DAMAGE_EVENT.stopTiming();
@@ -310,7 +320,11 @@ public class EntityEventHandler implements Listener {
     @EventHandler(priority = EventPriority.LOWEST)
     public void onEntityDamage(EntityCombustByEntityEvent event) {
         GDTimings.ENTITY_DAMAGE_EVENT.startTiming();
-        if (protectEntity(event, event.getCombuster(), event.getEntity())) {
+        Object source = event.getCombuster();
+        if (source == null) {
+            source = NMSUtil.getInstance().getFlameableBlock(event.getEntity());
+        }
+        if (protectEntity(event, source, event.getEntity())) {
             event.setCancelled(true);
         }
         GDTimings.ENTITY_DAMAGE_EVENT.stopTiming();
@@ -322,7 +336,7 @@ public class EntityEventHandler implements Listener {
             return;
         }
         GDTimings.ENTITY_DAMAGE_EVENT.startTiming();
-        if (protectEntity(event, event.getDamager(), event.getEntity())) {
+        if (protectEntity(event, event.getDamager() == null ? event.getCause() : event.getDamager(), event.getEntity())) {
             event.setCancelled(true);
         }
         GDTimings.ENTITY_DAMAGE_EVENT.stopTiming();
@@ -403,7 +417,7 @@ public class EntityEventHandler implements Listener {
             // Ignore as this is handled above
             return;
         }
-        if (event.getCause() == DamageCause.SUFFOCATION || event.getCause() == DamageCause.DROWNING || event.getCause() == DamageCause.SUICIDE) {
+        if (GriefDefenderPlugin.getGlobalConfig().getConfig().blacklist.entityDamageSourceBlacklist.contains(event.getCause().name().toLowerCase())) {
             return;
         }
         GDTimings.ENTITY_DAMAGE_EVENT.startTiming();
@@ -433,11 +447,6 @@ public class EntityEventHandler implements Listener {
             if (cause != GriefDefenderPlugin.getInstance()) {
                 source = cause;
             }
-        }
-
-        // Get proper source block
-        if (source == null && event instanceof EntityCombustByBlockEvent) {
-            source = NMSUtil.getInstance().getFlameableBlock(targetEntity);
         }
 
         final GDClaim claim = this.baseStorage.getClaimAt(targetEntity.getLocation());
@@ -474,7 +483,7 @@ public class EntityEventHandler implements Listener {
         }
 
         if (user == null) {
-            user = owner != null ? PermissionHolderCache.getInstance().getOrCreateUser(owner) : CauseContextHelper.getEventUser(null);
+            user = PermissionHolderCache.getInstance().getOrCreateUser(owner);
             if (user != null) {
                 GDCauseStackManager.getInstance().pushCause(user);
             }
@@ -646,6 +655,16 @@ public class EntityEventHandler implements Listener {
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
+    public void onItemSpawn(ItemSpawnEvent event) {
+        handleEntitySpawn(event, null, event.getEntity());
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onProjectileSpawn(ProjectileLaunchEvent event) {
+        handleEntitySpawn(event, null, event.getEntity());
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onSpawnerSpawn(SpawnerSpawnEvent event) {
         handleEntitySpawn(event, event.getSpawner(), event.getEntity());
     }
@@ -654,23 +673,6 @@ public class EntityEventHandler implements Listener {
     public void onSlimeSplitEvent(SlimeSplitEvent event) {
         handleEntitySpawn(event, event.getEntity(), event.getEntity());
     }
-
-    @EventHandler(priority = EventPriority.LOWEST)
-    public void onEntitySpawn(EntitySpawnEvent event) {
-        final Object source = GDCauseStackManager.getInstance().getCurrentCause().root();
-        if (source != null && source instanceof GDPermissionUser) {
-            final GDPermissionUser user = (GDPermissionUser) source;
-            final GDEntity gdEntity = new GDEntity(event.getEntity().getEntityId());
-            gdEntity.setOwnerUUID(user.getUniqueId());
-            gdEntity.setNotifierUUID(user.getUniqueId());
-            EntityTracker.addTempEntity(gdEntity);
-        }
-        handleEntitySpawn(event, null, event.getEntity());
-    }
-
-    //@EventHandler(priority = EventPriority.LOWEST)
-    //public void onEntitySpawn(EntitySpawnEvent event) {
-    //}
 
     public void handleEntitySpawn(Event event, Object source, Entity entity) {
         if (!GDFlags.ENTITY_SPAWN) {
@@ -684,6 +686,16 @@ public class EntityEventHandler implements Listener {
         if (GriefDefenderPlugin.isSourceIdBlacklisted(Flags.ENTITY_SPAWN.getName(), source, world.getUID())) {
             return;
         }
+
+        final Object root = GDCauseStackManager.getInstance().getCurrentCause().root();
+        if (root != null && root instanceof GDPermissionUser) {
+            final GDPermissionUser user = (GDPermissionUser) root;
+            final GDEntity gdEntity = new GDEntity(entity.getEntityId());
+            gdEntity.setOwnerUUID(user.getUniqueId());
+            gdEntity.setNotifierUUID(user.getUniqueId());
+            EntityTracker.addTempEntity(gdEntity);
+        }
+
         if (entity instanceof FallingBlock) {
             return;
         }
@@ -691,7 +703,6 @@ public class EntityEventHandler implements Listener {
         final boolean isEntityProtected = this.isEntityProtected(entity);
         GDTimings.ENTITY_SPAWN_EVENT.startTiming();
         GDPermissionUser user = null;
-        final Object root = GDCauseStackManager.getInstance().getCurrentCause().root();
         // Make sure not to pass trusted user for non-protected entities such as monsters
         if (isEntityProtected) {
             user = root instanceof GDPermissionUser && isEntityProtected ? (GDPermissionUser) root : null;
@@ -711,7 +722,7 @@ public class EntityEventHandler implements Listener {
             if (source instanceof CreatureSpawner) {
                 sourceLocation = ((CreatureSpawner) source).getLocation();
                 if (isEntityProtected) {
-                    user = CauseContextHelper.getEventUser(sourceLocation);
+                    user = CauseContextHelper.getEventUser(sourceLocation, PlayerTracker.Type.OWNER);
                 }
             } else if (source instanceof Player) {
                 if (isEntityProtected) {
@@ -720,7 +731,7 @@ public class EntityEventHandler implements Listener {
             } else if (source instanceof Block) {
                 sourceLocation = ((Block) source).getLocation();
                 if (isEntityProtected) {
-                    user = CauseContextHelper.getEventUser(sourceLocation);
+                    user = CauseContextHelper.getEventUser(sourceLocation, PlayerTracker.Type.OWNER);
                 }
                 // check if claim is rented
                 if (user != null && GriefDefenderPlugin.getGlobalConfig().getConfig().economy.rentSystem) {

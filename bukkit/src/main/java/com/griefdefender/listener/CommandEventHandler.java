@@ -270,4 +270,22 @@ public class CommandEventHandler implements Listener {
         }
         GDTimings.PLAYER_COMMAND_EVENT.stopTiming();
     }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onPlayerCommandMonitor(PlayerCommandPreprocessEvent event) {
+        String message = event.getMessage();
+        String arguments = "";
+        String command = "";
+        if (!message.contains(" ")) {
+            command = message.replace("/", "");
+        } else {
+            command = message.substring(0, message.indexOf(" ")).replace("/", "");
+            arguments = message.substring(message.indexOf(" ") + 1, message.length());
+        }
+        if (command.equalsIgnoreCase("datapack") && (arguments.contains("enable") || arguments.contains("disable"))) {
+            if (GriefDefenderPlugin.getInstance().getTagProvider() != null) {
+                GriefDefenderPlugin.getInstance().getTagProvider().refresh();
+            }
+        }
+    }
 }

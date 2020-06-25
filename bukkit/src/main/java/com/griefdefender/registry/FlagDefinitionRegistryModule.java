@@ -92,7 +92,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .reset()
                     .name("ambient-spawn")
                     .admin(true)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.TRUE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_SPAWN_AMBIENT)
                     .group("admin")
@@ -108,7 +108,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .reset()
                     .name("animal-spawn")
                     .admin(true)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.TRUE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_SPAWN_ANIMAL)
                     .group("admin")
@@ -124,7 +124,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .reset()
                     .name("aquatic-spawn")
                     .admin(true)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.TRUE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_SPAWN_AQUATIC)
                     .group("admin")
@@ -135,12 +135,46 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                         .build())
                     .build());
 
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.SOURCE_PLAYER);
+        flagContexts.add(FlagContexts.TARGET_ITEM_ARMOR_STAND);
+        flagData = new ArrayList<>();
+        flagData.add(flagDataBuilder
+                .reset()
+                .flag(Flags.INTERACT_ITEM_SECONDARY)
+                .contexts(flagContexts)
+                .build());
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.SOURCE_PLAYER);
+        flagContexts.add(FlagContexts.TARGET_ENTITY_ARMOR_STAND);
+        flagData.add(flagDataBuilder
+                .reset()
+                .flag(Flags.ENTITY_DAMAGE)
+                .contexts(flagContexts)
+                .build());
+        flagData.add(flagDataBuilder
+                .reset()
+                .flag(Flags.INTERACT_ENTITY_SECONDARY)
+                .contexts(flagContexts)
+                .build());
+        this.registerCustomType(
+                definitionBuilder
+                    .reset()
+                    .name("armorstand-use")
+                    .admin(true)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
+                    .defaultValue(Tristate.FALSE)
+                    .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_ARMOR_STAND_USE)
+                    .group("admin")
+                    .flagData(flagData)
+                    .build());
+
         this.registerCustomType(
                 definitionBuilder
                     .reset()
                     .name("chorus-fruit-teleport")
                     .admin(true)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.FALSE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_CHORUS_FRUIT_TELEPORT)
                     .group("admin")
@@ -156,7 +190,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .reset()
                     .name("creeper-block-explosion")
                     .admin(true)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.FALSE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_CREEPER_BLOCK_EXPLOSION)
                     .group("admin")
@@ -172,7 +206,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .reset()
                     .name("creeper-entity-explosion")
                     .admin(true)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.FALSE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_CREEPER_ENTITY_EXPLOSION)
                     .group("admin")
@@ -183,12 +217,46 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                         .build())
                     .build());
 
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.SOURCE_PLAYER);
+        flagContexts.add(FlagContexts.TARGET_ITEM_END_CRYSTAL);
+        flagData = new ArrayList<>();
+        flagData.add(flagDataBuilder
+                .reset()
+                .flag(Flags.INTERACT_ITEM_SECONDARY)
+                .contexts(flagContexts)
+                .build());
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.SOURCE_PLAYER);
+        flagContexts.add(FlagContexts.TARGET_ENTITY_ENDER_CRYSTAL);
+        flagData.add(flagDataBuilder
+                .reset()
+                .flag(Flags.ENTITY_DAMAGE)
+                .contexts(flagContexts)
+                .build());
+        flagData.add(flagDataBuilder
+                .reset()
+                .flag(Flags.INTERACT_ENTITY_SECONDARY)
+                .contexts(flagContexts)
+                .build());
+        this.registerCustomType(
+                definitionBuilder
+                    .reset()
+                    .name("endcrystal-use")
+                    .admin(true)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
+                    .defaultValue(Tristate.FALSE)
+                    .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_END_CRYSTAL_USE)
+                    .group("admin")
+                    .flagData(flagData)
+                    .build());
+
         this.registerCustomType(
                 definitionBuilder
                     .reset()
                     .name("exp-drop")
                     .admin(true)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.TRUE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_EXP_DROP)
                     .group("admin")
@@ -204,7 +272,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .reset()
                     .name("fall-entity-damage")
                     .admin(true)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.TRUE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_FALL_ENTITY_DAMAGE)
                     .group("admin")
@@ -223,7 +291,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .reset()
                     .name("fall-player-damage")
                     .admin(true)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.TRUE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_FALL_PLAYER_DAMAGE)
                     .group("admin")
@@ -239,7 +307,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .reset()
                     .name("falling-block-break")
                     .admin(true)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.TRUE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_FALLING_BLOCK_BREAK)
                     .group("admin")
@@ -256,12 +324,12 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .name("fire-block-damage")
                     .admin(true)
                     .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
-                    .defaultValue(Tristate.FALSE)
+                    .defaultValue(Tristate.TRUE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_FIRE_BLOCK_DAMAGE)
                     .group("admin")
                     .flagData(flagDataBuilder
                         .reset()
-                        .flag(Flags.BLOCK_MODIFY)
+                        .flag(Flags.BLOCK_BREAK)
                         .context(FlagContexts.SOURCE_FIRE)
                         .build())
                     .build());
@@ -300,7 +368,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .reset()
                     .name("fire-entity-damage")
                     .admin(true)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.TRUE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_FIRE_ENTITY_DAMAGE)
                     .group("admin")
@@ -312,7 +380,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .reset()
                     .name("lightning-damage")
                     .admin(true)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.TRUE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_LIGHTNING)
                     .group("admin")
@@ -342,7 +410,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .reset()
                     .name("monster-animal-damage")
                     .admin(true)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.FALSE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_MONSTER_ANIMAL_DAMAGE)
                     .group("admin")
@@ -368,7 +436,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .reset()
                     .name("monster-player-damage")
                     .admin(true)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.TRUE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_MONSTER_PLAYER_DAMAGE)
                     .group("admin")
@@ -380,7 +448,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .reset()
                     .name("monster-spawn")
                     .admin(true)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.TRUE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_MONSTER_SPAWN)
                     .group("admin")
@@ -407,7 +475,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .reset()
                     .name("piston-item-spawn")
                     .admin(true)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.TRUE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_PISTON_ITEM_SPAWN)
                     .group("admin")
@@ -452,7 +520,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .reset()
                     .name("player-block-break")
                     .admin(true)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.FALSE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_PLAYER_BLOCK_BREAK)
                     .group("admin")
@@ -468,7 +536,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .reset()
                     .name("player-block-interact")
                     .admin(true)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.FALSE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_PLAYER_BLOCK_INTERACT)
                     .group("admin")
@@ -484,7 +552,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .reset()
                     .name("player-block-place")
                     .admin(true)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.FALSE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_PLAYER_BLOCK_PLACE)
                     .group("admin")
@@ -500,7 +568,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .reset()
                     .name("player-damage")
                     .admin(true)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.TRUE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_PLAYER_DAMAGE)
                     .group("admin")
@@ -519,7 +587,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .reset()
                     .name("player-enderpearl-interact")
                     .admin(true)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.TRUE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_PLAYER_ENDERPEARL_INTERACT)
                     .group("admin")
@@ -551,7 +619,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .reset()
                     .name("player-entity-interact")
                     .admin(true)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.TRUE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_PLAYER_ENTITY_INTERACT)
                     .group("admin")
@@ -586,7 +654,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .reset()
                     .name("player-itemframe-interact")
                     .admin(true)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.FALSE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_PLAYER_ITEMFRAME_INTERACT)
                     .group("admin")
@@ -597,12 +665,31 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                         .build())
                     .build());
 
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.SOURCE_PLAYER);
+        flagContexts.add(FlagContexts.TARGET_HANGING);
+        this.registerCustomType(
+                definitionBuilder
+                    .reset()
+                    .name("player-itemhanging-place")
+                    .admin(true)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
+                    .defaultValue(Tristate.FALSE)
+                    .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_PLAYER_ITEMHANGING_PLACE)
+                    .group("admin")
+                    .flagData(flagDataBuilder
+                        .reset()
+                        .flag(Flags.INTERACT_ITEM_SECONDARY)
+                        .contexts(flagContexts)
+                        .build())
+                    .build());
+
         this.registerCustomType(
                 definitionBuilder
                     .reset()
                     .name("player-item-drop")
                     .admin(true)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.TRUE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_PLAYER_ITEM_DROP)
                     .group("admin")
@@ -618,7 +705,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .reset()
                     .name("player-item-pickup")
                     .admin(true)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.TRUE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_PLAYER_ITEM_PICKUP)
                     .group("admin")
@@ -637,7 +724,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .reset()
                     .name("player-portal-use")
                     .admin(true)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.TRUE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_PLAYER_PORTAL_USE)
                     .group("admin")
@@ -653,7 +740,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .reset()
                     .name("player-teleport-from")
                     .admin(true)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.TRUE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_PLAYER_TELEPORT_FROM)
                     .group("admin")
@@ -669,7 +756,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .reset()
                     .name("player-teleport-to")
                     .admin(true)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.TRUE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_PLAYER_TELEPORT_TO)
                     .group("admin")
@@ -688,7 +775,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .reset()
                     .name("pvp")
                     .admin(true)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.TRUE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_PVP)
                     .group("admin")
@@ -704,7 +791,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .reset()
                     .name("tnt-block-explosion")
                     .admin(true)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.FALSE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_TNT_BLOCK_EXPLOSION)
                     .group("admin")
@@ -720,7 +807,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .reset()
                     .name("tnt-entity-explosion")
                     .admin(true)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.FALSE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_TNT_ENTITY_EXPLOSION)
                     .group("admin")
@@ -745,7 +832,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .reset()
                     .name("turtle-egg-hatch")
                     .admin(true)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.TRUE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_TURTLE_EGG_HATCH)
                     .group("admin")
@@ -766,7 +853,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .reset()
                     .name("villager-farm")
                     .admin(true)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.TRUE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_VILLAGER_FARM)
                     .group("admin")
@@ -778,7 +865,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .reset()
                     .name("wither-block-break")
                     .admin(true)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.FALSE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_WITHER_BLOCK_BREAK)
                     .group("admin")
@@ -794,7 +881,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .reset()
                     .name("wither-entity-break")
                     .admin(true)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.FALSE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_WITHER_ENTITY_DAMAGE)
                     .group("admin")
@@ -806,7 +893,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .build());
 
         definitionContexts = new HashSet<>();
-        definitionContexts.add(ClaimContexts.GLOBAL_DEFAULT_CONTEXT);
+        definitionContexts.add(ClaimContexts.USER_DEFAULT_CONTEXT);
         definitionContexts.add(OWNER_OVERRIDE_CONTEXT);
         flagContexts = new HashSet<>();
         flagContexts.add(FlagContexts.SOURCE_VILLAGER);
@@ -838,7 +925,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .reset()
                     .name("block-trampling")
                     .admin(false)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.FALSE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_BLOCK_TRAMPLING)
                     .group("user")
@@ -868,7 +955,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .reset()
                     .name("chest-access")
                     .admin(false)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.FALSE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_CHEST_ACCESS)
                     .group("user")
@@ -880,7 +967,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .reset()
                     .name("crop-growth")
                     .admin(false)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.TRUE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_CROP_GROWTH)
                     .group("user")
@@ -896,7 +983,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .reset()
                     .name("damage-animals")
                     .admin(false)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.FALSE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_DAMAGE_ANIMALS)
                     .group("user")
@@ -912,7 +999,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .reset()
                     .name("enderman-grief")
                     .admin(false)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.FALSE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_ENDERMAN_GRIEF)
                     .group("user")
@@ -932,6 +1019,11 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                         .flag(Flags.BLOCK_SPREAD)
                         .context(FlagContexts.SOURCE_FIRE)
                         .build());
+        flagData.add(flagDataBuilder
+                .reset()
+                .flag(Flags.BLOCK_SPREAD)
+                .context(FlagContexts.SOURCE_LAVA)
+                .build());
         this.registerCustomType(
                 definitionBuilder
                     .reset()
@@ -949,7 +1041,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .reset()
                     .name("grass-growth")
                     .admin(false)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.TRUE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_GRASS_GROWTH)
                     .group("user")
@@ -965,7 +1057,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .reset()
                     .name("ice-form")
                     .admin(false)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.TRUE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_ICE_FORM)
                     .group("user")
@@ -984,7 +1076,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .reset()
                     .name("ice-melt")
                     .admin(false)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.TRUE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_ICE_MELT)
                     .group("user")
@@ -1013,7 +1105,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .reset()
                     .name("lava-flow")
                     .admin(false)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.FALSE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_LAVA_FLOW)
                     .group("user")
@@ -1025,7 +1117,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .reset()
                     .name("leaf-decay")
                     .admin(false)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.TRUE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_LEAF_DECAY)
                     .group("user")
@@ -1040,7 +1132,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .reset()
                     .name("lighter")
                     .admin(false)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.FALSE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_LIGHTER)
                     .group("user")
@@ -1056,7 +1148,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .reset()
                     .name("mushroom-growth")
                     .admin(false)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.TRUE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_MUSHROOM_GROWTH)
                     .group("user")
@@ -1072,7 +1164,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .reset()
                     .name("mycelium-spread")
                     .admin(false)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.TRUE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_MYCELIUM_SPREAD)
                     .group("user")
@@ -1102,7 +1194,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .reset()
                     .name("ride")
                     .admin(false)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.TRUE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_RIDE)
                     .group("user")
@@ -1128,7 +1220,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .reset()
                     .name("sleep")
                     .admin(false)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.TRUE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_SLEEP)
                     .group("user")
@@ -1136,7 +1228,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .build());
 
         definitionContexts = new HashSet<>();
-        definitionContexts.add(ClaimContexts.GLOBAL_DEFAULT_CONTEXT);
+        definitionContexts.add(ClaimContexts.USER_DEFAULT_CONTEXT);
         definitionContexts.add(OWNER_OVERRIDE_CONTEXT);
         flagContexts = new HashSet<>();
         if (GriefDefenderPlugin.getMajorMinecraftVersion() > 12) {
@@ -1163,7 +1255,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .build());
 
         definitionContexts = new HashSet<>();
-        definitionContexts.add(ClaimContexts.GLOBAL_DEFAULT_CONTEXT);
+        definitionContexts.add(ClaimContexts.USER_DEFAULT_CONTEXT);
         definitionContexts.add(OWNER_OVERRIDE_CONTEXT);
         flagContexts = new HashSet<>();
         if (GriefDefenderPlugin.getMajorMinecraftVersion() > 12) {
@@ -1202,7 +1294,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .reset()
                     .name("snowman-trail")
                     .admin(false)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.TRUE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_SNOWMAN_TRAIL)
                     .group("user")
@@ -1218,7 +1310,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .reset()
                     .name("soil-dry")
                     .admin(false)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.TRUE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_SOIL_DRY)
                     .group("user")
@@ -1231,16 +1323,8 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
 
         flagContexts = new HashSet<>();
         flagContexts.add(FlagContexts.SOURCE_PLAYER);
-        flagContexts.add(FlagContexts.USED_ITEM_VEHICLE);
-        flagData = new ArrayList<>();
-        flagData.add(flagDataBuilder
-                .reset()
-                .flag(Flags.INTERACT_BLOCK_SECONDARY)
-                .contexts(flagContexts)
-                .build());
-        flagContexts = new HashSet<>();
-        flagContexts.add(FlagContexts.SOURCE_PLAYER);
         flagContexts.add(FlagContexts.TARGET_TYPE_VEHICLE);
+        flagData = new ArrayList<>();
         flagData.add(flagDataBuilder
                 .reset()
                 .flag(Flags.INTERACT_ITEM_SECONDARY)
@@ -1266,7 +1350,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .reset()
                     .name("vehicle-use")
                     .admin(false)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.FALSE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_VEHICLE_USE)
                     .group("user")
@@ -1274,7 +1358,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .build());
 
         definitionContexts = new HashSet<>();
-        definitionContexts.add(ClaimContexts.GLOBAL_DEFAULT_CONTEXT);
+        definitionContexts.add(ClaimContexts.USER_DEFAULT_CONTEXT);
         flagContexts = new HashSet<>();
         flagContexts.add(FlagContexts.SOURCE_PLAYER);
         flagContexts.add(FlagContexts.TARGET_VILLAGER);
@@ -1301,7 +1385,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .reset()
                     .name("vine-growth")
                     .admin(false)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.TRUE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_VINE_GROWTH)
                     .group("user")
@@ -1312,6 +1396,9 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                         .build())
                     .build());
 
+        definitionContexts = new HashSet<>();
+        definitionContexts.add(ClaimContexts.USER_DEFAULT_CONTEXT);
+        definitionContexts.add(OWNER_OVERRIDE_CONTEXT);
         flagContexts = new HashSet<>();
         if (GriefDefenderPlugin.getMajorMinecraftVersion() > 12) {
             flagContexts.add(FlagContexts.SOURCE_WATER);
@@ -1330,7 +1417,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .reset()
                     .name("water-flow")
                     .admin(false)
-                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .contexts(definitionContexts)
                     .defaultValue(Tristate.FALSE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_WATER_FLOW)
                     .group("user")

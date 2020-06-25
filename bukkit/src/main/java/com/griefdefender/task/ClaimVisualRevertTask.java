@@ -33,16 +33,26 @@ import java.util.UUID;
 
 import org.bukkit.entity.Player;
 
-class ClaimVisualRevertTask implements Runnable {
+public class ClaimVisualRevertTask implements Runnable {
 
     private Player player;
     private GDPlayerData playerData;
     private UUID visualUniqueId;
+    private boolean shovelStartVisual = false;
 
     public ClaimVisualRevertTask(UUID visualUniqueId, Player player, GDPlayerData playerData) {
         this.visualUniqueId = visualUniqueId;
         this.playerData = playerData;
         this.player = player;
+        this.shovelStartVisual = playerData.lastShovelLocation != null;
+    }
+
+    public boolean isShovelStartVisual() {
+        return this.shovelStartVisual;
+    }
+
+    public UUID getVisualUniqueId() {
+        return this.visualUniqueId;
     }
 
     @Override

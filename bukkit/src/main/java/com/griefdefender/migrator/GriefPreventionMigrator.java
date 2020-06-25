@@ -502,7 +502,7 @@ public class GriefPreventionMigrator {
                     final int bonusBlocks = Integer.parseInt(lines.get(2));
                     final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(world, uuid);
                     // Set directly in storage as subject data has not been initialized
-                    playerData.setAccruedClaimBlocks(accruedBlocks);
+                    playerData.setAccruedClaimBlocks(accruedBlocks, false);
                     playerData.setBonusClaimBlocks(bonusBlocks);
                 } catch (NumberFormatException e) {
                     e.printStackTrace();
@@ -512,7 +512,13 @@ public class GriefPreventionMigrator {
         }
 
         try {
-            Files.createFile(gpBukkitPlayerDataMigrated.toPath());
+            final Path gpPlayerDataPath = gpBukkitPlayerDataMigrated.toPath();
+            if (Files.notExists(gpPlayerDataPath.getParent())) {
+                Files.createDirectories(gpPlayerDataPath.getParent());
+            }
+            if (Files.notExists(gpPlayerDataPath)) {
+                Files.createFile(gpPlayerDataPath);
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }

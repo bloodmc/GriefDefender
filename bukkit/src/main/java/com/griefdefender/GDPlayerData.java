@@ -34,8 +34,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.function.Consumer;
 
 import org.bukkit.Bukkit;
@@ -73,6 +71,7 @@ import com.griefdefender.permission.GDPermissions;
 import com.griefdefender.permission.option.GDOptions;
 import com.griefdefender.provider.VaultProvider;
 import com.griefdefender.storage.BaseStorage;
+import com.griefdefender.task.ClaimVisualRevertTask;
 import com.griefdefender.util.PermissionUtil;
 
 import net.kyori.text.Component;
@@ -95,6 +94,8 @@ public class GDPlayerData implements PlayerData {
 
     public GDClaim claimResizing;
     public GDClaim claimSubdividing;
+    public Map<UUID, Runnable> createBlockVisualRevertRunnables = new HashMap<>();
+    public Map<UUID, List<BlockTransaction>> createBlockVisualTransactions = new HashMap<>();
     public Map<UUID, BukkitTask> claimVisualRevertTasks = new HashMap<>();
     public Map<UUID, List<BlockTransaction>> visualClaimBlocks = new HashMap<>();
     public List<BlockSnapshot> queuedVisuals = new ArrayList<>();
@@ -256,6 +257,9 @@ public class GDPlayerData implements PlayerData {
 
     @Override
     public void revertAllVisuals() {
+        this.lastShovelLocation = null;
+        this.claimResizing = null;
+        this.claimSubdividing = null;
         final Player player = this.getSubject().getOnlinePlayer();
         if (player == null) {
             return;
@@ -277,6 +281,10 @@ public class GDPlayerData implements PlayerData {
             GriefDefenderPlugin.getInstance().getWorldEditProvider().revertAllVisuals(this.playerID);
         }
         // Revert any temp visuals
+        this.revertTempVisuals();
+    }
+
+    public void revertTempVisuals() {
         if (this.tempVisualUniqueId != null) {
             this.revertClaimVisual(null, this.tempVisualUniqueId);
             this.tempVisualUniqueId = null;
@@ -318,10 +326,22 @@ public class GDPlayerData implements PlayerData {
     }
 
     private void revertVisualBlocks(Player player, GDClaim claim, UUID visualUniqueId) {
-        this.lastShovelLocation = null;
         final List<BlockTransaction> visualTransactions = this.visualClaimBlocks.get(visualUniqueId);
         if (visualTransactions == null || visualTransactions.isEmpty()) {
             return;
+        }
+
+        // Gather create block visuals
+        final List<BlockTransaction> createBlockVisualTransactions = new ArrayList<>();
+        for (Runnable runnable : this.createBlockVisualRevertRunnables.values()) {
+            final ClaimVisualRevertTask revertTask = (ClaimVisualRevertTask) runnable;
+            if (revertTask.getVisualUniqueId().equals(visualUniqueId)) {
+                continue;
+            }
+            final List<BlockTransaction> blockTransactions = this.createBlockVisualTransactions.get(revertTask.getVisualUniqueId());
+            if (blockTransactions != null) {
+                createBlockVisualTransactions.addAll(blockTransactions);
+            }
         }
 
         for (int i = 0; i < visualTransactions.size(); i++) {
@@ -333,6 +353,16 @@ public class GDPlayerData implements PlayerData {
                 }
                 continue;
             }
+            boolean ignoreVisual = false;
+            for (BlockTransaction createVisualTransaction : createBlockVisualTransactions) {
+                if (createVisualTransaction.getOriginal().getLocation().equals(snapshot.getLocation())) {
+                    ignoreVisual = true;
+                    break;
+                }
+            }
+            if (ignoreVisual) {
+                continue;
+            }
             NMSUtil.getInstance().sendBlockChange(player, snapshot);
         }
         if (claim != null) {
@@ -341,11 +371,8 @@ public class GDPlayerData implements PlayerData {
 
         this.claimVisualRevertTasks.remove(visualUniqueId);
         this.visualClaimBlocks.remove(visualUniqueId);
-        // Revert any temp visuals
-        if (this.tempVisualUniqueId != null) {
-            this.revertClaimVisual(null, this.tempVisualUniqueId);
-            this.tempVisualUniqueId = null;
-        }
+        this.createBlockVisualRevertRunnables.remove(visualUniqueId);
+        this.createBlockVisualTransactions.remove(visualUniqueId);
     }
 
     @Override
@@ -491,7 +518,11 @@ public class GDPlayerData implements PlayerData {
     }
 
     public boolean setAccruedClaimBlocks(int newAccruedClaimBlocks) {
-        if (newAccruedClaimBlocks > this.getMaxAccruedClaimBlocks()) {
+        return this.setAccruedClaimBlocks(newAccruedClaimBlocks, true);
+    }
+
+    public boolean setAccruedClaimBlocks(int newAccruedClaimBlocks, boolean checkMax) {
+        if (checkMax && newAccruedClaimBlocks > this.getMaxAccruedClaimBlocks()) {
             return false;
         }
 
@@ -699,7 +730,6 @@ public class GDPlayerData implements PlayerData {
     }
 
     public GDPermissionUser getSubject() {
-        this.playerSubject = null;
         if (this.playerSubject == null || this.playerSubject.get() == null) {
             GDPermissionUser user = PermissionHolderCache.getInstance().getOrCreateUser(this.playerID);
             this.playerSubject = new WeakReference<>(user);
@@ -825,8 +855,11 @@ public class GDPlayerData implements PlayerData {
     public void onDisconnect() {
         this.claimVisualRevertTasks.clear();
         this.visualClaimBlocks.clear();
+        this.createBlockVisualTransactions.clear();
+        this.createBlockVisualRevertRunnables.clear();
         this.queuedVisuals.clear();
         this.claimMode = false;
+        this.debugClaimPermissions = false;
         this.ignoreClaims = false;
         this.lastShovelLocation = null;
         this.eventResultCache = null;

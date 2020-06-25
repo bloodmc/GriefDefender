@@ -43,7 +43,7 @@ import org.bukkit.entity.Player;
 @CommandPermission(GDPermissions.COMMAND_FLAGS_DEBUG)
 public class CommandClaimFlagDebug extends BaseCommand {
 
-    @CommandAlias("cfd")
+    @CommandAlias("cfdebug")
     @Description("Toggles claim flag debug mode.")
     @Subcommand("claim debug")
     public void execute(Player player) {

@@ -144,7 +144,7 @@ public class FlagDefinitionSerializer implements TypeSerializer<FlagDefinition> 
                 final String value = parts[1];
                 if (key.equalsIgnoreCase("default") || key.equalsIgnoreCase("gd_claim_default")) {
                     if (!value.equalsIgnoreCase("global") && !value.equalsIgnoreCase("basic") && !value.equalsIgnoreCase("admin")
-                            && !value.equalsIgnoreCase("subdivision") && !value.equalsIgnoreCase("town") && !value.equalsIgnoreCase("wilderness")) {
+                            && !value.equalsIgnoreCase("subdivision") && !value.equalsIgnoreCase("town") && !value.equalsIgnoreCase("user")) {
                         throw new ObjectMappingException("Invalid context '" + key + "' with value '" + value + "'.");
                     }
                     contexts.add(new Context("gd_claim_default", value));

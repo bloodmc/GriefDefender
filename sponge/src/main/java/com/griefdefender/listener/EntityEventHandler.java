@@ -419,8 +419,7 @@ public class EntityEventHandler {
     }
 
     public boolean protectEntity(Event event, Entity targetEntity, Cause cause, DamageSource damageSource) {
-        if (damageSource.getType() == DamageTypes.SUFFOCATE || damageSource.getType() == DamageTypes.DROWN) {
-            // Ignore as this can only happen if an entity is stuck in wall
+        if (GriefDefenderPlugin.getGlobalConfig().getConfig().blacklist.entityDamageSourceBlacklist.contains(damageSource.getType().getId().toLowerCase())) {
             return false;
         }
         if (!GDFlags.ENTITY_DAMAGE || !GriefDefenderPlugin.getInstance().claimsEnabledForWorld(targetEntity.getWorld().getUniqueId())) {

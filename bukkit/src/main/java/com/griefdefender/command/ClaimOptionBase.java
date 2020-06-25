@@ -372,7 +372,7 @@ public abstract class ClaimOptionBase extends BaseCommand {
             defaultContexts.add(ClaimContexts.WILDERNESS_DEFAULT_CONTEXT);
             overrideContexts.add(ClaimContexts.WILDERNESS_OVERRIDE_CONTEXT);
         }
-        if (!claim.isWilderness() && !claim.isAdminClaim()) {
+        if (!claim.isWilderness()) {
             defaultContexts.add(ClaimContexts.USER_DEFAULT_CONTEXT);
             overrideContexts.add(ClaimContexts.USER_OVERRIDE_CONTEXT);
         }
@@ -383,7 +383,7 @@ public abstract class ClaimOptionBase extends BaseCommand {
         Map<String, OptionData> filteredContextMap = new HashMap<>();
         for (Map.Entry<Set<Context>, Map<String, String>> mapEntry : PermissionUtil.getInstance().getTransientOptions(this.subject).entrySet()) {
             final Set<Context> contextSet = mapEntry.getKey();
-            if (contextSet.contains(claim.getDefaultTypeContext()) || contextSet.contains(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)) {
+            if (contextSet.contains(claim.getDefaultTypeContext()) || (contextSet.contains(ClaimContexts.GLOBAL_DEFAULT_CONTEXT) || (!claim.isWilderness() && contextSet.contains(ClaimContexts.USER_DEFAULT_CONTEXT)))) {
                 this.addFilteredContexts(src, filteredContextMap, contextSet, MenuType.DEFAULT, mapEntry.getValue());
             }
         }
@@ -391,6 +391,9 @@ public abstract class ClaimOptionBase extends BaseCommand {
         if (displayType == MenuType.DEFAULT || displayType == MenuType.CLAIM) {
             final Set<Context> contexts = new HashSet<>();
             contexts.add(ClaimContexts.GLOBAL_DEFAULT_CONTEXT);
+            if (!claim.isWilderness()) {
+                contexts.add(ClaimContexts.USER_DEFAULT_CONTEXT);
+            }
             for (Option option : OptionRegistryModule.getInstance().getAll()) {
                 if (option.isGlobal() && displayType == MenuType.CLAIM) {
                     continue;
@@ -417,7 +420,7 @@ public abstract class ClaimOptionBase extends BaseCommand {
 
         for (Map.Entry<Set<Context>, Map<String, String>> mapEntry : PermissionUtil.getInstance().getPermanentOptions(this.subject).entrySet()) {
             final Set<Context> contextSet = mapEntry.getKey();
-            if (contextSet.contains(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)) {
+            if (contextSet.contains(ClaimContexts.GLOBAL_DEFAULT_CONTEXT) || (!claim.isWilderness() && contextSet.contains(ClaimContexts.USER_DEFAULT_CONTEXT))) {
                 this.addFilteredContexts(src, filteredContextMap, contextSet, MenuType.DEFAULT, mapEntry.getValue());
             }
             if (contextSet.contains(claim.getDefaultTypeContext())) {
@@ -429,7 +432,7 @@ public abstract class ClaimOptionBase extends BaseCommand {
                         this.addFilteredContexts(src, filteredContextMap, contextSet, MenuType.CLAIM, mapEntry.getValue());
                     }
                 }
-                if (contextSet.contains(ClaimContexts.GLOBAL_OVERRIDE_CONTEXT)) {
+                if (contextSet.contains(ClaimContexts.GLOBAL_OVERRIDE_CONTEXT) || (!claim.isWilderness() && contextSet.contains(ClaimContexts.USER_OVERRIDE_CONTEXT))) {
                     this.addFilteredContexts(src, filteredContextMap, contextSet, MenuType.OVERRIDE, mapEntry.getValue());
                 }
                 if (contextSet.contains(claim.getOverrideClaimContext())) {

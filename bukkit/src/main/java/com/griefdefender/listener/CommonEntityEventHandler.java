@@ -203,7 +203,7 @@ public class CommonEntityEventHandler {
                 }
 
                 Component farewellMessage = gpEvent.getExitMessage().orElse(null);
-                if (farewellMessage != null && !farewellMessage.equals(TextComponent.empty())) {
+                if (farewellMessage != null && !farewellMessage.equals(TextComponent.empty()) && !toClaim.isParent(fromClaim)) {
                     ChatType chatType = gpEvent.getExitMessageChatType();
                     if (chatType == ChatTypes.ACTION_BAR) {
                         TextAdapter.sendActionBar(player, TextComponent.builder("")
@@ -306,7 +306,7 @@ public class CommonEntityEventHandler {
                 }
 
                 Component farewellMessage = gpEvent.getExitMessage().orElse(null);
-                if (farewellMessage != null && !farewellMessage.equals(TextComponent.empty())) {
+                if (farewellMessage != null && !farewellMessage.equals(TextComponent.empty()) && !toClaim.isParent(fromClaim)) {
                     ChatType chatType = gpEvent.getExitMessageChatType();
                     if (chatType == ChatTypes.ACTION_BAR) {
                         TextAdapter.sendActionBar(player, TextComponent.builder("")
