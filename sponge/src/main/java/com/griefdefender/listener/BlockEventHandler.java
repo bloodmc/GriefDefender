@@ -480,13 +480,22 @@ public class BlockEventHandler {
             targetClaim = this.dataStore.getClaimAt(event.getTargetLocation());
         }
 
-        if (GDPermissionManager.getInstance().getFinalPermission(event, event.getTargetLocation(), targetClaim, Flags.COLLIDE_BLOCK, source, event.getTargetBlock(), user, TrustTypes.ACCESSOR, true) == Tristate.TRUE) {
-            entityBlockCache.setLastResult(Tristate.TRUE);
+        Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, event.getTargetLocation(), targetClaim, Flags.COLLIDE_BLOCK, source, event.getTargetBlock(), user, TrustTypes.ACCESSOR, true);
+        if (result != Tristate.UNDEFINED) {
+            if (result == Tristate.TRUE) {
+                entityBlockCache.setLastResult(Tristate.TRUE);
+                GDTimings.BLOCK_COLLIDE_EVENT.stopTimingIfSync();
+                return;
+            }
+
+            entityBlockCache.setLastResult(Tristate.FALSE);
+            event.setCancelled(true);
             GDTimings.BLOCK_COLLIDE_EVENT.stopTimingIfSync();
             return;
         }
         if (GDFlags.PORTAL_USE && event.getTargetBlock().getType() == BlockTypes.PORTAL) {
             if (GDPermissionManager.getInstance().getFinalPermission(event, event.getTargetLocation(), targetClaim, Flags.PORTAL_USE, source, event.getTargetBlock(), user, TrustTypes.ACCESSOR, true) == Tristate.TRUE) {
+                entityBlockCache.setLastResult(Tristate.TRUE);
                 GDTimings.BLOCK_COLLIDE_EVENT.stopTimingIfSync();
                 return;
             }
@@ -505,6 +514,7 @@ public class BlockEventHandler {
             }
         }
 
+        entityBlockCache.setLastResult(Tristate.TRUE);
         GDTimings.BLOCK_COLLIDE_EVENT.stopTimingIfSync();
     }
 
