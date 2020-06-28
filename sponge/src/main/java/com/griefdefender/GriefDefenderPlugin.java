@@ -59,6 +59,7 @@ import com.griefdefender.command.CommandCallback;
 import com.griefdefender.command.CommandClaimAbandon;
 import com.griefdefender.command.CommandClaimAbandonAll;
 import com.griefdefender.command.CommandClaimAbandonTop;
+import com.griefdefender.command.CommandClaimAbandonWorld;
 import com.griefdefender.command.CommandClaimAdmin;
 import com.griefdefender.command.CommandClaimBan;
 import com.griefdefender.command.CommandClaimBank;
@@ -780,6 +781,7 @@ public class GriefDefenderPlugin {
         manager.registerCommand(new CommandClaimAbandon());
         manager.registerCommand(new CommandClaimAbandonAll());
         manager.registerCommand(new CommandClaimAbandonTop());
+        manager.registerCommand(new CommandClaimAbandonWorld());
         manager.registerCommand(new CommandClaimAdmin());
         manager.registerCommand(new CommandClaimBan());
         manager.registerCommand(new CommandClaimBank());

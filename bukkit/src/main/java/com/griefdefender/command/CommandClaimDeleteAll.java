@@ -58,6 +58,7 @@ import net.kyori.text.event.HoverEvent;
 import net.kyori.text.format.TextColor;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -134,12 +135,25 @@ public class CommandClaimDeleteAll extends BaseCommand {
     private static Consumer<CommandSender> createConfirmationConsumer(Player src, GDPermissionUser otherPlayer, World world) {
         return confirm -> {
             GDCauseStackManager.getInstance().pushCause(src);
-            Set<Claim> claims = new HashSet<>();
+            Set<Claim> claims;
             if (world != null) {
                 final GDClaimManager claimManager = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(world.getUID());
-                claims = claimManager.getPlayerClaims(otherPlayer.getUniqueId());
+                claims = new HashSet<>(claimManager.getInternalPlayerClaims(otherPlayer.getUniqueId()));
+                final Iterator<Claim> iterator = claims.iterator();
+                while (iterator.hasNext()) {
+                    final Claim claim = iterator.next();
+                    if (!claim.getWorldUniqueId().equals(world.getUID())) {
+                        iterator.remove();
+                    }
+                }
             } else {
                 claims = otherPlayer.getInternalPlayerData().getInternalClaims();
+            }
+            if (claims.isEmpty()) {
+                final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PLAYER_NO_CLAIMS_TO_DELETE, ImmutableMap.of(
+                        "player", otherPlayer.getFriendlyName()));
+                TextAdapter.sendComponent(src, message);
+                return;
             }
             GDRemoveClaimEvent.Delete event = new GDRemoveClaimEvent.Delete(ImmutableList.copyOf(claims));
             GriefDefender.getEventManager().post(event);

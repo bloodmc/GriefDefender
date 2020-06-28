@@ -65,6 +65,7 @@ import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextColor;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 import org.spongepowered.api.world.storage.WorldProperties;
@@ -153,8 +154,11 @@ public abstract class BaseStorage {
         return claimResult;
     }
 
-    public ClaimResult deleteAllAdminClaims(CommandSource src, World world) {
-        GDClaimManager claimWorldManager = this.claimWorldManagers.get(world.getProperties().getUniqueId());
+    public ClaimResult deleteAllAdminClaims(Player source, UUID worldUniqueId) {
+        if (worldUniqueId == null) {
+            worldUniqueId = source.getWorld().getUniqueId();
+        }
+        GDClaimManager claimWorldManager = this.claimWorldManagers.get(worldUniqueId);
         if (claimWorldManager == null) {
             return new GDClaimResult(ClaimResultType.CLAIMS_DISABLED);
         }
@@ -162,6 +166,9 @@ public abstract class BaseStorage {
         List<Claim> claimsToDelete = new ArrayList<Claim>();
         boolean adminClaimFound = false;
         for (Claim claim : claimWorldManager.getWorldClaims()) {
+            if (worldUniqueId != null && !claim.getWorldUniqueId().equals(worldUniqueId)) {
+                continue;
+            }
             if (claim.isAdminClaim()) {
                 claimsToDelete.add(claim);
                 adminClaimFound = true;
@@ -172,7 +179,7 @@ public abstract class BaseStorage {
             return new GDClaimResult(ClaimResultType.CLAIM_NOT_FOUND);
         }
 
-        GDCauseStackManager.getInstance().pushCause(src);
+        GDCauseStackManager.getInstance().pushCause(source);
         GDRemoveClaimEvent.Delete event = new GDRemoveClaimEvent.Delete(ImmutableList.copyOf(claimsToDelete));
         GriefDefender.getEventManager().post(event);
         GDCauseStackManager.getInstance().popCause();
@@ -205,19 +212,36 @@ public abstract class BaseStorage {
     }
 
     public void deleteClaimsForPlayer(UUID playerID) {
+        this.deleteClaimsForPlayer(playerID, null);
+    }
+
+    public void deleteClaimsForPlayer(UUID playerID, UUID worldUniqueId) {
         if (BaseStorage.USE_GLOBAL_PLAYER_STORAGE && playerID != null) {
-            final GDPlayerData playerData = BaseStorage.GLOBAL_PLAYER_DATA.get(playerID);
-            List<Claim> claimsToDelete = new ArrayList<>(playerData.getInternalClaims());
+            Set<Claim> claims = new HashSet<>();
+            if (worldUniqueId != null) {
+                final GDClaimManager claimManager = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(worldUniqueId);
+                claims = claimManager.getInternalPlayerClaims(playerID);
+            } else {
+                final GDPlayerData playerData = BaseStorage.GLOBAL_PLAYER_DATA.get(playerID);
+                claims = playerData.getInternalClaims();
+            }
+            List<Claim> claimsToDelete = new ArrayList<>(claims);
             for (Claim claim : claimsToDelete) {
+                if (worldUniqueId != null && !claim.getWorldUniqueId().equals(worldUniqueId)) {
+                    continue;
+                }
                 GDClaimManager claimWorldManager = this.claimWorldManagers.get(claim.getWorldUniqueId());
                 claimWorldManager.deleteClaimInternal(claim, true);
+                claims.remove(claim);
             }
 
-            playerData.getInternalClaims().clear();
             return;
         }
 
         for (GDClaimManager claimWorldManager : this.claimWorldManagers.values()) {
+            if (worldUniqueId != null && !claimWorldManager.getWorldId().equals(worldUniqueId)) {
+                continue;
+            }
             Set<Claim> claims = claimWorldManager.getInternalPlayerClaims(playerID);
             if (playerID == null) {
                 claims = claimWorldManager.getWorldClaims();
@@ -228,6 +252,9 @@ public abstract class BaseStorage {
 
             List<Claim> claimsToDelete = new ArrayList<Claim>();
             for (Claim claim : claims) {
+                if (worldUniqueId != null && !claim.getWorldUniqueId().equals(worldUniqueId)) {
+                    continue;
+                }
                 if (!claim.isAdminClaim()) {
                     claimsToDelete.add(claim);
                 }

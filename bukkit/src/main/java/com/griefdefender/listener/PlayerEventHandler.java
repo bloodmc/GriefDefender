@@ -526,7 +526,7 @@ public class PlayerEventHandler implements Listener {
             return;
         }
 
-        final boolean primaryEvent = event.getAction() == Action.LEFT_CLICK_AIR ? true : false;
+        final boolean primaryEvent = event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK ? true : false;
         final Flag flag = primaryEvent ? Flags.INTERACT_ITEM_PRIMARY : Flags.INTERACT_ITEM_SECONDARY;
 
         if ((playerData.claimMode && (NMSUtil.getInstance().isMainHand(event) && event.getAction() == Action.LEFT_CLICK_AIR|| event.getAction() == Action.LEFT_CLICK_BLOCK)) || (!playerData.claimMode && GriefDefenderPlugin.getInstance().investigationTool != null && NMSUtil.getInstance().itemsEqual(itemInHand, GriefDefenderPlugin.getInstance().investigationTool))) {

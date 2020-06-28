@@ -34,6 +34,8 @@ public class VisualCategory extends ConfigCategory {
 
     @Setting(value = "hide-borders-when-using-wecui", comment = "Whether to hide the glowstone/gold block borders when using WECUI.")
     public boolean hideBorders = false;
+    @Setting(value = "hide-fillers-when-using-wecui", comment = "Whether to hide the block fillers when using WECUI.")
+    public boolean hideFillers = false;
     @Setting(value = "hide-wecui-drag-visuals-2d", comment = "Whether drag visuals should be shown while creating a claim in 2D mode.")
     public boolean hideDrag2d = true;
     @Setting(value = "client-visuals-per-tick", comment = "The amount of block visuals a client can receive per tick when showing/hiding claims. Default: 12")

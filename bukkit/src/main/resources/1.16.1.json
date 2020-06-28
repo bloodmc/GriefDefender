@@ -3,9 +3,9 @@
     "libraries": [
         {
             "name": "com.griefdefender:adapter:1.16.1",
-            "sha1": "15eec491a9e4d40d0deae04fff009983d960cac0",
-            "path": "com/griefdefender/adapter/1.16.1-SNAPSHOT/adapter-1.16.1-20200625.044010-2.jar",
-            "url": "https://repo.glaremasters.me/repository/bloodshot/com/griefdefender/adapter/1.16.1-SNAPSHOT/adapter-1.16.1-20200625.044010-2.jar"
+            "sha1": "5615f7855680579ad778d2a953293b929493d553",
+            "path": "com/griefdefender/adapter/1.16.1-SNAPSHOT/adapter-1.16.1-20200627.034742-3.jar",
+            "url": "https://repo.glaremasters.me/repository/bloodshot/com/griefdefender/adapter/1.16.1-SNAPSHOT/adapter-1.16.1-20200627.034742-3.jar"
         },
         {
             "name": "com.griefdefender:api:1.0.0",
@@ -117,18 +117,18 @@
             "url": "https://repo1.maven.org/maven2/javax/inject/javax.inject/1/javax.inject-1.jar"
         },
         {
-            "name": "com.squareup.okhttp3:okhttp:3.14.2",
-            "sha1": "eaed79ed6bc1e14fad462172b6a09524545b165c",
-            "path": "com/squareup/okhttp3/okhttp/3.14.2/okhttp-3.14.2.jar",
+            "name": "com.squareup.okhttp3:okhttp:4.7.2",
+            "sha1": "c9acfd63537db1d7d21d98a7405e22449bb881d6",
+            "path": "com/squareup/okhttp3/okhttp/4.7.2/okhttp-4.7.2.jar",
             "relocate": "okhttp3:okhttp3",
-            "url": "https://repo1.maven.org/maven2/com/squareup/okhttp3/okhttp/3.14.2/okhttp-3.14.2.jar"
+            "url": "https://repo1.maven.org/maven2/com/squareup/okhttp3/okhttp/4.7.2/okhttp-4.7.2.jar"
         },
         {
-            "name": "com.squareup.okio:okio:2.2.2",
-            "sha1": "36f483536153f15339a8b48d508e22be7c9c531a",
-            "path": "com/squareup/okio/okio/2.2.2/okio-2.2.2.jar",
+            "name": "com.squareup.okio:okio:2.6.0",
+            "sha1": "0f06923d428f3c8e6f571043ec29a45d0cd9d2bf",
+            "path": "com/squareup/okio/okio/2.6.0/okio-2.6.0.jar",
             "relocate": "okio:okio",
-            "url": "https://repo1.maven.org/maven2/com/squareup/okio/okio/2.2.2/okio-2.2.2.jar"
+            "url": "https://repo1.maven.org/maven2/com/squareup/okio/okio/2.6.0/okio-2.6.0.jar"
         },
         {
             "name": "com.github.ben-manes.caffeine:caffeine:2.7.0",
@@ -194,11 +194,11 @@
             "url": "https://repo1.maven.org/maven2/it/unimi/dsi/fastutil/8.2.3/fastutil-8.2.3.jar"
         },
         {
-            "name": "org.jetbrains.kotlin:kotlin-stdlib:1.3.31",
-            "sha1": "11289d20fd95ae219333f3456072be9f081c30cc",
-            "path": "org/jetbrains/kotlin/kotlin-stdlib/1.3.31/kotlin-stdlib-1.3.31.jar",
-            "relocate": "org.jetbrains:jetbrains",
-            "url": "https://repo1.maven.org/maven2/org/jetbrains/kotlin/kotlin-stdlib/1.3.31/kotlin-stdlib-1.3.31.jar"
+            "name": "org.jetbrains.kotlin:kotlin-stdlib:1.3.72",
+            "sha1": "8032138f12c0180bc4e51fe139d4c52b46db6109",
+            "path": "org/jetbrains/kotlin/kotlin-stdlib/1.3.72/kotlin-stdlib-1.3.72.jar",
+            "relocate": "kotlin:kotlin",
+            "url": "https://repo1.maven.org/maven2/org/jetbrains/kotlin/kotlin-stdlib/1.3.72/kotlin-stdlib-1.3.72.jar"
         },
         {
             "name": "net.kyori:event-api:3.0.0",

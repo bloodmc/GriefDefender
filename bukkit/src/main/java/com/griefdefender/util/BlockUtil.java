@@ -265,12 +265,16 @@ public class BlockUtil {
             return claims;
         }
 
+        final World world = location.getWorld();
         org.bukkit.Chunk lesserChunk = location.getWorld().getChunkAt((location.getBlockX() - blockDistance) >> 4, (location.getBlockZ() - blockDistance) >> 4);
         org.bukkit.Chunk greaterChunk = location.getWorld().getChunkAt((location.getBlockX() + blockDistance) >> 4, (location.getBlockZ() + blockDistance) >> 4);
 
         if (lesserChunk != null && greaterChunk != null) {
             for (int chunkX = lesserChunk.getX(); chunkX <= greaterChunk.getX(); chunkX++) {
                 for (int chunkZ = lesserChunk.getZ(); chunkZ <= greaterChunk.getZ(); chunkZ++) {
+                    if (!world.isChunkLoaded(chunkX, chunkZ)) {
+                        continue;
+                    }
                     org.bukkit.Chunk chunk = location.getWorld().getChunkAt(chunkX, chunkZ);
                     if (chunk != null) {
                         Set<Claim> claimsInChunk = claimWorldManager.getInternalChunksToClaimsMap().get(NMSUtil.getInstance().getChunkCoordIntPair(chunkX, chunkZ));

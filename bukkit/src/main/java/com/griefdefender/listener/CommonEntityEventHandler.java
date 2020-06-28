@@ -187,7 +187,7 @@ public class CommonEntityEventHandler {
             } else {
                 final boolean showGpPrefix = GriefDefenderPlugin.getGlobalConfig().getConfig().message.enterExitShowGdPrefix;
                 TextComponent welcomeMessage = (TextComponent) gpEvent.getEnterMessage().orElse(null);
-                if (welcomeMessage != null && !welcomeMessage.equals(TextComponent.empty())) {
+                if (welcomeMessage != null && !welcomeMessage.equals(TextComponent.empty()) && !fromClaim.isParent(toClaim)) {
                     ChatType chatType = gpEvent.getEnterMessageChatType();
                     if (chatType == ChatTypes.ACTION_BAR) {
                         TextAdapter.sendActionBar(player, TextComponent.builder("")
@@ -290,7 +290,7 @@ public class CommonEntityEventHandler {
                 final GDPlayerData playerData = user.getInternalPlayerData();
                 final boolean showGpPrefix = GriefDefenderPlugin.getGlobalConfig().getConfig().message.enterExitShowGdPrefix;
                 Component welcomeMessage = gpEvent.getEnterMessage().orElse(null);
-                if (welcomeMessage != null && !welcomeMessage.equals(TextComponent.empty())) {
+                if (welcomeMessage != null && !welcomeMessage.equals(TextComponent.empty()) && !fromClaim.isParent(toClaim)) {
                     ChatType chatType = gpEvent.getEnterMessageChatType();
                     if (chatType == ChatTypes.ACTION_BAR) {
                         TextAdapter.sendActionBar(player, TextComponent.builder("")

@@ -71,6 +71,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -156,7 +157,10 @@ public abstract class BaseStorage {
         return claimResult;
     }
 
-    public ClaimResult deleteAllAdminClaims(CommandSender src, UUID worldUniqueId) {
+    public ClaimResult deleteAllAdminClaims(Player source, UUID worldUniqueId) {
+        if (worldUniqueId == null) {
+            worldUniqueId = source.getWorld().getUID();
+        }
         GDClaimManager claimWorldManager = this.claimWorldManagers.get(worldUniqueId);
         if (claimWorldManager == null) {
             return new GDClaimResult(ClaimResultType.CLAIMS_DISABLED);
@@ -165,6 +169,9 @@ public abstract class BaseStorage {
         List<Claim> claimsToDelete = new ArrayList<Claim>();
         boolean adminClaimFound = false;
         for (Claim claim : claimWorldManager.getWorldClaims()) {
+            if (worldUniqueId != null && !claim.getWorldUniqueId().equals(worldUniqueId)) {
+                continue;
+            }
             if (claim.isAdminClaim()) {
                 claimsToDelete.add(claim);
                 adminClaimFound = true;
@@ -175,7 +182,7 @@ public abstract class BaseStorage {
             return new GDClaimResult(ClaimResultType.CLAIM_NOT_FOUND);
         }
 
-        GDCauseStackManager.getInstance().pushCause(src);
+        GDCauseStackManager.getInstance().pushCause(source);
         GDRemoveClaimEvent.Delete event = new GDRemoveClaimEvent.Delete(ImmutableList.copyOf(claimsToDelete));
         GriefDefender.getEventManager().post(event);
         GDCauseStackManager.getInstance().popCause();
@@ -223,11 +230,14 @@ public abstract class BaseStorage {
             }
             List<Claim> claimsToDelete = new ArrayList<>(claims);
             for (Claim claim : claimsToDelete) {
+                if (worldUniqueId != null && !claim.getWorldUniqueId().equals(worldUniqueId)) {
+                    continue;
+                }
                 GDClaimManager claimWorldManager = this.claimWorldManagers.get(claim.getWorldUniqueId());
                 claimWorldManager.deleteClaimInternal(claim, true);
+                claims.remove(claim);
             }
 
-            claims.clear();
             return;
         }
 
@@ -242,6 +252,9 @@ public abstract class BaseStorage {
 
             List<Claim> claimsToDelete = new ArrayList<Claim>();
             for (Claim claim : claims) {
+                if (worldUniqueId != null && !claim.getWorldUniqueId().equals(worldUniqueId)) {
+                    continue;
+                }
                 if (!claim.isAdminClaim()) {
                     claimsToDelete.add(claim);
                 }

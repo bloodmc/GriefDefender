@@ -25,7 +25,6 @@
 package com.griefdefender.claim;
 
 import com.flowpowered.math.vector.Vector3i;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.reflect.TypeToken;
@@ -69,6 +68,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -470,7 +470,7 @@ public class GDClaimManager implements ClaimManager {
 
     @Override
     public Map<Long, Set<Claim>> getChunksToClaimsMap() {
-        return ImmutableMap.copyOf(this.chunksToClaimsMap);
+        return Collections.unmodifiableMap(this.chunksToClaimsMap);
     }
 
     public Map<Long, Set<Claim>> getInternalChunksToClaimsMap() {

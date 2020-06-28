@@ -247,7 +247,7 @@ public class CommonEntityEventHandler {
                     final boolean showGpPrefix = GriefDefenderPlugin.getGlobalConfig().getConfig().message.enterExitShowGdPrefix;
                     if (player != null) {
                         TextComponent welcomeMessage = (TextComponent) gpEvent.getEnterMessage().orElse(null);
-                        if (welcomeMessage != null && !welcomeMessage.equals(TextComponent.empty()) && !welcomeMessage.content().equals("")) {
+                        if (welcomeMessage != null && !welcomeMessage.equals(TextComponent.empty()) && !fromClaim.isParent(toClaim)) {
                             ChatType chatType = gpEvent.getEnterMessageChatType();
                             if (showGpPrefix) {
                                 TextAdapter.sendComponent(player, TextComponent.builder("")
@@ -352,7 +352,7 @@ public class CommonEntityEventHandler {
                 final GDPlayerData playerData = user.getInternalPlayerData();
                 final boolean showGpPrefix = GriefDefenderPlugin.getGlobalConfig().getConfig().message.enterExitShowGdPrefix;
                 Component welcomeMessage = gpEvent.getEnterMessage().orElse(null);
-                if (welcomeMessage != null && !welcomeMessage.equals(TextComponent.empty())) {
+                if (welcomeMessage != null && !welcomeMessage.equals(TextComponent.empty()) && !fromClaim.isParent(toClaim)) {
                     ChatType chatType = gpEvent.getEnterMessageChatType();
                     if (showGpPrefix) {
                         TextAdapter.sendComponent(player, TextComponent.builder("")
@@ -365,7 +365,7 @@ public class CommonEntityEventHandler {
                 }
 
                 Component farewellMessage = gpEvent.getExitMessage().orElse(null);
-                if (farewellMessage != null && farewellMessage != TextComponent.empty() && !toClaim.isParent(fromClaim)) {
+                if (farewellMessage != null && !farewellMessage.equals(TextComponent.empty()) && !toClaim.isParent(fromClaim)) {
                     ChatType chatType = gpEvent.getExitMessageChatType();
                     if (showGpPrefix) {
                         TextAdapter.sendComponent(player, TextComponent.builder("")

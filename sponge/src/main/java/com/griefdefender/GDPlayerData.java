@@ -171,7 +171,6 @@ public class GDPlayerData implements PlayerData {
     public boolean userOptionBypassPlayerGamemode = false;
 
     public boolean dataInitialized = false;
-    public boolean showVisualFillers = true;
     public boolean showNoClaimsFoundMessage = true;
     public boolean useRestoreSchematic = false;
     private boolean checkedDimensionHeight = false;

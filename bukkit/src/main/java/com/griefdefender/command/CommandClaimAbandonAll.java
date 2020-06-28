@@ -145,6 +145,9 @@ public class CommandClaimAbandonAll extends BaseCommand {
                 claims = playerData.getInternalClaims();
             }
             for (Claim claim : claims) {
+                if (world != null && !claim.getWorldUniqueId().equals(world.getUID())) {
+                    continue;
+                }
                 if (abandonDelay > 0) {
                     final Instant localNow = Instant.now();
                     final Instant dateCreated = ((GDClaim) claim).getInternalClaimData().getDateCreated();
@@ -160,6 +163,10 @@ public class CommandClaimAbandonAll extends BaseCommand {
                 }
             }
 
+            if (allowedClaims.isEmpty() && delayedClaims.isEmpty()) {
+                TextAdapter.sendComponent(user.getOnlinePlayer(), MessageCache.getInstance().CLAIM_NO_CLAIMS);
+                return;
+            }
             if (!allowedClaims.isEmpty()) {
                 GDCauseStackManager.getInstance().pushCause(user);
                 GDRemoveClaimEvent.Abandon event = new GDRemoveClaimEvent.Abandon(ImmutableList.copyOf(allowedClaims));

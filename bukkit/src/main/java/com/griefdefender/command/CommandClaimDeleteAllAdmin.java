@@ -34,11 +34,9 @@ import co.aikar.commands.annotation.Subcommand;
 import com.google.common.collect.ImmutableMap;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
-import com.griefdefender.api.claim.Claim;
 import com.griefdefender.api.claim.ClaimResult;
 import com.griefdefender.api.claim.ClaimTypes;
 import com.griefdefender.cache.MessageCache;
-import com.griefdefender.claim.GDClaimManager;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.permission.GDPermissions;
 import com.griefdefender.text.action.GDCallbackHolder;
@@ -50,7 +48,6 @@ import net.kyori.text.event.ClickEvent;
 import net.kyori.text.event.HoverEvent;
 import net.kyori.text.format.TextColor;
 
-import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -73,12 +70,6 @@ public class CommandClaimDeleteAllAdmin extends BaseCommand {
             if (world == null) {
                 TextAdapter.sendComponent(player, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.COMMAND_WORLD_NOT_FOUND,
                         ImmutableMap.of("world", worldName)));
-                return;
-            }
-            final GDClaimManager claimManager = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(world.getUID());
-            final Set<Claim> claims = claimManager.getPlayerClaims(player.getUniqueId());
-            if (claims == null || claims.isEmpty()) {
-                TextAdapter.sendComponent(player, MessageCache.getInstance().CLAIM_NO_CLAIMS);
                 return;
             }
         }

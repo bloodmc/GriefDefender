@@ -52,21 +52,23 @@ import com.griefdefender.permission.GDPermissions;
 import com.griefdefender.text.action.GDCallbackHolder;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
-import net.kyori.text.adapter.bukkit.TextAdapter;
+import net.kyori.text.adapter.spongeapi.TextAdapter;
 import net.kyori.text.event.ClickEvent;
 import net.kyori.text.event.HoverEvent;
 import net.kyori.text.format.TextColor;
-import net.milkbowl.vault.economy.Economy;
-import net.milkbowl.vault.economy.EconomyResponse;
+import org.spongepowered.api.Sponge;
+import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.service.economy.Currency;
+import org.spongepowered.api.service.economy.account.Account;
+import org.spongepowered.api.service.economy.transaction.ResultType;
+import org.spongepowered.api.service.economy.transaction.TransactionResult;
+import org.spongepowered.api.world.storage.WorldProperties;
 
+import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Consumer;
-
-import org.bukkit.Bukkit;
-import org.bukkit.World;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 
 @CommandAlias("%griefdefender")
 @CommandPermission(GDPermissions.COMMAND_ABANDON_WORLD_CLAIMS)
@@ -78,16 +80,16 @@ public class CommandClaimAbandonWorld extends BaseCommand {
     @Subcommand("abandon world")
     @Syntax("[<world>]")
     public void execute(Player player, @Optional String worldName) {
-        World world = player.getWorld();
+        WorldProperties world = player.getWorld().getProperties();
         if (worldName != null) {
-            world = Bukkit.getWorld(worldName);
+            world = Sponge.getServer().getWorldProperties(worldName).orElse(null);
             if (world == null) {
                 TextAdapter.sendComponent(player, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.COMMAND_WORLD_NOT_FOUND,
                         ImmutableMap.of("world", worldName)));
                 return;
             }
         }
-        final GDClaimManager claimWorldManager = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(player.getWorld().getUID());
+        final GDClaimManager claimWorldManager = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(player.getWorld().getUniqueId());
         if (claimWorldManager.getWorldClaims().size() == 0) {
             try {
                 throw new CommandException(MessageCache.getInstance().CLAIM_NO_CLAIMS);
@@ -98,7 +100,7 @@ public class CommandClaimAbandonWorld extends BaseCommand {
         }
 
         final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ABANDON_WORLD_WARNING, ImmutableMap.of(
-                "world", TextComponent.of(world.getName())));
+                "world", TextComponent.of(world.getWorldName())));
         final Component confirmationText = TextComponent.builder()
                 .append(message)
                 .append(TextComponent.builder()
@@ -111,9 +113,9 @@ public class CommandClaimAbandonWorld extends BaseCommand {
         TextAdapter.sendComponent(player, confirmationText);
     }
 
-    private static Consumer<CommandSender> createConfirmationConsumer(Player source, World world) {
+    private static Consumer<CommandSource> createConfirmationConsumer(Player source, WorldProperties world) {
         return confirm -> {
-            final GDClaimManager claimWorldManager = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(world.getUID());
+            final GDClaimManager claimWorldManager = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(world.getUniqueId());
             for (GDPlayerData playerData : claimWorldManager.getPlayerDataMap().values()) {
                 final GDPermissionUser user = playerData.getSubject();
                 if (user == null) {
@@ -123,7 +125,7 @@ public class CommandClaimAbandonWorld extends BaseCommand {
                 Set<Claim> allowedClaims = new HashSet<>();
                 final Player player = user.getOnlinePlayer();
                 for (Claim claim : playerData.getInternalClaims()) {
-                    if (!claim.getWorldUniqueId().equals(world.getUID())) {
+                    if (!claim.getWorldUniqueId().equals(world.getUniqueId())) {
                         continue;
                     }
                     allowedClaims.add(claim);
@@ -159,29 +161,29 @@ public class CommandClaimAbandonWorld extends BaseCommand {
                     playerData.onClaimDelete();
 
                     if (GriefDefenderPlugin.getInstance().isEconomyModeEnabled()) {
-                        final Economy economy = GriefDefenderPlugin.getInstance().getVaultProvider().getApi();
-                        if (!economy.hasAccount(player)) {
+                        final Account playerAccount = GriefDefenderPlugin.getInstance().economyService.get().getOrCreateAccount(playerData.playerID).orElse(null);
+                        if (playerAccount == null) {
                             return;
                         }
 
-                        final EconomyResponse result = economy.depositPlayer(user.getOfflinePlayer(), refund);
-                        if (result.transactionSuccess()) {
-                            final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_CLAIM_ABANDON_SUCCESS_WORLD, ImmutableMap.of(
-                                    "world", world.getName(),
+                        final Currency defaultCurrency = GriefDefenderPlugin.getInstance().economyService.get().getDefaultCurrency();
+                        final TransactionResult result = playerAccount.deposit(defaultCurrency, BigDecimal.valueOf(refund), Sponge.getCauseStackManager().getCurrentCause());
+                        if (result.getResult() == ResultType.SUCCESS) {
+                            final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_CLAIM_ABANDON_SUCCESS, ImmutableMap.of(
                                     "amount", TextComponent.of(String.valueOf(refund))));
-                            TextAdapter.sendComponent(player, message);
+                            GriefDefenderPlugin.sendMessage(player, message);
                         }
                     } else {
                         int remainingBlocks = playerData.getRemainingClaimBlocks();
                         final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ABANDON_SUCCESS_WORLD, ImmutableMap.of(
-                                    "world", world.getName(),
+                                    "world", world.getWorldName(),
                                     "amount", remainingBlocks));
                         TextAdapter.sendComponent(player, message);
                     }
                 }
             }
             final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ABANDON_WORLD_SUCCESS, ImmutableMap.of(
-                    "world", world.getName()));
+                    "world", world.getWorldName()));
             TextAdapter.sendComponent(source, message);
         };
     }

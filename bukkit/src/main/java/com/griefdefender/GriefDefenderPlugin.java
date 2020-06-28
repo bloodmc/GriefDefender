@@ -1063,7 +1063,7 @@ public class GriefDefenderPlugin {
                 // refresh default permissions
                 this.dataStore.setDefaultGlobalPermissions();
             }
-            if (this.tagProvider != null) {
+            if (this.tagProvider != null && getMajorMinecraftVersion() > 15) {
                 this.tagProvider.refresh();
             }
         } catch (Exception e) {
