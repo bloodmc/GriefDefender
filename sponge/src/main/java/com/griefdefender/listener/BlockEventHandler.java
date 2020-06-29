@@ -48,6 +48,8 @@ import com.griefdefender.claim.GDClaimManager;
 import com.griefdefender.configuration.GriefDefenderConfig;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.event.GDCauseStackManager;
+import com.griefdefender.internal.registry.BlockTypeRegistryModule;
+import com.griefdefender.internal.registry.GDBlockType;
 import com.griefdefender.internal.util.BlockUtil;
 import com.griefdefender.internal.util.NMSUtil;
 import com.griefdefender.internal.visual.GDClaimVisual;
@@ -425,6 +427,11 @@ public class BlockEventHandler {
         }
         // ignore falling blocks
         if (!GDFlags.COLLIDE_BLOCK || source instanceof FallingBlock) {
+            return;
+        }
+
+        final GDBlockType gdBlock = BlockTypeRegistryModule.getInstance().getById(event.getTargetBlock().getType().getId()).orElse(null);
+        if (gdBlock != null && !gdBlock.isCollidable()) {
             return;
         }
         if (GriefDefenderPlugin.isSourceIdBlacklisted(Flags.COLLIDE_BLOCK.getName(), source.getType().getId(), source.getWorld().getProperties())) {

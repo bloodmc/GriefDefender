@@ -139,8 +139,7 @@ public class BlockEventTracker implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBlockPhysicsMonitor(BlockPhysicsEvent event) {
-        final String targetBlockName = GDPermissionManager.getInstance().getPermissionIdentifier(event.getBlock());
-        if (targetBlockName.equals("minecraft:observer")) {
+        if (NMSUtil.getInstance().isBlockObserver(event.getBlock())) {
             return;
         }
         // Check if sign broke
@@ -165,11 +164,8 @@ public class BlockEventTracker implements Listener {
         if (sourceLocation != null && sourceLocation.equals(block.getLocation())) {
             return;
         }
-        if (sourceBlock != null) {
-            final String sourceBlockName = GDPermissionManager.getInstance().getPermissionIdentifier(sourceBlock);
-            if (sourceBlockName.equals("minecraft:observer")) {
-                return;
-            }
+        if (sourceBlock != null && NMSUtil.getInstance().isBlockObserver(sourceBlock)) {
+            return;
         }
 
         final GDClaimManager claimWorldManager = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(block.getWorld().getUID());

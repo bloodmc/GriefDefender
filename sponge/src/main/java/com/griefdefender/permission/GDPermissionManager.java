@@ -401,13 +401,9 @@ public class GDPermissionManager implements PermissionManager {
             return value;
         }
 
-
-        if (holder == GriefDefenderPlugin.DEFAULT_HOLDER) {
-            contexts.remove(claim.getContext());
-            return getFlagDefaultPermission(claim, permission, contexts);
-        }
-
-        return getClaimFlagPermission(claim, permission, contexts, inheritParents);
+        // Group MUST inherit default group or above will return undefined if no permission set on non-default group/user.
+        contexts.remove(claim.getContext());
+        return getFlagDefaultPermission(claim, permission, contexts);
     }
 
     private Tristate getClaimFlagPermission(Claim claim, String permission) {

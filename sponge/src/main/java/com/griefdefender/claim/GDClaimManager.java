@@ -649,9 +649,13 @@ public class GDClaimManager implements ClaimManager {
     }
 
     public GDChunk getChunk(Chunk chunk) {
+        return this.getChunk(chunk, true);
+    }
+
+    public GDChunk getChunk(Chunk chunk, boolean force) {
         final long chunkKey = getChunkKey(chunk);
         GDChunk gdChunk = this.chunksToGDChunks.get(chunkKey);
-        if (gdChunk == null) {
+        if (gdChunk == null && force) {
             gdChunk = new GDChunk(chunk);
             this.chunksToGDChunks.put(chunkKey, gdChunk);
             if (this.chunksToClaimsMap.get(chunkKey) == null) {

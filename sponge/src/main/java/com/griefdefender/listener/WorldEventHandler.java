@@ -96,7 +96,7 @@ public class WorldEventHandler {
         }
 
         final GDClaimManager claimWorldManager = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(event.getTargetChunk().getWorld().getUniqueId());
-        final GDChunk gdChunk = claimWorldManager.getChunk(event.getTargetChunk());
+        final GDChunk gdChunk = claimWorldManager.getChunk(event.getTargetChunk(), false);
         if (gdChunk != null) {
             claimWorldManager.removeChunk(gdChunk.getChunkKey());
         }

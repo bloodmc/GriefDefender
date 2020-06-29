@@ -92,7 +92,7 @@ public class WorldEventHandler implements Listener {
         }
 
         final GDClaimManager claimWorldManager = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(event.getWorld().getUID());
-        final GDChunk gdChunk = claimWorldManager.getChunk(event.getChunk());
+        final GDChunk gdChunk = claimWorldManager.getChunk(event.getChunk(), false);
         if (gdChunk != null) {
             if (gdChunk.getTrackedShortPlayerPositions().size() > 0) {
                 gdChunk.saveChunkTrackingData();
