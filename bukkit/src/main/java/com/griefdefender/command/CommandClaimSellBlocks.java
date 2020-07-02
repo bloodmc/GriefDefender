@@ -39,9 +39,6 @@ import com.griefdefender.cache.MessageCache;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.permission.GDPermissions;
 import net.kyori.text.Component;
-import net.kyori.text.TextComponent;
-import net.kyori.text.adapter.bukkit.TextAdapter;
-import net.kyori.text.format.TextColor;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.economy.EconomyResponse;
 
@@ -56,10 +53,13 @@ public class CommandClaimSellBlocks extends BaseCommand {
     @Syntax("[<amount>]")
     @Subcommand("sell blocks")
     public void execute(Player player, @Optional Integer blockCount) {
-        final boolean economyMode = GriefDefenderPlugin.getInstance().isEconomyModeEnabled();
         // if economy is disabled, don't do anything
         if (GriefDefenderPlugin.getInstance().getVaultProvider() == null) {
             GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().ECONOMY_NOT_INSTALLED);
+            return;
+        }
+        if (GriefDefenderPlugin.getInstance().isEconomyModeEnabled()) {
+            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().COMMAND_NOT_AVAILABLE_ECONOMY);
             return;
         }
 
@@ -83,7 +83,7 @@ public class CommandClaimSellBlocks extends BaseCommand {
             return;
         }
 
-        int availableBlocks = economyMode ? playerData.getAccruedClaimBlocks() + playerData.getBonusClaimBlocks() : playerData.getInternalRemainingClaimBlocks();
+        int availableBlocks = playerData.getInternalRemainingClaimBlocks();
         if (blockCount == null) {
             final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_BLOCK_PURCHASE_COST,
                     ImmutableMap.of(
@@ -113,19 +113,6 @@ public class CommandClaimSellBlocks extends BaseCommand {
                 return;
             }
 
-            Component message = null;
-            if (economyMode) {
-                message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_MODE_BLOCK_SALE_CONFIRMATION,
-                        ImmutableMap.of(
-                        "deposit", economyTotalValue,
-                        "balance", String.valueOf("$" + economy.getBalance(player)),
-                        "amount", playerData.getRemainingClaimBlocks()));
-            } else {
-                message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_BLOCK_SALE_CONFIRMATION,
-                    ImmutableMap.of(
-                    "deposit", economyTotalValue,
-                    "amount", playerData.getRemainingClaimBlocks()));
-            }
             int bonusBlocks = playerData.getBonusClaimBlocks();
             int accruedBlocks = playerData.getAccruedClaimBlocks();
             if (bonusBlocks > 0) {
@@ -142,6 +129,10 @@ public class CommandClaimSellBlocks extends BaseCommand {
                 playerData.setAccruedClaimBlocks(accruedBlocks);
             }
 
+            final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_BLOCK_SALE_CONFIRMATION,
+                    ImmutableMap.of(
+                    "deposit", "$" + String.format("%.2f", economyTotalValue),
+                    "amount", playerData.getRemainingClaimBlocks()));
             GriefDefenderPlugin.sendMessage(player, message);
         }
     }

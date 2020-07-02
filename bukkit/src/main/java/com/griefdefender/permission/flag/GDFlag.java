@@ -88,7 +88,6 @@ public class GDFlag implements Flag {
                 case "block-place" :
                 case "collide-block" :
                 case "collide-entity" :
-                case "entity-damage" :
                 case "explosion-block" :
                 case "explosion-entity" :
                 case "interact-block-primary" :
@@ -97,7 +96,6 @@ public class GDFlag implements Flag {
                 case "interact-inventory" : 
                 case "liquid-flow" : 
                 case "projectile-impact-block" :
-                case "projectile-impact-entity" : 
                     return false;
                 default :
                     return true;

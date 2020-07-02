@@ -251,6 +251,18 @@ public class BlockUtil {
         return getBlockRelative(location, blockFaceToDirectionMap.get(face));
     }
 
+    public Location getBlockRelative(Location location, BlockFace face, int distance) {
+        int count = 0;
+        Location relativeLocation = null;
+        Location sourceLocation = location.clone();
+        while (count < distance) {
+            relativeLocation = getBlockRelative(sourceLocation, blockFaceToDirectionMap.get(face));
+            sourceLocation = relativeLocation;
+            count++;
+        }
+        return relativeLocation;
+    }
+
     public Location getBlockRelative(Location location, Direction direction) {
         final Vector3i offset = direction.asBlockOffset();
         // We must clone here as Bukkit's location is mutable

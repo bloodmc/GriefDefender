@@ -492,10 +492,6 @@ public class EntityEventHandler {
             playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(targetEntity.getWorld(), player.getUniqueId());
         }
 
-        if (NMSUtil.getInstance().isEntityMonster(targetEntity)) {
-            return false;
-        }
-
         GDClaim claim = null;
         if (playerData != null) {
             claim = this.dataStore.getClaimAtPlayer(playerData, targetEntity.getLocation());
@@ -513,6 +509,9 @@ public class EntityEventHandler {
         final TrustType trustType = TrustTypes.BUILDER;
         if (GDPermissionManager.getInstance().getFinalPermission(event, targetEntity.getLocation(), claim, Flags.ENTITY_DAMAGE, source, targetEntity, user, trustType, true) == Tristate.FALSE) {
             return true;
+        }
+        if (NMSUtil.getInstance().isEntityMonster(targetEntity)) {
+            return false;
         }
 
         // allow trusted users to attack entities within claim
@@ -576,8 +575,10 @@ public class EntityEventHandler {
             }
         }
 
-        if (GDPermissionManager.getInstance().getFinalPermission(event, targetEntity.getLocation(), claim, Flags.ENTITY_DAMAGE, attacker, targetEntity, user, trustType, true) == Tristate.FALSE) {
-            return true;
+        if (source != attacker) {
+            if (GDPermissionManager.getInstance().getFinalPermission(event, targetEntity.getLocation(), claim, Flags.ENTITY_DAMAGE, attacker, targetEntity, user, trustType, true) == Tristate.FALSE) {
+                return true;
+            }
         }
 
         return false;

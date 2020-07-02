@@ -91,6 +91,7 @@ public class GDPermissions {
     public static final String CLAIM_SHOW_TUTORIAL = "griefdefender.user.claim.show-tutorial";
     public static final String VISUALIZE_CLAIMS = "griefdefender.user.claim.visualize.base";
     public static final String VISUALIZE_CLAIMS_NEARBY = "griefdefender.user.claim.visualize.nearby";
+    public static final String COMMAND_CONFIRM = "griefdefender.user.command.confirm";
     public static final String COMMAND_PLAYER_INFO_BASE = "griefdefender.user.command.info.base";
     public static final String COMMAND_PLAYER_INFO_OTHERS = "griefdefender.user.command.info.others";
     public static final String COMMAND_VERSION = "griefdefender.user.command.version";
@@ -154,6 +155,7 @@ public class GDPermissions {
     public static final String COMMAND_DELETE_CLAIM_BASE = "griefdefender.admin.claim.command.delete.base";
     public static final String COMMAND_DELETE_CLAIMS = "griefdefender.admin.claim.command.delete-claims";
     public static final String COMMAND_DELETE_ADMIN_CLAIMS = "griefdefender.admin.command.delete-admin-claims";
+    public static final String COMMAND_ECONOMY_BLOCK_TRANSFER = "griefdefender.admin.command.block-transfer";
     public static final String COMMAND_SET_ACCRUED_CLAIM_BLOCKS = "griefdefender.admin.command.set-accrued-claim-blocks";
     public static final String COMMAND_RESTORE_CLAIM = "griefdefender.admin.command.restore-claim.base";
     public static final String COMMAND_RESTORE_NATURE = "griefdefender.admin.command.restore-nature.base";

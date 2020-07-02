@@ -198,11 +198,11 @@ public class CommandClaimAbandonAll extends BaseCommand {
     
                 if (GriefDefenderPlugin.getInstance().isEconomyModeEnabled()) {
                     final Economy economy = GriefDefenderPlugin.getInstance().getVaultProvider().getApi();
-                    if (!economy.hasAccount(player)) {
+                    if (!economy.hasAccount(user.getOfflinePlayer())) {
                         return;
                     }
     
-                    final EconomyResponse result = economy.depositPlayer(user.getOnlinePlayer(), refund);
+                    final EconomyResponse result = economy.depositPlayer(user.getOfflinePlayer(), refund);
                     if (result.transactionSuccess()) {
                         Component message = null;
                         if (world != null) {

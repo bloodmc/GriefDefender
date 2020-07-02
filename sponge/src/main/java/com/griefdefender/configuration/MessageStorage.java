@@ -185,6 +185,7 @@ public class MessageStorage {
     public static final String ECONOMY_BLOCK_PURCHASE_LIMIT = "economy-block-purchase-limit";
     public static final String ECONOMY_BLOCK_SALE_CONFIRMATION = "economy-block-sale-confirmation";
     public static final String ECONOMY_BLOCK_SELL_ERROR = "economy-block-sell-error";
+    public static final String ECONOMY_BLOCK_TRANSFER_SUCCESS = "economy-block-transfer-success";
     public static final String ECONOMY_CLAIM_ABANDON_SUCCESS = "economy-claim-abandon-success";
     public static final String ECONOMY_CLAIM_ABANDON_SUCCESS_WORLD = "economy-claim-abandon-success-world";
     public static final String ECONOMY_CLAIM_BUY_CANCELLED = "economy-claim-buy-cancelled";
@@ -218,6 +219,7 @@ public class MessageStorage {
     public static final String ECONOMY_CLAIM_SALE_CONFIRMED = "economy-claim-sale-confirmed";
     public static final String ECONOMY_CLAIM_SALE_INVALID_PRICE = "economy-claim-sale-invalid-price";
     public static final String ECONOMY_CLAIM_SOLD = "economy-claim-sold";
+    public static final String ECONOMY_DEPOSIT_ERROR = "economy-deposit-error";
     public static final String ECONOMY_MODE_BLOCK_SALE_CONFIRMATION = "economy-mode-block-sale-confirmation";
     public static final String ECONOMY_MODE_BLOCK_COST_NOT_SET = "economy-mode-block-cost-not-set";
     public static final String ECONOMY_MODE_RESIZE_SUCCESS_2D = "economy-mode-resize-success-2d";
@@ -286,6 +288,7 @@ public class MessageStorage {
     public static final String PLAYERINFO_UI_ABANDON_RETURN_RATIO = "playerinfo-ui-abandon-return-ratio";
     public static final String PLAYERINFO_UI_BLOCK_ACCRUED = "playerinfo-ui-block-accrued";
     public static final String PLAYERINFO_UI_BLOCK_BONUS = "playerinfo-ui-block-bonus";
+    public static final String PLAYERINFO_UI_CLAIM_CREATION_LIMIT = "playerinfo-ui-claim-creation-limit";
     public static final String PLAYERINFO_UI_CLAIM_LEVEL = "playerinfo-ui-claim-level";
     public static final String PLAYERINFO_UI_CLAIM_SIZE_LIMIT = "playerinfo-ui-claim-size-limit";
     public static final String PLAYERINFO_UI_BLOCK_INITIAL = "playerinfo-ui-block-initial";
@@ -302,6 +305,7 @@ public class MessageStorage {
     public static final String PLAYERINFO_UI_TAX_GLOBAL_CLAIM_RATE = "playerinfo-ui-tax-global-claim-rate";
     public static final String PLAYERINFO_UI_TAX_GLOBAL_TOWN_RATE = "playerinfo-ui-tax-global-town-rate";
     public static final String PLAYERINFO_UI_TAX_TOTAL = "playerinfo-ui-tax-total";
+    public static final String PLAYERINFO_UI_TITLE = "playerinfo-ui-title";
     public static final String PLAYERINFO_UI_UUID = "playerinfo-ui-uuid";
     public static final String PLAYERINFO_UI_WORLD = "playerinfo-ui-world";
     public static final String PLUGIN_COMMAND_NOT_FOUND = "plugin-command-not-found";

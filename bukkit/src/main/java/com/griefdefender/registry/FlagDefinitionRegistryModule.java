@@ -137,7 +137,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
 
         flagContexts = new HashSet<>();
         flagContexts.add(FlagContexts.SOURCE_PLAYER);
-        flagContexts.add(FlagContexts.TARGET_ITEM_ARMOR_STAND);
+        flagContexts.add(FlagContexts.TARGET_ARMOR_STAND);
         flagData = new ArrayList<>();
         flagData.add(flagDataBuilder
                 .reset()
@@ -146,7 +146,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                 .build());
         flagContexts = new HashSet<>();
         flagContexts.add(FlagContexts.SOURCE_PLAYER);
-        flagContexts.add(FlagContexts.TARGET_ENTITY_ARMOR_STAND);
+        flagContexts.add(FlagContexts.TARGET_ARMOR_STAND);
         flagData.add(flagDataBuilder
                 .reset()
                 .flag(Flags.ENTITY_DAMAGE)
@@ -219,7 +219,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
 
         flagContexts = new HashSet<>();
         flagContexts.add(FlagContexts.SOURCE_PLAYER);
-        flagContexts.add(FlagContexts.TARGET_ITEM_END_CRYSTAL);
+        flagContexts.add(FlagContexts.TARGET_END_CRYSTAL);
         flagData = new ArrayList<>();
         flagData.add(flagDataBuilder
                 .reset()
@@ -228,7 +228,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                 .build());
         flagContexts = new HashSet<>();
         flagContexts.add(FlagContexts.SOURCE_PLAYER);
-        flagContexts.add(FlagContexts.TARGET_ENTITY_ENDER_CRYSTAL);
+        flagContexts.add(FlagContexts.TARGET_END_CRYSTAL);
         flagData.add(flagDataBuilder
                 .reset()
                 .flag(Flags.ENTITY_DAMAGE)
@@ -247,6 +247,56 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.FALSE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_END_CRYSTAL_USE)
+                    .group("admin")
+                    .flagData(flagData)
+                    .build());
+
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.TARGET_ARMOR_STAND);
+        flagData = new ArrayList<>();
+        flagData.add(flagDataBuilder
+                .reset()
+                .flag(Flags.ENTITY_DAMAGE)
+                .contexts(flagContexts)
+                .build());
+        flagData.add(flagDataBuilder
+                .reset()
+                .flag(Flags.PROJECTILE_IMPACT_ENTITY)
+                .contexts(flagContexts)
+                .build());
+        this.registerCustomType(
+                definitionBuilder
+                    .reset()
+                    .name("entity-armorstand-damage")
+                    .admin(true)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
+                    .defaultValue(Tristate.FALSE)
+                    .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_ENTITY_ARMORSTAND_DAMAGE)
+                    .group("admin")
+                    .flagData(flagData)
+                    .build());
+
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.TARGET_ITEM_FRAME);
+        flagData = new ArrayList<>();
+        flagData.add(flagDataBuilder
+                .reset()
+                .flag(Flags.ENTITY_DAMAGE)
+                .contexts(flagContexts)
+                .build());
+        flagData.add(flagDataBuilder
+                .reset()
+                .flag(Flags.PROJECTILE_IMPACT_ENTITY)
+                .contexts(flagContexts)
+                .build());
+        this.registerCustomType(
+                definitionBuilder
+                    .reset()
+                    .name("entity-itemframe-damage")
+                    .admin(true)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
+                    .defaultValue(Tristate.FALSE)
+                    .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_ENTITY_ITEMFRAME_DAMAGE)
                     .group("admin")
                     .flagData(flagData)
                     .build());
@@ -508,7 +558,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .reset()
                     .name("piston-use")
                     .admin(true)
-                    .context(new Context(ContextKeys.CLAIM, "claim"))
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.FALSE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_PISTON_USE)
                     .group("admin")
@@ -563,6 +613,19 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                         .build())
                     .build());
 
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.TARGET_PLAYER);
+        flagData = new ArrayList<>();
+        flagData.add(flagDataBuilder
+                .reset()
+                .flag(Flags.ENTITY_DAMAGE)
+                .contexts(flagContexts)
+                .build());
+        flagData.add(flagDataBuilder
+                .reset()
+                .flag(Flags.PROJECTILE_IMPACT_ENTITY)
+                .contexts(flagContexts)
+                .build());
         this.registerCustomType(
                 definitionBuilder
                     .reset()
@@ -572,11 +635,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .defaultValue(Tristate.TRUE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_PLAYER_DAMAGE)
                     .group("admin")
-                    .flagData(flagDataBuilder
-                        .reset()
-                        .flag(Flags.ENTITY_DAMAGE)
-                        .context(FlagContexts.TARGET_PLAYER)
-                        .build())
+                    .flagData(flagData)
                     .build());
 
         flagContexts = new HashSet<>();
@@ -769,7 +828,44 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
 
         flagContexts = new HashSet<>();
         flagContexts.add(FlagContexts.SOURCE_PLAYER);
+        flagContexts.add(FlagContexts.TARGET_VILLAGER);
+        flagData = new ArrayList<>();
+        flagData.add(flagDataBuilder
+                .reset()
+                .flag(Flags.ENTITY_DAMAGE)
+                .contexts(flagContexts)
+                .build());
+        flagData.add(flagDataBuilder
+                .reset()
+                .flag(Flags.PROJECTILE_IMPACT_ENTITY)
+                .contexts(flagContexts)
+                .build());
+        this.registerCustomType(
+                definitionBuilder
+                    .reset()
+                    .name("player-villager-damage")
+                    .admin(true)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
+                    .defaultValue(Tristate.FALSE)
+                    .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_PLAYER_VILLAGER_DAMAGE)
+                    .group("admin")
+                    .flagData(flagData)
+                    .build());
+
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.SOURCE_PLAYER);
         flagContexts.add(FlagContexts.TARGET_PLAYER);
+        flagData = new ArrayList<>();
+        flagData.add(flagDataBuilder
+                .reset()
+                .flag(Flags.ENTITY_DAMAGE)
+                .contexts(flagContexts)
+                .build());
+        flagData.add(flagDataBuilder
+                .reset()
+                .flag(Flags.PROJECTILE_IMPACT_ENTITY)
+                .contexts(flagContexts)
+                .build());
         this.registerCustomType(
                 definitionBuilder
                     .reset()
@@ -779,11 +875,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .defaultValue(Tristate.TRUE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_PVP)
                     .group("admin")
-                    .flagData(flagDataBuilder
-                        .reset()
-                        .flag(Flags.ENTITY_DAMAGE)
-                        .contexts(flagContexts)
-                        .build())
+                    .flagData(flagData)
                     .build());
 
         this.registerCustomType(
@@ -879,10 +971,10 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
         this.registerCustomType(
                 definitionBuilder
                     .reset()
-                    .name("wither-entity-break")
+                    .name("wither-entity-damage")
                     .admin(true)
                     .context(ClaimContexts.USER_DEFAULT_CONTEXT)
-                    .defaultValue(Tristate.FALSE)
+                    .defaultValue(Tristate.TRUE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_WITHER_ENTITY_DAMAGE)
                     .group("admin")
                     .flagData(flagDataBuilder
@@ -978,6 +1070,19 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                         .build())
                     .build());
 
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.TARGET_TYPE_ANIMAL);
+        flagData = new ArrayList<>();
+        flagData.add(flagDataBuilder
+                .reset()
+                .flag(Flags.ENTITY_DAMAGE)
+                .contexts(flagContexts)
+                .build());
+        flagData.add(flagDataBuilder
+                .reset()
+                .flag(Flags.PROJECTILE_IMPACT_ENTITY)
+                .contexts(flagContexts)
+                .build());
         this.registerCustomType(
                 definitionBuilder
                     .reset()
@@ -987,11 +1092,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .defaultValue(Tristate.FALSE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_DAMAGE_ANIMALS)
                     .group("user")
-                    .flagData(flagDataBuilder
-                        .reset()
-                        .flag(Flags.ENTITY_DAMAGE)
-                        .context(FlagContexts.TARGET_TYPE_ANIMAL)
-                        .build())
+                    .flagData(flagData)
                     .build());
 
         this.registerCustomType(
@@ -1011,7 +1112,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .build());
 
         definitionContexts = new HashSet<>();
-        definitionContexts.add(ClaimContexts.GLOBAL_DEFAULT_CONTEXT);
+        definitionContexts.add(ClaimContexts.GLOBAL_OVERRIDE_CONTEXT);
         definitionContexts.add(OWNER_OVERRIDE_CONTEXT);
         flagData = new ArrayList<>();
         flagData.add(flagDataBuilder

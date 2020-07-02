@@ -133,6 +133,8 @@ import com.griefdefender.command.CommandClaimTransfer;
 import com.griefdefender.command.CommandClaimUnban;
 import com.griefdefender.command.CommandClaimWorldEdit;
 import com.griefdefender.command.CommandDebug;
+import com.griefdefender.command.CommandGDBlockTransfer;
+import com.griefdefender.command.CommandGDConfirm;
 import com.griefdefender.command.CommandGDReload;
 import com.griefdefender.command.CommandGDVersion;
 import com.griefdefender.command.CommandGiveBlocks;
@@ -752,6 +754,8 @@ public class GriefDefenderPlugin {
         manager.registerCommand(new CommandClaimWorldEdit());
         manager.registerCommand(new CommandContainerTrust());
         manager.registerCommand(new CommandDebug());
+        manager.registerCommand(new CommandGDBlockTransfer());
+        manager.registerCommand(new CommandGDConfirm());
         manager.registerCommand(new CommandGDReload());
         manager.registerCommand(new CommandGDVersion());
         manager.registerCommand(new CommandGiveBlocks());

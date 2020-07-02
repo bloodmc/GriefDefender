@@ -119,6 +119,15 @@ public class CommandClaimAbandonWorld extends BaseCommand {
                 if (user == null) {
                     continue;
                 }
+                if (playerData.playerID.equals(GriefDefenderPlugin.ADMIN_USER_UUID)) {
+                    continue;
+                }
+                if (playerData.playerID.equals(GriefDefenderPlugin.PUBLIC_UUID)) {
+                    continue;
+                }
+                if (playerData.playerID.equals(GriefDefenderPlugin.WORLD_USER_UUID)) {
+                    continue;
+                }
 
                 Set<Claim> allowedClaims = new HashSet<>();
                 final Player player = user.getOnlinePlayer();
@@ -160,18 +169,18 @@ public class CommandClaimAbandonWorld extends BaseCommand {
 
                     if (GriefDefenderPlugin.getInstance().isEconomyModeEnabled()) {
                         final Economy economy = GriefDefenderPlugin.getInstance().getVaultProvider().getApi();
-                        if (!economy.hasAccount(player)) {
+                        if (!economy.hasAccount(user.getOfflinePlayer())) {
                             return;
                         }
 
                         final EconomyResponse result = economy.depositPlayer(user.getOfflinePlayer(), refund);
-                        if (result.transactionSuccess()) {
+                        if (result.transactionSuccess() && player != null) {
                             final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_CLAIM_ABANDON_SUCCESS_WORLD, ImmutableMap.of(
                                     "world", world.getName(),
                                     "amount", TextComponent.of(String.valueOf(refund))));
                             TextAdapter.sendComponent(player, message);
                         }
-                    } else {
+                    } else if (player != null) {
                         int remainingBlocks = playerData.getRemainingClaimBlocks();
                         final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ABANDON_SUCCESS_WORLD, ImmutableMap.of(
                                     "world", world.getName(),

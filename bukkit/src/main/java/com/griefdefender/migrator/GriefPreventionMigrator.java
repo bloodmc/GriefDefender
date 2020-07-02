@@ -479,6 +479,9 @@ public class GriefPreventionMigrator {
             GriefDefenderPlugin.getInstance().getLogger().info("Migrating " + files.length + " player data files...");
             for (int i = 0; i < files.length; i++) {
                 final File file = files[i];
+                if (file.getName().endsWith("ignore")) {
+                    continue;
+                }
                 GriefDefenderPlugin.getInstance().getLogger().info("Migrating playerdata " + file.getName() + "...");
                 UUID uuid = null;
                 try {

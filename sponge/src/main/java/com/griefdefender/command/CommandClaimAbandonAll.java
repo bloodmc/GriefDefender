@@ -207,9 +207,16 @@ public class CommandClaimAbandonAll extends BaseCommand {
                     final Currency defaultCurrency = GriefDefenderPlugin.getInstance().economyService.get().getDefaultCurrency();
                     final TransactionResult result = playerAccount.deposit(defaultCurrency, BigDecimal.valueOf(refund), Sponge.getCauseStackManager().getCurrentCause());
                     if (result.getResult() == ResultType.SUCCESS) {
-                        final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_CLAIM_ABANDON_SUCCESS, ImmutableMap.of(
-                                "amount", TextComponent.of(String.valueOf(refund))));
-                        GriefDefenderPlugin.sendMessage(player, message);
+                        Component message = null;
+                        if (worldProperties != null) {
+                            message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_CLAIM_ABANDON_SUCCESS_WORLD, ImmutableMap.of(
+                                    "world", worldProperties.getWorldName(),
+                                    "amount", TextComponent.of(String.valueOf(refund))));
+                        } else {
+                            message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_CLAIM_ABANDON_SUCCESS, ImmutableMap.of(
+                                    "amount", TextComponent.of(String.valueOf(refund))));
+                        }
+                        TextAdapter.sendComponent(player, message);
                     }
                 } else {
                     int remainingBlocks = playerData.getRemainingClaimBlocks();

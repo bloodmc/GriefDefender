@@ -74,7 +74,7 @@ import java.util.List;
 public class CommandPlayerInfo extends BaseCommand {
 
     @CommandCompletion("@gdplayers @gddummy")
-    @CommandAlias("playerinfo")
+    @CommandAlias("gdplayerinfo|playerinfo")
     @Description("Gets information about a player.")
     @Syntax("[<player>|<player> <world>]")
     @Subcommand("player info")
@@ -159,59 +159,54 @@ public class CommandPlayerInfo extends BaseCommand {
         final Component economyBlockAvailablePurchaseText = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_ECONOMY_BLOCK_AVAILABLE_PURCHASE, 
                 ImmutableMap.of("amount", String.valueOf(playerData.getRemainingClaimBlocks())));
         final Component economyBlockCostText = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_ECONOMY_BLOCK_COST, 
-                ImmutableMap.of("amount", String.valueOf("$" + playerData.getInternalEconomyBlockCost())));
+                ImmutableMap.of("amount", "$" + String.format("%.2f", playerData.getInternalEconomyBlockCost())));
         final Component economyBlockSellReturnText = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_ECONOMY_BLOCK_SELL_RETURN, 
-                ImmutableMap.of("amount", String.valueOf("$" + playerData.getEconomyClaimBlockReturn())));
+                ImmutableMap.of("amount", "$" + String.format("%.2f", playerData.getEconomyClaimBlockReturn())));
         final Component minMaxLevelText = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_CLAIM_LEVEL, 
                 ImmutableMap.of("level", String.valueOf(playerData.getMinClaimLevel() + "-" + playerData.getMaxClaimLevel())));
         final Component abandonRatioText = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_ABANDON_RETURN_RATIO, 
                 ImmutableMap.of("ratio", String.valueOf(playerData.getAbandonedReturnRatio(ClaimTypes.BASIC))));
         final Component totalTaxText = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_TAX_TOTAL, 
-                ImmutableMap.of("amount", String.valueOf(playerData.getInitialClaimBlocks())));
+                ImmutableMap.of("amount", "$" + String.format("%.2f", playerData.getTotalTax())));
         final Component totalBlockText = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_BLOCK_TOTAL, 
-                ImmutableMap.of("amount", String.valueOf(playerData.getInitialClaimBlocks())));
+                ImmutableMap.of("amount", String.valueOf(playerData.getInitialClaimBlocks() + playerData.getAccruedClaimBlocks() + playerData.getBonusClaimBlocks())));
         final Component totalClaimableChunkText = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_CHUNK_TOTAL, 
                 ImmutableMap.of("amount", String.valueOf(Math.round(claimableChunks * 100.0)/100.0)));
         final Component totalClaimText = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_CLAIM_TOTAL, 
-                ImmutableMap.of("amount", String.valueOf(claimList.size())));
+                ImmutableMap.of("amount", claimList.size(),
+                                "block_amount", playerData.getTotalClaimsCost()));
 
         List<Component> claimsTextList = Lists.newArrayList();
         claimsTextList.add(uuidText);
         claimsTextList.add(worldText);
         claimsTextList.add(sizeLimitText);
-        claimsTextList.add(initialBlockText);
-        claimsTextList.add(accruedBlockText);
-        claimsTextList.add(maxAccruedBlockText);
-        claimsTextList.add(bonusBlockText);
-        if (GriefDefenderPlugin.getInstance().isEconomyModeEnabled()) {
-            claimsTextList.add(economyBlockAvailablePurchaseText);
-            claimsTextList.add(economyBlockCostText);
-            claimsTextList.add(economyBlockSellReturnText);
-        } else {
-            claimsTextList.add(remainingBlockText);
-        }
-        claimsTextList.add(minMaxLevelText);
-        claimsTextList.add(abandonRatioText);
         final int townLimit = playerData.getCreateClaimLimit(ClaimTypes.TOWN);
         final int basicLimit = playerData.getCreateClaimLimit(ClaimTypes.BASIC);
         final int subLimit = playerData.getCreateClaimLimit(ClaimTypes.SUBDIVISION);
         String townLimitText = townLimit < 0 ? "∞" : String.valueOf(townLimit);
         String basicLimitText = basicLimit < 0 ? "∞" : String.valueOf(basicLimit);
         String subLimitText = subLimit < 0 ? "∞" : String.valueOf(subLimit);
-
-        Component claimCreateLimits = TextComponent.builder("")
-                .append("TOWN", TextColor.GRAY)
-                .append(" : ")
-                .append(townLimitText, TextColor.GREEN)
-                .append(" BASIC", TextColor.GRAY)
-                .append(" : ")
-                .append(basicLimitText, TextColor.GREEN)
-                .append(" SUB", TextColor.GRAY)
-                .append(" : ")
-                .append(subLimitText, TextColor.GREEN)
-                .build();
+        Component claimCreateLimits = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_CLAIM_CREATION_LIMIT, 
+                ImmutableMap.of("basic_limit", basicLimitText,
+                                "sub_limit", subLimitText,
+                                "town_limit", townLimitText));
         claimsTextList.add(claimCreateLimits);
-        if (GriefDefenderPlugin.getActiveConfig(playerData.worldUniqueId).getConfig().economy.taxSystem) {
+        claimsTextList.add(initialBlockText);
+        claimsTextList.add(accruedBlockText);
+        claimsTextList.add(bonusBlockText);
+        claimsTextList.add(totalBlockText);
+        if (GriefDefenderPlugin.getInstance().isEconomyModeEnabled()) {
+            claimsTextList.add(economyBlockCostText);
+            claimsTextList.add(economyBlockSellReturnText);
+            claimsTextList.add(economyBlockAvailablePurchaseText);
+        } else {
+            claimsTextList.add(remainingBlockText);
+        }
+        claimsTextList.add(maxAccruedBlockText);
+        claimsTextList.add(minMaxLevelText);
+        claimsTextList.add(abandonRatioText);
+
+        if (GriefDefenderPlugin.getActiveConfig(worldProperties.getUniqueId()).getConfig().economy.taxSystem) {
             Component townTaxRate = TextComponent.builder("")
                     .append("TOWN", TextColor.GRAY)
                     .append(" : ")
@@ -250,7 +245,6 @@ public class CommandPlayerInfo extends BaseCommand {
             claimsTextList.add(globalClaimTaxText);
             claimsTextList.add(totalTaxText);
         }
-        claimsTextList.add(totalBlockText);
         claimsTextList.add(totalClaimableChunkText);
         claimsTextList.add(totalClaimText);
         JoinData joinData = user.getOfflinePlayer().getOrCreate(JoinData.class).orElse(null);
@@ -267,8 +261,10 @@ public class CommandPlayerInfo extends BaseCommand {
             }
         }
 
+        final Component title = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PLAYERINFO_UI_TITLE, 
+                ImmutableMap.of("name", playerData.getName()));
         PaginationList.Builder paginationBuilder = PaginationList.builder()
-                .title(MessageCache.getInstance().PLAYERINFO_UI_TITLE).padding(TextComponent.of(" ").decoration(TextDecoration.STRIKETHROUGH, true)).contents(claimsTextList);
+                .title(title).padding(TextComponent.of(" ").decoration(TextDecoration.STRIKETHROUGH, true)).contents(claimsTextList);
         paginationBuilder.sendTo(src);
     }
 }

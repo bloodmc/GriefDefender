@@ -44,8 +44,6 @@ import com.griefdefender.claim.GDClaim;
 import com.griefdefender.claim.GDClaimManager;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.event.GDCauseStackManager;
-import com.griefdefender.internal.registry.EntityTypeRegistryModule;
-import com.griefdefender.internal.registry.GDEntityType;
 import com.griefdefender.internal.tracking.EntityTracker;
 import com.griefdefender.internal.tracking.PlayerTracker;
 import com.griefdefender.internal.tracking.entity.GDEntity;
@@ -95,7 +93,6 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.entity.EntityExplodeEvent;
-import org.bukkit.event.entity.EntitySpawnEvent;
 import org.bukkit.event.entity.ExplosionPrimeEvent;
 import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.event.entity.ProjectileLaunchEvent;
@@ -530,12 +527,6 @@ public class EntityEventHandler implements Listener {
             }
         }
 
-        // Always allow damage against monsters
-        if (!this.isEntityProtected(targetEntity)) {
-            GDPermissionManager.getInstance().processEventLog(event, location, claim, flag.getPermission(), source, targetEntity, user, TrustTypes.NONE.getName().toLowerCase(), Tristate.TRUE);
-            return false;
-        }
-
         final TrustType trustType = TrustTypes.BUILDER;
         if (projectileSource != null && projectileSource instanceof Monster) {
             // check monster source damage first
@@ -551,6 +542,10 @@ public class EntityEventHandler implements Listener {
                 CommonEntityEventHandler.getInstance().sendInteractEntityDenyMessage(NMSUtil.getInstance().getActiveItem(player), targetEntity, claim, player);
             }
             return true;
+        }
+
+        if (targetEntity instanceof Monster) {
+            return false;
         }
 
         // allow trusted users to attack entities within claim
@@ -700,7 +695,7 @@ public class EntityEventHandler implements Listener {
             return;
         }
 
-        final boolean isEntityProtected = this.isEntityProtected(entity);
+        final boolean isEntityProtected = !(entity instanceof Monster);
         GDTimings.ENTITY_SPAWN_EVENT.startTiming();
         GDPermissionUser user = null;
         // Make sure not to pass trusted user for non-protected entities such as monsters
@@ -831,31 +826,5 @@ public class EntityEventHandler implements Listener {
         }
 
         GDTimings.ENTITY_MOUNT_EVENT.stopTiming();
-    }
-
-    private boolean isEntityProtected(Entity entity) {
-        if (entity.getType() == null) {
-            if (entity instanceof Monster) {
-                return false;
-            }
-            return true;
-        }
-
-        // ignore monsters
-        final String name = entity.getType().getName() == null ? entity.getType().name().toLowerCase() : entity.getType().getName();
-        final GDEntityType type = EntityTypeRegistryModule.getInstance().getById(name).orElse(null);
-        if (type == null) {
-            return true;
-        }
-
-        final String creatureType = type.getEnumCreatureTypeId();
-        if (creatureType == null) {
-            return true;
-        }
-        if (creatureType.contains("monster")) {
-            return false;
-        }
-
-        return true;
     }
 }

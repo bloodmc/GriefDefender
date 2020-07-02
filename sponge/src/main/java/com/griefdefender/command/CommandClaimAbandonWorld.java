@@ -80,10 +80,10 @@ public class CommandClaimAbandonWorld extends BaseCommand {
     @Subcommand("abandon world")
     @Syntax("[<world>]")
     public void execute(Player player, @Optional String worldName) {
-        WorldProperties world = player.getWorld().getProperties();
+        WorldProperties worldProperties = player.getWorld().getProperties();
         if (worldName != null) {
-            world = Sponge.getServer().getWorldProperties(worldName).orElse(null);
-            if (world == null) {
+            worldProperties = Sponge.getServer().getWorldProperties(worldName).orElse(null);
+            if (worldProperties == null) {
                 TextAdapter.sendComponent(player, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.COMMAND_WORLD_NOT_FOUND,
                         ImmutableMap.of("world", worldName)));
                 return;
@@ -100,32 +100,41 @@ public class CommandClaimAbandonWorld extends BaseCommand {
         }
 
         final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ABANDON_WORLD_WARNING, ImmutableMap.of(
-                "world", TextComponent.of(world.getWorldName())));
+                "world", TextComponent.of(worldProperties.getWorldName())));
         final Component confirmationText = TextComponent.builder()
                 .append(message)
                 .append(TextComponent.builder()
                     .append("\n[")
                     .append(MessageCache.getInstance().LABEL_CONFIRM.color(TextColor.GREEN))
                     .append("]\n")
-                    .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(player, createConfirmationConsumer(player, world), true)))
+                    .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(player, createConfirmationConsumer(player, worldProperties), true)))
                     .hoverEvent(HoverEvent.showText(MessageCache.getInstance().UI_CLICK_CONFIRM)).build())
                 .build();
         TextAdapter.sendComponent(player, confirmationText);
     }
 
-    private static Consumer<CommandSource> createConfirmationConsumer(Player source, WorldProperties world) {
+    private static Consumer<CommandSource> createConfirmationConsumer(Player source, WorldProperties worldProperties) {
         return confirm -> {
-            final GDClaimManager claimWorldManager = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(world.getUniqueId());
+            final GDClaimManager claimWorldManager = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(worldProperties.getUniqueId());
             for (GDPlayerData playerData : claimWorldManager.getPlayerDataMap().values()) {
                 final GDPermissionUser user = playerData.getSubject();
                 if (user == null) {
+                    continue;
+                }
+                if (playerData.playerID.equals(GriefDefenderPlugin.ADMIN_USER_UUID)) {
+                    continue;
+                }
+                if (playerData.playerID.equals(GriefDefenderPlugin.PUBLIC_UUID)) {
+                    continue;
+                }
+                if (playerData.playerID.equals(GriefDefenderPlugin.WORLD_USER_UUID)) {
                     continue;
                 }
 
                 Set<Claim> allowedClaims = new HashSet<>();
                 final Player player = user.getOnlinePlayer();
                 for (Claim claim : playerData.getInternalClaims()) {
-                    if (!claim.getWorldUniqueId().equals(world.getUniqueId())) {
+                    if (!claim.getWorldUniqueId().equals(worldProperties.getUniqueId())) {
                         continue;
                     }
                     allowedClaims.add(claim);
@@ -168,22 +177,23 @@ public class CommandClaimAbandonWorld extends BaseCommand {
 
                         final Currency defaultCurrency = GriefDefenderPlugin.getInstance().economyService.get().getDefaultCurrency();
                         final TransactionResult result = playerAccount.deposit(defaultCurrency, BigDecimal.valueOf(refund), Sponge.getCauseStackManager().getCurrentCause());
-                        if (result.getResult() == ResultType.SUCCESS) {
-                            final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_CLAIM_ABANDON_SUCCESS, ImmutableMap.of(
+                        if (result.getResult() == ResultType.SUCCESS && player != null) {
+                            final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_CLAIM_ABANDON_SUCCESS_WORLD, ImmutableMap.of(
+                                    "world", worldProperties.getWorldName(),
                                     "amount", TextComponent.of(String.valueOf(refund))));
-                            GriefDefenderPlugin.sendMessage(player, message);
+                            TextAdapter.sendComponent(player, message);
                         }
-                    } else {
+                    } else if (player != null) {
                         int remainingBlocks = playerData.getRemainingClaimBlocks();
                         final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ABANDON_SUCCESS_WORLD, ImmutableMap.of(
-                                    "world", world.getWorldName(),
+                                    "world", worldProperties.getWorldName(),
                                     "amount", remainingBlocks));
                         TextAdapter.sendComponent(player, message);
                     }
                 }
             }
             final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ABANDON_WORLD_SUCCESS, ImmutableMap.of(
-                    "world", world.getWorldName()));
+                    "world", worldProperties.getWorldName()));
             TextAdapter.sendComponent(source, message);
         };
     }

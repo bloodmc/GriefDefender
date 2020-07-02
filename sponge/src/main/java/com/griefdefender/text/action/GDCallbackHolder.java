@@ -88,6 +88,17 @@ public class GDCallbackHolder {
         return consumer;
     }
 
+    @Nullable
+    public Consumer<CommandSource> getConfirmationForPlayer(Player player) {
+        Consumer<CommandSource> consumer = null;
+        final UUID callbackUniqueId = confirmConsumerMap.get(player.getUniqueId());
+        if (callbackUniqueId != null) {
+            consumer = reverseMap.remove(callbackUniqueId);
+            confirmConsumerMap.remove(player.getUniqueId());
+        }
+        return consumer;
+    }
+
     public String createCallbackRunCommand(Consumer<CommandSource> consumer) {
         return this.createCallbackRunCommand(null, consumer, false);
     }
