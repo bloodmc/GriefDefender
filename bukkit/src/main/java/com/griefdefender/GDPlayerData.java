@@ -57,6 +57,7 @@ import com.griefdefender.api.permission.option.type.CreateModeType;
 import com.griefdefender.api.permission.option.type.CreateModeTypes;
 import com.griefdefender.api.permission.option.type.GameModeType;
 import com.griefdefender.api.permission.option.type.GameModeTypes;
+import com.griefdefender.api.permission.option.type.WeatherType;
 import com.griefdefender.cache.EventResultCache;
 import com.griefdefender.cache.MessageCache;
 import com.griefdefender.cache.PermissionHolderCache;
@@ -165,6 +166,14 @@ public class GDPlayerData implements PlayerData {
     public boolean userOptionBypassPlayerDenyFlight = false;
     public boolean userOptionBypassPlayerDenyGodmode = false;
     public boolean userOptionBypassPlayerGamemode = false;
+
+    // option cache
+    public Boolean optionNoFly = null;
+    public Boolean optionNoGodMode = null;
+    public Double optionFlySpeed = null;
+    public Double optionWalkSpeed = null;
+    public GameModeType optionGameModeType = null;
+    public WeatherType optionWeatherType = null;
 
     public boolean dataInitialized = false;
     public boolean showNoClaimsFoundMessage = true;
@@ -849,6 +858,15 @@ public class GDPlayerData implements PlayerData {
         this.eventResultCache = null;
         this.claimResizing = null;
         this.claimSubdividing = null;
+    }
+
+    public void resetOptionCache() {
+        this.optionNoFly = null;
+        this.optionNoGodMode = null;
+        this.optionFlySpeed = null;
+        this.optionWalkSpeed = null;
+        this.optionGameModeType = null;
+        this.optionWeatherType = null;
     }
 
     public void onDisconnect() {

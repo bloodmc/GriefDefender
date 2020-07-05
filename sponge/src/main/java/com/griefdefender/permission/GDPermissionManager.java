@@ -89,6 +89,7 @@ import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.EntityType;
+import org.spongepowered.api.entity.Item;
 import org.spongepowered.api.entity.living.Living;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
@@ -595,7 +596,10 @@ public class GDPermissionManager implements PermissionManager {
 
     public String getPermissionIdentifier(Object obj, boolean isSource) {
         if (obj != null) {
-            if (obj instanceof Entity) {
+            if (obj instanceof Item) {
+                final String id = ((Item) obj).getItemType().getId();
+                return populateEventSourceTarget(id, isSource);
+            } else if (obj instanceof Entity) {
                 return populateEventSourceTarget(NMSUtil.getInstance().getEntityId((Entity) obj, isSource), isSource);
             } else if (obj instanceof EntityType) {
                 final String id = ((EntityType) obj).getId();
@@ -679,7 +683,10 @@ public class GDPermissionManager implements PermissionManager {
         }
 
         if (obj != null) {
-            if (obj instanceof Entity) {
+            if (obj instanceof Item) {
+                final String id = ((Item) obj).getItemType().getId();
+                return populateEventSourceTargetContext(contexts, id, isSource);
+            } else if (obj instanceof Entity) {
                 final Entity targetEntity = (Entity) obj;
                 final String id = NMSUtil.getInstance().getEntityId((Entity) obj);
                 final String modId = NMSUtil.getInstance().getEntityModId(id);
@@ -1062,8 +1069,7 @@ public class GDPermissionManager implements PermissionManager {
             return result;
         }
 
-        result.complete(PermissionUtil.getInstance().setPermissionValue((GDPermissionHolder) subject, flag, value, contexts));
-        return result;
+        return PermissionUtil.getInstance().setPermissionValue((GDPermissionHolder) subject, flag, value, contexts);
     }
 
     // internal
@@ -1477,14 +1483,12 @@ public class GDPermissionManager implements PermissionManager {
 
     @Override
     public CompletableFuture<PermissionResult> setOption(Option option, String value, Set<Context> contexts) {
-        final PermissionResult result = PermissionUtil.getInstance().setOptionValue(GriefDefenderPlugin.DEFAULT_HOLDER, option.getPermission(), value, contexts);
-        return CompletableFuture.completedFuture(result);
+        return PermissionUtil.getInstance().setOptionValue(GriefDefenderPlugin.DEFAULT_HOLDER, option.getPermission(), value, contexts);
     }
 
     @Override
     public CompletableFuture<PermissionResult> setOption(Option option, Subject subject, String value, Set<Context> contexts) {
-        final PermissionResult result = PermissionUtil.getInstance().setOptionValue((GDPermissionHolder) subject, option.getPermission(), value, contexts);
-        return CompletableFuture.completedFuture(result);
+        return PermissionUtil.getInstance().setOptionValue((GDPermissionHolder) subject, option.getPermission(), value, contexts);
     }
 
     @Override
@@ -1517,16 +1521,17 @@ public class GDPermissionManager implements PermissionManager {
     public CompletableFuture<PermissionResult> setFlagDefinition(Subject subject, FlagDefinition flagDefinition, Tristate value) {
         final Set<Context> contexts = new HashSet<>();
         contexts.addAll(flagDefinition.getContexts());
-        PermissionResult result = null;
+        PermissionResult result = new GDPermissionResult(ResultTypes.SUCCESS, TextComponent.builder().append("SUCCESS").build());
         CompletableFuture<PermissionResult> future = new CompletableFuture<>();
         for (FlagData flagData : flagDefinition.getFlagData()) {
             final Set<Context> flagContexts = new HashSet<>(contexts);
             flagContexts.addAll(flagData.getContexts());
-            result = PermissionUtil.getInstance().setPermissionValue((GDPermissionHolder) subject, flagData.getFlag(), value, flagContexts);
-            if (!result.successful()) {
+            // TODO - Add method that supports multiple permissions
+            PermissionUtil.getInstance().setPermissionValue((GDPermissionHolder) subject, flagData.getFlag(), value, flagContexts);
+            /*if (!result.successful()) {
                 future.complete(result);
                 return future;
-            }
+            }*/
         }
 
         future.complete(result);

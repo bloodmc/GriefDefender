@@ -24,9 +24,11 @@
  */
 package com.griefdefender.listener;
 
-import com.griefdefender.GriefDefenderPlugin;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
+
 import com.griefdefender.cache.PermissionHolderCache;
-import com.griefdefender.permission.GDPermissionHolder;
+import com.griefdefender.permission.GDPermissionUser;
 
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.event.group.GroupDataRecalculateEvent;
@@ -43,13 +45,16 @@ public class LuckPermsEventHandler {
     }
 
     public void onGroupDataRecalculate(GroupDataRecalculateEvent event) {
-        final GDPermissionHolder holder = PermissionHolderCache.getInstance().getOrCreateGroup(event.getGroup().getName());
-        PermissionHolderCache.getInstance().getOrCreatePermissionCache(holder).invalidateAll();
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            final GDPermissionUser user = PermissionHolderCache.getInstance().getOrCreateUser(player);
+            user.getInternalPlayerData().resetOptionCache();
+        }
     }
 
     public void onUserDataRecalculate(UserDataRecalculateEvent event) {
-        final GDPermissionHolder holder = PermissionHolderCache.getInstance().getOrCreateUser(event.getUser().getUniqueId());
-        PermissionHolderCache.getInstance().getOrCreatePermissionCache(holder).invalidateAll();
-        PermissionHolderCache.getInstance().getOrCreatePermissionCache(GriefDefenderPlugin.DEFAULT_HOLDER).invalidateAll();
+        final GDPermissionUser user = PermissionHolderCache.getInstance().getOrCreateUser(event.getUser().getUniqueId());
+        if (user.getOnlinePlayer() != null) {
+            user.getInternalPlayerData().resetOptionCache();
+        }
     }
 }

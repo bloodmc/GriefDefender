@@ -776,20 +776,39 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .build());
 
         flagContexts = new HashSet<>();
-        flagContexts.add(FlagContexts.SOURCE_PLAYER);
-        flagContexts.add(FlagContexts.TARGET_TYPE_PORTAL);
+        flagContexts.add(FlagContexts.SOURCE_END_PORTAL);
+        flagContexts.add(FlagContexts.TARGET_PLAYER);
         this.registerCustomType(
                 definitionBuilder
                     .reset()
-                    .name("player-portal-use")
+                    .name("player-endportal-use")
                     .admin(true)
-                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
+                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
                     .defaultValue(Tristate.TRUE)
-                    .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_PLAYER_PORTAL_USE)
+                    .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_PLAYER_ENDPORTAL_USE)
                     .group("admin")
                     .flagData(flagDataBuilder
                         .reset()
-                        .flag(Flags.INTERACT_BLOCK_SECONDARY)
+                        .flag(Flags.ENTITY_TELEPORT_FROM)
+                        .contexts(flagContexts)
+                        .build())
+                    .build());
+
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.SOURCE_NETHER_PORTAL);
+        flagContexts.add(FlagContexts.TARGET_PLAYER);
+        this.registerCustomType(
+                definitionBuilder
+                    .reset()
+                    .name("player-netherportal-use")
+                    .admin(true)
+                    .context(ClaimContexts.GLOBAL_DEFAULT_CONTEXT)
+                    .defaultValue(Tristate.TRUE)
+                    .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_PLAYER_NETHERPORTAL_USE)
+                    .group("admin")
+                    .flagData(flagDataBuilder
+                        .reset()
+                        .flag(Flags.ENTITY_TELEPORT_FROM)
                         .contexts(flagContexts)
                         .build())
                     .build());

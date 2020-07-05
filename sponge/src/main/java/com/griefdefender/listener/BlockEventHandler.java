@@ -93,6 +93,8 @@ import org.spongepowered.api.event.cause.EventContext;
 import org.spongepowered.api.event.cause.EventContextKeys;
 import org.spongepowered.api.event.filter.cause.Root;
 import org.spongepowered.api.event.world.ExplosionEvent;
+import org.spongepowered.api.item.ItemTypes;
+import org.spongepowered.api.item.inventory.ItemStackSnapshot;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.util.Direction;
 import org.spongepowered.api.world.DimensionTypes;
@@ -434,6 +436,10 @@ public class BlockEventHandler {
         if (gdBlock != null && !gdBlock.isCollidable()) {
             return;
         }
+        if (event.getTargetBlock().getType() == BlockTypes.PORTAL) {
+            // ignore as we handle this with entity-teleport-from
+            return;
+        }
         if (GriefDefenderPlugin.isSourceIdBlacklisted(Flags.COLLIDE_BLOCK.getName(), source.getType().getId(), source.getWorld().getProperties())) {
             return;
         }
@@ -644,6 +650,9 @@ public class BlockEventHandler {
             denySurfaceExplosion = !GriefDefenderPlugin.getActiveConfig(world.getUniqueId()).getConfig().claim.explosionBlockSurfaceBlacklist.contains("any");
         }
         for (Location<World> location : event.getAffectedLocations()) {
+            if (location.getBlockType().equals(BlockTypes.AIR)) {
+                continue;
+            }
             targetClaim =  GriefDefenderPlugin.getInstance().dataStore.getClaimAt(location, targetClaim);
             if (denySurfaceExplosion && world.getDimension().getType() != DimensionTypes.NETHER && location.getBlockY() >= world.getSeaLevel()) {
                 filteredLocations.add(location);
@@ -769,6 +778,13 @@ public class BlockEventHandler {
             return;
         }
 
+        ItemStackSnapshot itemSnapshot = event.getContext().get(EventContextKeys.USED_ITEM).orElse(null);
+        if (itemSnapshot != null) {
+            if (itemSnapshot.getType().equals(ItemTypes.BUCKET)) {
+                // Sponge bug - empty buckets should never fire a block place
+                return;
+            }
+        }
         GDTimings.BLOCK_PLACE_EVENT.startTimingIfSync();
         GDClaim sourceClaim = null;
         LocatableBlock locatable = null;

@@ -165,6 +165,7 @@ import com.griefdefender.listener.PlayerEventHandler;
 import com.griefdefender.listener.WorldEventHandler;
 import com.griefdefender.migrator.GPSpongeMigrator;
 import com.griefdefender.permission.ContextGroupKeys;
+import com.griefdefender.permission.GDPermissionGroup;
 import com.griefdefender.permission.GDPermissionHolder;
 import com.griefdefender.permission.GDPermissionManager;
 import com.griefdefender.permission.GDPermissionUser;
@@ -555,7 +556,7 @@ public class GriefDefenderPlugin {
         instance = this;
         this.getLogger().info("GriefDefender boot start.");
         this.getLogger().info("Finished loading configuration.");
-        DEFAULT_HOLDER = new GDPermissionHolder("default");
+        DEFAULT_HOLDER = new GDPermissionGroup("default");
         PUBLIC_USER = new GDPermissionUser(PUBLIC_UUID, PUBLIC_NAME);
         WORLD_USER = new GDPermissionUser(WORLD_USER_UUID, WORLD_USER_NAME);
         this.getLogger().info("Registering GriefDefender API...");

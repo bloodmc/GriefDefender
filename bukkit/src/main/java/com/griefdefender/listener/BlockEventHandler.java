@@ -493,6 +493,9 @@ public class BlockEventHandler implements Listener {
         }
         for (Block block : event.blockList()) {
             final Location location = block.getLocation();
+            if (location.getBlock().isEmpty()) {
+                continue;
+            }
             targetClaim =  GriefDefenderPlugin.getInstance().dataStore.getClaimAt(location);
             if (denySurfaceExplosion && block.getWorld().getEnvironment() != Environment.NETHER && location.getBlockY() >= location.getWorld().getSeaLevel()) {
                 filteredLocations.add(block);

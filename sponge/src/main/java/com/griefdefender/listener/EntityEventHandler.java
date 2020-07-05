@@ -65,6 +65,7 @@ import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.entity.living.player.gamemode.GameMode;
 import org.spongepowered.api.entity.living.player.gamemode.GameModes;
+import org.spongepowered.api.entity.projectile.EnderPearl;
 import org.spongepowered.api.entity.projectile.Projectile;
 import org.spongepowered.api.event.Event;
 import org.spongepowered.api.event.Listener;
@@ -701,8 +702,7 @@ public class EntityEventHandler {
         }
         final boolean teleportFromBlacklisted = GriefDefenderPlugin.isSourceIdBlacklisted(Flags.ENTITY_TELEPORT_FROM.getName(), entity, entity.getWorld().getProperties());
         final boolean teleportToBlacklisted = GriefDefenderPlugin.isSourceIdBlacklisted(Flags.ENTITY_TELEPORT_TO.getName(), entity, entity.getWorld().getProperties());
-        final boolean portalUseBlacklisted = GriefDefenderPlugin.isSourceIdBlacklisted(Flags.PORTAL_USE.getName(), entity, entity.getWorld().getProperties());
-        if (teleportFromBlacklisted && teleportToBlacklisted && portalUseBlacklisted) {
+        if (teleportFromBlacklisted && teleportToBlacklisted) {
             return;
         }
 
@@ -729,6 +729,9 @@ public class EntityEventHandler {
             }
         } else {
             user = PermissionHolderCache.getInstance().getOrCreateUser(entity.getCreator().orElse(null));
+            if (user != null && user.getOnlinePlayer() != null) {
+                player = user.getOnlinePlayer();
+            }
         }
 
         if (user == null) {
@@ -745,7 +748,7 @@ public class EntityEventHandler {
         // Handle BorderClaimEvent
         if (!CommonEntityEventHandler.getInstance().onEntityMove(event, sourceLocation, destination, entity)) {
             event.setCancelled(true);
-            GDTimings.ENTITY_TELEPORT_EVENT.stopTiming();
+            GDTimings.ENTITY_TELEPORT_EVENT.stopTimingIfSync();
             return;
         }
 
@@ -758,26 +761,38 @@ public class EntityEventHandler {
             sourceClaim = this.dataStore.getClaimAt(sourceLocation);
         }
 
+        Object source = type;
+        if (type.equals(TeleportTypes.PORTAL) || type.equals((TeleportTypes.UNKNOWN)) && !sourceLocation.getExtent().getUniqueId().equals(destination.getExtent().getUniqueId())) {
+            source = destination.getExtent().getDimension().getType().getName().toLowerCase().replace("the_", "") + "_portal";
+        }
         if (sourceClaim != null) {
-            if (GDFlags.ENTITY_TELEPORT_FROM && !teleportFromBlacklisted && GDPermissionManager.getInstance().getFinalPermission(event, sourceLocation, sourceClaim, Flags.ENTITY_TELEPORT_FROM, type, entity, user, TrustTypes.ACCESSOR, true) == Tristate.FALSE) {
-                boolean cancelled = true;
-                if (GDFlags.PORTAL_USE && type.equals(TeleportTypes.PORTAL)) {
-                    if (portalUseBlacklisted || GDPermissionManager.getInstance().getFinalPermission(event, sourceLocation, sourceClaim, Flags.PORTAL_USE, type, entity, user) == Tristate.TRUE) {
-                        cancelled = false;
-                    }
-                }
-                if (cancelled) {
-                    final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_PORTAL_EXIT,
+            if (GDFlags.ENTITY_TELEPORT_FROM && !teleportFromBlacklisted && GDPermissionManager.getInstance().getFinalPermission(event, sourceLocation, sourceClaim, Flags.ENTITY_TELEPORT_FROM, source, entity, user, TrustTypes.ACCESSOR, true) == Tristate.FALSE) {
+                if (player != null) {
+                    Component message = null;
+                    if (type == TeleportTypes.PORTAL || source != type) {
+                        message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_PORTAL_FROM,
                             ImmutableMap.of(
-                            "player", sourceClaim.getOwnerName()));
-                    if (player != null) {
-                        GriefDefenderPlugin.sendMessage(player, message);
+                            "player", sourceClaim.getOwnerDisplayName()));
+                    } else {
+                        message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_TELEPORT_FROM,
+                            ImmutableMap.of(
+                            "player", sourceClaim.getOwnerDisplayName()));
                     }
 
-                    event.setCancelled(true);
-                    GDTimings.ENTITY_TELEPORT_EVENT.stopTimingIfSync();
-                    return;
+                    final GameMode gameMode = player.get(Keys.GAME_MODE).orElse(null);
+                    if (gameMode == GameModes.SURVIVAL) {
+                        final Entity last = cause.last(Entity.class).orElse(null);
+                        if (last != null && last instanceof EnderPearl) {
+                            player.getInventory().offer(ItemStack.of(ItemTypes.ENDER_PEARL, 1));
+                        }
+                    }
+
+                    GriefDefenderPlugin.sendMessage(player, message);
                 }
+
+                event.setCancelled(true);
+                GDTimings.ENTITY_TELEPORT_EVENT.stopTimingIfSync();
+                return;
             }
         }
 
@@ -789,28 +804,33 @@ public class EntityEventHandler {
 
         final GDClaim toClaim = this.dataStore.getClaimAt(destination);
         if (toClaim != null) {
-            if (GDFlags.ENTITY_TELEPORT_TO && !teleportToBlacklisted && GDPermissionManager.getInstance().getFinalPermission(event, destination, toClaim, Flags.ENTITY_TELEPORT_TO, type, entity, user, TrustTypes.ACCESSOR, true) == Tristate.FALSE) {
-                boolean cancelled = true;
-                if (GDFlags.PORTAL_USE && type.equals(TeleportTypes.PORTAL)) {
-                    if (portalUseBlacklisted || GDPermissionManager.getInstance().getFinalPermission(event, destination, toClaim, Flags.PORTAL_USE, type, entity, user, TrustTypes.ACCESSOR, true) == Tristate.TRUE) {
-                        cancelled = false;
-                    }
-                }
-                if (cancelled) {
-                    final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_PORTAL_ENTER,
+            if (GDFlags.ENTITY_TELEPORT_TO && !teleportToBlacklisted && GDPermissionManager.getInstance().getFinalPermission(event, destination, toClaim, Flags.ENTITY_TELEPORT_TO, source, entity, user, TrustTypes.ACCESSOR, true) == Tristate.FALSE) {
+                if (player != null) {
+                    Component message = null;
+                    if (type == TeleportTypes.PORTAL || source != type) {
+                        message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_PORTAL_TO,
                             ImmutableMap.of(
-                            "player", toClaim.getOwnerName()));
-                    if (player != null) {
-                        GriefDefenderPlugin.sendMessage(player, message);
+                            "player", toClaim.getOwnerDisplayName()));
+                    } else {
+                        message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_TELEPORT_TO,
+                            ImmutableMap.of(
+                            "player", toClaim.getOwnerDisplayName()));
                     }
-    
-                    if (type.equals(EntityTypes.ENDER_PEARL)) {
-                        player.getInventory().offer(ItemStack.of(ItemTypes.ENDER_PEARL, 1));
+
+                    final GameMode gameMode = player.get(Keys.GAME_MODE).orElse(null);
+                    if (gameMode == GameModes.SURVIVAL) {
+                        final Entity last = cause.last(Entity.class).orElse(null);
+                        if (last != null && last instanceof EnderPearl) {
+                            player.getInventory().offer(ItemStack.of(ItemTypes.ENDER_PEARL, 1));
+                        }
                     }
-                    event.setCancelled(true);
-                    GDTimings.ENTITY_TELEPORT_EVENT.stopTimingIfSync();
-                    return;
+
+                    GriefDefenderPlugin.sendMessage(player, message);
                 }
+
+                event.setCancelled(true);
+                GDTimings.ENTITY_TELEPORT_EVENT.stopTimingIfSync();
+                return;
             }
         }
 
@@ -841,12 +861,7 @@ public class EntityEventHandler {
                 playerData.inTown = false;
             }
         }
-        // TODO
-        /*if (event.getCause().first(PortalTeleportCause.class).isPresent()) {
-            // FEATURE: when players get trapped in a nether portal, send them back through to the other side
-            CheckForPortalTrapTask task = new CheckForPortalTrapTask(player, event.getFromTransform().getLocation());
-            Sponge.getGame().getScheduler().createTaskBuilder().delayTicks(200).execute(task).submit(GriefDefender.instance);
-        }*/
+
         GDTimings.ENTITY_TELEPORT_EVENT.stopTimingIfSync();
     }
 
@@ -856,9 +871,6 @@ public class EntityEventHandler {
         if (!GDFlags.COLLIDE_ENTITY || event instanceof CollideEntityEvent.Impact) {
             return;
         }
-        //if (GriefDefenderPlugin.isSourceIdBlacklisted(ClaimFlag.ENTITY_COLLIDE_ENTITY.toString(), event.getSource(), event.getEntities().get(0).getWorld().getProperties())) {
-        //    return;
-        //}
 
         Object rootCause = event.getCause().root();
         final boolean isRootEntityItemFrame = rootCause instanceof ItemFrame;

@@ -33,6 +33,7 @@ public class FlagContexts {
     public static final Context SOURCE_CREEPER = new Context(ContextKeys.SOURCE, "minecraft:creeper");
     public static final Context SOURCE_ENDERDRAGON = new Context(ContextKeys.SOURCE, "minecraft:enderdragon");
     public static final Context SOURCE_ENDERMAN = new Context(ContextKeys.SOURCE, "minecraft:enderman");
+    public static final Context SOURCE_END_PORTAL = new Context(ContextKeys.SOURCE, "minecraft:end_portal");
     public static final Context SOURCE_FALL = new Context(ContextKeys.SOURCE, "minecraft:fall");
     public static final Context SOURCE_FALLING_BLOCK = new Context(ContextKeys.SOURCE, "minecraft:falling_block");
     public static final Context SOURCE_FIRE = new Context(ContextKeys.SOURCE, "minecraft:fire");
@@ -44,6 +45,7 @@ public class FlagContexts {
     public static final Context SOURCE_LAVA_1_12 = new Context(ContextKeys.SOURCE, "minecraft:flowing_lava");
     public static final Context SOURCE_LIGHTNING_BOLT = new Context(ContextKeys.SOURCE, "minecraft:lightning_bolt");
     public static final Context SOURCE_MAGMA_BLOCK = new Context(ContextKeys.SOURCE, "minecraft:magma_block");
+    public static final Context SOURCE_NETHER_PORTAL = new Context(ContextKeys.SOURCE, "minecraft:nether_portal");
     public static final Context SOURCE_PISTON = new Context(ContextKeys.SOURCE, "minecraft:piston");
     public static final Context SOURCE_PISTON_STICKY = new Context(ContextKeys.SOURCE, "minecraft:sticky_piston");
     public static final Context SOURCE_PLAYER = new Context(ContextKeys.SOURCE, "minecraft:player");
@@ -99,7 +101,6 @@ public class FlagContexts {
     public static final Context TARGET_TYPE_FOOD = new Context(ContextKeys.TARGET, "#food");
     public static final Context TARGET_TYPE_MONSTER = new Context(ContextKeys.TARGET, "#monster");
     public static final Context TARGET_TYPE_MUSHROOM = new Context(ContextKeys.TARGET, "#mushroom");
-    public static final Context TARGET_TYPE_PORTAL = new Context(ContextKeys.TARGET, "#portal");
     public static final Context TARGET_TYPE_VEHICLE = new Context(ContextKeys.TARGET, "#vehicle");
 
     public static final Context USED_ITEM_LAVA_BUCKET = new Context(ContextKeys.USED_ITEM, "minecraft:lava_bucket");

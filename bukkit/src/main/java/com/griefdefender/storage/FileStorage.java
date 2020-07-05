@@ -83,7 +83,7 @@ public class FileStorage extends BaseStorage {
             worldsDataFolder.mkdirs();
         }
 
-        rootWorldSavePath = new File(".").toPath();
+        rootWorldSavePath = Bukkit.getWorldContainer().toPath();
 
         super.initialize();
     }

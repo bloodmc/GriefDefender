@@ -279,9 +279,11 @@ public class MessageStorage {
     public static final String PERMISSION_INVENTORY_OPEN = "permission-inventory-open";
     public static final String PERMISSION_ITEM_DROP = "permission-item-drop";
     public static final String PERMISSION_ITEM_USE = "permission-item-use";
-    public static final String PERMISSION_PORTAL_ENTER = "permission-portal-enter";
-    public static final String PERMISSION_PORTAL_EXIT = "permission-portal-exit";
+    public static final String PERMISSION_PORTAL_FROM = "permission-portal-from";
+    public static final String PERMISSION_PORTAL_TO = "permission-portal-to";
     public static final String PERMISSION_PROTECTED_PORTAL = "permission-protected-portal";
+    public static final String PERMISSION_TELEPORT_FROM = "permission-teleport-from";
+    public static final String PERMISSION_TELEPORT_TO = "permission-teleport-to";
     public static final String PERMISSION_TRUST = "permission-trust";
     public static final String PLAYER_ACCRUED_BLOCKS_EXCEEDED = "player-accrued-blocks-exceeded";
     public static final String PLAYER_NO_CLAIMS_TO_DELETE = "player-no-claims-to-delete";

@@ -193,6 +193,7 @@ import com.griefdefender.listener.EntityEventHandler;
 import com.griefdefender.listener.PlayerEventHandler;
 import com.griefdefender.listener.WorldEventHandler;
 import com.griefdefender.permission.ContextGroupKeys;
+import com.griefdefender.permission.GDPermissionGroup;
 import com.griefdefender.permission.GDPermissionHolder;
 import com.griefdefender.permission.GDPermissionManager;
 import com.griefdefender.permission.GDPermissionUser;
@@ -500,7 +501,7 @@ public class GriefDefenderPlugin {
         }
         instance = this;
         timingManager = TimingManager.of(GDBootstrap.getInstance());
-        DEFAULT_HOLDER = new GDPermissionHolder("default");
+        DEFAULT_HOLDER = new GDPermissionGroup("default");
         PUBLIC_USER = new GDPermissionUser(PUBLIC_UUID, PUBLIC_NAME);
         WORLD_USER = new GDPermissionUser(WORLD_USER_UUID, WORLD_USER_NAME);
         Guice.createInjector(Stage.PRODUCTION, new GriefDefenderImplModule());

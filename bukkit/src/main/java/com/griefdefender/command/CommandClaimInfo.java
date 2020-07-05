@@ -66,6 +66,8 @@ import net.kyori.text.event.ClickEvent;
 import net.kyori.text.event.HoverEvent;
 import net.kyori.text.format.TextColor;
 import net.kyori.text.format.TextDecoration;
+import net.kyori.text.serializer.legacy.LegacyComponentSerializer;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -251,10 +253,16 @@ public class CommandClaimInfo extends BaseCommand {
         if (claim.isWilderness() && name == null) {
             name = TextComponent.of("Wilderness", TextColor.GREEN);
         }
+        Component nameText = name == null ? NONE : name;
         Component claimName = TextComponent.builder()
-                .append(MessageCache.getInstance().LABEL_NAME.color(TextColor.YELLOW))
+                .append(MessageCache.getInstance().LABEL_NAME.color(TextColor.YELLOW)
+                        .clickEvent(ClickEvent.suggestCommand("/claimname "))
+                        .hoverEvent(HoverEvent.showText(MessageCache.getInstance().CLAIMINFO_UI_CLICK_NAME)))
                 .append(" : ", TextColor.YELLOW)
-                .append(name == null ? NONE : name).build();
+                .append(nameText
+                        .clickEvent(ClickEvent.suggestCommand(name == null ? "/claimname " : "/claimname " + LegacyComponentSerializer.legacy().serialize(name, '&')))
+                        .hoverEvent(HoverEvent.showText(MessageCache.getInstance().CLAIMINFO_UI_CLICK_NAME)))
+                .build();
         Component worldName = TextComponent.builder()
                 .append(MessageCache.getInstance().LABEL_WORLD.color(TextColor.YELLOW))
                 .append(" : ")
@@ -476,22 +484,34 @@ public class CommandClaimInfo extends BaseCommand {
                 .append(" : ")
                 .append(getClickableInfoText(src, claim, INHERIT_PARENT, claim.getData().doesInheritParent() ? TextComponent.of("ON", TextColor.GREEN) : TextComponent.of("OFF", TextColor.RED))).build();
         TextComponent.Builder expireBuilder = TextComponent.builder()
-            .append(MessageCache.getInstance().LABEL_EXPIRED.color(TextColor.YELLOW))
-            .append(" : ");
+                .append(MessageCache.getInstance().LABEL_EXPIRED.color(TextColor.YELLOW))
+                .append(" : ");
         if (isAdmin && claim.getData().isExpired()) {
-            expireBuilder.append(getClickableInfoText(src, claim, IS_EXPIRED, claim.getData().isExpired() ? TextComponent.of("YES", TextColor.RED) : TextComponent.of("NO", TextColor.GRAY)));
+            expireBuilder.append(getClickableInfoText(src, claim, IS_EXPIRED, claim.getData().isExpired() ? MessageCache.getInstance().LABEL_YES.color(TextColor.RED) : MessageCache.getInstance().LABEL_NO.color(TextColor.GRAY)));
         } else {
-            expireBuilder.append(claim.getData().isExpired() ? TextComponent.of("YES", TextColor.RED) : TextComponent.of("NO", TextColor.GRAY));
+            expireBuilder.append(claim.getData().isExpired() ? MessageCache.getInstance().LABEL_YES.color(TextColor.RED) : MessageCache.getInstance().LABEL_NO.color(TextColor.GRAY));
         }
         Component claimExpired = expireBuilder.build();
+        Component farewellText = farewell == null ? NONE : farewell;
+        Component greetingText = greeting == null ? NONE : greeting;
         Component claimFarewell = TextComponent.builder()
-                .append(MessageCache.getInstance().LABEL_FAREWELL.color(TextColor.YELLOW))
+                .append(MessageCache.getInstance().LABEL_FAREWELL.color(TextColor.YELLOW)
+                        .clickEvent(ClickEvent.suggestCommand("/claimfarewell "))
+                        .hoverEvent(HoverEvent.showText(MessageCache.getInstance().CLAIMINFO_UI_CLICK_FAREWELL)))
                 .append(" : ")
-                .append(farewell == null ? NONE : farewell).build();
+                .append(farewellText
+                        .clickEvent(ClickEvent.suggestCommand(farewell == null ? "/claimfarewell " : "/claimfarewell " + LegacyComponentSerializer.legacy().serialize(farewell, '&')))
+                        .hoverEvent(HoverEvent.showText(MessageCache.getInstance().CLAIMINFO_UI_CLICK_FAREWELL)))
+                .build();
         Component claimGreeting = TextComponent.builder()
-                .append(MessageCache.getInstance().LABEL_GREETING.color(TextColor.YELLOW))
+                .append(MessageCache.getInstance().LABEL_GREETING.color(TextColor.YELLOW)
+                        .clickEvent(ClickEvent.suggestCommand("/claimgreeting "))
+                        .hoverEvent(HoverEvent.showText(MessageCache.getInstance().CLAIMINFO_UI_CLICK_GREETING)))
                 .append(" : ")
-                .append(greeting == null ? NONE : greeting).build();
+                .append(greetingText
+                        .clickEvent(ClickEvent.suggestCommand(greeting == null ? "/claimgreeting " : "/claimgreeting " + LegacyComponentSerializer.legacy().serialize(greeting, '&')))
+                        .hoverEvent(HoverEvent.showText(MessageCache.getInstance().CLAIMINFO_UI_CLICK_GREETING)))
+                .build();
         Component claimDenyMessages = TextComponent.builder()
                 .append(MessageCache.getInstance().CLAIMINFO_UI_DENY_MESSAGES.color(TextColor.YELLOW))
                 .append(" : ")

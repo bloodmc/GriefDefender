@@ -31,6 +31,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.reflect.TypeToken;
+import com.griefdefender.GDBootstrap;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.GriefDefender;
@@ -78,6 +79,7 @@ import net.kyori.text.event.ClickEvent;
 import net.kyori.text.event.HoverEvent;
 import net.kyori.text.format.TextColor;
 import net.kyori.text.format.TextDecoration;
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.entity.living.player.Player;
 
@@ -93,6 +95,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
@@ -874,25 +877,46 @@ public abstract class ClaimOptionBase extends BaseCommand {
             if (!hasServerContext && serverContext != null) {
                 newContexts.add(serverContext);
             }
-            final PermissionResult result = PermissionUtil.getInstance().setOptionValue(this.subject, option.getPermission(), newValue, newContexts);
-            if (!result.successful()) {
-                // Try again without server context
-                newContexts.remove(serverContext);
-                PermissionUtil.getInstance().setOptionValue(this.subject, option.getPermission(), newValue, newContexts, false);
-            }
-            if (result.successful()) {
-                if (option == Options.PLAYER_WEATHER) {
-                    CommonEntityEventHandler.getInstance().checkPlayerWeather(src, claim, claim, true);
+            final Context permServerContext = serverContext;
+            final String permValue = newValue;
+            final CompletableFuture<PermissionResult> future = PermissionUtil.getInstance().setOptionValue(this.subject, option.getPermission(), newValue, newContexts);
+            future.thenAcceptAsync(r -> {
+                if (!r.successful()) {
+                    // Try again without server context
+                    newContexts.remove(permServerContext);
+                    CompletableFuture<PermissionResult> newFuture = PermissionUtil.getInstance().setOptionValue(this.subject, option.getPermission(), permValue, newContexts, false);
+                    newFuture.thenAccept(r2 -> {
+                        if (r2.successful()) {
+                            Sponge.getScheduler().createSyncExecutor(GDBootstrap.getInstance()).execute(() -> {
+                                if (option == Options.PLAYER_WEATHER) {
+                                    CommonEntityEventHandler.getInstance().checkPlayerWeather(src, claim, claim, true);
+                                }
+                                showOptionPermissions(src, claim, displayType);
+                            });
+                        }
+                    });
+                } else {
+                    Sponge.getScheduler().createSyncExecutor(GDBootstrap.getInstance()).execute(() -> {
+                        if (option == Options.PLAYER_WEATHER) {
+                            CommonEntityEventHandler.getInstance().checkPlayerWeather(src, claim, claim, true);
+                        }
+                        showOptionPermissions(src, claim, displayType);
+                    });
                 }
-            }
-            showOptionPermissions(src, claim, displayType);
+            });
         };
     }
 
     private Consumer<CommandSource> removeOptionValueConsumer(GDPermissionUser src, GDClaim claim, Option option, OptionContextHolder optionHolder, Set<Context> contexts, MenuType displayType) {
         return consumer -> {
-            PermissionUtil.getInstance().setOptionValue(this.subject, option.getPermission(), "undefined", contexts);
-            showOptionPermissions(src, claim, displayType);
+            final CompletableFuture<PermissionResult> future = PermissionUtil.getInstance().setOptionValue(this.subject, option.getPermission(), "undefined", contexts);
+            future.thenAccept(r -> {
+                if (r.successful()) {
+                    Sponge.getScheduler().createSyncExecutor(GDBootstrap.getInstance()).execute(() -> {
+                        showOptionPermissions(src, claim, displayType);
+                    });
+                }
+            });
         };
     }
 

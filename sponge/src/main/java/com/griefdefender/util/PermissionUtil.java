@@ -190,35 +190,35 @@ public class PermissionUtil {
         return PERMISSION_PROVIDER.getOptionValueList(holder, option, contexts);
     }
 
-    public PermissionResult setOptionValue(GDPermissionHolder holder, String permission, String value, Set<Context> contexts) {
+    public CompletableFuture<PermissionResult> setOptionValue(GDPermissionHolder holder, String permission, String value, Set<Context> contexts) {
         return PERMISSION_PROVIDER.setOptionValue(holder, permission, value, contexts, true);
     }
 
-    public PermissionResult setOptionValue(GDPermissionHolder holder, String permission, String value, Set<Context> contexts, boolean check) {
+    public CompletableFuture<PermissionResult> setOptionValue(GDPermissionHolder holder, String permission, String value, Set<Context> contexts, boolean check) {
         return PERMISSION_PROVIDER.setOptionValue(holder, permission, value, contexts, check);
     }
 
-    public PermissionResult setPermissionValue(GDPermissionHolder holder, Flag flag, Tristate value, Set<Context> contexts) {
+    public CompletableFuture<PermissionResult> setPermissionValue(GDPermissionHolder holder, Flag flag, Tristate value, Set<Context> contexts) {
         return PERMISSION_PROVIDER.setPermissionValue(holder, flag, value, contexts, true, true);
     }
 
-    public PermissionResult setPermissionValue(GDPermissionHolder holder, String permission, Tristate value, Set<Context> contexts) {
+    public CompletableFuture<PermissionResult> setPermissionValue(GDPermissionHolder holder, String permission, Tristate value, Set<Context> contexts) {
         return PERMISSION_PROVIDER.setPermissionValue(holder, permission, value, contexts, true, true);
     }
 
-    public PermissionResult setPermissionValue(GDPermissionHolder holder, Flag flag, Tristate value, Set<Context> contexts, boolean check, boolean save) {
+    public CompletableFuture<PermissionResult> setPermissionValue(GDPermissionHolder holder, Flag flag, Tristate value, Set<Context> contexts, boolean check, boolean save) {
         return PERMISSION_PROVIDER.setPermissionValue(holder, flag, value, contexts, check, save);
     }
 
-    public PermissionResult setPermissionValue(GDPermissionHolder holder, String permission, Tristate value, Set<Context> contexts, boolean check, boolean save) {
+    public CompletableFuture<PermissionResult> setPermissionValue(GDPermissionHolder holder, String permission, Tristate value, Set<Context> contexts, boolean check, boolean save) {
         return PERMISSION_PROVIDER.setPermissionValue(holder, permission, value, contexts, check, save);
     }
 
-    public PermissionResult setTransientOption(GDPermissionHolder holder, String permission, String value, Set<Context> contexts) {
+    public CompletableFuture<PermissionResult> setTransientOption(GDPermissionHolder holder, String permission, String value, Set<Context> contexts) {
         return PERMISSION_PROVIDER.setTransientOption(holder, permission, value, contexts);
     }
 
-    public PermissionResult setTransientPermission(GDPermissionHolder holder, String permission, Tristate value, Set<Context> contexts) {
+    public CompletableFuture<PermissionResult> setTransientPermission(GDPermissionHolder holder, String permission, Tristate value, Set<Context> contexts) {
         return PERMISSION_PROVIDER.setTransientPermission(holder, permission, value, contexts);
     }
 

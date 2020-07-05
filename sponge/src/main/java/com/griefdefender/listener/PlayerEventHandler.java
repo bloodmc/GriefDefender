@@ -91,6 +91,7 @@ import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.data.type.HandType;
 import org.spongepowered.api.data.type.HandTypes;
 import org.spongepowered.api.entity.Entity;
+import org.spongepowered.api.entity.Item;
 import org.spongepowered.api.entity.living.ArmorStand;
 import org.spongepowered.api.entity.living.Living;
 import org.spongepowered.api.entity.living.player.Player;
@@ -563,21 +564,25 @@ public class PlayerEventHandler {
         Player player = user instanceof Player ? (Player) user : null;
         GDPlayerData playerData = this.dataStore.getOrCreatePlayerData(world, user.getUniqueId());
 
-        for (Entity entityItem : event.getEntities()) {
-            if (GriefDefenderPlugin.isTargetIdBlacklisted(Flags.ITEM_DROP.toString(), entityItem, world.getProperties())) {
+        for (Entity entity : event.getEntities()) {
+            if (!(entity instanceof Item)) {
+                continue;
+            }
+            final Item item = (Item) entity;
+            if (GriefDefenderPlugin.isTargetIdBlacklisted(Flags.ITEM_DROP.toString(), item, world.getProperties())) {
                 continue;
             }
 
-            Location<World> location = entityItem.getLocation();
+            Location<World> location = item.getLocation();
             GDClaim claim = this.dataStore.getClaimAtPlayer(playerData, location);
             if (claim != null) {
-                if (GDPermissionManager.getInstance().getFinalPermission(event, location, claim, Flags.ITEM_DROP, user, entityItem, user, TrustTypes.ACCESSOR, true) == Tristate.FALSE) {
+                if (GDPermissionManager.getInstance().getFinalPermission(event, location, claim, Flags.ITEM_DROP, user, item, user, TrustTypes.ACCESSOR, true) == Tristate.FALSE) {
                     event.setCancelled(true);
                     if (spawncause instanceof Player) {
                         final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_ITEM_DROP,
                                 ImmutableMap.of(
                                 "player", claim.getOwnerName(),
-                                "item", entityItem.getType().getId()));
+                                "item", item.getItemType().getId()));
                         GriefDefenderPlugin.sendClaimDenyMessage(claim, player, message);
                     }
                     GDTimings.PLAYER_DISPENSE_ITEM_EVENT.stopTimingIfSync();
@@ -739,6 +744,7 @@ public class PlayerEventHandler {
             playerData.petRecipientUniqueId = null;
             GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().COMMAND_PET_TRANSFER_CANCEL);
             event.setCancelled(true);
+            GDTimings.PLAYER_INTERACT_ENTITY_PRIMARY_EVENT.stopTimingIfSync();
             return;
         }
         if (targetEntity instanceof Living && targetEntity.get(Keys.TAMED_OWNER).isPresent()) {
@@ -776,17 +782,14 @@ public class PlayerEventHandler {
 
         Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, claim, Flags.INTERACT_ENTITY_PRIMARY, source, targetEntity, player, TrustTypes.ACCESSOR, true);
         if (result == Tristate.FALSE) {
-            if (GDPermissionManager.getInstance().getFinalPermission(event, location, claim, Flags.ENTITY_DAMAGE, source, targetEntity, player, TrustTypes.ACCESSOR, true) != Tristate.TRUE) {
-                final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_PROTECTED_ENTITY,
-                        ImmutableMap.of(
-                        "player", claim.getOwnerName()));
-                GriefDefenderPlugin.sendMessage(player, message);
-                event.setCancelled(true);
-                this.sendInteractEntityDenyMessage(itemInHand, targetEntity, claim, player, handType);
-                GDTimings.PLAYER_INTERACT_ENTITY_PRIMARY_EVENT.stopTimingIfSync();
-                return;
-            }
+            final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_PROTECTED_ENTITY,
+                    ImmutableMap.of(
+                    "player", claim.getOwnerName()));
+            GriefDefenderPlugin.sendMessage(player, message);
+            event.setCancelled(true);
+            this.sendInteractEntityDenyMessage(itemInHand, targetEntity, claim, player, handType);
         }
+        GDTimings.PLAYER_INTERACT_ENTITY_PRIMARY_EVENT.stopTimingIfSync();
     }
 
     @Listener(order = Order.FIRST, beforeModifications = true)
@@ -1256,6 +1259,18 @@ public class PlayerEventHandler {
                     event.setCancelled(true);
                 }
                 lastInteractItemCancelled = true;
+                return event;
+            }
+            if (!itemInHand.isEmpty() && itemInHand.getType().equals(ItemTypes.BUCKET)) {
+                if (GDPermissionManager.getInstance().getFinalPermission(event, location, claim,Flags.INTERACT_BLOCK_SECONDARY, itemInHand, blockSnapshot, player, TrustTypes.ACCESSOR, true) == Tristate.FALSE) {
+                    final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_INTERACT_ITEM_BLOCK,
+                            ImmutableMap.of(
+                            "item", itemInHand.getType().getId(),
+                            "block", blockSnapshot.getState().getType().getId()));
+                    GriefDefenderPlugin.sendClaimDenyMessage(claim, player, message);
+                    event.setCancelled(true);
+                    lastInteractItemCancelled = true;
+                }
             }
         }
         return event;
@@ -1770,13 +1785,13 @@ public class PlayerEventHandler {
                     if (GriefDefenderPlugin.CLAIM_BLOCK_SYSTEM == ClaimBlockSystem.VOLUME) {
                         final double claimableChunks = claimBlocksRemaining / 65536.0;
                         final Map<String, Object> params = ImmutableMap.of(
-                                "balance", String.valueOf("$" + currentFunds.intValue()),
+                                "balance", "$" + String.format("%.2f", currentFunds.intValue()),
                                 "chunk-amount", Math.round(claimableChunks * 100.0)/100.0, 
                                 "block-amount", claimBlocksRemaining);
                         GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_MODE_RESIZE_SUCCESS_3D, params));
                     } else {
                         final Map<String, Object> params = ImmutableMap.of(
-                                "balance", String.valueOf("$" + currentFunds.intValue()),
+                                "balance", "$" + String.format("%.2f", currentFunds.intValue()),
                                 "block-amount", claimBlocksRemaining);
                         GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_MODE_RESIZE_SUCCESS_2D, params));
                     }

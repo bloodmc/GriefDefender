@@ -728,6 +728,10 @@ public class GDPermissionManager implements PermissionManager {
             final DamageCause damageCause = (DamageCause) obj;
             String id = damageCause.name().toLowerCase();
             return populateEventSourceTargetContext(contexts, id, isSource);
+        } else if (obj instanceof TeleportCause) {
+            final TeleportCause teleportCause = (TeleportCause) obj;
+            String id = teleportCause.name().toLowerCase();
+            return populateEventSourceTargetContext(contexts, id, isSource);
         } else if (obj instanceof SpawnReason) {
             return populateEventSourceTargetContext(contexts, "spawnreason:" + ((SpawnReason) obj).name().toLowerCase(), isSource);
         } else if (obj instanceof CreatureSpawner) {
@@ -1145,8 +1149,7 @@ public class GDPermissionManager implements PermissionManager {
             return result;
         }
 
-        result.complete(PermissionUtil.getInstance().setPermissionValue((GDPermissionHolder) subject, flag, value, contexts));
-        return result;
+        return PermissionUtil.getInstance().setPermissionValue((GDPermissionHolder) subject, flag, value, contexts);
     }
 
     // internal
@@ -1556,14 +1559,12 @@ public class GDPermissionManager implements PermissionManager {
 
     @Override
     public CompletableFuture<PermissionResult> setOption(Option option, String value, Set<Context> contexts) {
-        final PermissionResult result = PermissionUtil.getInstance().setOptionValue(GriefDefenderPlugin.DEFAULT_HOLDER, option.getPermission(), value, contexts);
-        return CompletableFuture.completedFuture(result);
+        return PermissionUtil.getInstance().setOptionValue(GriefDefenderPlugin.DEFAULT_HOLDER, option.getPermission(), value, contexts);
     }
 
     @Override
     public CompletableFuture<PermissionResult> setOption(Option option, Subject subject, String value, Set<Context> contexts) {
-        final PermissionResult result = PermissionUtil.getInstance().setOptionValue((GDPermissionHolder) subject, option.getPermission(), value, contexts);
-        return CompletableFuture.completedFuture(result);
+        return PermissionUtil.getInstance().setOptionValue((GDPermissionHolder) subject, option.getPermission(), value, contexts);
     }
 
     @Override
@@ -1596,16 +1597,17 @@ public class GDPermissionManager implements PermissionManager {
     public CompletableFuture<PermissionResult> setFlagDefinition(Subject subject, FlagDefinition flagDefinition, Tristate value) {
         final Set<Context> contexts = new HashSet<>();
         contexts.addAll(flagDefinition.getContexts());
-        PermissionResult result = null;
+        PermissionResult result = new GDPermissionResult(ResultTypes.SUCCESS, TextComponent.builder().append("SUCCESS").build());
         CompletableFuture<PermissionResult> future = new CompletableFuture<>();
         for (FlagData flagData : flagDefinition.getFlagData()) {
             final Set<Context> flagContexts = new HashSet<>(contexts);
             flagContexts.addAll(flagData.getContexts());
-            result = PermissionUtil.getInstance().setPermissionValue((GDPermissionHolder) subject, flagData.getFlag(), value, flagContexts);
-            if (!result.successful()) {
+            // TODO - Add method that supports multiple permissions
+            PermissionUtil.getInstance().setPermissionValue((GDPermissionHolder) subject, flagData.getFlag(), value, flagContexts);
+            /*if (!result.successful()) {
                 future.complete(result);
                 return future;
-            }
+            }*/
         }
 
         future.complete(result);

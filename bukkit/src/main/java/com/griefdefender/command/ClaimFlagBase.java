@@ -29,6 +29,7 @@ import co.aikar.commands.InvalidCommandArgument;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.common.collect.ImmutableMap;
+import com.griefdefender.GDBootstrap;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.GriefDefender;
@@ -76,6 +77,8 @@ import net.kyori.text.event.ClickEvent;
 import net.kyori.text.event.HoverEvent;
 import net.kyori.text.format.TextColor;
 import net.kyori.text.format.TextDecoration;
+
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -94,6 +97,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -1103,6 +1107,7 @@ public abstract class ClaimFlagBase extends BaseCommand {
             } else if (addClaimContext) {
                 definitionContexts.add(claim.getContext());
             }
+            CompletableFuture<PermissionResult> result = null;
             for (FlagData flagData : customFlag.getFlagData()) {
                 final Set<Context> newContexts = new HashSet<>(definitionContexts);
                 newContexts.addAll(flagData.getContexts());
@@ -1120,13 +1125,15 @@ public abstract class ClaimFlagBase extends BaseCommand {
                     return;
                 }
 
-                PermissionResult result = GriefDefenderPlugin.getInstance().getPermissionProvider().setPermissionValue(GriefDefenderPlugin.DEFAULT_HOLDER, flag, newValue, newContexts);
+                result = GriefDefenderPlugin.getInstance().getPermissionProvider().setPermissionValue(GriefDefenderPlugin.DEFAULT_HOLDER, flag, newValue, newContexts);
             }
 
-            // Save after all permission changes have been made
-            GriefDefenderPlugin.getInstance().getPermissionProvider().save(GriefDefenderPlugin.DEFAULT_HOLDER);
-            GDCauseStackManager.getInstance().popCause();
-            showCustomFlags(src, claim, flagGroup);
+            result.thenAccept(r -> {
+                Bukkit.getScheduler().runTask(GDBootstrap.getInstance(), () -> {
+                    GDCauseStackManager.getInstance().popCause();
+                    showCustomFlags(src, claim, flagGroup);
+                });
+            });
         };
     }
 
@@ -1176,21 +1183,35 @@ public abstract class ClaimFlagBase extends BaseCommand {
             }
 
             if (displayType == MenuType.DEFAULT || (hasDefaultContext && src.getInternalPlayerData().canManageFlagDefaults)) {
-                PermissionResult result = PermissionUtil.getInstance().setTransientPermission(this.subject, flag.getPermission(), newValue, newContexts);
-                if (result.successful()) {
-                    showFlagPermissions(src, claim, displayType);
-                    return;
+                CompletableFuture<PermissionResult> future = PermissionUtil.getInstance().setPermissionValue(this.subject, flag.getPermission(), newValue, newContexts);
+                future.thenAccept(r -> {
+                    Bukkit.getScheduler().runTask(GDBootstrap.getInstance(), () -> {
+                        showFlagPermissions(src, claim, displayType);
+                    });
+                });
+                return;
+            }
+
+            final Context permServerContext = serverContext;
+            CompletableFuture<PermissionResult> future = PermissionUtil.getInstance().setPermissionValue(this.subject, flag, newValue, newContexts);
+            future.thenAcceptAsync(r -> {
+                if (!r.successful()) {
+                    // Try again without server context
+                    newContexts.remove(permServerContext);
+                    CompletableFuture<PermissionResult> newFuture = PermissionUtil.getInstance().setPermissionValue(this.subject, flag, newValue, newContexts, false, true);
+                    newFuture.thenAccept(r2 -> {
+                        if (r2.successful()) {
+                            Bukkit.getScheduler().runTask(GDBootstrap.getInstance(), () -> {
+                                showFlagPermissions(src, claim, displayType);
+                            });
+                        }
+                    });
+                } else {
+                    Bukkit.getScheduler().runTask(GDBootstrap.getInstance(), () -> {
+                        showFlagPermissions(src, claim, displayType);
+                    });
                 }
-            }
-            PermissionResult result = PermissionUtil.getInstance().setPermissionValue(this.subject, flag, newValue, newContexts);
-            if (!result.successful()) {
-                // Try again without server context
-                newContexts.remove(serverContext);
-                result = PermissionUtil.getInstance().setPermissionValue(this.subject, flag, newValue, newContexts, false, true);
-            }
-            if (result.successful()) {
-                showFlagPermissions(src, claim, displayType);
-            }
+            });
         };
     }
 

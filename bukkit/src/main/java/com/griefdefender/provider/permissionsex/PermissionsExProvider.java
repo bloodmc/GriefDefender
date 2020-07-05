@@ -396,18 +396,18 @@ public class PermissionsExProvider implements PermissionProvider {
     }
 
     @Override
-    public PermissionResult setOptionValue(GDPermissionHolder holder, String permission, String value, Set<Context> contexts, boolean check) {
-        return convertResult(holderToPEXSubject(holder).data().update(data -> data.setOption(contextsGDToPEX(contexts), permission, value))).join();
+    public CompletableFuture<PermissionResult> setOptionValue(GDPermissionHolder holder, String permission, String value, Set<Context> contexts, boolean check) {
+        return convertResult(holderToPEXSubject(holder).data().update(data -> data.setOption(contextsGDToPEX(contexts), permission, value)));
     }
 
     @Override
-    public PermissionResult setTransientOption(GDPermissionHolder holder, String permission, String value, Set<Context> contexts) {
-        return convertResult(holderToPEXSubject(holder).transientData().update(data -> data.setOption(contextsGDToPEX(contexts), permission, value))).join();
+    public CompletableFuture<PermissionResult> setTransientOption(GDPermissionHolder holder, String permission, String value, Set<Context> contexts) {
+        return convertResult(holderToPEXSubject(holder).transientData().update(data -> data.setOption(contextsGDToPEX(contexts), permission, value)));
     }
 
     @Override
-    public PermissionResult setTransientPermission(GDPermissionHolder holder, String permission, Tristate value, Set<Context> contexts) {
-        return convertResult(holderToPEXSubject(holder).transientData().update(data -> data.setPermission(contextsGDToPEX(contexts), permission, pValFromBool(value.asBoolean())))).join();
+    public CompletableFuture<PermissionResult> setTransientPermission(GDPermissionHolder holder, String permission, Tristate value, Set<Context> contexts) {
+        return convertResult(holderToPEXSubject(holder).transientData().update(data -> data.setPermission(contextsGDToPEX(contexts), permission, pValFromBool(value.asBoolean()))));
     }
 
     @Override
@@ -417,8 +417,8 @@ public class PermissionsExProvider implements PermissionProvider {
     }
 
     @Override
-    public PermissionResult setPermissionValue(GDPermissionHolder holder, String permission, Tristate value, Set<Context> contexts, boolean check, boolean save) {
-        return convertResult(holderToPEXSubject(holder).data().update(data -> data.setPermission(contextsGDToPEX(contexts), permission, intFromTristate(value)))).join();
+    public CompletableFuture<PermissionResult> setPermissionValue(GDPermissionHolder holder, String permission, Tristate value, Set<Context> contexts, boolean check, boolean save) {
+        return convertResult(holderToPEXSubject(holder).data().update(data -> data.setPermission(contextsGDToPEX(contexts), permission, intFromTristate(value))));
     }
 
     @Override

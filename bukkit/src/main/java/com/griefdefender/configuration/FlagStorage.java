@@ -28,6 +28,7 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 import com.griefdefender.api.permission.flag.Flag;
+import com.griefdefender.api.permission.flag.Flags;
 import com.griefdefender.configuration.category.ConfigCategory;
 import com.griefdefender.configuration.category.CustomFlagGroupDefinitionCategory;
 import com.griefdefender.configuration.category.DefaultFlagCategory;
@@ -81,7 +82,11 @@ public class FlagStorage extends ConfigCategory {
 
     public FlagStorage() {
         for (Flag flag : FlagRegistryModule.getInstance().getAll()) {
-            this.control.put(flag.getName().toLowerCase(), true);
+            if (flag == Flags.ENTITY_CHUNK_SPAWN || flag == Flags.PORTAL_USE) {
+                this.control.put(flag.getName().toLowerCase(), false);
+            } else {
+                this.control.put(flag.getName().toLowerCase(), true);
+            }
         }
     }
 
