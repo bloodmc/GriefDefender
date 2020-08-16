@@ -32,7 +32,6 @@ import java.util.Set;
 
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.permission.Context;
-import com.griefdefender.api.permission.flag.FlagData;
 import com.griefdefender.api.permission.flag.FlagDefinition;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.permission.GDPermissionHolder;
@@ -106,30 +105,21 @@ public class CustomFlagGroupDefinitionCategory extends ConfigCategory {
                         groupStr = context.getValue();
                     }
                 }
-                GDPermissionHolder holder = GriefDefenderPlugin.DEFAULT_HOLDER;
+                GDPermissionHolder holder = GriefDefenderPlugin.GD_DEFINITION_HOLDER;
                 if (groupStr != null) {
                     if (PermissionUtil.getInstance().hasGroupSubject(groupStr)) {
                         holder = PermissionHolderCache.getInstance().getOrCreateGroup(groupStr);
                         if (holder == null) {
-                            holder = GriefDefenderPlugin.DEFAULT_HOLDER;
+                            holder = GriefDefenderPlugin.GD_DEFINITION_HOLDER;
                         }
                     }
                 }
-                for (FlagData flagData : flagDefinition.getFlagData()) {
-                    Set<Context> permissionContexts = new HashSet<>();
-                    permissionContexts.addAll(flagData.getContexts());
-                    // apply defaults
-                    for (Context context : defaultContexts) {
-                        permissionContexts.add(context);
-                        PermissionUtil.getInstance().setTransientPermission(holder, flagData.getFlag().getPermission(), flagDefinition.getDefaultValue(), permissionContexts);
-                        permissionContexts.remove(context);
-                    }
-                    // apply overrides
-                    for (Context context : overrideContexts) {
-                        permissionContexts.add(context);
-                        PermissionUtil.getInstance().setPermissionValue(holder, flagData.getFlag().getPermission(), flagDefinition.getDefaultValue(), permissionContexts);
-                        permissionContexts.remove(context);
-                    }
+
+                if (!defaultContexts.isEmpty()) {
+                    PermissionUtil.getInstance().setFlagDefinition(holder, flagDefinition, flagDefinition.getDefaultValue(), defaultContexts, false);
+                }
+                if (!overrideContexts.isEmpty()) {
+                    PermissionUtil.getInstance().setFlagDefinition(holder, flagDefinition, flagDefinition.getDefaultValue(), overrideContexts, false);
                 }
             }
         }

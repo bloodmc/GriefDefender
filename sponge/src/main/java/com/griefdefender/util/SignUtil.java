@@ -249,7 +249,7 @@ public class SignUtil {
             minTime = TextComponent.builder()
             .append(String.valueOf(min))
             .append(" ")
-            .append(claim.getEconomyData().getPaymentType() == PaymentType.DAILY ? 
+            .append(paymentType == PaymentType.DAILY ? 
                     (min > 1 ? MessageCache.getInstance().LABEL_DAYS : MessageCache.getInstance().LABEL_DAY) : 
                         (min > 1 ? MessageCache.getInstance().LABEL_HOURS : MessageCache.getInstance().LABEL_HOUR))
                 .build();

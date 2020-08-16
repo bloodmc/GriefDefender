@@ -44,7 +44,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -87,6 +86,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
         FlagData.Builder flagDataBuilder = GriefDefender.getRegistry().createBuilder(FlagData.Builder.class);
 
         // ADMIN
+        flagContexts.add(FlagContexts.TARGET_TYPE_AMBIENT);
         this.registerCustomType(
                 definitionBuilder
                     .reset()
@@ -99,10 +99,12 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .flagData(flagDataBuilder
                         .reset()
                         .flag(Flags.ENTITY_SPAWN)
-                        .context(FlagContexts.TARGET_TYPE_AMBIENT)
+                        .contexts(flagContexts)
                         .build())
                     .build());
 
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.TARGET_TYPE_ANIMAL);
         this.registerCustomType(
                 definitionBuilder
                     .reset()
@@ -115,10 +117,12 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .flagData(flagDataBuilder
                         .reset()
                         .flag(Flags.ENTITY_SPAWN)
-                        .context(FlagContexts.TARGET_TYPE_ANIMAL)
+                        .contexts(flagContexts)
                         .build())
                     .build());
 
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.TARGET_TYPE_AQUATIC);
         this.registerCustomType(
                 definitionBuilder
                     .reset()
@@ -131,7 +135,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .flagData(flagDataBuilder
                         .reset()
                         .flag(Flags.ENTITY_SPAWN)
-                        .context(FlagContexts.TARGET_TYPE_AQUATIC)
+                        .contexts(flagContexts)
                         .build())
                     .build());
 
@@ -169,6 +173,9 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .flagData(flagData)
                     .build());
 
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.SOURCE_PLAYER);
+        flagContexts.add(FlagContexts.TARGET_CHORUS_FRUIT);
         this.registerCustomType(
                 definitionBuilder
                     .reset()
@@ -181,10 +188,12 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .flagData(flagDataBuilder
                         .reset()
                         .flag(Flags.INTERACT_ITEM_SECONDARY)
-                        .context(FlagContexts.TARGET_CHORUS_FRUIT)
+                        .contexts(flagContexts)
                         .build())
                     .build());
  
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.SOURCE_CREEPER);
         this.registerCustomType(
                 definitionBuilder
                     .reset()
@@ -197,10 +206,12 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .flagData(flagDataBuilder
                         .reset()
                         .flag(Flags.EXPLOSION_BLOCK)
-                        .context(FlagContexts.SOURCE_CREEPER)
+                        .contexts(flagContexts)
                         .build())
                     .build());
 
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.SOURCE_CREEPER);
         this.registerCustomType(
                 definitionBuilder
                     .reset()
@@ -213,10 +224,18 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .flagData(flagDataBuilder
                         .reset()
                         .flag(Flags.EXPLOSION_ENTITY)
-                        .context(FlagContexts.SOURCE_CREEPER)
+                        .contexts(flagContexts)
                         .build())
                     .build());
 
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.SOURCE_ARROW);
+        flagContexts.add(FlagContexts.TARGET_END_CRYSTAL);
+        flagData.add(flagDataBuilder
+                .reset()
+                .flag(Flags.PROJECTILE_IMPACT_ENTITY)
+                .contexts(flagContexts)
+                .build());
         flagContexts = new HashSet<>();
         flagContexts.add(FlagContexts.SOURCE_PLAYER);
         flagContexts.add(FlagContexts.TARGET_END_CRYSTAL);
@@ -301,6 +320,8 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .flagData(flagData)
                     .build());
 
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.TARGET_XP_ORB);
         this.registerCustomType(
                 definitionBuilder
                     .reset()
@@ -313,10 +334,12 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .flagData(flagDataBuilder
                         .reset()
                         .flag(Flags.ENTITY_SPAWN)
-                        .context(FlagContexts.TARGET_XP_ORB)
+                        .contexts(flagContexts)
                         .build())
                     .build());
 
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.SOURCE_FALL);
         this.registerCustomType(
                 definitionBuilder
                     .reset()
@@ -329,7 +352,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .flagData(flagDataBuilder
                         .reset()
                         .flag(Flags.ENTITY_DAMAGE)
-                        .context(FlagContexts.SOURCE_FALL)
+                        .contexts(flagContexts)
                         .build())
                     .build());
 
@@ -352,6 +375,8 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                         .build())
                     .build());
 
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.SOURCE_FALL);
         this.registerCustomType(
                 definitionBuilder
                     .reset()
@@ -364,10 +389,12 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .flagData(flagDataBuilder
                         .reset()
                         .flag(Flags.BLOCK_BREAK)
-                        .context(FlagContexts.SOURCE_FALLING_BLOCK)
+                        .contexts(flagContexts)
                         .build())
                     .build());
 
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.SOURCE_FIRE);
         this.registerCustomType(
                 definitionBuilder
                     .reset()
@@ -380,37 +407,47 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .flagData(flagDataBuilder
                         .reset()
                         .flag(Flags.BLOCK_BREAK)
-                        .context(FlagContexts.SOURCE_FIRE)
+                        .contexts(flagContexts)
                         .build())
                     .build());
 
         flagData = new ArrayList<>();
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.SOURCE_FIRE);
         flagData.add(flagDataBuilder
                 .reset()
                 .flag(Flags.ENTITY_DAMAGE)
-                .context(FlagContexts.SOURCE_FIRE)
+                .contexts(flagContexts)
                 .build());
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.SOURCE_FIRE_TICK);
         flagData.add(flagDataBuilder
                 .reset()
                 .flag(Flags.ENTITY_DAMAGE)
-                .context(FlagContexts.SOURCE_FIRE_TICK)
+                .contexts(flagContexts)
                 .build());
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.SOURCE_MAGMA_BLOCK);
         flagData.add(flagDataBuilder
                 .reset()
                 .flag(Flags.ENTITY_DAMAGE)
-                .context(FlagContexts.SOURCE_MAGMA_BLOCK)
+                .contexts(flagContexts)
                 .build());
         if (GriefDefenderPlugin.getMajorMinecraftVersion() > 12) {
+            flagContexts = new HashSet<>();
+            flagContexts.add(FlagContexts.SOURCE_LAVA);
             flagData.add(flagDataBuilder
                     .reset()
                     .flag(Flags.ENTITY_DAMAGE)
-                    .context(FlagContexts.SOURCE_LAVA)
+                    .contexts(flagContexts)
                     .build());
         } else {
+            flagContexts = new HashSet<>();
+            flagContexts.add(FlagContexts.SOURCE_LAVA_1_12);
             flagData.add(flagDataBuilder
                     .reset()
                     .flag(Flags.ENTITY_DAMAGE)
-                    .context(FlagContexts.SOURCE_LAVA_1_12)
+                    .contexts(flagContexts)
                     .build());
         }
         this.registerCustomType(
@@ -425,6 +462,8 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .flagData(flagData)
                     .build());
 
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.SOURCE_LIGHTNING_BOLT);
         this.registerCustomType(
                 definitionBuilder
                     .reset()
@@ -437,7 +476,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .flagData(flagDataBuilder
                         .reset()
                         .flag(Flags.ENTITY_DAMAGE)
-                        .context(FlagContexts.SOURCE_LIGHTNING_BOLT)
+                        .contexts(flagContexts)
                         .build())
                     .build());
 
@@ -445,6 +484,14 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
         flagContexts.add(FlagContexts.SOURCE_TYPE_MONSTER);
         flagContexts.add(FlagContexts.TARGET_TYPE_ANIMAL);
         flagData = new ArrayList<>();
+        flagData.add(flagDataBuilder
+                .reset()
+                .flag(Flags.ENTITY_DAMAGE)
+                .contexts(flagContexts)
+                .build());
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.SOURCE_TYPE_MONSTER);
+        flagContexts.add(FlagContexts.TARGET_TYPE_AQUATIC);
         flagData.add(flagDataBuilder
                 .reset()
                 .flag(Flags.ENTITY_DAMAGE)
@@ -493,6 +540,8 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .flagData(flagData)
                     .build());
 
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.TARGET_TYPE_MONSTER);
         this.registerCustomType(
                 definitionBuilder
                     .reset()
@@ -505,20 +554,24 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .flagData(flagDataBuilder
                         .reset()
                         .flag(Flags.ENTITY_SPAWN)
-                        .context(FlagContexts.TARGET_TYPE_MONSTER)
+                        .contexts(flagContexts)
                         .build())
                     .build());
 
         flagData = new ArrayList<>();
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.SOURCE_PISTON);
         flagData.add(flagDataBuilder
                 .reset()
                 .flag(Flags.ITEM_SPAWN)
-                .context(FlagContexts.SOURCE_PISTON)
+                .contexts(flagContexts)
                 .build());
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.SOURCE_PISTON_STICKY);
         flagData.add(flagDataBuilder
                 .reset()
                 .flag(Flags.ITEM_SPAWN)
-                .context(FlagContexts.SOURCE_PISTON_STICKY)
+                .contexts(flagContexts)
                 .build());
         this.registerCustomType(
                 definitionBuilder
@@ -533,25 +586,29 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .build());
 
         flagData = new ArrayList<>();
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.SOURCE_PISTON);
         flagData.add(flagDataBuilder
                 .reset()
                 .flag(Flags.BLOCK_BREAK)
-                .context(FlagContexts.SOURCE_PISTON)
+                .contexts(flagContexts)
                 .build());
         flagData.add(flagDataBuilder
                 .reset()
                 .flag(Flags.BLOCK_PLACE)
-                .context(FlagContexts.SOURCE_PISTON)
+                .contexts(flagContexts)
                 .build());
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.SOURCE_PISTON_STICKY);
         flagData.add(flagDataBuilder
                 .reset()
                 .flag(Flags.BLOCK_BREAK)
-                .context(FlagContexts.SOURCE_PISTON_STICKY)
+                .contexts(flagContexts)
                 .build());
         flagData.add(flagDataBuilder
                 .reset()
                 .flag(Flags.BLOCK_PLACE)
-                .context(FlagContexts.SOURCE_PISTON_STICKY)
+                .contexts(flagContexts)
                 .build());
         this.registerCustomType(
                 definitionBuilder
@@ -565,6 +622,8 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .flagData(flagData)
                     .build());
 
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.SOURCE_PLAYER);
         this.registerCustomType(
                 definitionBuilder
                     .reset()
@@ -577,10 +636,12 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .flagData(flagDataBuilder
                         .reset()
                         .flag(Flags.BLOCK_BREAK)
-                        .context(FlagContexts.SOURCE_PLAYER)
+                        .contexts(flagContexts)
                         .build())
                     .build());
 
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.SOURCE_PLAYER);
         this.registerCustomType(
                 definitionBuilder
                     .reset()
@@ -593,10 +654,12 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .flagData(flagDataBuilder
                         .reset()
                         .flag(Flags.INTERACT_BLOCK_SECONDARY)
-                        .context(FlagContexts.SOURCE_PLAYER)
+                        .contexts(flagContexts)
                         .build())
                     .build());
 
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.SOURCE_PLAYER);
         this.registerCustomType(
                 definitionBuilder
                     .reset()
@@ -609,7 +672,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .flagData(flagDataBuilder
                         .reset()
                         .flag(Flags.BLOCK_PLACE)
-                        .context(FlagContexts.SOURCE_PLAYER)
+                        .contexts(flagContexts)
                         .build())
                     .build());
 
@@ -657,6 +720,8 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                         .build())
                     .build());
 
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.SOURCE_PLAYER);
         this.registerCustomType(
                 definitionBuilder
                     .reset()
@@ -669,10 +734,12 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .flagData(flagDataBuilder
                         .reset()
                         .flag(Flags.ENTER_CLAIM)
-                        .context(FlagContexts.SOURCE_PLAYER)
+                        .contexts(flagContexts)
                         .build())
                     .build());
 
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.SOURCE_PLAYER);
         this.registerCustomType(
                 definitionBuilder
                     .reset()
@@ -685,10 +752,12 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .flagData(flagDataBuilder
                         .reset()
                         .flag(Flags.INTERACT_ENTITY_SECONDARY)
-                        .context(FlagContexts.SOURCE_PLAYER)
+                        .contexts(flagContexts)
                         .build())
                     .build());
 
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.SOURCE_PLAYER);
         this.registerCustomType(
                 definitionBuilder
                     .reset()
@@ -701,7 +770,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .flagData(flagDataBuilder
                         .reset()
                         .flag(Flags.EXIT_CLAIM)
-                        .context(FlagContexts.SOURCE_PLAYER)
+                        .contexts(flagContexts)
                         .build())
                     .build());
 
@@ -743,6 +812,8 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                         .build())
                     .build());
 
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.SOURCE_PLAYER);
         this.registerCustomType(
                 definitionBuilder
                     .reset()
@@ -755,10 +826,12 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .flagData(flagDataBuilder
                         .reset()
                         .flag(Flags.ITEM_DROP)
-                        .context(FlagContexts.SOURCE_PLAYER)
+                        .contexts(flagContexts)
                         .build())
                     .build());
 
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.SOURCE_PLAYER);
         this.registerCustomType(
                 definitionBuilder
                     .reset()
@@ -771,7 +844,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .flagData(flagDataBuilder
                         .reset()
                         .flag(Flags.ITEM_PICKUP)
-                        .context(FlagContexts.SOURCE_PLAYER)
+                        .contexts(flagContexts)
                         .build())
                     .build());
 
@@ -813,6 +886,8 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                         .build())
                     .build());
 
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.TARGET_PLAYER);
         this.registerCustomType(
                 definitionBuilder
                     .reset()
@@ -825,10 +900,12 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .flagData(flagDataBuilder
                         .reset()
                         .flag(Flags.ENTITY_TELEPORT_FROM)
-                        .context(FlagContexts.TARGET_PLAYER)
+                        .contexts(flagContexts)
                         .build())
                     .build());
 
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.TARGET_PLAYER);
         this.registerCustomType(
                 definitionBuilder
                     .reset()
@@ -841,7 +918,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .flagData(flagDataBuilder
                         .reset()
                         .flag(Flags.ENTITY_TELEPORT_TO)
-                        .context(FlagContexts.TARGET_PLAYER)
+                        .contexts(flagContexts)
                         .build())
                     .build());
 
@@ -897,6 +974,8 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .flagData(flagData)
                     .build());
 
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.SOURCE_TNT);
         this.registerCustomType(
                 definitionBuilder
                     .reset()
@@ -909,10 +988,12 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .flagData(flagDataBuilder
                         .reset()
                         .flag(Flags.EXPLOSION_BLOCK)
-                        .context(FlagContexts.SOURCE_TNT)
+                        .contexts(flagContexts)
                         .build())
                     .build());
 
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.SOURCE_TNT);
         this.registerCustomType(
                 definitionBuilder
                     .reset()
@@ -925,13 +1006,13 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .flagData(flagDataBuilder
                         .reset()
                         .flag(Flags.EXPLOSION_ENTITY)
-                        .context(FlagContexts.SOURCE_TNT)
+                        .contexts(flagContexts)
                         .build())
                     .build());
 
         flagContexts = new HashSet<>();
         flagContexts.add(FlagContexts.SOURCE_TURTLE_EGG);
-        flagContexts.add(FlagContexts.TARGET_AIR);
+        flagContexts.add(FlagContexts.TARGET_TURTLE_EGG);
         flagData = new ArrayList<>();
         flagData.add(flagDataBuilder
                 .reset()
@@ -971,6 +1052,8 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .flagData(flagData)
                     .build());
 
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.SOURCE_WITHER);
         this.registerCustomType(
                 definitionBuilder
                     .reset()
@@ -983,10 +1066,12 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .flagData(flagDataBuilder
                         .reset()
                         .flag(Flags.BLOCK_BREAK)
-                        .context(FlagContexts.SOURCE_WITHER)
+                        .contexts(flagContexts)
                         .build())
                     .build());
 
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.SOURCE_WITHER);
         this.registerCustomType(
                 definitionBuilder
                     .reset()
@@ -999,7 +1084,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .flagData(flagDataBuilder
                         .reset()
                         .flag(Flags.ENTITY_DAMAGE)
-                        .context(FlagContexts.SOURCE_WITHER)
+                        .contexts(flagContexts)
                         .build())
                     .build());
 
@@ -1073,6 +1158,8 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .flagData(flagData)
                     .build());
 
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.TARGET_TYPE_CROP);
         this.registerCustomType(
                 definitionBuilder
                     .reset()
@@ -1085,7 +1172,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .flagData(flagDataBuilder
                         .reset()
                         .flag(Flags.BLOCK_GROW)
-                        .context(FlagContexts.TARGET_TYPE_CROP)
+                        .contexts(flagContexts)
                         .build())
                     .build());
 
@@ -1114,6 +1201,8 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .flagData(flagData)
                     .build());
 
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.SOURCE_ENDERMAN);
         this.registerCustomType(
                 definitionBuilder
                     .reset()
@@ -1126,23 +1215,31 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .flagData(flagDataBuilder
                         .reset()
                         .flag(Flags.BLOCK_BREAK)
-                        .context(FlagContexts.SOURCE_ENDERMAN)
+                        .contexts(flagContexts)
                         .build())
                     .build());
 
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.SOURCE_FIRE);
         definitionContexts = new HashSet<>();
         definitionContexts.add(ClaimContexts.GLOBAL_OVERRIDE_CONTEXT);
-        definitionContexts.add(OWNER_OVERRIDE_CONTEXT);
+        //definitionContexts.add(OWNER_OVERRIDE_CONTEXT);
         flagData = new ArrayList<>();
         flagData.add(flagDataBuilder
                         .reset()
                         .flag(Flags.BLOCK_SPREAD)
-                        .context(FlagContexts.SOURCE_FIRE)
+                        .contexts(flagContexts)
                         .build());
+        flagContexts = new HashSet<>();
+        if (GriefDefenderPlugin.getMajorMinecraftVersion() > 12) {
+            flagContexts.add(FlagContexts.SOURCE_LAVA);
+        } else {
+            flagContexts.add(FlagContexts.SOURCE_LAVA_1_12);
+        }
         flagData.add(flagDataBuilder
                 .reset()
                 .flag(Flags.BLOCK_SPREAD)
-                .context(FlagContexts.SOURCE_LAVA)
+                .contexts(flagContexts)
                 .build());
         this.registerCustomType(
                 definitionBuilder
@@ -1156,6 +1253,8 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .flagData(flagData)
                     .build());
 
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.TARGET_GRASS);
         this.registerCustomType(
                 definitionBuilder
                     .reset()
@@ -1168,10 +1267,12 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .flagData(flagDataBuilder
                         .reset()
                         .flag(Flags.BLOCK_GROW)
-                        .context(FlagContexts.TARGET_GRASS)
+                        .contexts(flagContexts)
                         .build())
                     .build());
 
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.TARGET_ICE_FORM);
         this.registerCustomType(
                 definitionBuilder
                     .reset()
@@ -1184,7 +1285,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .flagData(flagDataBuilder
                         .reset()
                         .flag(Flags.BLOCK_MODIFY)
-                        .context(FlagContexts.TARGET_ICE_FORM)
+                        .contexts(flagContexts)
                         .build())
                     .build());
 
@@ -1247,6 +1348,9 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                         .build())
                     .build());
 
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.SOURCE_PLAYER);
+        flagContexts.add(FlagContexts.TARGET_FLINTANDSTEEL);
         this.registerCustomType(
                 definitionBuilder
                     .reset()
@@ -1259,10 +1363,12 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .flagData(flagDataBuilder
                         .reset()
                         .flag(Flags.INTERACT_ITEM_SECONDARY)
-                        .context(FlagContexts.TARGET_FLINTANDSTEEL)
+                        .contexts(flagContexts)
                         .build())
                     .build());
 
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.TARGET_TYPE_MUSHROOM);
         this.registerCustomType(
                 definitionBuilder
                     .reset()
@@ -1279,6 +1385,8 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                         .build())
                     .build());
 
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.TARGET_MYCELIUM);
         this.registerCustomType(
                 definitionBuilder
                     .reset()
@@ -1380,10 +1488,8 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
         flagContexts = new HashSet<>();
         if (GriefDefenderPlugin.getMajorMinecraftVersion() > 12) {
             flagContexts.add(FlagContexts.SOURCE_SNOW);
-            flagContexts.add(FlagContexts.TARGET_AIR);
         } else {
             flagContexts.add(FlagContexts.SOURCE_SNOW_1_12);
-            flagContexts.add(FlagContexts.TARGET_AIR);
         }
         this.registerCustomType(
                 definitionBuilder
@@ -1425,6 +1531,9 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                         .build())
                     .build());
 
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.SOURCE_FARMLAND);
+        flagContexts.add(FlagContexts.STATE_FARMLAND_DRY);
         this.registerCustomType(
                 definitionBuilder
                     .reset()
@@ -1437,7 +1546,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .flagData(flagDataBuilder
                         .reset()
                         .flag(Flags.BLOCK_MODIFY)
-                        .context(FlagContexts.STATE_FARMLAND_DRY)
+                        .contexts(flagContexts)
                         .build())
                     .build());
 
@@ -1500,6 +1609,9 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .flagData(flagData)
                     .build());
 
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.SOURCE_PLAYER);
+        flagContexts.add(FlagContexts.TARGET_VILLAGER);
         this.registerCustomType(
                 definitionBuilder
                     .reset()

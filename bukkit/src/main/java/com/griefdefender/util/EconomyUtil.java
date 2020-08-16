@@ -441,7 +441,7 @@ public class EconomyUtil {
             minTime = TextComponent.builder()
             .append(String.valueOf(min))
             .append(" ")
-            .append(claim.getEconomyData().getPaymentType() == PaymentType.DAILY ? 
+            .append(paymentType == PaymentType.DAILY ? 
                     (min > 1 ? MessageCache.getInstance().LABEL_DAYS : MessageCache.getInstance().LABEL_DAY) : 
                         (min > 1 ? MessageCache.getInstance().LABEL_HOURS : MessageCache.getInstance().LABEL_HOUR))
                 .build();
@@ -523,6 +523,11 @@ public class EconomyUtil {
             }
 
             claim.getEconomyData().addPaymentTransaction(new GDPaymentTransaction(TransactionType.RENT, TransactionResultType.SUCCESS, player.getUniqueId(), Instant.now(), rate));
+            if (claim.getEconomyData().getRentMinTime() > 0) {
+                final double minDeposit = rate * claim.getEconomyData().getRentMinTime();
+                final double currentBalance = claim.getEconomyData().getRentBalance(player.getUniqueId());
+                claim.getEconomyData().setRentBalance(player.getUniqueId(), currentBalance - minDeposit);
+            }
             if (claim.isAdminClaim()) {
                 final UUID bankAccount = claim.getEconomyAccountId().orElse(null);
                 if (bankAccount != null) {

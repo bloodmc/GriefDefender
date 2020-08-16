@@ -21,6 +21,7 @@ import com.griefdefender.api.permission.ContextKeys;
 import com.griefdefender.api.permission.PermissionResult;
 import com.griefdefender.api.permission.ResultTypes;
 import com.griefdefender.api.permission.flag.Flag;
+import com.griefdefender.api.permission.flag.FlagDefinition;
 import com.griefdefender.api.permission.option.Option;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.internal.registry.BlockTypeRegistryModule;
@@ -221,6 +222,14 @@ public class PermissionsExProvider implements PermissionProvider {
     // - Implement API
 
     @Override
+    public boolean createDefaultGroup(String identifier) {
+        if (!this.hasGroupSubject(identifier)) {
+            pex.createSubjectIdentifier(PermissionsEx.SUBJECTS_GROUP, identifier);
+        }
+        return true;
+    }
+
+    @Override
     public String getServerName() {
         return pex.getConfig().getServerTags().get(0);
     }
@@ -313,6 +322,12 @@ public class PermissionsExProvider implements PermissionProvider {
     @Override
     public Map<String, String> getOptions(GDPermissionHolder holder, Set<Context> contexts) {
         return holderToPEXSubject(holder).getOptions(contextsGDToPEX(contexts));
+    }
+
+    @Override
+    public Map<Set<Context>, Map<String, Boolean>> getAllPermanentPermissions() {
+        // TODO
+        return new HashMap<>();
     }
 
     @Override
@@ -423,6 +438,12 @@ public class PermissionsExProvider implements PermissionProvider {
 
     @Override
     public CompletableFuture<Void> save(GDPermissionHolder holder) {
+        // TODO
+        return new CompletableFuture<>();
+    }
+
+    @Override
+    public CompletableFuture<PermissionResult> setFlagDefinition(GDPermissionHolder holder, FlagDefinition definition, Tristate value, Set<Context> contexts, boolean isTransient) {
         // TODO
         return new CompletableFuture<>();
     }

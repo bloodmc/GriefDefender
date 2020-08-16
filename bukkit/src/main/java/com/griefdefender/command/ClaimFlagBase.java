@@ -42,6 +42,7 @@ import com.griefdefender.api.permission.PermissionResult;
 import com.griefdefender.api.permission.ResultTypes;
 import com.griefdefender.api.permission.flag.Flag;
 import com.griefdefender.api.permission.flag.FlagData;
+import com.griefdefender.api.permission.flag.Flags;
 import com.griefdefender.cache.MessageCache;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
@@ -426,7 +427,7 @@ public abstract class ClaimFlagBase extends BaseCommand {
         overrideContexts.add(claim.getOverrideClaimContext());
 
         Map<String, UIFlagData> filteredContextMap = new HashMap<>();
-        for (Map.Entry<Set<Context>, Map<String, Boolean>> mapEntry : PermissionUtil.getInstance().getTransientPermissions(this.subject).entrySet()) {
+        for (Map.Entry<Set<Context>, Map<String, Boolean>> mapEntry : PermissionUtil.getInstance().getTransientPermissions(GriefDefenderPlugin.GD_DEFAULT_HOLDER).entrySet()) {
             final Set<Context> contextSet = mapEntry.getKey();
             if (contextSet.contains(claim.getDefaultTypeContext())) {
                 this.addFilteredContexts(filteredContextMap, contextSet, MenuType.DEFAULT, mapEntry.getValue());
@@ -436,7 +437,7 @@ public abstract class ClaimFlagBase extends BaseCommand {
         }
 
         final List<Claim> inheritParents = claim.getInheritedParents();
-        for (Map.Entry<Set<Context>, Map<String, Boolean>> mapEntry : PermissionUtil.getInstance().getPermanentPermissions(this.subject).entrySet()) {
+        for (Map.Entry<Set<Context>, Map<String, Boolean>> mapEntry : PermissionUtil.getInstance().getAllPermanentPermissions().entrySet()) {
             final Set<Context> contextSet = mapEntry.getKey();
             if (contextSet.contains(claim.getDefaultTypeContext())) {
                 this.addFilteredContexts(filteredContextMap, contextSet, MenuType.DEFAULT, mapEntry.getValue());
@@ -627,17 +628,21 @@ public abstract class ClaimFlagBase extends BaseCommand {
         boolean hasHover = false;
         TextComponent.Builder hoverBuilder = TextComponent.builder();
         final Player player = src.getOnlinePlayer();
+        final boolean canIgnoreClaim = src.getInternalPlayerData().canIgnoreClaim(claim);
         boolean hasEditPermission = true;
-        Component denyReason = claim.allowEdit(player);
-        if (denyReason != null) {
-            hasEditPermission = false;
-            hasHover = true;
+        Component denyReason = null;
+        if (!canIgnoreClaim) {
+            denyReason = claim.allowEdit(player);
+            if (denyReason != null) {
+                hasEditPermission = false;
+                hasHover = true;
+            }
         }
 
         final boolean isAdminGroup = GriefDefenderPlugin.getFlagConfig().getConfig().customFlags.getGroups().get(flagGroup).isAdminGroup();
         final String permission = isAdminGroup ? GDPermissions.FLAG_CUSTOM_ADMIN_BASE : GDPermissions.FLAG_CUSTOM_USER_BASE;
          // check flag perm
-        if (!player.hasPermission(permission + "." + flagGroup + "." + customFlag.getName())) {
+        if (!canIgnoreClaim && !player.hasPermission(permission + "." + flagGroup + "." + customFlag.getName())) {
             hoverBuilder.append(MessageCache.getInstance().PERMISSION_FLAG_USE).append("\n");
             hasEditPermission = false;
             hasHover = true;
@@ -654,8 +659,7 @@ public abstract class ClaimFlagBase extends BaseCommand {
                 hasOverride = true;
                 hasEditPermission = false;
             } else if (activeData.getType() == GDActiveFlagData.Type.OWNER_OVERRIDE_PARENT_INHERIT || activeData.getType() == GDActiveFlagData.Type.CLAIM_PARENT_INHERIT) {
-                if (claim.allowEdit(src) != null) {
-                    hasEditPermission = false;
+                if (!hasEditPermission) {
                     parentInheritUniqueId = activeData.getInheritParentUniqueId();
                     parentInheritFriendlyType = activeData.getInheritParentFriendlyType();
                 }
@@ -913,14 +917,14 @@ public abstract class ClaimFlagBase extends BaseCommand {
         if (!claim.isWilderness()) {
             permissionContexts.add(ClaimContexts.GLOBAL_DEFAULT_CONTEXT);
             permissionContexts.add(ClaimContexts.USER_DEFAULT_CONTEXT);
-            result = PermissionUtil.getInstance().getPermissionValue(claim, (GDPermissionHolder) flagDefinition.getSubject(), flagData.getFlag().getPermission(), permissionContexts, PermissionDataType.ALL);
+            result = PermissionUtil.getInstance().getPermissionValue(claim, (GDPermissionHolder) flagDefinition.getSubject(), flagData.getFlag().getPermission(), permissionContexts, PermissionDataType.PERSISTENT);
             if (result != Tristate.UNDEFINED) {
                 return new GDActiveFlagData(flagDefinition, flagData, result, permissionContexts, GDActiveFlagData.Type.DEFAULT);
             }
             permissionContexts.remove(ClaimContexts.USER_DEFAULT_CONTEXT);
         } else {
             permissionContexts.add(ClaimContexts.GLOBAL_DEFAULT_CONTEXT);
-            result = PermissionUtil.getInstance().getPermissionValue(claim, (GDPermissionHolder) flagDefinition.getSubject(), flagData.getFlag().getPermission(), permissionContexts, PermissionDataType.ALL);
+            result = PermissionUtil.getInstance().getPermissionValue(claim, (GDPermissionHolder) flagDefinition.getSubject(), flagData.getFlag().getPermission(), permissionContexts, PermissionDataType.PERSISTENT);
             if (result != Tristate.UNDEFINED) {
                 return new GDActiveFlagData(flagDefinition, flagData, result, permissionContexts, GDActiveFlagData.Type.DEFAULT);
             }
@@ -928,6 +932,7 @@ public abstract class ClaimFlagBase extends BaseCommand {
 
         permissionContexts.remove(ClaimContexts.GLOBAL_DEFAULT_CONTEXT);
         permissionContexts.add(claim.getDefaultTypeContext());
+        permissionContexts.add(ClaimContexts.USER_DEFAULT_CONTEXT);
         result = PermissionUtil.getInstance().getPermissionValue(claim, (GDPermissionHolder) flagDefinition.getSubject(), flagData.getFlag().getPermission(), permissionContexts, PermissionDataType.TRANSIENT);
         if (result != Tristate.UNDEFINED) {
             return new GDActiveFlagData(flagDefinition, flagData, result, permissionContexts, GDActiveFlagData.Type.DEFAULT);
@@ -1084,11 +1089,11 @@ public abstract class ClaimFlagBase extends BaseCommand {
         return textBuilder.build();
     }
 
-    private Consumer<CommandSender> createCustomFlagConsumer(GDPermissionUser src, GDClaim claim, GDFlagDefinition customFlag, Tristate currentValue, String flagGroup) {
+    private Consumer<CommandSender> createCustomFlagConsumer(GDPermissionUser src, GDClaim claim, GDFlagDefinition flagDefinition, Tristate currentValue, String flagGroup) {
         final Player player = src.getOnlinePlayer();
         return consumer -> {
             GDCauseStackManager.getInstance().pushCause(player);
-            Set<Context> definitionContexts = new HashSet<>(customFlag.getContexts());
+            Set<Context> definitionContexts = new HashSet<>(flagDefinition.getContexts());
             boolean addClaimContext = false;
             boolean addClaimOverrideContext = false;
             final Iterator<Context> iterator = definitionContexts.iterator();
@@ -1107,28 +1112,15 @@ public abstract class ClaimFlagBase extends BaseCommand {
             } else if (addClaimContext) {
                 definitionContexts.add(claim.getContext());
             }
-            CompletableFuture<PermissionResult> result = null;
-            for (FlagData flagData : customFlag.getFlagData()) {
-                final Set<Context> newContexts = new HashSet<>(definitionContexts);
-                newContexts.addAll(flagData.getContexts());
-                Tristate newValue = Tristate.UNDEFINED;
-                if (currentValue == Tristate.TRUE) {
-                    newValue = Tristate.FALSE;
-                } else {
-                    newValue = Tristate.TRUE;
-                }
 
-                final Flag flag = flagData.getFlag();
-                GDFlagPermissionEvent.Set event = new GDFlagPermissionEvent.Set(this.subject, flagData.getFlag(), newValue, newContexts);
-                GriefDefender.getEventManager().post(event);
-                if (event.cancelled()) {
-                    return;
-                }
-
-                result = GriefDefenderPlugin.getInstance().getPermissionProvider().setPermissionValue(GriefDefenderPlugin.DEFAULT_HOLDER, flag, newValue, newContexts);
+            Tristate newValue = Tristate.UNDEFINED;
+            if (currentValue == Tristate.TRUE) {
+                newValue = Tristate.FALSE;
+            } else {
+                newValue = Tristate.TRUE;
             }
 
-            result.thenAccept(r -> {
+            PermissionUtil.getInstance().setFlagDefinition(GriefDefenderPlugin.GD_DEFINITION_HOLDER, flagDefinition, newValue, definitionContexts, false).thenAccept(r -> {
                 Bukkit.getScheduler().runTask(GDBootstrap.getInstance(), () -> {
                     GDCauseStackManager.getInstance().popCause();
                     showCustomFlags(src, claim, flagGroup);

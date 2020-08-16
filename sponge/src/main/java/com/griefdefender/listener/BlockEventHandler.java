@@ -80,6 +80,7 @@ import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.FallingBlock;
 import org.spongepowered.api.entity.Item;
+import org.spongepowered.api.entity.hanging.ItemFrame;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.Listener;
@@ -433,7 +434,7 @@ public class BlockEventHandler {
         }
 
         final GDBlockType gdBlock = BlockTypeRegistryModule.getInstance().getById(event.getTargetBlock().getType().getId()).orElse(null);
-        if (gdBlock != null && !gdBlock.isCollidable()) {
+        if (gdBlock != null && !gdBlock.isCollidable() && !(source instanceof ItemFrame)) {
             return;
         }
         if (event.getTargetBlock().getType() == BlockTypes.PORTAL) {
@@ -635,6 +636,7 @@ public class BlockEventHandler {
                 }
             }
         }
+
         if (GriefDefenderPlugin.isSourceIdBlacklisted(Flags.EXPLOSION_BLOCK.getName(), source, event.getExplosion().getWorld().getProperties())) {
             return;
         }
@@ -647,7 +649,7 @@ public class BlockEventHandler {
         final int cancelBlockLimit = GriefDefenderPlugin.getGlobalConfig().getConfig().claim.explosionCancelBlockLimit;
         boolean denySurfaceExplosion = GriefDefenderPlugin.getActiveConfig(world.getUniqueId()).getConfig().claim.explosionBlockSurfaceBlacklist.contains(sourceId);
         if (!denySurfaceExplosion) {
-            denySurfaceExplosion = !GriefDefenderPlugin.getActiveConfig(world.getUniqueId()).getConfig().claim.explosionBlockSurfaceBlacklist.contains("any");
+            denySurfaceExplosion = GriefDefenderPlugin.getActiveConfig(world.getUniqueId()).getConfig().claim.explosionBlockSurfaceBlacklist.contains("any");
         }
         for (Location<World> location : event.getAffectedLocations()) {
             if (location.getBlockType().equals(BlockTypes.AIR)) {
@@ -986,7 +988,7 @@ public class BlockEventHandler {
         }
 
         final GriefDefenderConfig<?> activeConfig = GriefDefenderPlugin.getActiveConfig(event.getTargetTile().getWorld().getUniqueId());
-        if (!activeConfig.getConfig().economy.rentSystem || (!activeConfig.getConfig().economy.isRentSignEnabled() && !activeConfig.getConfig().economy.isSellSignEnabled())) {
+        if (!activeConfig.getConfig().economy.isRentSignEnabled() && !activeConfig.getConfig().economy.isSellSignEnabled()) {
             return;
         }
 
@@ -1033,7 +1035,7 @@ public class BlockEventHandler {
             }
 
             SignUtil.setClaimForSale(claim, user.getOnlinePlayer(), sign, price);
-        } else if (line1.equalsIgnoreCase("rent") && activeConfig.getConfig().economy.isRentSignEnabled()) {
+        } else if (line1.equalsIgnoreCase("rent") && activeConfig.getConfig().economy.isRentSignEnabled() && activeConfig.getConfig().economy.rentSystem) {
             if (!player.hasPermission(GDPermissions.USER_RENT_SIGN)) {
                 return;
             }

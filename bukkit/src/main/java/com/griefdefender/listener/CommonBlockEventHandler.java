@@ -98,7 +98,7 @@ public class CommonBlockEventHandler {
         if (source instanceof Block) {
             fromBlock = (Block) source;
             // Air -> block should always be recorded as place
-            if (fromBlock.isEmpty()) {
+            if (fromBlock.isEmpty() && !NMSUtil.getInstance().isMaterialAir(newState.getType())) {
                 handleBlockPlace(event, source, newState);
                 return;
             }
@@ -156,7 +156,7 @@ public class CommonBlockEventHandler {
             }
         }
 
-        final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, Flags.BLOCK_MODIFY, source, newState.getBlock().isEmpty() ? newState.getType() : newState, user, TrustTypes.BUILDER, true);
+        final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, Flags.BLOCK_MODIFY, source, newState, user, TrustTypes.BUILDER, true);
         if (result == Tristate.FALSE) {
             ((Cancellable) event).setCancelled(true);
         }
@@ -193,7 +193,7 @@ public class CommonBlockEventHandler {
         }
 
         GDClaim targetClaim = this.storage.getClaimAt(location);
-        final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, Flags.BLOCK_PLACE, source, newState.getBlock().isEmpty() ? newState.getType() : newState, user, TrustTypes.BUILDER, true);
+        final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, Flags.BLOCK_PLACE, source, newState, user, TrustTypes.BUILDER, true);
         if (result == Tristate.FALSE) {
             ((Cancellable) event).setCancelled(true);
         }
@@ -201,10 +201,6 @@ public class CommonBlockEventHandler {
 
     public void handleBlockBreak(Event event, Object source, BlockState blockState) {
         if (!GDFlags.BLOCK_BREAK) {
-            return;
-        }
-        // Ignore air blocks
-        if (blockState.getBlock().isEmpty()) {
             return;
         }
 
@@ -227,8 +223,8 @@ public class CommonBlockEventHandler {
         }
 
         GDClaim targetClaim = this.storage.getClaimAt(location);
-
-        final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, Flags.BLOCK_BREAK, source, blockState, player, TrustTypes.BUILDER, true);
+        // Always pass the actual block being broken
+        final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, Flags.BLOCK_BREAK, source, blockState.getBlock(), player, TrustTypes.BUILDER, true);
         if (result == Tristate.FALSE) {
             ((Cancellable) event).setCancelled(true);
         }

@@ -98,6 +98,7 @@ import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.event.entity.ProjectileLaunchEvent;
 import org.bukkit.event.entity.SlimeSplitEvent;
 import org.bukkit.event.entity.SpawnerSpawnEvent;
+import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 import org.bukkit.event.vehicle.VehicleDamageEvent;
 import org.bukkit.event.vehicle.VehicleDestroyEvent;
@@ -249,6 +250,7 @@ public class EntityEventHandler implements Listener {
         GDClaim targetClaim = null;
         final int cancelBlockLimit = GriefDefenderPlugin.getGlobalConfig().getConfig().claim.explosionCancelBlockLimit;
         final List<Block> filteredLocations = new ArrayList<>();
+        boolean clearAll = false;
         for (Block block : event.blockList()) {
             final Location location = block.getLocation();
             targetClaim =  GriefDefenderPlugin.getInstance().dataStore.getClaimAt(location);
@@ -261,14 +263,16 @@ public class EntityEventHandler implements Listener {
             if (result == Tristate.FALSE) {
                 // Avoid lagging server from large explosions.
                 if (event.blockList().size() > cancelBlockLimit) {
-                    event.setCancelled(true);
+                    // Avoid cancelling as it causing clients not to receive explosion sound
+                    //event.setCancelled(true);
+                    clearAll = true;
                     break;
                 }
                 filteredLocations.add(block);
             }
         }
 
-        if (event.isCancelled()) {
+        if (clearAll) {
             event.blockList().clear();
         } else if (!filteredLocations.isEmpty()) {
             event.blockList().removeAll(filteredLocations);
@@ -683,7 +687,7 @@ public class EntityEventHandler implements Listener {
         }
 
         final Object root = GDCauseStackManager.getInstance().getCurrentCause().root();
-        if (root != null && root instanceof GDPermissionUser) {
+        if (root != null && root instanceof GDPermissionUser && source != SpawnReason.DEFAULT) {
             final GDPermissionUser user = (GDPermissionUser) root;
             final GDEntity gdEntity = new GDEntity(entity.getEntityId());
             gdEntity.setOwnerUUID(user.getUniqueId());

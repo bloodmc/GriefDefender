@@ -384,7 +384,7 @@ public abstract class ClaimOptionBase extends BaseCommand {
         overrideContexts.add(claim.getOverrideClaimContext());
 
         Map<String, OptionData> filteredContextMap = new HashMap<>();
-        for (Map.Entry<Set<Context>, Map<String, String>> mapEntry : PermissionUtil.getInstance().getTransientOptions(this.subject).entrySet()) {
+        for (Map.Entry<Set<Context>, Map<String, String>> mapEntry : PermissionUtil.getInstance().getTransientOptions(GriefDefenderPlugin.GD_OPTION_HOLDER).entrySet()) {
             final Set<Context> contextSet = mapEntry.getKey();
             if (contextSet.contains(claim.getDefaultTypeContext()) || (contextSet.contains(ClaimContexts.GLOBAL_DEFAULT_CONTEXT) || (!claim.isWilderness() && contextSet.contains(ClaimContexts.USER_DEFAULT_CONTEXT)))) {
                 this.addFilteredContexts(src, filteredContextMap, contextSet, MenuType.DEFAULT, mapEntry.getValue());

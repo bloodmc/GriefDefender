@@ -51,7 +51,7 @@ public class CommandClaimOption extends ClaimOptionBase {
     @Syntax("[<option> <value> [context[key=value]]")
     @Subcommand("option claim")
     public void execute(Player player, @Optional String[] args) throws InvalidCommandArgument {
-        this.subject = GriefDefenderPlugin.DEFAULT_HOLDER;
+        this.subject = GriefDefenderPlugin.GD_OPTION_HOLDER;
         this.friendlySubjectName = "ALL";
         super.execute(player, args);
     }

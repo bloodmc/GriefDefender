@@ -502,6 +502,9 @@ public class PlayerEventHandler {
             this.worldEditProvider.removePlayer(player);
         }
 
+        if (GriefDefenderPlugin.getActiveConfig(player.getWorld().getUniqueId()).getConfig().pvp.combatLogout && playerData.inPvpCombat() && !player.hasPermission(GDPermissions.BYPASS_PVP_LOGOUT)) {
+            player.offer(Keys.HEALTH, 0.0);
+        }
         playerData.onDisconnect();
         PaginationUtil.getInstance().removeActivePageData(player.getUniqueId());
         if (playerData.getClaims().isEmpty()) {
@@ -749,7 +752,7 @@ public class PlayerEventHandler {
         }
         if (targetEntity instanceof Living && targetEntity.get(Keys.TAMED_OWNER).isPresent()) {
             final UUID ownerID = targetEntity.get(Keys.TAMED_OWNER).get().orElse(null);
-            if (ownerID != null) {
+            if (ownerID != null && !ownerID.equals(GriefDefenderPlugin.WORLD_USER_UUID)) {
                 // always allow owner to interact with their pets
                 if (player.getUniqueId().equals(ownerID)) {
                     GDTimings.PLAYER_INTERACT_ENTITY_PRIMARY_EVENT.stopTimingIfSync();
@@ -812,7 +815,7 @@ public class PlayerEventHandler {
         final GDPlayerData playerData = this.dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
         if (targetEntity instanceof Living && targetEntity.get(Keys.TAMED_OWNER).isPresent()) {
             final UUID ownerID = targetEntity.get(Keys.TAMED_OWNER).get().orElse(null);
-            if (ownerID != null) {
+            if (ownerID != null && !ownerID.equals(GriefDefenderPlugin.WORLD_USER_UUID)) {
                 // always allow owner to interact with their pets
                 if (player.getUniqueId().equals(ownerID) || playerData.canIgnoreClaim(claim)) {
                     if (playerData.petRecipientUniqueId != null) {
@@ -904,6 +907,11 @@ public class PlayerEventHandler {
         for (SlotTransaction transaction : event.getTransactions()) {
             ItemStackSnapshot newItemStack = transaction.getFinal();
             if (count == 1 && newItemStack != null && newItemStack.getType().equals(GriefDefenderPlugin.getInstance().modificationTool.getType())) {
+                if (!playerData.claimTool) {
+                    GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().CLAIMTOOL_NOT_ENABLED);
+                    GDTimings.PLAYER_CHANGE_HELD_ITEM_EVENT.stopTiming();
+                    return;
+                }
                 playerData.lastShovelLocation = null;
                 playerData.endShovelLocation = null;
                 playerData.claimResizing = null;
@@ -1218,13 +1226,13 @@ public class PlayerEventHandler {
 
         final Flag flag = primaryEvent ? Flags.INTERACT_ITEM_PRIMARY : Flags.INTERACT_ITEM_SECONDARY;
 
-        if ((playerData.claimMode && event.getHandType() == HandTypes.MAIN_HAND && primaryEvent) || (!playerData.claimMode && GriefDefenderPlugin.getInstance().investigationTool != null && !itemInHand.isEmpty() && itemInHand.getType().equals(GriefDefenderPlugin.getInstance().investigationTool.getType()))) {
+        if ((playerData.claimMode && event.getHandType() == HandTypes.MAIN_HAND && primaryEvent) || (!playerData.claimMode && playerData.claimTool && GriefDefenderPlugin.getInstance().investigationTool != null && !itemInHand.isEmpty() && itemInHand.getType().equals(GriefDefenderPlugin.getInstance().investigationTool.getType()))) {
             investigateClaim(event, player, blockSnapshot, itemInHand);
             event.setCancelled(true);
             return event;
         }
 
-        if ((playerData.claimMode && event.getHandType() == HandTypes.MAIN_HAND && !primaryEvent) || (!playerData.claimMode && GriefDefenderPlugin.getInstance().modificationTool != null && !itemInHand.isEmpty() && itemInHand.getType().equals(GriefDefenderPlugin.getInstance().modificationTool.getType()))) {
+        if ((playerData.claimMode && event.getHandType() == HandTypes.MAIN_HAND && !primaryEvent) || (!playerData.claimMode && playerData.claimTool && GriefDefenderPlugin.getInstance().modificationTool != null && !itemInHand.isEmpty() && itemInHand.getType().equals(GriefDefenderPlugin.getInstance().modificationTool.getType()))) {
             onPlayerHandleClaimCreateAction(event, blockSnapshot, player, itemInHand, playerData);
             // avoid changing blocks after using a shovel
             event.setCancelled(true);
@@ -1858,7 +1866,7 @@ public class PlayerEventHandler {
         if (clickedBlock.getState().getType().equals(BlockTypes.AIR)) {
             final int maxDistance = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), player, Options.RADIUS_INSPECT);
             final boolean hidingVisuals = (event instanceof InteractItemEvent.Primary || event instanceof InteractBlockEvent.Primary) && !playerData.claimMode;
-            claim = this.findNearbyClaim(player, playerData, maxDistance, hidingVisuals);
+            claim = PlayerUtil.getInstance().findNearbyClaim(player, playerData, maxDistance, hidingVisuals);
             // if holding shift (sneaking), show all claims in area
             if (player.get(Keys.IS_SNEAKING).get()) {
                 if (!playerData.claimMode && (event instanceof InteractItemEvent.Primary || event instanceof InteractBlockEvent.Primary)) {
@@ -1928,7 +1936,7 @@ public class PlayerEventHandler {
             if (!playerData.claimMode || claim.hasActiveVisual(player)) {
                 final int maxDistance = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), player, Options.RADIUS_INSPECT);
                 if (!((GDClaim) claim).children.isEmpty()) {
-                    claim = this.findNearbyClaim(player, playerData, maxDistance, true);
+                    claim = PlayerUtil.getInstance().findNearbyClaim(player, playerData, maxDistance, true);
                 }
                 if (!claim.hasActiveVisual(player) && claim.parent != null) {
                     GDClaim parent = claim.parent;
@@ -1974,52 +1982,6 @@ public class PlayerEventHandler {
 
         GDTimings.PLAYER_INVESTIGATE_CLAIM.stopTimingIfSync();
         return true;
-    }
-
-    private GDClaim findNearbyClaim(Player player, GDPlayerData playerData, int maxDistance, boolean hidingVisuals) {
-        if (maxDistance <= 20) {
-            maxDistance = 100;
-        }
-        BlockRay<World> blockRay = BlockRay.from(player).distanceLimit(maxDistance).build();
-        GDClaim playerClaim = GriefDefenderPlugin.getInstance().dataStore.getClaimAtPlayer(playerData, player.getLocation());
-        GDClaim firstClaim = null;
-        GDClaim claim = null;
-        playerData.lastNonAirInspectLocation = null;
-        playerData.lastValidInspectLocation = null;
-        while (blockRay.hasNext()) {
-            BlockRayHit<World> blockRayHit = blockRay.next();
-            Location<World> location = blockRayHit.getLocation();
-            claim = this.dataStore.getClaimAt(location);
-            if (firstClaim == null && !claim.isWilderness()) {
-                if (hidingVisuals) {
-                    if (claim.hasActiveVisual(player)) {
-                        firstClaim = claim;
-                    }
-                } else {
-                    firstClaim = claim;
-                }
-            }
-
-            if (playerData.lastNonAirInspectLocation == null && !location.getBlockType().equals(BlockTypes.AIR)) {
-                playerData.lastNonAirInspectLocation = location;
-            }
-            if (claim != null && !claim.isWilderness() && !playerClaim.getUniqueId().equals(claim.getUniqueId())) {
-                playerData.lastValidInspectLocation = location;
-            }
-
-            if (!location.getBlockType().equals(BlockTypes.AIR) && !NMSUtil.getInstance().isBlockTransparent(location.getBlock())) {
-                break;
-            }
-        }
-
-        if (claim == null || claim.isWilderness()) {
-            if (firstClaim == null) {
-                return GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(player.getWorld().getUniqueId()).getWildernessClaim();
-            }
-            return firstClaim;
-        }
-
-        return claim;
     }
 
     private void sendInteractEntityDenyMessage(ItemStack playerItem, Entity entity, GDClaim claim, Player player, HandType handType) {

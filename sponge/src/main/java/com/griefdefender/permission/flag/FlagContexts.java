@@ -30,12 +30,14 @@ import com.griefdefender.api.permission.ContextKeys;
 public class FlagContexts {
 
     public static final Context SOURCE_AIR = new Context(ContextKeys.SOURCE, "minecraft:air");
+    public static final Context SOURCE_ARROW = new Context(ContextKeys.SOURCE, "minecraft:arrow");
     public static final Context SOURCE_CREEPER = new Context(ContextKeys.SOURCE, "minecraft:creeper");
     public static final Context SOURCE_ENDERDRAGON = new Context(ContextKeys.SOURCE, "minecraft:enderdragon");
     public static final Context SOURCE_ENDERMAN = new Context(ContextKeys.SOURCE, "minecraft:enderman");
     public static final Context SOURCE_END_PORTAL = new Context(ContextKeys.SOURCE, "minecraft:end_portal");
     public static final Context SOURCE_FALL = new Context(ContextKeys.SOURCE, "minecraft:fall");
     public static final Context SOURCE_FALLING_BLOCK = new Context(ContextKeys.SOURCE, "minecraft:falling_block");
+    public static final Context SOURCE_FARMLAND = new Context(ContextKeys.SOURCE, "minecraft:farmland");
     public static final Context SOURCE_FIRE = new Context(ContextKeys.SOURCE, "minecraft:fire");
     public static final Context SOURCE_FIRE_TICK = new Context(ContextKeys.SOURCE, "minecraft:fire_tick");
     public static final Context SOURCE_FIREWORKS = new Context(ContextKeys.SOURCE, "minecraft:fireworks");
@@ -67,6 +69,7 @@ public class FlagContexts {
 
     // Targets
     public static final Context TARGET_AIR = new Context(ContextKeys.TARGET, "minecraft:air");
+    public static final Context TARGET_ANY = new Context(ContextKeys.TARGET, "#any");
     public static final Context TARGET_ARMOR_STAND = new Context(ContextKeys.TARGET, "minecraft:armor_stand");
     public static final Context TARGET_BED = new Context(ContextKeys.TARGET, "minecraft:bed");
     public static final Context TARGET_BOAT = new Context(ContextKeys.TARGET, "minecraft:boat");

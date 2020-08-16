@@ -31,12 +31,17 @@ import com.griefdefender.api.Tristate;
 import com.griefdefender.api.claim.Claim;
 import com.griefdefender.api.claim.TrustTypes;
 import com.griefdefender.api.permission.Context;
+import com.griefdefender.api.permission.ContextKeys;
 import com.griefdefender.api.permission.PermissionResult;
 import com.griefdefender.api.permission.flag.Flag;
+import com.griefdefender.api.permission.flag.FlagDefinition;
+import com.griefdefender.api.permission.flag.Flags;
 import com.griefdefender.api.permission.option.Option;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
+import com.griefdefender.internal.util.VecHelper;
 import com.griefdefender.permission.GDPermissionHolder;
+import com.griefdefender.permission.GDPermissionManager;
 import com.griefdefender.permission.GDPermissions;
 import com.griefdefender.provider.PermissionProvider;
 import com.griefdefender.provider.PermissionProvider.PermissionDataType;
@@ -144,6 +149,10 @@ public class PermissionUtil {
         return PERMISSION_PROVIDER.getOptions(holder, contexts);
     }
 
+    public Map<Set<Context>, Map<String, Boolean>> getAllPermanentPermissions() {
+        return PERMISSION_PROVIDER.getAllPermanentPermissions();
+    }
+
     public Map<Set<Context>, Map<String, Boolean>> getPermanentPermissions(GDPermissionHolder holder) {
         return PERMISSION_PROVIDER.getPermanentPermissions(holder);
     }
@@ -194,6 +203,10 @@ public class PermissionUtil {
 
     public List<String> getOptionValueList(GDPermissionHolder holder, Option option, Set<Context> contexts) {
         return PERMISSION_PROVIDER.getOptionValueList(holder, option, contexts);
+    }
+
+    public CompletableFuture<PermissionResult> setFlagDefinition(GDPermissionHolder holder, FlagDefinition definition, Tristate value, Set<Context> contexts, boolean isTransient) {
+        return PERMISSION_PROVIDER.setFlagDefinition(holder, definition, value, contexts, isTransient);
     }
 
     public CompletableFuture<PermissionResult> setOptionValue(GDPermissionHolder holder, String permission, String value, Set<Context> contexts) {
@@ -274,27 +287,57 @@ public class PermissionUtil {
 
     public boolean canPlayerTeleport(Player player, GDClaim claim) {
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getPlayerData(player.getWorld(), player.getUniqueId());
+        boolean allowTeleport = true;
         if (!playerData.canIgnoreClaim(claim) && !playerData.canManageAdminClaims) {
             // if not owner of claim, validate perms
             if (!player.getUniqueId().equals(claim.getOwnerUniqueId())) {
                 if (!player.hasPermission(GDPermissions.COMMAND_CLAIM_INFO_TELEPORT_OTHERS)) {
-                    return false;
-                }
-                if (!claim.isUserTrusted(player, TrustTypes.ACCESSOR)) {
-                    if (GriefDefenderPlugin.getInstance().getVaultProvider() != null) {
-                        // Allow non-trusted to TP to claims for sale
-                        if (!claim.getEconomyData().isForSale() && !claim.getEconomyData().isForRent()) {
-                            return false;
+                    allowTeleport = false;
+                } else {
+                    if (!claim.isUserTrusted(player, TrustTypes.ACCESSOR)) {
+                        if (GriefDefenderPlugin.getInstance().getVaultProvider() != null) {
+                            // Allow non-trusted to TP to claims for sale
+                            if (!claim.getEconomyData().isForSale() && !claim.getEconomyData().isForRent()) {
+                                allowTeleport = false;
+                            }
+                        } else {
+                            allowTeleport = false;
                         }
-                    } else {
-                        return false;
                     }
                 }
             } else if (!player.hasPermission(GDPermissions.COMMAND_CLAIM_INFO_TELEPORT_BASE)) {
-                return false;
+                allowTeleport = false;
+            }
+        }
+        if (!claim.isWilderness() && !allowTeleport && player.hasPermission(GDPermissions.COMMAND_CLAIM_INFO_TELEPORT_INSIDE)) {
+            // check if player is in claim
+            if (!player.getUniqueId().equals(claim.getOwnerUniqueId()) && !claim.isUserTrusted(player, TrustTypes.BUILDER)) {
+                if (claim.contains(VecHelper.toVector3i(player.getLocation()))) {
+                    // check place
+                    final Tristate placeResult = GDPermissionManager.getInstance().getFinalPermission(null, player.getLocation(), claim, Flags.BLOCK_PLACE, player, player.getLocation(), player, TrustTypes.BUILDER, true);
+                    if (placeResult == Tristate.FALSE) {
+                        allowTeleport = true;
+                    }
+                }
             }
         }
 
-        return true;
+        return allowTeleport;
+    }
+
+    public GDPermissionHolder getGDPermissionHolder(GDPermissionHolder holder, Set<Context> contexts) {
+        if (holder != GriefDefenderPlugin.DEFAULT_HOLDER && holder != GriefDefenderPlugin.GD_DEFAULT_HOLDER) {
+            return holder;
+        }
+
+        for (Context context : contexts) {
+            if (context.getKey().equals(ContextKeys.CLAIM_OVERRIDE)) {
+                return GriefDefenderPlugin.GD_OVERRIDE_HOLDER;
+            }
+            if (context.getKey().equals(ContextKeys.CLAIM)) {
+                return GriefDefenderPlugin.GD_CLAIM_HOLDER;
+            }
+        }
+        return GriefDefenderPlugin.GD_DEFAULT_HOLDER;
     }
 }

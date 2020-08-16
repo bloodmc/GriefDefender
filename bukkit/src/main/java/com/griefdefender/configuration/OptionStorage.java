@@ -41,7 +41,7 @@ import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
 public class OptionStorage extends ConfigCategory {
 
     @Setting(value = "option-control", comment = "Controls which options are enabled.\nNote: To enable an option, set the value to 'true'."
-            + "\nSee https://github.com/bloodmc/GriefDefender/wiki/Advanced-Options for info on how each option works.")
+            + "\nSee https://github.com/bloodmc/GriefDefender/wiki/Options for info on how each option works.")
     private Map<String, Boolean> control = Maps.newHashMap();
 
     @Setting(value = "default-options")

@@ -471,14 +471,14 @@ public class GPBukkitMigrator {
         }
 
         File[] files = path.toFile().listFiles();
+        final List<File> fileList = new ArrayList<>();
         if (files != null) {
-            GriefDefenderPlugin.getInstance().getLogger().info("Migrating " + files.length + " player data files...");
+            GriefDefenderPlugin.getInstance().getLogger().info("Scanning " + files.length + " player data files...");
             for (int i = 0; i < files.length; i++) {
                 final File file = files[i];
                 if (file.getName().endsWith("ignore")) {
                     continue;
                 }
-                GriefDefenderPlugin.getInstance().getLogger().info("Migrating playerdata " + file.getName() + "...");
                 UUID uuid = null;
                 try {
                     uuid = UUID.fromString(file.getName().replaceFirst("[.][^.]+$", ""));
@@ -496,17 +496,18 @@ public class GPBukkitMigrator {
                 if (lines.size() < 3) {
                     continue;
                 }
-                try {
-                    final int accruedBlocks = Integer.parseInt(lines.get(1));
-                    final int bonusBlocks = Integer.parseInt(lines.get(2));
-                    final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(world, uuid);
-                    // Set directly in storage as subject data has not been initialized
-                    playerData.setAccruedClaimBlocks(accruedBlocks, false);
-                    playerData.setBonusClaimBlocks(bonusBlocks);
-                } catch (NumberFormatException e) {
-                    e.printStackTrace();
-                    continue;
-                }
+                fileList.add(file);
+            }
+
+            GriefDefenderPlugin.getInstance().getLogger().info("Migrating " + files.length + " player data files...");
+            // Migrate each meta separately to avoid race conditions in LP
+            for (File file : fileList) {
+                GriefDefenderPlugin.getInstance().getLogger().info("Migrating playerdata " + file.getName() + " accrued blocks...");
+                migrateAccruedBlocks(world, file);
+            }
+            for (File file : fileList) {
+                GriefDefenderPlugin.getInstance().getLogger().info("Migrating playerdata " + file.getName() + " bonus blocks...");
+                migrateBonusBlocks(world, file);
             }
         }
 
@@ -519,6 +520,62 @@ public class GPBukkitMigrator {
                 Files.createFile(gpPlayerDataPath);
             }
         } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void migrateAccruedBlocks(World world, File file) {
+        UUID uuid = null;
+        try {
+            uuid = UUID.fromString(file.getName().replaceFirst("[.][^.]+$", ""));
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+            return;
+        }
+        List<String> lines;
+        try {
+            lines = Files.readAllLines(file.toPath());
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
+        if (lines.size() < 3) {
+            return;
+        }
+        try {
+            final int accruedBlocks = Integer.parseInt(lines.get(1));
+            final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(world, uuid);
+            // Set directly in storage as subject data has not been initialized
+            playerData.setAccruedClaimBlocks(accruedBlocks, false);
+        } catch (NumberFormatException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void migrateBonusBlocks(World world, File file) {
+        UUID uuid = null;
+        try {
+            uuid = UUID.fromString(file.getName().replaceFirst("[.][^.]+$", ""));
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+            return;
+        }
+        List<String> lines;
+        try {
+            lines = Files.readAllLines(file.toPath());
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
+        if (lines.size() < 3) {
+            return;
+        }
+        try {
+            final int bonusBlocks = Integer.parseInt(lines.get(2));
+            final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(world, uuid);
+            // Set directly in storage as subject data has not been initialized
+            playerData.setBonusClaimBlocks(bonusBlocks);
+        } catch (NumberFormatException e) {
             e.printStackTrace();
         }
     }

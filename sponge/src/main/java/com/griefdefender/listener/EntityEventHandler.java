@@ -465,7 +465,7 @@ public class EntityEventHandler {
                 }
                 if (targetEntity instanceof Living && targetEntity.get(Keys.TAMED_OWNER).isPresent()) {
                     final UUID ownerID = targetEntity.get(Keys.TAMED_OWNER).get().orElse(null);
-                    if (ownerID != null) {
+                    if (ownerID != null && !ownerID.equals(GriefDefenderPlugin.WORLD_USER_UUID)) {
                         // always allow owner to interact with their pets
                         if (player.getUniqueId().equals(ownerID)) {
                             return false;
@@ -882,8 +882,8 @@ public class EntityEventHandler {
         event.filterEntities(new Predicate<Entity>() {
             @Override
             public boolean test(Entity entity) {
-                // Avoid living entities breaking itemframes
-                if (isRootEntityItemFrame && entity instanceof Living) {
+                // Avoid entities breaking itemframes
+                if (isRootEntityItemFrame) {
                     return false;
                 }
 

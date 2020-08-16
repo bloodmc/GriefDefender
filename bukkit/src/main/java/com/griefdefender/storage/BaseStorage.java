@@ -57,6 +57,7 @@ import com.griefdefender.event.GDRemoveClaimEvent;
 import com.griefdefender.event.GDRemoveClaimEvent.Delete;
 import com.griefdefender.internal.util.VecHelper;
 import com.griefdefender.migrator.PlayerDataMigrator;
+import com.griefdefender.permission.ContextGroups;
 import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.permission.flag.FlagContexts;
 import com.griefdefender.permission.option.GDOption;
@@ -393,7 +394,7 @@ public abstract class BaseStorage {
         contexts.add(ClaimContexts.GLOBAL_DEFAULT_CONTEXT);
         final Map<String, String> globalDefaultOptions = optionConfig.getConfig().defaultOptionCategory.getUserOptionDefaults();
         this.setDefaultOptions(contexts, new HashMap<>(globalDefaultOptions));
-        GriefDefenderPlugin.getInstance().getPermissionProvider().setTransientPermission(GriefDefenderPlugin.DEFAULT_HOLDER, "griefdefender", Tristate.FALSE, new HashSet<>());
+        GriefDefenderPlugin.getInstance().getPermissionProvider().setTransientPermission(GriefDefenderPlugin.GD_DEFAULT_HOLDER, "griefdefender", Tristate.FALSE, new HashSet<>());
         flagConfig.save();
         optionConfig.save();
     }
@@ -409,9 +410,9 @@ public abstract class BaseStorage {
                 if (flag == null) {
                     continue;
                 }
-                PermissionUtil.getInstance().setTransientPermission(GriefDefenderPlugin.DEFAULT_HOLDER, flag.getPermission(), Tristate.fromBoolean(mapEntry.getValue()), contexts);
+                PermissionUtil.getInstance().setTransientPermission(GriefDefenderPlugin.GD_DEFAULT_HOLDER, flag.getPermission(), Tristate.fromBoolean(mapEntry.getValue()), contexts);
             }
-            PermissionUtil.getInstance().refreshCachedData(GriefDefenderPlugin.DEFAULT_HOLDER);
+            PermissionUtil.getInstance().refreshCachedData(GriefDefenderPlugin.GD_DEFAULT_HOLDER);
         });
     }
 
@@ -441,9 +442,9 @@ public abstract class BaseStorage {
                         continue;
                     }
                 }
-                PermissionUtil.getInstance().setTransientOption(GriefDefenderPlugin.DEFAULT_HOLDER, option.getPermission(), optionEntry.getValue(), contexts);
+                PermissionUtil.getInstance().setTransientOption(GriefDefenderPlugin.GD_OPTION_HOLDER, option.getPermission(), optionEntry.getValue(), contexts);
             }
-            PermissionUtil.getInstance().refreshCachedData(GriefDefenderPlugin.DEFAULT_HOLDER);
+            PermissionUtil.getInstance().refreshCachedData(GriefDefenderPlugin.GD_OPTION_HOLDER);
         });
     }
 

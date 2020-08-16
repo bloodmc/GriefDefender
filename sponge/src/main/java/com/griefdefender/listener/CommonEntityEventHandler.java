@@ -405,7 +405,7 @@ public class CommonEntityEventHandler {
             return;
         }
         final Player player = user.getOnlinePlayer();
-        if (player == null) {
+        if (player == null || NMSUtil.getInstance().isFakePlayer(player)) {
             // Most likely NPC
             return;
         }
@@ -484,7 +484,7 @@ public class CommonEntityEventHandler {
             return;
         }
         final Player player = user.getOnlinePlayer();
-        if (player == null || !player.get(Keys.IS_FLYING).get()) {
+        if (player == null || NMSUtil.getInstance().isFakePlayer(player) || !player.get(Keys.IS_FLYING).get()) {
             // Most likely NPC
             return;
         }
@@ -497,21 +497,18 @@ public class CommonEntityEventHandler {
         if (gameMode == null || gameMode == GameModes.SPECTATOR) {
             return;
         }
-        if (gameMode == GameModes.CREATIVE) {
-            if (playerData.inPvpCombat() && !GriefDefenderPlugin.getActiveConfig(player.getWorld().getUniqueId()).getConfig().pvp.allowFly) {
-                player.offer(Keys.CAN_FLY, false);
-                player.offer(Keys.IS_FLYING, false);
-                playerData.ignoreFallDamage = true;
-                Location<World> safeLocation = Sponge.getGame().getTeleportHelper()
-                    .getSafeLocation(player.getLocation(), 80, 0)
-                    .orElseGet(() -> Sponge.getGame().getTeleportHelper()
-                            .getSafeLocation(player.getLocation(), 80, 6)
-                            .orElse(player.getWorld().getSpawnLocation())
-                    );
-                player.setTransform(player.getTransform().setLocation(safeLocation));
-                GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().OPTION_APPLY_PLAYER_DENY_FLIGHT);
-                return;
-            }
+        if (playerData.inPvpCombat() && !GriefDefenderPlugin.getActiveConfig(player.getWorld().getUniqueId()).getConfig().pvp.allowFly) {
+            player.offer(Keys.CAN_FLY, false);
+            player.offer(Keys.IS_FLYING, false);
+            playerData.ignoreFallDamage = true;
+            Location<World> safeLocation = Sponge.getGame().getTeleportHelper()
+                .getSafeLocation(player.getLocation(), 80, 0)
+                .orElseGet(() -> Sponge.getGame().getTeleportHelper()
+                        .getSafeLocation(player.getLocation(), 80, 6)
+                        .orElse(player.getWorld().getSpawnLocation())
+                );
+            player.setTransform(player.getTransform().setLocation(safeLocation));
+            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().OPTION_APPLY_PLAYER_DENY_FLIGHT);
             return;
         }
 
@@ -566,7 +563,7 @@ public class CommonEntityEventHandler {
             return;
         }
         final Player player = user.getOnlinePlayer();
-        if (player == null || !player.get(Keys.INVULNERABLE).get()) {
+        if (player == null || NMSUtil.getInstance().isFakePlayer(player) || !player.get(Keys.INVULNERABLE).get()) {
             // Most likely NPC
             return;
         }
@@ -597,7 +594,7 @@ public class CommonEntityEventHandler {
             return;
         }
         final Player player = user.getOnlinePlayer();
-        if (player == null) {
+        if (player == null || NMSUtil.getInstance().isFakePlayer(player)) {
             // Most likely Citizens NPC
             return;
         }
@@ -636,7 +633,7 @@ public class CommonEntityEventHandler {
             return;
         }
         final Player player = user.getOnlinePlayer();
-        if (player == null || !player.get(Keys.IS_FLYING).get()) {
+        if (player == null || NMSUtil.getInstance().isFakePlayer(player) || !player.get(Keys.IS_FLYING).get()) {
             // Most likely Citizens NPC
             return;
         }
@@ -688,7 +685,7 @@ public class CommonEntityEventHandler {
             return;
         }
         final Player player = user.getOnlinePlayer();
-        if (player == null || player.get(Keys.IS_FLYING).get()) {
+        if (player == null || NMSUtil.getInstance().isFakePlayer(player) || player.get(Keys.IS_FLYING).get()) {
             // Most likely Citizens NPC
             return;
         }
@@ -740,7 +737,7 @@ public class CommonEntityEventHandler {
             return;
         }
         final Player player = user.getOnlinePlayer();
-        if (player == null) {
+        if (player == null || NMSUtil.getInstance().isFakePlayer(player)) {
             // Most likely Citizens NPC
             return;
         }

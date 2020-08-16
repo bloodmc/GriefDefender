@@ -342,7 +342,13 @@ public class CommandHelper {
         }
 
         if (subject == GriefDefenderPlugin.DEFAULT_HOLDER) {
-            PermissionUtil.getInstance().setPermissionValue(GriefDefenderPlugin.DEFAULT_HOLDER, flag, value, contexts);
+            if (flagType == MenuType.OVERRIDE) {
+                PermissionUtil.getInstance().setPermissionValue(GriefDefenderPlugin.GD_OVERRIDE_HOLDER, flag, value, contexts);
+            } else if (flagType == MenuType.CLAIM) {
+                PermissionUtil.getInstance().setPermissionValue(GriefDefenderPlugin.GD_CLAIM_HOLDER, flag, value, contexts);
+            } else {
+                PermissionUtil.getInstance().setPermissionValue(GriefDefenderPlugin.GD_DEFAULT_HOLDER, flag, value, contexts);
+            }
             if (!clicked && src instanceof Player) {
                 TextAdapter.sendComponent(src, TextComponent.builder("")
                     .append(TextComponent.builder("\n[").append(MessageCache.getInstance().FLAG_UI_RETURN_FLAGS.color(TextColor.AQUA)).append("]\n")

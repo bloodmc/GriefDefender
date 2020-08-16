@@ -112,6 +112,7 @@ public class MessageCache {
     public Component CLAIMLIST_UI_RETURN_CLAIMSLIST;
     public Component CLAIMLIST_UI_TITLE;
     public Component CLAIMLIST_UI_TITLE_CHILD_CLAIMS;
+    public Component CLAIMTOOL_NOT_ENABLED;
     public Component COMMAND_CLAIMBUY_TITLE;
     public Component COMMAND_CLAIMCLEAR_UUID_DENY;
     public Component COMMAND_CLAIMFLAGDEBUG_DISABLED;
@@ -122,6 +123,8 @@ public class MessageCache {
     public Component COMMAND_CLAIMINHERIT_ENABLED;
     public Component COMMAND_CLAIMMODE_DISABLED;
     public Component COMMAND_CLAIMMODE_ENABLED;
+    public Component COMMAND_CLAIMTOOL_DISABLED;
+    public Component COMMAND_CLAIMTOOL_ENABLED;
     public Component COMMAND_CUBOID_DISABLED;
     public Component COMMAND_CUBOID_ENABLED;
     public Component COMMAND_INHERIT_ONLY_CHILD;
@@ -574,6 +577,7 @@ public class MessageCache {
         CLAIMLIST_UI_RETURN_CLAIMSLIST = MessageStorage.MESSAGE_DATA.getMessage("claimlist-ui-return-claimlist");
         CLAIMLIST_UI_TITLE = MessageStorage.MESSAGE_DATA.getMessage("claimlist-ui-title");
         CLAIMLIST_UI_TITLE_CHILD_CLAIMS = MessageStorage.MESSAGE_DATA.getMessage("claimlist-ui-title-child-claims");
+        CLAIMTOOL_NOT_ENABLED = MessageStorage.MESSAGE_DATA.getMessage("claimtool-not-enabled");
         COMMAND_CLAIMBUY_TITLE = MessageStorage.MESSAGE_DATA.getMessage("command-claimbuy-title");
         COMMAND_CLAIMCLEAR_UUID_DENY = MessageStorage.MESSAGE_DATA.getMessage("command-claimclear-uuid-deny");
         COMMAND_CLAIMFLAGDEBUG_DISABLED = MessageStorage.MESSAGE_DATA.getMessage("command-claimflagdebug-disabled");
@@ -584,6 +588,8 @@ public class MessageCache {
         COMMAND_CLAIMINHERIT_ENABLED = MessageStorage.MESSAGE_DATA.getMessage("command-claiminherit-enabled");
         COMMAND_CLAIMMODE_DISABLED = MessageStorage.MESSAGE_DATA.getMessage("command-claimmode-disabled");
         COMMAND_CLAIMMODE_ENABLED = MessageStorage.MESSAGE_DATA.getMessage("command-claimmode-enabled");
+        COMMAND_CLAIMTOOL_DISABLED = MessageStorage.MESSAGE_DATA.getMessage("command-claimtool-disabled");
+        COMMAND_CLAIMTOOL_ENABLED = MessageStorage.MESSAGE_DATA.getMessage("command-claimtool-enabled");
         COMMAND_CUBOID_DISABLED = MessageStorage.MESSAGE_DATA.getMessage("command-cuboid-disabled");
         COMMAND_CUBOID_ENABLED = MessageStorage.MESSAGE_DATA.getMessage("command-cuboid-enabled");
         COMMAND_INHERIT_ONLY_CHILD = MessageStorage.MESSAGE_DATA.getMessage("command-inherit-only-child");

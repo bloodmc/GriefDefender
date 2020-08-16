@@ -29,41 +29,28 @@ import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Subcommand;
+import net.kyori.text.adapter.bukkit.TextAdapter;
 
-import com.google.common.collect.ImmutableMap;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
-import com.griefdefender.api.claim.ShovelTypes;
 import com.griefdefender.cache.MessageCache;
-import com.griefdefender.configuration.MessageStorage;
-import com.griefdefender.internal.util.NMSUtil;
 import com.griefdefender.permission.GDPermissions;
-import net.kyori.text.TextComponent;
-import net.kyori.text.adapter.bukkit.TextAdapter;
-import net.kyori.text.format.TextColor;
 import org.bukkit.entity.Player;
 
 @CommandAlias("%griefdefender")
-@CommandPermission(GDPermissions.COMMAND_RESTORE_NATURE)
-public class CommandRestoreNature extends BaseCommand {
+@CommandPermission(GDPermissions.COMMAND_CLAIM_TOOL)
+public class CommandClaimTool extends BaseCommand {
 
-    @CommandAlias("modenature")
-    @Description("Switches the shovel tool to restoration mode.")
-    @Subcommand("mode nature")
+    @CommandAlias("claimtool")
+    @Description("Toggles claim tool on/off.")
+    @Subcommand("mode tool")
     public void execute(Player player) {
-        if (true) {
-            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().FEATURE_NOT_AVAILABLE);
-            return;
-        }
-
-        if (!NMSUtil.getInstance().hasItemInOneHand(player, GriefDefenderPlugin.getInstance().modificationTool)) {
-            TextAdapter.sendComponent(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.TOOL_NOT_EQUIPPED,
-                    ImmutableMap.of("tool", TextComponent.of(GriefDefenderPlugin.getInstance().modificationTool.toLowerCase(), TextColor.GREEN))));
-            return;
-        }
-
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
-        playerData.shovelMode = ShovelTypes.RESTORE;
-        GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().MODE_NATURE);
+        playerData.claimTool = !playerData.claimTool;
+        if (!playerData.claimTool) {
+            TextAdapter.sendComponent(player, MessageCache.getInstance().COMMAND_CLAIMTOOL_DISABLED);
+        } else {
+            TextAdapter.sendComponent(player, MessageCache.getInstance().COMMAND_CLAIMTOOL_ENABLED);
+        }
     }
 }

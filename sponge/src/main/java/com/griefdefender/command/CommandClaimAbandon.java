@@ -191,7 +191,15 @@ public class CommandClaimAbandon extends BaseCommand {
                 playerData.townChat = false;
             }
 
-            if (!claim.isSubdivision() && !claim.isAdminClaim()) {
+            if (claim.isSubdivision()) {
+                int remainingBlocks = playerData.getRemainingClaimBlocks();
+                final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ABANDON_SUCCESS, ImmutableMap.of(
+                        "amount", remainingBlocks));
+                GriefDefenderPlugin.sendMessage(source, message);
+                return;
+            }
+
+            if (!claim.isAdminClaim()) {
                 final double abandonReturnRatio = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Double.class), user, Options.ABANDON_RETURN_RATIO, claim);
                 if (GriefDefenderPlugin.getInstance().isEconomyModeEnabled()) {
                     final Account playerAccount = GriefDefenderPlugin.getInstance().economyService.get().getOrCreateAccount(user.getUniqueId()).orElse(null);

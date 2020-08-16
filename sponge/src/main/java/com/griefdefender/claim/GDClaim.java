@@ -1132,6 +1132,18 @@ public class GDClaim implements Claim {
                     continue;
                 }
 
+                // validate this claim exists
+                boolean claimExists = false;
+                for (Claim claim : this.worldClaimManager.getWorldClaims()) {
+                    if (claim.getUniqueId().equals(chunkClaim.getUniqueId())) {
+                        claimExists = true;
+                        break;
+                    }
+                }
+                if (!claimExists) {
+                    //GriefDefenderPlugin.getInstance().getLogger().warn("Detected Ghost chunk claim with the following data [UUID:  " + chunkClaim.getUniqueId() + ", Owner: " + chunkClaim.getOwnerName() + ", Type: " + chunkClaim.getType().getName() + "]. Ignoring...");
+                    continue;
+                }
                 // First check if new claim is crossing another
                 if (this.isBandingAcross(gpChunkClaim) || gpChunkClaim.isBandingAcross(this)) {
                     return new GDClaimResult(gpChunkClaim, ClaimResultType.OVERLAPPING_CLAIM);

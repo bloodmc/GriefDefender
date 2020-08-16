@@ -42,7 +42,6 @@ import com.griefdefender.api.permission.PermissionManager;
 import com.griefdefender.api.permission.PermissionResult;
 import com.griefdefender.api.permission.ResultTypes;
 import com.griefdefender.api.permission.flag.Flag;
-import com.griefdefender.api.permission.flag.FlagData;
 import com.griefdefender.api.permission.flag.FlagDefinition;
 import com.griefdefender.api.permission.flag.Flags;
 import com.griefdefender.api.permission.option.Option;
@@ -108,6 +107,7 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -314,7 +314,7 @@ public class GDPermissionManager implements PermissionManager {
                     return processResult(claim, targetPermission, type.getName().toLowerCase(), Tristate.TRUE, permissionHolder);
                 }
             }
-            return getUserPermission(user, claim, targetPermission, PermissionDataType.ALL);
+            return getUserPermission(user, claim, targetPermission, PermissionDataType.PERSISTENT);
         }
 
         return getClaimFlagPermission(claim, targetPermission);
@@ -396,24 +396,25 @@ public class GDPermissionManager implements PermissionManager {
         if (!claim.isWilderness()) {
             contexts.add(ClaimContexts.GLOBAL_DEFAULT_CONTEXT);
             contexts.add(ClaimContexts.USER_DEFAULT_CONTEXT);
-            value = PermissionUtil.getInstance().getPermissionValue((GDClaim) claim, GriefDefenderPlugin.DEFAULT_HOLDER, permission, contexts, PermissionDataType.ALL);
+            value = PermissionUtil.getInstance().getPermissionValue((GDClaim) claim, GriefDefenderPlugin.DEFAULT_HOLDER, permission, contexts, PermissionDataType.PERSISTENT);
             if (value != Tristate.UNDEFINED) {
                 return processResult(claim, permission, value, GriefDefenderPlugin.DEFAULT_HOLDER);
             }
             contexts.remove(ClaimContexts.USER_DEFAULT_CONTEXT);
         } else {
             contexts.add(ClaimContexts.GLOBAL_DEFAULT_CONTEXT);
-            value = PermissionUtil.getInstance().getPermissionValue((GDClaim) claim, GriefDefenderPlugin.DEFAULT_HOLDER, permission, contexts, PermissionDataType.ALL);
+            value = PermissionUtil.getInstance().getPermissionValue((GDClaim) claim, GriefDefenderPlugin.DEFAULT_HOLDER, permission, contexts, PermissionDataType.PERSISTENT);
             if (value != Tristate.UNDEFINED) {
                 return processResult(claim, permission, value, GriefDefenderPlugin.DEFAULT_HOLDER);
             }
         }
 
         contexts.remove(ClaimContexts.GLOBAL_DEFAULT_CONTEXT);
+        contexts.add(ClaimContexts.USER_DEFAULT_CONTEXT);
         contexts.add(claim.getDefaultTypeContext());
-        value = PermissionUtil.getInstance().getPermissionValue((GDClaim) claim, GriefDefenderPlugin.DEFAULT_HOLDER, permission, contexts, PermissionDataType.TRANSIENT);
+        value = PermissionUtil.getInstance().getPermissionValue((GDClaim) claim, GriefDefenderPlugin.GD_DEFAULT_HOLDER, permission, contexts, PermissionDataType.TRANSIENT);
         if (value != Tristate.UNDEFINED) {
-            return processResult(claim, permission, value, GriefDefenderPlugin.DEFAULT_HOLDER);
+            return processResult(claim, permission, value, GriefDefenderPlugin.GD_DEFAULT_HOLDER);
         }
 
         return processResult(claim, permission, Tristate.UNDEFINED, GriefDefenderPlugin.DEFAULT_HOLDER);
@@ -488,7 +489,7 @@ public class GDPermissionManager implements PermissionManager {
     }
 
     public Tristate processResult(Claim claim, String permission, String trust, Tristate permissionValue, GDPermissionHolder permissionHolder) {
-        if (GriefDefenderPlugin.debugActive) {
+        if (GriefDefenderPlugin.debugActive && this.currentEvent != null) {
             // Use the event subject always if available
             // This prevents debug showing 'default' for users
             if (eventSubject != null) {
@@ -502,7 +503,7 @@ public class GDPermissionManager implements PermissionManager {
                 }
             }
 
-            if (this.currentEvent != null && (this.currentEvent instanceof BlockPhysicsEvent)) {
+            if (this.currentEvent instanceof BlockPhysicsEvent) {
                 if (((GDClaim) claim).getWorld().getTime() % 100 != 0L) {
                     return permissionValue;
                 }
@@ -580,10 +581,27 @@ public class GDPermissionManager implements PermissionManager {
 
                 return populateEventSourceTarget(id, isSource);
             } else if (obj instanceof Block) {
-                final String id = BlockTypeRegistryModule.getInstance().getNMSKey((Block) obj);
+                final Block block = (Block) obj;
+                if (GriefDefenderPlugin.getInstance().getSlimefunProvider() != null) { 
+                    final String customItemId = GriefDefenderPlugin.getInstance().getSlimefunProvider().getSlimeBlockId(block);
+                    if (customItemId != null && !customItemId.isEmpty()) {
+                        return populateEventSourceTarget(customItemId, isSource);
+                    }
+                }
+
+                final String id = BlockTypeRegistryModule.getInstance().getNMSKey(block);
                 return populateEventSourceTarget(id, isSource);
             } else if (obj instanceof BlockState) {
                 final BlockState blockstate = (BlockState) obj;
+                if (blockstate.getBlock().getType() != blockstate.getType()) {
+                    return populateEventSourceTarget(blockstate.getType().name().toLowerCase(), isSource);
+                }
+                if (GriefDefenderPlugin.getInstance().getSlimefunProvider() != null) { 
+                    final String customItemId = GriefDefenderPlugin.getInstance().getSlimefunProvider().getSlimeBlockId(blockstate.getBlock());
+                    if (customItemId != null && !customItemId.isEmpty()) {
+                        return populateEventSourceTarget(customItemId, isSource);
+                    }
+                }
                 final String id = BlockTypeRegistryModule.getInstance().getNMSKey(blockstate);
                 return populateEventSourceTarget(id, isSource);
             } else if (obj instanceof Material) {
@@ -604,6 +622,18 @@ public class GDPermissionManager implements PermissionManager {
                 
             } else if (obj instanceof ItemStack) {
                 final ItemStack itemstack = (ItemStack) obj;
+                if (GriefDefenderPlugin.getInstance().isCustomItemsInstalled) {
+                    final String customItemId = NMSUtil.getInstance().getItemStackNBTString(itemstack, "com.jojodmo.customitems.itemID");
+                    if (customItemId != null && !customItemId.isEmpty()) {
+                        return populateEventSourceTarget("customitems:" + customItemId, isSource);
+                    }
+                }
+                if (GriefDefenderPlugin.getInstance().getSlimefunProvider() != null) { 
+                    final String customItemId = GriefDefenderPlugin.getInstance().getSlimefunProvider().getSlimeItemId(itemstack);
+                    if (customItemId != null && !customItemId.isEmpty()) {
+                        return populateEventSourceTarget(customItemId, isSource);
+                    }
+                }
                 String id = ItemTypeRegistryModule.getInstance().getNMSKey(itemstack);
                 return populateEventSourceTarget(id, isSource);
             } else if (obj instanceof DamageCause) {
@@ -670,6 +700,12 @@ public class GDPermissionManager implements PermissionManager {
             return populateEventSourceTargetContext(contexts, id, isSource);
         } else if (obj instanceof Block) {
             final Block block = (Block) obj;
+            if (GriefDefenderPlugin.getInstance().getSlimefunProvider() != null) { 
+                final String customItemId = GriefDefenderPlugin.getInstance().getSlimefunProvider().getSlimeBlockId(block, contexts);
+                if (customItemId != null && !customItemId.isEmpty()) {
+                    return populateEventSourceTargetContext(contexts, customItemId, isSource);
+                }
+            }
             final String id = BlockTypeRegistryModule.getInstance().getNMSKey(block);
             this.addBlockContexts(contexts, block, isSource);
             if (this.isObjectIdBanned(claim, id, BanType.BLOCK)) {
@@ -679,6 +715,15 @@ public class GDPermissionManager implements PermissionManager {
             return populateEventSourceTargetContext(contexts, id, isSource);
         } else if (obj instanceof BlockState) {
             final BlockState blockstate = (BlockState) obj;
+            if (blockstate.getBlock().getType() != blockstate.getType()) {
+                return populateEventSourceTargetContext(contexts, blockstate.getType().name().toLowerCase(), isSource);
+            }
+            if (GriefDefenderPlugin.getInstance().getSlimefunProvider() != null) { 
+                final String customItemId = GriefDefenderPlugin.getInstance().getSlimefunProvider().getSlimeBlockId(blockstate.getBlock(), contexts);
+                if (customItemId != null && !customItemId.isEmpty()) {
+                    return populateEventSourceTargetContext(contexts, customItemId, isSource);
+                }
+            }
             final String id = BlockTypeRegistryModule.getInstance().getNMSKey(blockstate);
             this.addBlockContexts(contexts, blockstate.getBlock(), isSource);
             if (this.isObjectIdBanned(claim, id, BanType.BLOCK)) {
@@ -697,6 +742,18 @@ public class GDPermissionManager implements PermissionManager {
             return populateEventSourceTargetContext(contexts, id, isSource);
         } else if (obj instanceof ItemStack) {
             final ItemStack itemstack = (ItemStack) obj;
+            if (GriefDefenderPlugin.getInstance().isCustomItemsInstalled) {
+                final String customItemId = NMSUtil.getInstance().getItemStackNBTString(itemstack, "com.jojodmo.customitems.itemID");
+                if (customItemId != null && !customItemId.isEmpty()) {
+                    return populateEventSourceTargetContext(contexts, "customitems:" + customItemId, isSource);
+                }
+            }
+            if (GriefDefenderPlugin.getInstance().getSlimefunProvider() != null) { 
+                final String customItemId = GriefDefenderPlugin.getInstance().getSlimefunProvider().getSlimeItemId(itemstack, contexts);
+                if (customItemId != null && !customItemId.isEmpty()) {
+                    return populateEventSourceTargetContext(contexts, customItemId, isSource);
+                }
+            }
             if (NMSUtil.getInstance().isItemFood(itemstack)) {
                 if (isSource) {
                     contexts.add(ContextGroups.SOURCE_FOOD);
@@ -1017,6 +1074,9 @@ public class GDPermissionManager implements PermissionManager {
             id = "minecraft:" + id;
         }
         contexts = this.populateTagContextsForId(contexts, id, isSource);
+        // always add source/target any contexts
+        contexts.add(ContextGroups.SOURCE_ANY);
+        contexts.add(ContextGroups.TARGET_ANY);
         final String[] parts = id.split(":");
         final String modId = parts[0];
         if (isSource) {
@@ -1595,22 +1655,43 @@ public class GDPermissionManager implements PermissionManager {
 
     @Override
     public CompletableFuture<PermissionResult> setFlagDefinition(Subject subject, FlagDefinition flagDefinition, Tristate value) {
-        final Set<Context> contexts = new HashSet<>();
-        contexts.addAll(flagDefinition.getContexts());
-        PermissionResult result = new GDPermissionResult(ResultTypes.SUCCESS, TextComponent.builder().append("SUCCESS").build());
-        CompletableFuture<PermissionResult> future = new CompletableFuture<>();
-        for (FlagData flagData : flagDefinition.getFlagData()) {
-            final Set<Context> flagContexts = new HashSet<>(contexts);
-            flagContexts.addAll(flagData.getContexts());
-            // TODO - Add method that supports multiple permissions
-            PermissionUtil.getInstance().setPermissionValue((GDPermissionHolder) subject, flagData.getFlag(), value, flagContexts);
-            /*if (!result.successful()) {
-                future.complete(result);
-                return future;
-            }*/
+        Set<Context> contexts = new HashSet<>(flagDefinition.getContexts());
+        Set<Context> defaultContexts = new HashSet<>();
+        Set<Context> overrideContexts = new HashSet<>();
+        String groupStr = null;
+        final Iterator<Context> iterator = contexts.iterator();
+        while (iterator.hasNext()) {
+            final Context context = iterator.next();
+            if (context.getKey().equalsIgnoreCase("gd_claim_default")) {
+                defaultContexts.add(context);
+            } else if (context.getKey().equalsIgnoreCase("gd_claim_override")) {
+                if (context.getValue().equalsIgnoreCase("claim")) {
+                    iterator.remove();
+                    continue;
+                }
+                overrideContexts.add(context);
+            } else if (context.getKey().equalsIgnoreCase("group")) {
+                groupStr = context.getValue();
+            }
+        }
+        GDPermissionHolder holder = GriefDefenderPlugin.DEFAULT_HOLDER;
+        if (groupStr != null) {
+            if (PermissionUtil.getInstance().hasGroupSubject(groupStr)) {
+                holder = PermissionHolderCache.getInstance().getOrCreateGroup(groupStr);
+                if (holder == null) {
+                    holder = GriefDefenderPlugin.DEFAULT_HOLDER;
+                }
+            }
         }
 
-        future.complete(result);
-        return future;
+        CompletableFuture<PermissionResult> result = new CompletableFuture<>();
+        if (!defaultContexts.isEmpty()) {
+            result = PermissionUtil.getInstance().setFlagDefinition(holder, flagDefinition, flagDefinition.getDefaultValue(), defaultContexts, true);
+        }
+        if (!overrideContexts.isEmpty()) {
+            result = PermissionUtil.getInstance().setFlagDefinition(holder, flagDefinition, flagDefinition.getDefaultValue(), overrideContexts, false);
+        }
+        PermissionUtil.getInstance().save(holder);
+        return result;
     }
 }

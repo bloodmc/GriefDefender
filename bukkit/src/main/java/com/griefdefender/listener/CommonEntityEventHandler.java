@@ -438,14 +438,11 @@ public class CommonEntityEventHandler {
         if (gameMode == GameMode.SPECTATOR) {
             return;
         }
-        if (gameMode == GameMode.CREATIVE) {
-            if (playerData.inPvpCombat() && !GriefDefenderPlugin.getActiveConfig(player.getWorld().getUID()).getConfig().pvp.allowFly) {
-                player.setAllowFlight(false);
-                player.setFlying(false);
-                playerData.ignoreFallDamage = true;
-                GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().OPTION_APPLY_PLAYER_DENY_FLIGHT);
-                return;
-            }
+        if (playerData.inPvpCombat() && !GriefDefenderPlugin.getActiveConfig(player.getWorld().getUID()).getConfig().pvp.allowFly) {
+            player.setAllowFlight(false);
+            player.setFlying(false);
+            playerData.ignoreFallDamage = true;
+            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().OPTION_APPLY_PLAYER_DENY_FLIGHT);
             return;
         }
 

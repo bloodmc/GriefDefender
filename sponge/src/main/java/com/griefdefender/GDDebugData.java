@@ -183,6 +183,7 @@ public class GDDebugData {
         final String SOURCE = PlainComponentSerializer.INSTANCE.serialize(MessageCache.getInstance().LABEL_SOURCE);
         final String TARGET = PlainComponentSerializer.INSTANCE.serialize(MessageCache.getInstance().LABEL_TARGET);
         final String USER = PlainComponentSerializer.INSTANCE.serialize(MessageCache.getInstance().LABEL_USER);
+        final String GROUP = PlainComponentSerializer.INSTANCE.serialize(MessageCache.getInstance().LABEL_GROUP);
         final String CONTEXT = PlainComponentSerializer.INSTANCE.serialize(MessageCache.getInstance().LABEL_CONTEXT);
         final String RESULT = PlainComponentSerializer.INSTANCE.serialize(MessageCache.getInstance().LABEL_RESULT);
         debugOutput.add("| " + RECORD_END + " | " + DATE_FORMAT.format(new Date(endTime)) + "|");
@@ -190,7 +191,7 @@ public class GDDebugData {
         debugOutput.add("| " + TIME_ELAPSED + " | " + elapsed + " seconds" + "|");
         debugOutput.add("");
         debugOutput.add("### " + OUTPUT) ;
-        debugOutput.add("| " + FLAG + " | " + TRUST + " | " + SOURCE + " | " + TARGET + " | " + LOCATION + " | " + USER + " | " + CONTEXT + " | " + RESULT + " |");
+        debugOutput.add("| " + FLAG + " | " + TRUST + " | " + SOURCE + " | " + TARGET + " | " + LOCATION + " | " + USER + "/" + GROUP + " | " + CONTEXT + " | " + RESULT + " |");
         debugOutput.add("|------|-------|--------|--------|----------|------|----------|--------|");
 
         debugOutput.addAll(this.records);

@@ -40,6 +40,7 @@ import com.griefdefender.api.permission.option.type.GameModeTypes;
 import com.griefdefender.api.permission.option.type.WeatherType;
 import com.griefdefender.api.permission.option.type.WeatherTypes;
 import com.griefdefender.cache.PermissionHolderCache;
+import com.griefdefender.claim.GDClaim;
 import com.griefdefender.internal.util.BlockUtil;
 import com.griefdefender.internal.util.NMSUtil;
 import com.griefdefender.permission.GDPermissionUser;
@@ -48,6 +49,7 @@ import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextColor;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.BlockSnapshot;
+import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.data.Transaction;
 import org.spongepowered.api.data.property.entity.EyeLocationProperty;
 import org.spongepowered.api.data.type.HandTypes;
@@ -59,6 +61,8 @@ import org.spongepowered.api.item.ItemType;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.service.user.UserStorageService;
 import org.spongepowered.api.util.Direction;
+import org.spongepowered.api.util.blockray.BlockRay;
+import org.spongepowered.api.util.blockray.BlockRayHit;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
@@ -274,5 +278,52 @@ public class PlayerUtil {
             }
         }
         return false;
+    }
+
+    public GDClaim findNearbyClaim(Player player, GDPlayerData playerData, int maxDistance, boolean hidingVisuals) {
+        if (maxDistance <= 20) {
+            maxDistance = 100;
+        }
+
+        BlockRay<World> blockRay = BlockRay.from(player).distanceLimit(maxDistance).build();
+        GDClaim playerClaim = GriefDefenderPlugin.getInstance().dataStore.getClaimAtPlayer(playerData, player.getLocation());
+        GDClaim firstClaim = null;
+        GDClaim claim = null;
+        playerData.lastNonAirInspectLocation = null;
+        playerData.lastValidInspectLocation = null;
+        while (blockRay.hasNext()) {
+            BlockRayHit<World> blockRayHit = blockRay.next();
+            Location<World> location = blockRayHit.getLocation();
+            claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAt(location);
+            if (firstClaim == null && !claim.isWilderness()) {
+                if (hidingVisuals) {
+                    if (claim.hasActiveVisual(player)) {
+                        firstClaim = claim;
+                    }
+                } else {
+                    firstClaim = claim;
+                }
+            }
+
+            if (playerData.lastNonAirInspectLocation == null && !location.getBlockType().equals(BlockTypes.AIR)) {
+                playerData.lastNonAirInspectLocation = location;
+            }
+            if (claim != null && !claim.isWilderness() && !playerClaim.getUniqueId().equals(claim.getUniqueId())) {
+                playerData.lastValidInspectLocation = location;
+            }
+
+            if (!location.getBlockType().equals(BlockTypes.AIR) && !NMSUtil.getInstance().isBlockTransparent(location.getBlock())) {
+                break;
+            }
+        }
+
+        if (claim == null || claim.isWilderness()) {
+            if (firstClaim == null) {
+                return GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(player.getWorld().getUniqueId()).getWildernessClaim();
+            }
+            return firstClaim;
+        }
+
+        return claim;
     }
 }

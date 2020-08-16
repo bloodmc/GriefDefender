@@ -45,11 +45,15 @@ public class ClaimCategory extends ConfigCategory {
             + "\nEx. If set to '50' and an explosion affects 51+ blocks, the event will cancel when the first protected block is found."
             + "\nNote: To disable, set value to '0'.")
     public int explosionCancelBlockLimit = 50;
+    @Setting(value = "piston-protection-in-claims", comment = "Whether piston protection should be enabled within claims. Note: This does not affect pistons crossing into another claim, that is always protected. This only determines whether or not GD should process pistons if it doesn't cross into another claim.")
+    public boolean pistonProtectionInClaims = false;
     @Setting(value = "auto-chest-claim-block-radius", comment = "Radius used (in blocks) for auto-created claim when a chest is placed. Set to -1 to disable chest claim creation.")
     public int autoChestClaimBlockRadius = 4;
     @Setting(value = "border-block-radius", comment = "Set claim border of specified radius (in blocks), centered on claim. If set to 1, adds an additional 1 block protected radius around claim.\n" + 
             "Note: It is not recommended to set this value too high as performance can degrade due to deeper claim searches.")
     public int borderBlockRadius = 0;
+    @Setting(value = "restrict-world-max-height", comment = "Whether to restrict claiming to world max height. (Default: True")
+    public boolean restrictWorldMaxHeight = true;
     @Setting(value = "expiration-cleanup-interval", comment = "The interval in minutes for cleaning up expired claims. Default: 0. Set to 0 to disable.")
     public int expirationCleanupInterval = 0;
     @Setting(value = "auto-nature-restore", comment = "Whether survival claims will be automatically restored to world generated state when expired. \nNote: This only supports world generated blocks. Consider using 'auto-schematic-restore' if using a custom world.")

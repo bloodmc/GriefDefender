@@ -24,6 +24,9 @@
  */
 package com.griefdefender.configuration.category;
 
+import com.griefdefender.api.claim.ClaimType;
+import com.griefdefender.api.claim.ClaimTypes;
+
 import ninja.leaping.configurate.objectmapping.Setting;
 import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
 
@@ -47,4 +50,26 @@ public class DynmapOwnerStyleCategory {
 
     @Setting("label")
     public String label = "none";
+
+    public DynmapOwnerStyleCategory() {
+    }
+
+    public DynmapOwnerStyleCategory(ClaimType type) {
+        if (type.equals(ClaimTypes.ADMIN)) {
+            this.strokeColor = "#FF0000";
+            this.fillColor = "#FF0000";
+        } else if (type.equals(ClaimTypes.BASIC)) {
+            this.strokeColor = "#FFFF00";
+            this.fillColor = "#FFFF00";
+        } else if (type.equals(ClaimTypes.TOWN)) {
+            this.strokeColor = "#00FF00";
+            this.fillColor = "#00FF00";
+        } else if (type.equals(ClaimTypes.SUBDIVISION)) {
+            this.strokeColor = "#FF9C00";
+            this.fillColor = "#FF9C00";
+        } else {
+            this.strokeColor = "#FF0000";
+            this.fillColor = "#FF0000";
+        }
+    }
 }

@@ -35,4 +35,7 @@ public class PvpCategory extends ConfigCategory {
 
     @Setting(value = "allow-fly", comment = "Whether flying is allowed during PvP.")
     public boolean allowFly = false;
+
+    @Setting(value = "combat-logout", comment = "Whether players should be killed if they logout while in pvp combat.")
+    public boolean combatLogout = false;
 }

@@ -150,80 +150,88 @@ public class RentApplyTask extends BukkitRunnable {
             }
         }
         final Player player = renter.getOnlinePlayer();
-        final EconomyResponse response = EconomyUtil.getInstance().withdrawFunds(renter.getOfflinePlayer(), totalrentOwed);
-        if (!response.transactionSuccess()) {
-            Instant rentPastDue = claim.getEconomyData().getRentPastDueDate();
-            if (rentPastDue == null) {
-                claim.getEconomyData().setRentPastDueDate(localNow);
-                rentPastDue = localNow;
-            }
-
-            final Duration pastDueDuration = Duration.between(rentPastDue, localNow);
-            final int rentExpirationDays = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), ownerPlayerData.getSubject(), Options.RENT_EXPIRATION, claim).intValue();
-            final int expireDaysToKeep = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), ownerPlayerData.getSubject(), Options.RENT_EXPIRATION_DAYS_KEEP, claim).intValue();
-            if (pastDueDuration.toDays() > rentExpirationDays) {
-                claim.getInternalClaimData().setExpired(false);
-                final int keepDays = (int) (expireDaysToKeep - pastDueDuration.toDays());
-                if (player != null) {
-                    final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_CLAIM_RENTED_EXPIRED, ImmutableMap.of(
-                            "balance", totalrentOwed,
-                            "time", keepDays
-                            ));
-                    GriefDefenderPlugin.sendMessage(player, message);
+        if (totalrentOwed > 0) {
+            final EconomyResponse response = EconomyUtil.getInstance().withdrawFunds(renter.getOfflinePlayer(), totalrentOwed);
+            if (!response.transactionSuccess()) {
+                Instant rentPastDue = claim.getEconomyData().getRentPastDueDate();
+                if (rentPastDue == null) {
+                    claim.getEconomyData().setRentPastDueDate(localNow);
+                    rentPastDue = localNow;
                 }
-                claim.getData().save();
-                if (rentRestore && rentPastDue.plus(Duration.ofDays(rentExpirationDays + expireDaysToKeep)).isBefore(localNow)) {
-                    // expiration days keep is up
-                    // restore schematic and remove renter rights
-                    final ClaimSchematic schematic = claim.getSchematics().get("__rent__");
-                    if (schematic != null) {
-                        if (schematic.apply()) {
-                            if (ownerPlayerData.getSubject().getOnlinePlayer() != null) {
-                                ownerPlayerData.getSubject().getOnlinePlayer().sendMessage("Claim '" + claim.getFriendlyName() + "' has been restored.");
+    
+                final Duration pastDueDuration = Duration.between(rentPastDue, localNow);
+                final int rentExpirationDays = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), ownerPlayerData.getSubject(), Options.RENT_EXPIRATION, claim).intValue();
+                final int expireDaysToKeep = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), ownerPlayerData.getSubject(), Options.RENT_EXPIRATION_DAYS_KEEP, claim).intValue();
+                if (pastDueDuration.toDays() > rentExpirationDays) {
+                    claim.getInternalClaimData().setExpired(false);
+                    final int keepDays = (int) (expireDaysToKeep - pastDueDuration.toDays());
+                    if (player != null) {
+                        final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_CLAIM_RENTED_EXPIRED, ImmutableMap.of(
+                                "balance", totalrentOwed,
+                                "time", keepDays
+                                ));
+                        GriefDefenderPlugin.sendMessage(player, message);
+                    }
+                    claim.getData().save();
+                    if (rentRestore && rentPastDue.plus(Duration.ofDays(rentExpirationDays + expireDaysToKeep)).isBefore(localNow)) {
+                        // expiration days keep is up
+                        // restore schematic and remove renter rights
+                        final ClaimSchematic schematic = claim.getSchematics().get("__rent__");
+                        if (schematic != null) {
+                            if (schematic.apply()) {
+                                if (ownerPlayerData.getSubject().getOnlinePlayer() != null) {
+                                    final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_CLAIM_RENT_END_RESTORE, ImmutableMap.of(
+                                            "claim", claim.getFriendlyName()));
+                                    GriefDefenderPlugin.sendMessage(ownerPlayerData.getSubject().getOnlinePlayer(), message);
+                                }
+                                // end rent
+                                claim.getEconomyData().setForRent(false);
+                                claim.getEconomyData().getDelinquentRenters().add(renter.getUniqueId());
+                                claim.removeAllTrustsFromUser(renter.getUniqueId());
+                                final Sign rentSign = SignUtil.getSign(claim.getWorld(), claim.getEconomyData().getRentSignPosition());
+                                if (rentSign != null) {
+                                    rentSign.getBlock().setType(Material.AIR);
+                                }
+                    
+                                SignUtil.resetRentData(claim);
+                                if (player != null) {
+                                    GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().ECONOMY_CLAIM_RENT_CANCELLED);
+                                }
+                                claim.getEconomyData().getRenters().clear();
+                                claim.getData().save();
+                                return;
                             }
-                            // end rent
-                            claim.getEconomyData().setForRent(false);
-                            claim.getEconomyData().getDelinquentRenters().add(renter.getUniqueId());
-                            claim.removeAllTrustsFromUser(renter.getUniqueId());
-                            final Sign rentSign = SignUtil.getSign(claim.getWorld(), claim.getEconomyData().getRentSignPosition());
-                            if (rentSign != null) {
-                                rentSign.getBlock().setType(Material.AIR);
-                            }
-                
-                            SignUtil.resetRentData(claim);
-                            if (player != null) {
-                                GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().ECONOMY_CLAIM_RENT_CANCELLED);
-                            }
-                            claim.getEconomyData().getRenters().clear();
-                            claim.getData().save();
-                            return;
                         }
                     }
                 }
-            }
-
-            claim.getEconomyData().setRentBalance(playerData.playerID, totalrentOwed);
-            claim.getEconomyData().addPaymentTransaction(new GDPaymentTransaction(TransactionType.RENT, TransactionResultType.FAIL, Instant.now(), rentOwed));
-            if (player != null) {
-                final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_CLAIM_RENT_PAYMENT_FAILURE, ImmutableMap.of(
-                        "total-funds", this.economy.getBalance(player),
-                        "amount", rentBalance,
-                        "balance", totalrentOwed,
-                        "days-remaining", 5
-                        ));
-                GriefDefenderPlugin.sendMessage(player, message);
+    
+                claim.getEconomyData().setRentBalance(playerData.playerID, totalrentOwed);
+                claim.getEconomyData().addPaymentTransaction(new GDPaymentTransaction(TransactionType.RENT, TransactionResultType.FAIL, Instant.now(), rentOwed));
+                if (player != null) {
+                    final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_CLAIM_RENT_PAYMENT_FAILURE, ImmutableMap.of(
+                            "total-funds", this.economy.getBalance(player),
+                            "amount", rentBalance,
+                            "balance", totalrentOwed,
+                            "days-remaining", 5
+                            ));
+                    GriefDefenderPlugin.sendMessage(player, message);
+                }
+            } else {
+                claim.getEconomyData().addPaymentTransaction(new GDPaymentTransaction(TransactionType.RENT, TransactionResultType.SUCCESS, Instant.now(), totalrentOwed));
+                claim.getEconomyData().setRentPastDueDate(null);
+                claim.getEconomyData().setRentBalance(playerData.playerID, 0);
+                claim.getInternalClaimData().setExpired(false);
+                claim.getData().save();
+                if (player != null) {
+                    final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_CLAIM_RENT_PAYMENT_SUCCESS, ImmutableMap.of(
+                            "balance", totalrentOwed));
+                    GriefDefenderPlugin.sendMessage(player, message);
+                }
             }
         } else {
-            claim.getEconomyData().addPaymentTransaction(new GDPaymentTransaction(TransactionType.RENT, TransactionResultType.SUCCESS, Instant.now(), totalrentOwed));
             claim.getEconomyData().setRentPastDueDate(null);
-            claim.getEconomyData().setRentBalance(playerData.playerID, 0);
-            claim.getInternalClaimData().setExpired(false);
+            claim.getEconomyData().setRentBalance(playerData.playerID, totalrentOwed); // new balance
             claim.getData().save();
-            if (player != null) {
-                final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_CLAIM_RENT_PAYMENT_SUCCESS, ImmutableMap.of(
-                        "balance", totalrentOwed));
-                GriefDefenderPlugin.sendMessage(player, message);
-            }
         }
 
         // check max days
@@ -246,6 +254,24 @@ public class RentApplyTask extends BukkitRunnable {
             SignUtil.resetRentData(claim);
             if (renter != null && renter.getOnlinePlayer() != null) {
                 GriefDefenderPlugin.sendMessage(renter.getOnlinePlayer(), MessageCache.getInstance().ECONOMY_CLAIM_RENT_CANCELLED);
+            }
+            if (rentRestore) {
+                final ClaimSchematic schematic = claim.getSchematics().get("__rent__");
+                if (schematic != null) {
+                    if (schematic.apply()) {
+                        if (ownerPlayerData.getSubject().getOnlinePlayer() != null) {
+                            final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_CLAIM_RENT_END_RESTORE, ImmutableMap.of(
+                                    "claim", claim.getFriendlyName()));
+                            GriefDefenderPlugin.sendMessage(ownerPlayerData.getSubject().getOnlinePlayer(), message);
+                        }
+                    }
+                }
+            } else {
+                if (ownerPlayerData.getSubject().getOnlinePlayer() != null) {
+                    final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_CLAIM_RENT_END, ImmutableMap.of(
+                            "claim", claim.getFriendlyName()));
+                    GriefDefenderPlugin.sendMessage(ownerPlayerData.getSubject().getOnlinePlayer(), message);
+                }
             }
             claim.getEconomyData().getRenters().clear();
             claim.getData().save();

@@ -40,7 +40,6 @@ import org.spongepowered.api.service.permission.Subject;
 import org.spongepowered.api.service.user.UserStorageService;
 
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 public class PermissionHolderCache {
@@ -50,7 +49,6 @@ public class PermissionHolderCache {
             .build();
     private final Cache<String, GDPermissionGroup> groupCache = Caffeine.newBuilder().expireAfterAccess(10, TimeUnit.MINUTES)
             .build();
-    private final ConcurrentHashMap<GDPermissionHolder, Cache<Integer, Tristate>> permissionCache = new ConcurrentHashMap<>();
 
     public GDPermissionUser getOrCreateUser(User user) {
         if (user == null) {
@@ -127,21 +125,6 @@ public class PermissionHolderCache {
         }
 
         return this.getOrCreateUser(uuid);
-    }
-
-    public Cache<Integer, Tristate> getOrCreatePermissionCache(GDPermissionHolder holder) {
-        Cache<Integer, Tristate> cache = this.permissionCache.get(holder);
-        if (cache == null) {
-            cache = Caffeine.newBuilder().expireAfterAccess(10, TimeUnit.MINUTES).build();
-            this.permissionCache.put(holder, cache);
-        }
-        return cache;
-    }
-
-    public void invalidateAllPermissionCache() {
-        for (Cache<Integer, Tristate> cache : this.permissionCache.values()) {
-            cache.invalidateAll();
-        }
     }
 
     static {

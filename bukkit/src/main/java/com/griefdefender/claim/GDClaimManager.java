@@ -51,7 +51,6 @@ import com.griefdefender.storage.BaseStorage;
 import com.griefdefender.util.BlockUtil;
 import com.griefdefender.util.Direction;
 
-import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.serializer.plain.PlainComponentSerializer;
@@ -69,6 +68,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -81,6 +81,7 @@ public class GDClaimManager implements ClaimManager {
     private static final BaseStorage DATASTORE = GriefDefenderPlugin.getInstance().dataStore;
     private UUID worldUniqueId;
     private String worldName;
+    private final int worldMaxHeight;
 
     // Player UUID -> player data
     private Map<UUID, GDPlayerData> playerDataList = Maps.newHashMap();
@@ -89,10 +90,10 @@ public class GDClaimManager implements ClaimManager {
     // Claim UUID -> Claim
     private Map<UUID, Claim> claimUniqueIdMap = Maps.newHashMap();
     // String -> Claim
-    private Map<Long, Set<Claim>> chunksToClaimsMap = new Long2ObjectOpenHashMap<>(4096);
+    private Map<Long, Set<Claim>> chunksToClaimsMap = new HashMap<>();
     // Entity Index
     public PlayerIndexStorage playerIndexStorage;
-    private Map<Long, GDChunk> chunksToGDChunks = new Long2ObjectOpenHashMap<>(4096);
+    private Map<Long, GDChunk> chunksToGDChunks = new HashMap<>();
 
     private GDClaim theWildernessClaim;
 
@@ -100,6 +101,11 @@ public class GDClaimManager implements ClaimManager {
         this.worldUniqueId = world.getUID();
         this.worldName = world.getName();
         this.playerIndexStorage = new PlayerIndexStorage(world);
+        if (GriefDefenderPlugin.getActiveConfig(this.worldUniqueId).getConfig().claim.restrictWorldMaxHeight) {
+            this.worldMaxHeight = world.getMaxHeight() - 1;
+        } else {
+            this.worldMaxHeight = -1;
+        }
     }
 
     public GDPlayerData getOrCreatePlayerData(UUID playerUniqueId) {
@@ -650,6 +656,10 @@ public class GDClaimManager implements ClaimManager {
     @Override
     public UUID getWorldId() {
         return this.worldUniqueId;
+    }
+
+    public int getWorldMaxHeight() {
+        return this.worldMaxHeight;
     }
 
     public GDChunk getChunk(Chunk chunk) {

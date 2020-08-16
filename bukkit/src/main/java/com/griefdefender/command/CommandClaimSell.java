@@ -79,10 +79,6 @@ public class CommandClaimSell extends BaseCommand {
         }
 
         Double salePrice = null;
-        if (!claim.getEconomyData().isForSale()) {
-            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().ECONOMY_CLAIM_NOT_FOR_SALE);
-            return;
-        }
         if (arg.equalsIgnoreCase("cancel")) {
             claim.getEconomyData().setForSale(false);
             claim.getEconomyData().setSalePrice(-1);

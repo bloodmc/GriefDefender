@@ -38,6 +38,7 @@ import com.griefdefender.api.claim.Claim;
 import com.griefdefender.api.permission.Context;
 import com.griefdefender.api.permission.PermissionResult;
 import com.griefdefender.api.permission.flag.Flag;
+import com.griefdefender.api.permission.flag.FlagDefinition;
 import com.griefdefender.api.permission.option.Option;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.permission.GDPermissionHolder;
@@ -71,6 +72,14 @@ public interface PermissionProvider {
      * @return whether the group exists
      */
     boolean hasGroupSubject(String identifier);
+
+    /**
+     * Creates the default group used by GriefDefender.
+     * 
+     * @param identifier
+     * @return whether the group was created
+     */
+    boolean createDefaultGroup(String identifier);
 
     /**
      * Performs a lookup for a UUID with matching 
@@ -166,6 +175,13 @@ public interface PermissionProvider {
      * @return An immutable map of cached options or empty if none.
      */
     Map<String, String> getOptions(GDPermissionHolder holder, Set<Context> contexts);
+
+    /**
+     * Gets all persisted permissions.
+     * 
+     * @return An immutable map of persisted permissions or empty if none.
+     */
+    Map<Set<Context>, Map<String, Boolean>> getAllPermanentPermissions();
 
     /**
      * Gets all persisted permissions with associated contexts of holder.
@@ -286,6 +302,18 @@ public interface PermissionProvider {
      * @return The option value list
      */
     List<String> getOptionValueList(GDPermissionHolder holder, Option option, Set<Context> contexts);
+
+    /**
+     * Sets a flag definition with contexts to a holder.
+     * 
+     * @param holder The holder
+     * @param definition The flag definition
+     * @param value The value
+     * @param contexts The contexts
+     * @param isTransient Whether the definition should be applied as transient
+     * @return Whether the set flag definition operation was successful
+     */
+    CompletableFuture<PermissionResult> setFlagDefinition(GDPermissionHolder holder, FlagDefinition definition, Tristate value, Set<Context> contexts, boolean isTransient);
 
     /**
      * Sets an option and value with contexts to a holder.

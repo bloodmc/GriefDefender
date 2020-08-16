@@ -185,7 +185,8 @@ public class CommandClaimAbandonAll extends BaseCommand {
                     }
                     final double abandonReturnRatio = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Double.class), user, Options.ABANDON_RETURN_RATIO, claim);
                     if (GriefDefenderPlugin.getInstance().isEconomyModeEnabled()) {
-                        refund += claim.getClaimBlocks() * abandonReturnRatio;
+                        final double requiredClaimBlocks = claim.getClaimBlocks() * abandonReturnRatio;
+                        refund += requiredClaimBlocks * ((GDClaim) claim).getOwnerEconomyBlockCost();
                     } else {
                         playerData.setAccruedClaimBlocks(playerData.getAccruedClaimBlocks() - ((int) Math.ceil(claim.getClaimBlocks() * (1 - abandonReturnRatio))));
                     }

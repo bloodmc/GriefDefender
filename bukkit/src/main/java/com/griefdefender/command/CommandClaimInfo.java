@@ -186,6 +186,7 @@ public class CommandClaimInfo extends BaseCommand {
         final GDPermissionUser owner = PermissionHolderCache.getInstance().getOrCreateUser(claim.getOwnerUniqueId());
         final UUID ownerUniqueId = claim.getOwnerUniqueId();
         final boolean isAdmin = playerData.canManageAdminClaims;
+        final boolean canPlayerTeleport = (player != null && PermissionUtil.getInstance().canPlayerTeleport(player, gdClaim)) ? true : false;
         // if not owner of claim, validate perms
         if (!isAdmin && !player.getUniqueId().equals(claim.getOwnerUniqueId())) {
             if (!gdClaim.getInternalClaimData().getContainers().contains(player.getUniqueId()) 
@@ -521,66 +522,72 @@ public class CommandClaimInfo extends BaseCommand {
                 .append(" : ")
                 .append(getClickableInfoText(src, claim, RAID_OVERRIDE, GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Boolean.class), owner, Options.RAID, gdClaim) == true ? TextComponent.of("ON", TextColor.GREEN) : TextComponent.of("OFF", TextColor.RED))).build();
         Component claimSpawn = null;
-        if (claim.getData().getSpawnPos().isPresent() && player != null && PermissionUtil.getInstance().canPlayerTeleport(player, gdClaim)) {
+        if (claim.getData().getSpawnPos().isPresent() && player != null) {
             Vector3i spawnPos = claim.getData().getSpawnPos().get();
             Location spawnLoc = new Location(gdClaim.getWorld(), spawnPos.getX(), spawnPos.getY(), spawnPos.getZ());
-            claimSpawn = TextComponent.builder()
+            TextComponent.Builder spawnBuilder = TextComponent.builder()
                     .append(MessageCache.getInstance().LABEL_SPAWN.color(TextColor.GREEN))
                     .append(" : ")
-                    .append(spawnPos.toString(), TextColor.GRAY)
-                    .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(CommandHelper.createTeleportConsumer(player, spawnLoc, claim, true))))
-                    .hoverEvent(HoverEvent.showText(MessageCache.getInstance().CLAIMINFO_UI_TELEPORT_SPAWN))
-                    .build();
+                    .append(spawnPos.toString(), TextColor.GRAY);
+            if (canPlayerTeleport) {
+                spawnBuilder.clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(CommandHelper.createTeleportConsumer(player, spawnLoc, claim, true))))
+                    .hoverEvent(HoverEvent.showText(MessageCache.getInstance().CLAIMINFO_UI_TELEPORT_SPAWN));
+            }
+            claimSpawn = spawnBuilder.build();
         }
         Component southCorners = null;
         Component northCorners = null;
-        if (!claim.isWilderness() && player != null && PermissionUtil.getInstance().canPlayerTeleport(player, gdClaim)) {
-            Component southWestCorner = TextComponent.builder()
+        if (!claim.isWilderness() && player != null) {
+            TextComponent.Builder southWestCorner = TextComponent.builder()
                     .append("SW", TextColor.LIGHT_PURPLE)
                     .append(" : ")
-                    .append(VecHelper.toVector3i(southWest).toString(), TextColor.GRAY)
-                    .append(" ")
+                    .append(VecHelper.toVector3i(southWest).toString(), TextColor.GRAY);
+            if (canPlayerTeleport) {
+                southWestCorner.append(" ")
                     .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(CommandHelper.createTeleportConsumer(player, southWest, claim))))
                     .hoverEvent(HoverEvent.showText(MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.CLAIMINFO_UI_TELEPORT_DIRECTION, 
-                            ImmutableMap.of("direction", TextComponent.of("SW").color(TextColor.AQUA)))))
-                    .build();
-            Component southEastCorner = TextComponent.builder()
+                        ImmutableMap.of("direction", TextComponent.of("SW").color(TextColor.AQUA)))));
+            }
+            TextComponent.Builder southEastCorner = TextComponent.builder()
                     .append("SE", TextColor.LIGHT_PURPLE)
                     .append(" : ")
-                    .append(VecHelper.toVector3i(southEast).toString(), TextColor.GRAY)
-                    .append(" ")
+                    .append(VecHelper.toVector3i(southEast).toString(), TextColor.GRAY);
+            if (canPlayerTeleport) {
+                southEastCorner.append(" ")
                     .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(CommandHelper.createTeleportConsumer(player, southEast, claim))))
                     .hoverEvent(HoverEvent.showText(MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.CLAIMINFO_UI_TELEPORT_DIRECTION, 
-                            ImmutableMap.of("direction", TextComponent.of("SE").color(TextColor.AQUA)))))
-                    .build();
+                            ImmutableMap.of("direction", TextComponent.of("SE").color(TextColor.AQUA)))));
+            }
             southCorners = TextComponent.builder()
                     .append(MessageCache.getInstance().CLAIMINFO_UI_SOUTH_CORNERS.color(TextColor.YELLOW))
                     .append(" : ")
-                    .append(southWestCorner)
-                    .append(southEastCorner).build();
-            Component northWestCorner = TextComponent.builder()
+                    .append(southWestCorner.build())
+                    .append(southEastCorner.build()).build();
+            TextComponent.Builder northWestCorner = TextComponent.builder()
                     .append("NW", TextColor.LIGHT_PURPLE)
                     .append(" : ")
-                    .append(VecHelper.toVector3i(northWest).toString(), TextColor.GRAY)
-                    .append(" ")
+                    .append(VecHelper.toVector3i(northWest).toString(), TextColor.GRAY);
+            if (canPlayerTeleport) {
+                northWestCorner.append(" ")
                     .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(CommandHelper.createTeleportConsumer(player, northWest, claim))))
                     .hoverEvent(HoverEvent.showText(MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.CLAIMINFO_UI_TELEPORT_DIRECTION, 
-                            ImmutableMap.of("direction", TextComponent.of("NW").color(TextColor.AQUA)))))
-                    .build();
-            Component northEastCorner = TextComponent.builder()
+                            ImmutableMap.of("direction", TextComponent.of("NW").color(TextColor.AQUA)))));
+            }
+            TextComponent.Builder northEastCorner = TextComponent.builder()
                     .append("NE", TextColor.LIGHT_PURPLE)
                     .append(" : ")
-                    .append(VecHelper.toVector3i(northEast).toString(), TextColor.GRAY)
-                    .append(" ")
+                    .append(VecHelper.toVector3i(northEast).toString(), TextColor.GRAY);
+            if (canPlayerTeleport) {
+                northEastCorner.append(" ")
                     .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(CommandHelper.createTeleportConsumer(player, northEast, claim))))
                     .hoverEvent(HoverEvent.showText(MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.CLAIMINFO_UI_TELEPORT_DIRECTION, 
-                            ImmutableMap.of("direction", TextComponent.of("NE").color(TextColor.AQUA)))))
-                    .build();
+                            ImmutableMap.of("direction", TextComponent.of("NE").color(TextColor.AQUA)))));
+            }
             northCorners = TextComponent.builder()
                     .append(MessageCache.getInstance().CLAIMINFO_UI_NORTH_CORNERS.color(TextColor.YELLOW))
                     .append(" : ")
-                    .append(northWestCorner)
-                    .append(northEastCorner).build();
+                    .append(northWestCorner.build())
+                    .append(northEastCorner.build()).build();
         }
         Component dateCreated = TextComponent.builder()
                 .append(MessageCache.getInstance().LABEL_CREATED.color(TextColor.YELLOW))
@@ -654,9 +661,17 @@ public class CommandClaimInfo extends BaseCommand {
         }
         textList.add(claimGreeting);
         textList.add(claimFarewell);
-        textList.add(dateCreated);
-        textList.add(dateLastActive);
-        textList.add(claimId);
+        if (allowEdit == null || isAdmin) {
+            if (src.hasPermission(GDPermissions.COMMAND_CLAIM_INFO_OTHERS_CREATION_DATE)) {
+                textList.add(dateCreated);
+            }
+            if (src.hasPermission(GDPermissions.COMMAND_CLAIM_INFO_OTHERS_LAST_ACTIVE)) {
+                textList.add(dateLastActive);
+            }
+            if (src.hasPermission(GDPermissions.COMMAND_CLAIM_INFO_OTHERS_CLAIM_UUID)) {
+                textList.add(claimId);
+            }
+        }
         if (northCorners != null && southCorners != null) {
             textList.add(northCorners);
             textList.add(southCorners);
@@ -879,7 +894,8 @@ public class CommandClaimInfo extends BaseCommand {
                 TextAdapter.sendComponent(src, MessageCache.getInstance().CLAIM_NOT_YOURS);
                 return;
             }
-            final ClaimResult result = claim.changeType(clicked, Optional.of(player.getUniqueId()), src);
+            // Use same claim owner when changing claim type
+            final ClaimResult result = claim.changeType(clicked, Optional.empty(), src);
             if (result.successful()) {
                 CommandHelper.executeCommand(src, "claiminfo", gpClaim.getUniqueId().toString());
             } else {

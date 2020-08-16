@@ -80,6 +80,9 @@ public final class GDCauseStackManager {
 
     public Object popCause() {
         this.cached_cause = null;
+        if (this.cause.isEmpty()) {
+            return null;
+        }
         return this.cause.pop();
     }
 

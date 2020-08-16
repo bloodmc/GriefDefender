@@ -254,7 +254,7 @@ public class SignUtil {
             minTime = TextComponent.builder()
             .append(String.valueOf(min))
             .append(" ")
-            .append(claim.getEconomyData().getPaymentType() == PaymentType.DAILY ? 
+            .append(paymentType == PaymentType.DAILY ? 
                     (min > 1 ? MessageCache.getInstance().LABEL_DAYS : MessageCache.getInstance().LABEL_DAY) : 
                         (min > 1 ? MessageCache.getInstance().LABEL_HOURS : MessageCache.getInstance().LABEL_HOUR))
                 .build();
@@ -349,8 +349,6 @@ public class SignUtil {
             return;
         }
 
-
-        final PaymentType paymentType = claim.getEconomyData().getPaymentType();
         List<String> colorLines = new ArrayList<>(4);
         colorLines.add(ChatColor.translateAlternateColorCodes('&', "&7[&bGD&7-&1rent&7]"));
         colorLines.add(ChatColor.translateAlternateColorCodes('&', LegacyComponentSerializer.legacy().serialize(MessageCache.getInstance().ECONOMY_SIGN_RENT_DESCRIPTION)));

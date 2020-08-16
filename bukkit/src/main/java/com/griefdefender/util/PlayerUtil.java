@@ -66,9 +66,12 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.block.Action;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -322,5 +325,52 @@ public class PlayerUtil {
         }
 
         return GriefDefenderPlugin.getGlobalConfig().getConfig().mod.isFakePlayer(player);
+    }
+
+    public GDClaim findNearbyClaim(Player player, GDPlayerData playerData, int maxDistance, boolean hidingVisuals) {
+        if (maxDistance <= 20) {
+            maxDistance = 100;
+        }
+        BlockRay blockRay = BlockRay.from(player).distanceLimit(maxDistance).build();
+        GDClaim playerClaim = GriefDefenderPlugin.getInstance().dataStore.getClaimAtPlayer(playerData, player.getLocation());
+        GDClaim firstClaim = null;
+        GDClaim claim = null;
+        playerData.lastNonAirInspectLocation = null;
+        playerData.lastValidInspectLocation = null;
+        while (blockRay.hasNext()) {
+            BlockRayHit blockRayHit = blockRay.next();
+            Location location = blockRayHit.getLocation();
+            claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAt(location);
+            if (firstClaim == null && !claim.isWilderness()) {
+                if (hidingVisuals) {
+                    if (claim.hasActiveVisual(player)) {
+                        firstClaim = claim;
+                    }
+                } else {
+                    firstClaim = claim;
+                }
+            }
+
+            if (playerData.lastNonAirInspectLocation == null && !location.getBlock().isEmpty()) {
+                playerData.lastNonAirInspectLocation = location;
+            }
+            if (claim != null && !claim.isWilderness() && !playerClaim.getUniqueId().equals(claim.getUniqueId())) {
+                playerData.lastValidInspectLocation = location;
+            }
+
+            final Block block = location.getBlock();
+            if (!block.isEmpty() && !NMSUtil.getInstance().isBlockTransparent(block)) {
+                break;
+            }
+        }
+
+        if (claim == null || claim.isWilderness()) {
+            if (firstClaim == null) {
+                return GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(player.getWorld().getUID()).getWildernessClaim();
+            }
+            return firstClaim;
+        }
+
+        return claim;
     }
 }

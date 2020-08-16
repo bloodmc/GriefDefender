@@ -94,6 +94,7 @@ public class GDPlayerData implements PlayerData {
     public Location<World> lastValidInspectLocation;
     public Location<World> lastNonAirInspectLocation;
     public boolean claimMode = false;
+    public boolean claimTool = true;
     public ShovelType shovelMode = ShovelTypes.BASIC;
 
     public GDClaim claimResizing;
@@ -181,7 +182,7 @@ public class GDPlayerData implements PlayerData {
     public boolean dataInitialized = false;
     public boolean showNoClaimsFoundMessage = true;
     public boolean useRestoreSchematic = false;
-    private boolean checkedDimensionHeight = false;
+    private final int worldMaxHeight;
 
     public GDPlayerData(UUID worldUniqueId, String worldName, UUID playerUniqueId, Set<Claim> claims) {
         this.worldUniqueId = worldUniqueId;
@@ -202,6 +203,7 @@ public class GDPlayerData implements PlayerData {
                 contexts.add(new Context("server", PermissionUtil.getInstance().getServerName()));
             }
         }
+        this.worldMaxHeight = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(this.worldUniqueId).getWorldMaxHeight();
         this.optionContexts = contexts;
         this.refreshPlayerOptions();
     }
@@ -240,7 +242,6 @@ public class GDPlayerData implements PlayerData {
             this.userOptionBypassPlayerGamemode = PermissionUtil.getInstance().getPermissionValue(subject, GDPermissions.BYPASS_OPTION + "." + Options.PLAYER_GAMEMODE.getName().toLowerCase(), activeContexts).asBoolean();
             this.playerID = subject.getUniqueId();
             this.dataInitialized = true;
-            this.checkedDimensionHeight = false;
         });
     }
 
@@ -704,15 +705,8 @@ public class GDPlayerData implements PlayerData {
     @Override
     public int getMaxClaimLevel() {
         int maxClaimLevel = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), this.getSubject(), Options.MAX_LEVEL);
-        if (!this.checkedDimensionHeight) {
-            final World world = Sponge.getServer().getWorld(this.worldUniqueId).orElse(null);
-            if (world != null) {
-                final int buildHeight = world.getDimension().getBuildHeight() - 1;
-                if (buildHeight < maxClaimLevel) {
-                    maxClaimLevel = buildHeight;
-                }
-            }
-            this.checkedDimensionHeight = true;
+        if (this.worldMaxHeight > -1 && this.worldMaxHeight < maxClaimLevel) {
+            maxClaimLevel = this.worldMaxHeight;
         }
         return maxClaimLevel;
     }
@@ -881,6 +875,7 @@ public class GDPlayerData implements PlayerData {
         this.createBlockVisualRevertRunnables.clear();
         this.queuedVisuals.clear();
         this.claimMode = false;
+        this.claimTool = true;
         this.debugClaimPermissions = false;
         this.ignoreClaims = false;
         this.lastShovelLocation = null;

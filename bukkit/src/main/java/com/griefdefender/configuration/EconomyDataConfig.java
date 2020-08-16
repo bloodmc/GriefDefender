@@ -437,10 +437,6 @@ public class EconomyDataConfig extends ConfigCategory implements EconomyData {
 
     @Override
     public void setRentBalance(UUID uuid, double balance) {
-        if (balance <= 0) {
-            this.rentBalances.remove(uuid);
-            return;
-        }
         this.rentBalances.put(uuid, balance);
     }
 }

@@ -53,7 +53,7 @@ public class CommandAdjustBonusClaimBlocks extends BaseCommand {
 
     @CommandCompletion("@gdplayers @gddummy")
     @CommandAlias("acb|adjustclaimblocks")
-    @Description("Updates a player's accrued claim block total")
+    @Description("Adjusts a player's bonus claim block total by amount specified")
     @Syntax("<player> <amount>")
     @Subcommand("player adjustbonusblocks")
     public void execute(CommandSender src, OfflinePlayer user, int amount, @Optional String worldName) {
@@ -70,19 +70,14 @@ public class CommandAdjustBonusClaimBlocks extends BaseCommand {
             return;
         }
 
-        // parse the adjustment amount
-        int adjustment = amount;
-        //User user = args.<User>getOne("user").get();
-
-        // give blocks to player
         GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(world.getUID(), user.getUniqueId());
-        playerData.setBonusClaimBlocks(playerData.getBonusClaimBlocks() + adjustment);
+        playerData.setBonusClaimBlocks(playerData.getBonusClaimBlocks() + amount);
         final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ADJUST_BONUS_BLOCKS_SUCCESS, ImmutableMap.of(
                 "player", user.getName(),
-                "amount", adjustment,
-                "total", playerData.getBonusClaimBlocks()));
+                "amount", amount,
+                "total", playerData.getBonusClaimBlocks() + amount));
         TextAdapter.sendComponent(src, message);
         GriefDefenderPlugin.getInstance().getLogger().info(
-                src.getName() + " adjusted " + user.getName() + "'s bonus claim blocks by " + adjustment + ".");
+                src.getName() + " adjusted " + user.getName() + "'s bonus claim blocks by " + amount + ".");
     }
 }

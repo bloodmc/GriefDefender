@@ -113,7 +113,12 @@ public class BlockEventHandler implements Listener {
         if (!GDFlags.INVENTORY_ITEM_MOVE || !GriefDefenderPlugin.getGlobalConfig().getConfig().economy.rentSystem) {
             return;
         }
-        final World world = event.getSource().getLocation().getWorld();
+        final Location location = event.getSource().getLocation();
+        if (location == null) {
+            return;
+        }
+
+        final World world = location.getWorld();
         if (!GriefDefenderPlugin.getInstance().claimsEnabledForWorld(world.getUID()) || GriefDefenderPlugin.getInstance().getVaultProvider() == null) {
             return;
         }
@@ -169,12 +174,16 @@ public class BlockEventHandler implements Listener {
             return;
         }
 
+        final boolean pistonProtectionInClaims = GriefDefenderPlugin.getActiveConfig(sourceBlock.getWorld().getUID()).getConfig().claim.pistonProtectionInClaims;
         final GDClaim sourceClaim = this.storage.getClaimAt(sourceBlock.getLocation());
         for (Block block : event.getBlocks()) {
             // always check next block in direction
             final Location location = BlockUtil.getInstance().getBlockRelative(block.getLocation(), event.getDirection());
             final GDClaim targetClaim = this.storage.getClaimAt(location);
-            if (targetClaim.isWilderness() || sourceClaim.getUniqueId().equals(targetClaim.getUniqueId())) {
+            if (targetClaim.isWilderness()) {
+                continue;
+            }
+            if (!pistonProtectionInClaims && sourceClaim.getUniqueId().equals(targetClaim.getUniqueId())) {
                 continue;
             }
 
@@ -612,7 +621,14 @@ public class BlockEventHandler implements Listener {
 
         if (GDFlags.BLOCK_PLACE) {
             // check overrides
-            final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, Flags.BLOCK_PLACE, player, block, player, TrustTypes.BUILDER, true);
+            Object placedBlock = block;
+            if (GriefDefenderPlugin.getInstance().getSlimefunProvider() != null && event.getItemInHand() != null) { 
+                final String customItemId = GriefDefenderPlugin.getInstance().getSlimefunProvider().getSlimeItemId(event.getItemInHand());
+                if (customItemId != null && !customItemId.isEmpty()) {
+                    placedBlock = event.getItemInHand();
+                }
+            }
+            final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, Flags.BLOCK_PLACE, player, placedBlock, player, TrustTypes.BUILDER, true);
             if (result == Tristate.FALSE) {
                 if (!PlayerUtil.getInstance().isFakePlayer(player)) {
                     Component message = GDPermissionManager.getInstance().getEventMessage();
@@ -722,7 +738,7 @@ public class BlockEventHandler implements Listener {
         }
 
         final GriefDefenderConfig<?> activeConfig = GriefDefenderPlugin.getActiveConfig(event.getBlock().getWorld().getUID());
-        if (!activeConfig.getConfig().economy.rentSystem || (!activeConfig.getConfig().economy.isRentSignEnabled() && !activeConfig.getConfig().economy.isSellSignEnabled())) {
+        if (!activeConfig.getConfig().economy.isRentSignEnabled() && !activeConfig.getConfig().economy.isSellSignEnabled()) {
             return;
         }
 
@@ -758,7 +774,7 @@ public class BlockEventHandler implements Listener {
 
 
             SignUtil.setClaimForSale(claim, player, sign, price);
-        } else if (line1.equalsIgnoreCase("rent") && activeConfig.getConfig().economy.isRentSignEnabled()) {
+        } else if (line1.equalsIgnoreCase("rent") && activeConfig.getConfig().economy.isRentSignEnabled() && activeConfig.getConfig().economy.rentSystem) {
             if (!player.hasPermission(GDPermissions.USER_RENT_SIGN)) {
                 return;
             }

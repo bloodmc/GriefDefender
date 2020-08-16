@@ -100,6 +100,8 @@ public class MessageStorage {
     public static final String ABANDON_WORLD_WARNING = "abandon-world-warning";
     public static final String ADJUST_ACCRUED_BLOCKS_SUCCESS = "adjust-accrued-blocks-success";
     public static final String ADJUST_BONUS_BLOCKS_SUCCESS = "adjust-bonus-blocks-success";
+    public static final String ADJUST_BONUS_BLOCKS_ALL_SUCCESS = "adjust-bonus-blocks-all-success";
+    public static final String ADJUST_BONUS_BLOCKS_ALL_WARNING = "adjust-bonus-blocks-all-warning";
     public static final String BANK_DEPOSIT = "bank-deposit";
     public static final String BANK_INFO = "bank-info";
     public static final String BANK_NO_PERMISSION = "bank-no-permission";
@@ -201,6 +203,8 @@ public class MessageStorage {
     public static final String ECONOMY_CLAIM_RENT_CONFIRMATION_MIN = "economy-claim-rent-confirmation-min";
     public static final String ECONOMY_CLAIM_RENT_CONFIRMATION_MIN_MAX = "economy-claim-rent-confirmation-min-max";
     public static final String ECONOMY_CLAIM_RENT_CONFIRMED = "economy-claim-rent-confirmed";
+    public static final String ECONOMY_CLAIM_RENT_END = "economy-claim-rent-end";
+    public static final String ECONOMY_CLAIM_RENT_END_RESTORE = "economy-claim-rent-end-restore";
     public static final String ECONOMY_CLAIM_RENT_INVALID_PRICE = "economy-claim-rent-invalid-price";
     public static final String ECONOMY_CLAIM_RENT_NOT_ENOUGH_FUNDS = "economy-claim-rent-not-enough-funds";
     public static final String ECONOMY_CLAIM_RENT_PAYMENT_FAILURE = "economy-claim-rent-payment-failure";
@@ -214,6 +218,7 @@ public class MessageStorage {
     public static final String ECONOMY_CLAIM_RENTER_CONFIRMATION_MIN = "economy-claim-renter-confirmation-min";
     public static final String ECONOMY_CLAIM_RENTER_CONFIRMATION_MIN_MAX = "economy-claim-renter-confirmation-min-max";
     public static final String ECONOMY_CLAIM_RENTER_CONFIRMED = "economy-claim-renter-confirmed";
+    public static final String ECONOMY_CLAIM_RENTER_END = "economy-claim-renter-end";
     public static final String ECONOMY_CLAIM_RENTED_TIME_WARNING = "economy-claim-rented-time-warning";
     public static final String ECONOMY_CLAIM_RENTED_TIME_WARNING_RESTORE_ = "economy-claim-rented-time-warning-restore";
     public static final String ECONOMY_CLAIM_RENTED_NO_CANCEL = "economy-claim-rented-no-cancel";
