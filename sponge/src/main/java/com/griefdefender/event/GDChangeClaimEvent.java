@@ -64,6 +64,8 @@ public class GDChangeClaimEvent extends GDClaimEvent implements ChangeClaimEvent
 
         public Resize(Claim claim, Location<World> startCorner, Location<World> endCorner) {
             super(claim);
+            this.startCorner = startCorner.getBlockPosition();
+            this.endCorner = endCorner.getBlockPosition();
         }
 
         @Override
