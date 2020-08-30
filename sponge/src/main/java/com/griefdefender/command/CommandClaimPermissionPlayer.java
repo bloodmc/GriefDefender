@@ -130,7 +130,8 @@ public class CommandClaimPermissionPlayer extends BaseCommand {
             return;
         }
 
-        PermissionUtil.getInstance().setPermissionValue(holder, permission, tristateValue, contexts);
+        final GDPermissionHolder targetHolder = PermissionHolderCache.getInstance().getOrCreateUser(user);
+        PermissionUtil.getInstance().setPermissionValue(targetHolder, permission, tristateValue, contexts);
         TextAdapter.sendComponent(player, TextComponent.builder("")
                 .append("Set permission ")
                 .append(permission, TextColor.AQUA)
