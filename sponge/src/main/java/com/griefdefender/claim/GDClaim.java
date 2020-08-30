@@ -1308,14 +1308,10 @@ public class GDClaim implements Claim {
             if (GriefDefenderPlugin.getActiveConfig(this.world.getUniqueId()).getConfig().claim.claimAutoSchematicRestore) {
                 return new GDClaimResult(this, ClaimResultType.FAILURE);
             }
-            startCorner = new Location<>(this.world, minx, miny, minz);
-            endCorner = new Location<>(this.world, maxx, maxy, maxz);
         } else {
             if (!playerData.canIgnoreClaim(this) && GriefDefenderPlugin.getActiveConfig(this.world.getUniqueId()).getConfig().claim.claimAutoSchematicRestore) {
                 return new GDClaimResult(this, ClaimResultType.FAILURE);
             }
-            startCorner = playerData.lastShovelLocation;
-            endCorner = playerData.endShovelLocation;
         }
 
         final int minClaimLevel = this.getOwnerMinClaimLevel();
@@ -1359,6 +1355,8 @@ public class GDClaim implements Claim {
         Vector3i newLesserCorner = new Vector3i(minx, miny, minz);
         Vector3i newGreaterCorner = new Vector3i(maxx, maxy, maxz);
 
+        startCorner = new Location<>(this.world, minx, miny, minz);
+        endCorner = new Location<>(this.world, maxx, maxy, maxz);
         GDChangeClaimEvent.Resize event = new GDChangeClaimEvent.Resize(this, startCorner, endCorner);
         GriefDefender.getEventManager().post(event);
         if (event.cancelled()) {

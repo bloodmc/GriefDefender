@@ -28,6 +28,7 @@ import com.flowpowered.math.vector.Vector3i;
 import com.griefdefender.api.claim.Claim;
 import com.griefdefender.api.claim.ClaimType;
 import com.griefdefender.api.event.ChangeClaimEvent;
+import com.griefdefender.internal.util.VecHelper;
 import org.bukkit.Location;
 
 public class GDChangeClaimEvent extends GDClaimEvent implements ChangeClaimEvent {
@@ -63,6 +64,8 @@ public class GDChangeClaimEvent extends GDClaimEvent implements ChangeClaimEvent
 
         public Resize(Claim claim, Location startCorner, Location endCorner) {
             super(claim);
+            this.startCorner = VecHelper.toVector3i(startCorner);
+            this.endCorner = VecHelper.toVector3i(endCorner);
         }
 
         @Override
