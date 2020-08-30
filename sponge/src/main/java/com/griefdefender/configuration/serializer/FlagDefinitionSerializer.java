@@ -133,7 +133,7 @@ public class FlagDefinitionSerializer implements TypeSerializer<FlagDefinition> 
         }
 
         Set<Context> contexts = new HashSet<>();
-        GDPermissionHolder subject = GriefDefenderPlugin.DEFAULT_HOLDER;
+        GDPermissionHolder subject = GriefDefenderPlugin.GD_DEFINITION_HOLDER;
         if (contextList != null) {
             for (String context : contextList) {
                 final String parts[] = context.split("=");
@@ -168,7 +168,7 @@ public class FlagDefinitionSerializer implements TypeSerializer<FlagDefinition> 
                         if (PermissionUtil.getInstance().hasGroupSubject(value)) {
                             subject = PermissionHolderCache.getInstance().getOrCreateGroup(value);
                             if (subject == null) {
-                                subject = GriefDefenderPlugin.DEFAULT_HOLDER;
+                                subject = GriefDefenderPlugin.GD_DEFINITION_HOLDER;
                             }
                         }
                     }

@@ -149,7 +149,7 @@ public class GDFlagDefinition implements FlagDefinition {
         private boolean isAdmin = false;
         private Set<Context> contexts = new HashSet<>();
         private List<FlagData> data = new ArrayList<>();
-        private Subject subject = GriefDefenderPlugin.DEFAULT_HOLDER;
+        private Subject subject = GriefDefenderPlugin.GD_DEFINITION_HOLDER;
         private String displayName;
         private String groupName;
         private Tristate defaultValue = Tristate.UNDEFINED;
@@ -231,7 +231,7 @@ public class GDFlagDefinition implements FlagDefinition {
             this.groupName = "";
             this.defaultValue = Tristate.UNDEFINED;
             this.description = TextComponent.empty();
-            this.subject = GriefDefenderPlugin.DEFAULT_HOLDER;
+            this.subject = GriefDefenderPlugin.GD_DEFINITION_HOLDER;
             return this;
         }
 
