@@ -1253,7 +1253,9 @@ public class GDClaim implements Claim {
             if (claim.isAdminClaim()) {
                 return false;
             }
-            return true;
+            if (!claim.isUserTrusted(this.ownerUniqueId, TrustTypes.MANAGER)) {
+                return false;
+            }
         }
         return true;
     }
