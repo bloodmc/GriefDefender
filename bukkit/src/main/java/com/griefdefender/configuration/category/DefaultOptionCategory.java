@@ -58,8 +58,8 @@ public class DefaultOptionCategory extends ConfigCategory {
         this.defaultUserOptions.put(Options.CHEST_EXPIRATION.getName(), "7");
         this.defaultUserOptions.put(Options.CREATE_LIMIT.getName(), "-1");
         this.defaultUserOptions.put(Options.CREATE_MODE.getName(), "undefined");
-        this.defaultUserOptions.put(Options.ECONOMY_BLOCK_COST.getName(), "1.0");
-        this.defaultUserOptions.put(Options.ECONOMY_BLOCK_SELL_RETURN.getName(), "1.0");
+        this.defaultUserOptions.put(Options.ECONOMY_BLOCK_COST.getName(), "0.0");
+        this.defaultUserOptions.put(Options.ECONOMY_BLOCK_SELL_RETURN.getName(), "0.0");
         this.defaultUserOptions.put(Options.EXPIRATION.getName(), "14");
         this.defaultUserOptions.put(Options.INITIAL_BLOCKS.getName(), "120");
         this.defaultUserOptions.put(Options.MAX_ACCRUED_BLOCKS.getName(), Integer.toString(maxAccruedBlocks));
