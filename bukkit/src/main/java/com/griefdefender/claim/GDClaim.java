@@ -1005,6 +1005,19 @@ public class GDClaim implements Claim {
 
         this.ownerPlayerData = newOwnerData;
         this.getClaimStorage().save();
+        if (this.isTown()) {
+            // update children
+            for (Claim child : this.children) {
+                if (child.getOwnerUniqueId().equals(ownerData.getUniqueId())) {
+                    ((GDClaim) child).claimData.setOwnerUniqueId(newOwnerID);
+                    ((GDClaim) child).ownerPlayerData = newOwnerData;
+                    if (ownerData.getInternalClaims().remove(child)) {
+                        newOwnerData.getInternalClaims().add(child);
+                    }
+                    ((GDClaim) child).getClaimStorage().save();
+                }
+            }
+        }
         return new GDClaimResult(this, ClaimResultType.SUCCESS);
     }
 
