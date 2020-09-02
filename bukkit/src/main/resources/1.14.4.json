@@ -3,15 +3,15 @@
     "libraries": [
         {
             "name": "com.griefdefender:adapter:1.14.4",
-            "sha1": "79eb86d1c62fe70af428e7ac0cc5279790990ff0",
-            "path": "com/griefdefender/adapter/1.14.4-SNAPSHOT/adapter-1.14.4-20191230.225107-20.jar",
-            "url": "https://repo.glaremasters.me/repository/bloodshot/com/griefdefender/adapter/1.14.4-SNAPSHOT/adapter-1.14.4-20191230.225107-20.jar"
+            "sha1": "c2290d6f4cec30b2fd3d7ae95e4186f7c5493bf4",
+            "path": "com/griefdefender/adapter/1.14.4-SNAPSHOT/adapter-1.14.4-20200815.181454-46.jar",
+            "url": "https://repo.glaremasters.me/repository/bloodshot/com/griefdefender/adapter/1.14.4-SNAPSHOT/adapter-1.14.4-20200815.181454-46.jar"
         },
         {
             "name": "com.griefdefender:api:1.0.0",
-            "sha1": "0bb7ec5bb796298ed269e1cd642e6dd29704698d",
-            "path": "com/griefdefender/api/1.0.0-SNAPSHOT/api-1.0.0-20200505.043120-15.jar",
-            "url": "https://repo.glaremasters.me/repository/bloodshot/com/griefdefender/api/1.0.0-SNAPSHOT/api-1.0.0-20200505.043120-15.jar"
+            "sha1": "2a3f820d12a3bd4c03932018567ab3732517aee5",
+            "path": "com/griefdefender/api/1.0.0-SNAPSHOT/api-1.0.0-20200528.202302-24.jar",
+            "url": "https://repo.glaremasters.me/repository/bloodshot/com/griefdefender/api/1.0.0-SNAPSHOT/api-1.0.0-20200528.202302-24.jar"
         },
         {
             "name": "com.griefdefender:reflect-helper:1.0",
@@ -117,18 +117,18 @@
             "url": "https://repo1.maven.org/maven2/javax/inject/javax.inject/1/javax.inject-1.jar"
         },
         {
-            "name": "com.squareup.okhttp3:okhttp:3.14.2",
-            "sha1": "eaed79ed6bc1e14fad462172b6a09524545b165c",
-            "path": "com/squareup/okhttp3/okhttp/3.14.2/okhttp-3.14.2.jar",
+            "name": "com.squareup.okhttp3:okhttp:4.7.2",
+            "sha1": "c9acfd63537db1d7d21d98a7405e22449bb881d6",
+            "path": "com/squareup/okhttp3/okhttp/4.7.2/okhttp-4.7.2.jar",
             "relocate": "okhttp3:okhttp3",
-            "url": "https://repo1.maven.org/maven2/com/squareup/okhttp3/okhttp/3.14.2/okhttp-3.14.2.jar"
+            "url": "https://repo1.maven.org/maven2/com/squareup/okhttp3/okhttp/4.7.2/okhttp-4.7.2.jar"
         },
         {
-            "name": "com.squareup.okio:okio:2.2.2",
-            "sha1": "36f483536153f15339a8b48d508e22be7c9c531a",
-            "path": "com/squareup/okio/okio/2.2.2/okio-2.2.2.jar",
+            "name": "com.squareup.okio:okio:2.6.0",
+            "sha1": "0f06923d428f3c8e6f571043ec29a45d0cd9d2bf",
+            "path": "com/squareup/okio/okio/2.6.0/okio-2.6.0.jar",
             "relocate": "okio:okio",
-            "url": "https://repo1.maven.org/maven2/com/squareup/okio/okio/2.2.2/okio-2.2.2.jar"
+            "url": "https://repo1.maven.org/maven2/com/squareup/okio/okio/2.6.0/okio-2.6.0.jar"
         },
         {
             "name": "com.github.ben-manes.caffeine:caffeine:2.7.0",
@@ -194,11 +194,11 @@
             "url": "https://repo1.maven.org/maven2/it/unimi/dsi/fastutil/8.2.3/fastutil-8.2.3.jar"
         },
         {
-            "name": "org.jetbrains.kotlin:kotlin-stdlib:1.3.31",
-            "sha1": "11289d20fd95ae219333f3456072be9f081c30cc",
-            "path": "org/jetbrains/kotlin/kotlin-stdlib/1.3.31/kotlin-stdlib-1.3.31.jar",
-            "relocate": "org.jetbrains:jetbrains",
-            "url": "https://repo1.maven.org/maven2/org/jetbrains/kotlin/kotlin-stdlib/1.3.31/kotlin-stdlib-1.3.31.jar"
+            "name": "org.jetbrains.kotlin:kotlin-stdlib:1.3.72",
+            "sha1": "8032138f12c0180bc4e51fe139d4c52b46db6109",
+            "path": "org/jetbrains/kotlin/kotlin-stdlib/1.3.72/kotlin-stdlib-1.3.72.jar",
+            "relocate": "kotlin:kotlin",
+            "url": "https://repo1.maven.org/maven2/org/jetbrains/kotlin/kotlin-stdlib/1.3.72/kotlin-stdlib-1.3.72.jar"
         },
         {
             "name": "net.kyori:event-api:3.0.0",
@@ -219,46 +219,46 @@
             "url": "https://repo1.maven.org/maven2/net/kyori/event-method-asm/3.0.0/event-method-asm-3.0.0.jar"
         },
         {
-            "name": "net.kyori:text-adapter-bukkit:3.0.3",
-            "sha1": "37033ab1173d73a62a087cbd5c8d356774f4cee3",
-            "path": "net/kyori/text-adapter-bukkit/3.0.3/text-adapter-bukkit-3.0.3.jar",
-            "url": "https://repo1.maven.org/maven2/net/kyori/text-adapter-bukkit/3.0.3/text-adapter-bukkit-3.0.3.jar"
+            "name": "net.kyori:text-adapter-bukkit:3.0.5",
+            "sha1": "00f1b0dcf5a92da9172ea911695c0021eed445cb",
+            "path": "net/kyori/text-adapter-bukkit/3.0.5/text-adapter-bukkit-3.0.5.jar",
+            "url": "https://repo1.maven.org/maven2/net/kyori/text-adapter-bukkit/3.0.5/text-adapter-bukkit-3.0.5.jar"
         },
         {
-            "name": "net.kyori:text-adapter-bungeecord:3.0.2",
-            "sha1": "d57c245bdc182bdf37d1b7a32691859add018a2b",
-            "path": "net/kyori/text-adapter-bungeecord/3.0.2/text-adapter-bungeecord-3.0.2.jar",
-            "url": "https://repo1.maven.org/maven2/net/kyori/text-adapter-bungeecord/3.0.2/text-adapter-bungeecord-3.0.2.jar"
+            "name": "net.kyori:text-adapter-bungeecord:3.0.5",
+            "sha1": "3d4d18e691d8319cb3f2e42cedaaa18c7b1b324c",
+            "path": "net/kyori/text-adapter-bungeecord/3.0.5/text-adapter-bungeecord-3.0.5.jar",
+            "url": "https://repo1.maven.org/maven2/net/kyori/text-adapter-bungeecord/3.0.5/text-adapter-bungeecord-3.0.5.jar"
         },
         {
-            "name": "net.kyori:text-adapter-spongeapi:3.0.2",
-            "sha1": "8562afb1594a9d34b891f23add503741d0656873",
-            "path": "net/kyori/text-adapter-spongeapi/3.0.2/text-adapter-spongeapi-3.0.2.jar",
-            "url": "https://repo1.maven.org/maven2/net/kyori/text-adapter-spongeapi/3.0.2/text-adapter-spongeapi-3.0.2.jar"
+            "name": "net.kyori:text-adapter-spongeapi:3.0.5",
+            "sha1": "ce0217b7ac94d464074a916de58d86c1bac4f4b0",
+            "path": "net/kyori/text-adapter-spongeapi/3.0.5/text-adapter-spongeapi-3.0.5.jar",
+            "url": "https://repo1.maven.org/maven2/net/kyori/text-adapter-spongeapi/3.0.5/text-adapter-spongeapi-3.0.5.jar"
         },
         {
-            "name": "net.kyori:text-api:3.0.2",
-            "sha1": "608cdb44a74bbd68745941760df730ed55e4b47c",
-            "path": "net/kyori/text-api/3.0.2/text-api-3.0.2.jar",
-            "url": "https://repo1.maven.org/maven2/net/kyori/text-api/3.0.2/text-api-3.0.2.jar"
+            "name": "net.kyori:text-api:3.0.4",
+            "sha1": "3f6844794af6769053337f21e6ac544d88181fd9",
+            "path": "net/kyori/text-api/3.0.4/text-api-3.0.4.jar",
+            "url": "https://repo1.maven.org/maven2/net/kyori/text-api/3.0.4/text-api-3.0.4.jar"
         },
         {
-            "name": "net.kyori:text-serializer-gson:3.0.2",
-            "sha1": "9ac22f04f3504c52ff1618c5a8d9a6145d8d9c9e",
-            "path": "net/kyori/text-serializer-gson/3.0.2/text-serializer-gson-3.0.2.jar",
-            "url": "https://repo1.maven.org/maven2/net/kyori/text-serializer-gson/3.0.2/text-serializer-gson-3.0.2.jar"
+            "name": "net.kyori:text-serializer-gson:3.0.4",
+            "sha1": "d9e3e97a60bf64690f633f16278117b1c0702c27",
+            "path": "net/kyori/text-serializer-gson/3.0.4/text-serializer-gson-3.0.4.jar",
+            "url": "https://repo1.maven.org/maven2/net/kyori/text-serializer-gson/3.0.4/text-serializer-gson-3.0.4.jar"
         },
         {
-            "name": "net.kyori:text-serializer-legacy:3.0.2",
-            "sha1": "8acbfb36356259273a8e3a15782e4f2980375bc5",
-            "path": "net/kyori/text-serializer-legacy/3.0.2/text-serializer-legacy-3.0.2.jar",
-            "url": "https://repo1.maven.org/maven2/net/kyori/text-serializer-legacy/3.0.2/text-serializer-legacy-3.0.2.jar"
+            "name": "net.kyori:text-serializer-legacy:3.0.4",
+            "sha1": "925bad50c7221713fe6ada7a42686df584969017",
+            "path": "net/kyori/text-serializer-legacy/3.0.4/text-serializer-legacy-3.0.4.jar",
+            "url": "https://repo1.maven.org/maven2/net/kyori/text-serializer-legacy/3.0.4/text-serializer-legacy-3.0.4.jar"
         },
         {
-            "name": "net.kyori:text-serializer-plain:3.0.2",
-            "sha1": "8d60703f579019f7c26959d2e46501c3d389b48d",
-            "path": "net/kyori/text-serializer-plain/3.0.2/text-serializer-plain-3.0.2.jar",
-            "url": "https://repo1.maven.org/maven2/net/kyori/text-serializer-plain/3.0.2/text-serializer-plain-3.0.2.jar"
+            "name": "net.kyori:text-serializer-plain:3.0.4",
+            "sha1": "b5b9ca6a4be956542934ca699091a3b8ea169c19",
+            "path": "net/kyori/text-serializer-plain/3.0.4/text-serializer-plain-3.0.4.jar",
+            "url": "https://repo1.maven.org/maven2/net/kyori/text-serializer-plain/3.0.4/text-serializer-plain-3.0.4.jar"
         }
     ]
 }

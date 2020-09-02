@@ -127,7 +127,6 @@ public class CommandUntrustPlayer extends BaseCommand {
             return;
         }
 
-        System.out.println("Removing user " + user.getUniqueId());
         final GDClaim gdClaim = (GDClaim) claim;
         if (trustType == TrustTypes.NONE) {
             this.removeAllUserTrust(gdClaim, user);

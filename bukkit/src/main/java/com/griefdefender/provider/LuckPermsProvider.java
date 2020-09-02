@@ -24,23 +24,29 @@
  */
 package com.griefdefender.provider;
 
-import com.github.benmanes.caffeine.cache.Cache;
 import com.google.common.collect.ImmutableSet;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.Tristate;
 import com.griefdefender.api.claim.Claim;
 import com.griefdefender.api.permission.Context;
+import com.griefdefender.api.permission.ContextKeys;
 import com.griefdefender.api.permission.PermissionResult;
 import com.griefdefender.api.permission.ResultTypes;
+import com.griefdefender.api.permission.flag.FlagData;
+import com.griefdefender.api.permission.flag.FlagDefinition;
 import com.griefdefender.api.permission.option.Option;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.ClaimContextCalculator;
 import com.griefdefender.claim.GDClaim;
+import com.griefdefender.listener.LuckPermsEventHandler;
+import com.griefdefender.permission.GDPermissionGroup;
 import com.griefdefender.permission.GDPermissionHolder;
 import com.griefdefender.permission.GDPermissionResult;
 import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.registry.OptionRegistryModule;
+import com.griefdefender.util.PermissionUtil;
+
 import net.kyori.text.TextComponent;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.cacheddata.CachedMetaData;
@@ -62,25 +68,28 @@ import net.luckperms.api.query.QueryMode;
 import net.luckperms.api.query.QueryOptions;
 import net.luckperms.api.query.dataorder.DataQueryOrder;
 import net.luckperms.api.query.dataorder.DataQueryOrderFunction;
+import net.luckperms.api.query.dataorder.DataTypeFilter;
+import net.luckperms.api.query.dataorder.DataTypeFilterFunction;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
 import java.util.Map.Entry;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Predicate;
 
-import org.apache.commons.io.FilenameUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 public class LuckPermsProvider implements PermissionProvider {
 
@@ -99,10 +108,14 @@ public class LuckPermsProvider implements PermissionProvider {
 
     private final LuckPerms luckPermsApi;
     private final static DefaultDataQueryOrderFunction DEFAULT_DATA_QUERY_ORDER = new DefaultDataQueryOrderFunction();
+    private final static DefaultPersistentOnlyDataFilter DEFAULT_PERSISTENT_ONLY = new DefaultPersistentOnlyDataFilter();
+    private final static DefaultTransientOnlyDataFilter DEFAULT_TRANSIENT_ONLY = new DefaultTransientOnlyDataFilter();
+    private final static UserPersistentOnlyDataFilter USER_PERSISTENT_ONLY = new UserPersistentOnlyDataFilter();
 
     public LuckPermsProvider() {
         this.luckPermsApi = Bukkit.getServicesManager().getRegistration(LuckPerms.class).getProvider();
         this.luckPermsApi.getContextManager().registerCalculator(new ClaimContextCalculator());
+        new LuckPermsEventHandler(this.luckPermsApi);
     }
 
     public LuckPerms getApi() {
@@ -120,9 +133,6 @@ public class LuckPermsProvider implements PermissionProvider {
     }
 
     public PermissionHolder getLuckPermsHolder(GDPermissionHolder holder) {
-        if (holder.getIdentifier().equalsIgnoreCase("default")) {
-            return this.luckPermsApi.getGroupManager().getGroup("default");
-        }
         if (holder instanceof GDPermissionUser) {
             return this.getLuckPermsUser(holder.getIdentifier());
         }
@@ -139,23 +149,100 @@ public class LuckPermsProvider implements PermissionProvider {
             } catch (IllegalArgumentException e) {
                 e.printStackTrace();
             }
+        } else {
+            user = this.luckPermsApi.getUserManager().getUser(identifier);
+            if (user == null) {
+                try {
+                    uuid = this.luckPermsApi.getUserManager().lookupUniqueId(identifier).get();
+                } catch (Throwable t) {
+                    // ignore
+                }
+            }
         }
         if (uuid != null) {
             user = this.getUserSubject(uuid);
         }
 
-        if (user == null) {
-            user = this.luckPermsApi.getUserManager().getUser(identifier);
-        }
-
         return user;
     }
 
-    public Group getLuckPermsGroup(String identifier) {
-        if (identifier.equalsIgnoreCase("default")) {
-            return this.luckPermsApi.getGroupManager().getGroup("default");
+    public boolean createDefaultGroup(String identifier) {
+        Group  group = this.luckPermsApi.getGroupManager().getGroup(identifier);
+        if (group == null) {
+            try {
+                GriefDefenderPlugin.getInstance().getLogger().info("Creating group '" + identifier + "' in LuckPerms...");
+                final String dataType = identifier.replaceAll("griefdefender_", "");
+                group = this.luckPermsApi.getGroupManager().createAndLoadGroup(identifier).get();
+                GriefDefenderPlugin.getInstance().getLogger().info("Group created successfully.");
+                if (group != null) {
+                    final Group defaultGroup = this.luckPermsApi.getGroupManager().getGroup("default");
+                    if (defaultGroup != null) {
+                        GriefDefenderPlugin.getInstance().getLogger().info("Migrating legacy " + dataType + " permissions from 'default' to '" + identifier + "'...");
+                        final Node node = this.luckPermsApi.getNodeBuilderRegistry().forInheritance().group(group).build();
+                        // move all existing GD permissions to new group
+                        List<Node> nodesToRemove = new ArrayList<>();
+                        for (Node permNode : defaultGroup.data().toCollection()) {
+                            if (!permNode.getKey().contains("griefdefender")) {
+                                continue;
+                            }
+                            if (permNode.getType() == NodeType.META) {
+                                if (permNode.getKey().contains("griefdefender") && identifier.equals(GriefDefenderPlugin.GD_OPTION_GROUP_NAME)) {
+                                    GriefDefenderPlugin.getInstance().getLogger().info("Found legacy option node [Key: " + permNode.getKey() + ", Value: " + permNode.getValue() + ", Contexts: " + permNode.getContexts() + "].\nAdding option node to group '" + identifier + "'...");
+                                    group.data().add(permNode);
+                                    nodesToRemove.add(permNode);
+                                }
+                                continue;
+                            }
+                            if (permNode.getType() != NodeType.PERMISSION) {
+                                continue;
+                            }
+                            if (identifier.equals(GriefDefenderPlugin.GD_OVERRIDE_GROUP_NAME)) {
+                                if (permNode.getContexts().containsKey(ContextKeys.CLAIM_OVERRIDE)) {
+                                    GriefDefenderPlugin.getInstance().getLogger().info("Found legacy override permission node [Key: " + permNode.getKey() + ", Value: " + permNode.getValue() + ", Contexts: " + permNode.getContexts() + "].\nAdding permission node to group '" + identifier + "'...");
+                                    group.data().add(permNode);
+                                    nodesToRemove.add(permNode);
+                                }
+                                continue;
+                            } else if (identifier.equals(GriefDefenderPlugin.GD_CLAIM_GROUP_NAME)) {
+                                if (permNode.getContexts().containsKey(ContextKeys.CLAIM)) {
+                                    GriefDefenderPlugin.getInstance().getLogger().info("Found legacy claim permission node [Key: " + permNode.getKey() + ", Value: " + permNode.getValue() + ", Contexts: " + permNode.getContexts() + "].\nAdding permission node to group '" + identifier + "'...");
+                                    group.data().add(permNode);
+                                    nodesToRemove.add(permNode);
+                                }
+                                continue;
+                            } else if (identifier.equals(GriefDefenderPlugin.GD_DEFAULT_GROUP_NAME)) {
+                                if (!permNode.getContexts().isEmpty()) {
+                                    GriefDefenderPlugin.getInstance().getLogger().info("Found legacy default permission node [Key: " + permNode.getKey() + ", Value: " + permNode.getValue() + ", Contexts: " + permNode.getContexts() + "].\nAdding permission node to group '" + identifier + "'...");
+                                    group.data().add(permNode);
+                                    nodesToRemove.add(permNode);
+                                }
+                            }
+                        }
+                        if (!nodesToRemove.isEmpty()) {
+                            GriefDefenderPlugin.getInstance().getLogger().info("Removing legacy permission nodes from 'default' group...");
+                        }
+                        for (Node rem : nodesToRemove) {
+                            defaultGroup.data().remove(rem);
+                        }
+                        if (!nodesToRemove.isEmpty()) {
+                            GriefDefenderPlugin.getInstance().getLogger().info("Cleanup complete.");
+                        }
+                        final DataMutateResult result = defaultGroup.data().add(node);
+                        GriefDefenderPlugin.getInstance().getLogger().info("Saving permission changes to 'default'...");
+                        this.luckPermsApi.getGroupManager().saveGroup(defaultGroup).get();
+                        GriefDefenderPlugin.getInstance().getLogger().info("Saving permission changes to '" + identifier + "'...");
+                        this.luckPermsApi.getGroupManager().saveGroup(group).get();
+                        GriefDefenderPlugin.getInstance().getLogger().info("Migration to group '" + identifier + "' complete.");
+                    }
+                }
+            } catch (Throwable t) {
+                t.printStackTrace();
+            }
         }
+        return group != null;
+    }
 
+    public Group getLuckPermsGroup(String identifier) {
         return this.luckPermsApi.getGroupManager().getGroup(identifier);
     }
 
@@ -264,10 +351,10 @@ public class LuckPermsProvider implements PermissionProvider {
 
     public void clearPermissions(GDClaim claim) {
         // check default holder
-        this.clearPermission(claim.getUniqueId(), GriefDefenderPlugin.DEFAULT_HOLDER);
+        this.clearPermission(claim.getUniqueId(), GriefDefenderPlugin.GD_CLAIM_HOLDER);
         // check loaded groups
         for (Group group : this.luckPermsApi.getGroupManager().getLoadedGroups()) {
-            if (group.getName().equalsIgnoreCase("default")) {
+            if (group.getName().equalsIgnoreCase(GriefDefenderPlugin.DEFAULT_GROUP_NAME) || group.getName().startsWith("griefdefender_")) {
                 continue;
             }
             final GDPermissionHolder holder = PermissionHolderCache.getInstance().getOrCreateGroup(group.getName());
@@ -395,6 +482,37 @@ public class LuckPermsProvider implements PermissionProvider {
             }
         }
 
+        return permanentPermissionMap;
+    }
+
+    public Map<Set<Context>, Map<String, Boolean>> getAllPermanentPermissions() {
+        Map<Set<Context>, Map<String, Boolean>> permanentPermissionMap = new TreeMap<Set<Context>, Map<String, Boolean>>(CONTEXT_COMPARATOR);
+        this.addAllPermanentPermissions(this.getLuckPermsHolder(GriefDefenderPlugin.GD_CLAIM_HOLDER), permanentPermissionMap);
+        this.addAllPermanentPermissions(this.getLuckPermsHolder(GriefDefenderPlugin.GD_DEFAULT_HOLDER), permanentPermissionMap);
+        this.addAllPermanentPermissions(this.getLuckPermsHolder(GriefDefenderPlugin.GD_DEFINITION_HOLDER), permanentPermissionMap);
+        this.addAllPermanentPermissions(this.getLuckPermsHolder(GriefDefenderPlugin.GD_OPTION_HOLDER), permanentPermissionMap);
+        this.addAllPermanentPermissions(this.getLuckPermsHolder(GriefDefenderPlugin.GD_OVERRIDE_HOLDER), permanentPermissionMap);
+        return permanentPermissionMap;
+    }
+
+    private Map<Set<Context>, Map<String, Boolean>> addAllPermanentPermissions(PermissionHolder holder, Map<Set<Context>, Map<String, Boolean>> permanentPermissionMap) {
+        final Collection<Node> nodes = holder.data().toCollection();
+        for (Node node : nodes) {
+            if (node.getType() != NodeType.PERMISSION) {
+                continue;
+            }
+
+            final PermissionNode permissionNode = (PermissionNode) node;
+            final Set<Context> contexts = getGPContexts(node.getContexts());
+            Map<String, Boolean> permissionEntry = permanentPermissionMap.get(contexts);
+            if (permissionEntry == null) {
+                permissionEntry = new HashMap<>();
+                permissionEntry.put(permissionNode.getPermission(), node.getValue());
+                permanentPermissionMap.put(contexts, permissionEntry);
+            } else {
+                permissionEntry.put(permissionNode.getPermission(), node.getValue());
+            }
+        }
         return permanentPermissionMap;
     }
 
@@ -562,6 +680,21 @@ public class LuckPermsProvider implements PermissionProvider {
         return gpContexts;
     }
 
+    @Override
+    public Tristate getPermissionValue(GDPermissionHolder holder, String permission, Set<Context> contexts) {
+        return this.getPermissionValue(holder, permission, contexts, PermissionDataType.PERSISTENT);
+    }
+
+    @Override
+    public Tristate getPermissionValue(GDClaim claim, GDPermissionHolder holder, String permission, Set<Context> contexts) {
+        return this.getPermissionValue(holder, permission, contexts);
+    }
+
+    @Override
+    public Tristate getPermissionValue(GDClaim claim, GDPermissionHolder holder, String permission, Set<Context> contexts, PermissionDataType type) {
+        return this.getPermissionValue(holder, permission, contexts, type);
+    }
+
     public Tristate getPermissionValue(GDPermissionHolder holder, String permission) {
         final Set<Context> contexts = new HashSet<>();
         this.checkServerContext(contexts);
@@ -569,136 +702,36 @@ public class LuckPermsProvider implements PermissionProvider {
         return this.getPermissionValue(holder, permission, set);
     }
 
-    
-    public Tristate getPermissionValue(GDClaim claim, GDPermissionHolder holder, String permission, MutableContextSet contexts) {
-        return this.getPermissionValue(claim, holder, permission, this.getGDContexts(contexts));
+    public Tristate getPermissionValue(GDPermissionHolder holder, String permission, MutableContextSet contexts) {
+        return this.getPermissionValue(holder, permission, this.getGDContexts(contexts));
     }
 
-    public Tristate getPermissionValue(GDClaim claim, GDPermissionHolder holder, String permission, Set<Context> contexts) {
+    public Tristate getPermissionValue(GDPermissionHolder holder, String permission, Set<Context> contexts, PermissionDataType type) {
         this.checkServerContext(contexts);
         ImmutableContextSet contextSet = this.getLPContexts(contexts).immutableCopy();
-        return this.getPermissionValue(holder, permission, contextSet);
-    }
-
-    public Tristate getPermissionValue(GDClaim claim, GDPermissionHolder holder, String permission, Set<Context> contexts, boolean checkTransient) {
-        final Set<Context> activeContexts = new HashSet<>();
-        this.addActiveContexts(activeContexts, holder, null, claim);
-        contexts.addAll(activeContexts);
-        this.checkServerContext(contexts);
-        final int contextHash =  Objects.hash(claim, holder, permission, contexts);
-        final Cache<Integer, Tristate> cache = PermissionHolderCache.getInstance().getOrCreatePermissionCache(holder);
-        Tristate result = cache.getIfPresent(contextHash);
-        if (result != null) {
-            return result;
-        }
-        // check persistent permissions first
-        Map<Set<Context>, Map<String, Boolean>> permanentPermissions = getPermanentPermissions(holder);
-        for (Entry<Set<Context>, Map<String, Boolean>> entry : permanentPermissions.entrySet()) {
-            if (entry.getKey().isEmpty()) {
-                continue;
-            }
-            boolean match = true;
-            for (Context context : entry.getKey()) {
-                if (!contexts.contains(context)) {
-                    match = false;
-                    break;
-                }
-            }
-            if (match) {
-                for (Map.Entry<String, Boolean> permEntry : entry.getValue().entrySet()) {
-                    if (FilenameUtils.wildcardMatch(permission, permEntry.getKey())) {
-                        final Tristate value = Tristate.fromBoolean(permEntry.getValue());
-                        cache.put(contextHash, value);
-                        return value;
-                    }
-                }
-                // If we get here, continue on normally
-                continue;
-            }
-        }
-
-        if (!checkTransient) {
-            return Tristate.UNDEFINED;
-        }
-
-        // check transient permissions last
-        Map<Set<Context>, Map<String, Boolean>> transientPermissions = getTransientPermissions(holder);
-        for (Entry<Set<Context>, Map<String, Boolean>> entry : transientPermissions.entrySet()) {
-            if (entry.getKey().isEmpty()) {
-                continue;
-            }
-            boolean match = true;
-            for (Context context : entry.getKey()) {
-                if (!contexts.contains(context)) {
-                    match = false;
-                    break;
-                }
-            }
-            if (match) {
-                for (Map.Entry<String, Boolean> permEntry : entry.getValue().entrySet()) {
-                    if (FilenameUtils.wildcardMatch(permission, permEntry.getKey())) {
-                        final Tristate value = Tristate.fromBoolean(permEntry.getValue());
-                        cache.put(contextHash, value);
-                        return value;
-                    }
-                }
-                // If we get here, continue on normally
-                continue;
-            }
-        }
-
-        cache.put(contextHash, Tristate.UNDEFINED);
-        return Tristate.UNDEFINED;
-    }
-
-    public Tristate getPermissionValueWithRequiredContexts(GDClaim claim, GDPermissionHolder holder, String permission, Set<Context> contexts, String contextFilter) {
-        Map<Set<Context>, Map<String, Boolean>> permanentPermissions = getPermanentPermissions(holder);
-        for (Entry<Set<Context>, Map<String, Boolean>> entry : permanentPermissions.entrySet()) {
-            if (entry.getKey().isEmpty()) {
-                continue;
-            }
-            boolean match = true;
-            for (Context context : entry.getKey()) {
-                if (!contexts.contains(context)) {
-                    match = false;
-                    break;
-                }
-            }
-
-            // Check for required contexts
-            for (Context context : contexts) {
-                if (!context.getKey().contains(contextFilter) && !context.getKey().equalsIgnoreCase("world")) {
-                    if (!entry.getKey().contains(context)) {
-                        match = false;
-                        break;
-                    }
-                }
-            }
-            if (match) {
-                for (Map.Entry<String, Boolean> permEntry : entry.getValue().entrySet()) {
-                    if (FilenameUtils.wildcardMatch(permission, permEntry.getKey())) {
-                        final Tristate value = Tristate.fromBoolean(permEntry.getValue());
-                        return value;
-                    }
-                }
-            }
-        }
-        return Tristate.UNDEFINED;
-    }
-
-    public Tristate getPermissionValue(GDPermissionHolder holder, String permission, Set<Context> contexts) {
-        this.checkServerContext(contexts);
-        ImmutableContextSet contextSet = this.getLPContexts(contexts).immutableCopy();
-        return this.getPermissionValue(holder, permission, contextSet);
+        return this.getPermissionValue(holder, permission, contextSet, type);
     }
 
     public Tristate getPermissionValue(GDPermissionHolder holder, String permission, ContextSet contexts) {
-        final PermissionHolder permissionHolder = this.getLuckPermsHolder(holder);
+        return this.getPermissionValue(holder, permission, contexts, PermissionDataType.PERSISTENT);
+    }
+
+    public Tristate getPermissionValue(GDPermissionHolder holder, String permission, ContextSet contexts, PermissionDataType type) {
+        final PermissionHolder permissionHolder = type == PermissionDataType.TRANSIENT ? this.getLuckPermsHolder(GriefDefenderPlugin.GD_DEFAULT_HOLDER) : this.getLuckPermsHolder(holder);
         if (permissionHolder == null) {
             return Tristate.UNDEFINED;
         }
 
-        final QueryOptions query = QueryOptions.builder(QueryMode.CONTEXTUAL).option(DataQueryOrderFunction.KEY, DEFAULT_DATA_QUERY_ORDER).context(contexts).build();
+        QueryOptions query = null;
+        if (type == PermissionDataType.TRANSIENT) {
+            query = QueryOptions.builder(QueryMode.CONTEXTUAL).option(DataQueryOrderFunction.KEY, DEFAULT_DATA_QUERY_ORDER).option(DataTypeFilterFunction.KEY, DEFAULT_TRANSIENT_ONLY).context(contexts).build();
+        } else if (type == PermissionDataType.PERSISTENT) {
+            query = QueryOptions.builder(QueryMode.CONTEXTUAL).option(DataQueryOrderFunction.KEY, DEFAULT_DATA_QUERY_ORDER).option(DataTypeFilterFunction.KEY, DEFAULT_PERSISTENT_ONLY).context(contexts).build();
+        } else if (type == PermissionDataType.USER_PERSISTENT) {
+            query = QueryOptions.builder(QueryMode.CONTEXTUAL).option(DataQueryOrderFunction.KEY, DEFAULT_DATA_QUERY_ORDER).option(DataTypeFilterFunction.KEY, USER_PERSISTENT_ONLY).context(contexts).build();
+        } else {
+            query = QueryOptions.builder(QueryMode.CONTEXTUAL).option(DataQueryOrderFunction.KEY, DEFAULT_DATA_QUERY_ORDER).context(contexts).build();
+        }
         CachedPermissionData cachedData = permissionHolder.getCachedData().getPermissionData(query);
         return getGDTristate(cachedData.checkPermission(permission));
     }
@@ -738,37 +771,185 @@ public class LuckPermsProvider implements PermissionProvider {
         return list;
     }
 
-    public PermissionResult setOptionValue(GDPermissionHolder holder, String key, String value, Set<Context> contexts, boolean check) {
-        DataMutateResult result = null;
+    public CompletableFuture<PermissionResult> setOptionValue(GDPermissionHolder holder, String key, String value, Set<Context> contexts, boolean check) {
+        if (check) {
+            // If no server context exists, add global
+            this.checkServerContext(contexts);
+        }
+        if (holder == GriefDefenderPlugin.DEFAULT_HOLDER) {
+            holder = GriefDefenderPlugin.GD_OPTION_HOLDER;
+        }
+        ImmutableContextSet set = this.getLPContexts(contexts).immutableCopy();
+        final Node node = MetaNode.builder().key(key).value(value).context(set).build();
+        return this.createOptionFuture(holder, node, key, value, false);
+    }
+
+    public CompletableFuture<PermissionResult> setPermissionValue(GDPermissionHolder holder, String permission, Tristate value, Set<Context> contexts, boolean check, boolean save) {
         if (check) {
             // If no server context exists, add global
             this.checkServerContext(contexts);
         }
         ImmutableContextSet set = this.getLPContexts(contexts).immutableCopy();
-        final PermissionHolder permissionHolder = this.getLuckPermsHolder(holder);
-        if (permissionHolder == null) {
-            new GDPermissionResult(ResultTypes.FAILURE);
+        final Node node = this.luckPermsApi.getNodeBuilderRegistry().forPermission().permission(permission).value(value.asBoolean()).context(set).build();
+        return this.createPermissionFuture(PermissionUtil.getInstance().getGDPermissionHolder(holder, contexts), Arrays.asList(node), value, false);
+    }
+
+    @Override
+    public CompletableFuture<PermissionResult> setFlagDefinition(GDPermissionHolder holder, FlagDefinition definition, Tristate value, Set<Context> contexts, boolean isTransient) {
+        final List<Node> nodes = new ArrayList<>();
+        for (FlagData flagData : definition.getFlagData()) {
+            for (Context context : contexts) {
+                Set<Context> permissionContexts = new HashSet<>(flagData.getContexts());
+                permissionContexts.add(context);
+                // If no server context exists, add global
+                this.checkServerContext(permissionContexts);
+                ImmutableContextSet set = this.getLPContexts(permissionContexts).immutableCopy();
+                final Node node = this.luckPermsApi.getNodeBuilderRegistry().forPermission().permission(flagData.getFlag().getPermission()).value(value.asBoolean()).context(set).build();
+                nodes.add(node);
+            }
         }
 
+        return this.createPermissionFuture(GriefDefenderPlugin.GD_DEFINITION_HOLDER, nodes, value, isTransient);
+    }
+
+    public CompletableFuture<PermissionResult> setTransientOption(GDPermissionHolder holder, String key, String value, Set<Context> contexts) {
+        // If no server context exists, add global
+        this.checkServerContext(contexts);
+        MutableContextSet contextSet = this.getLPContexts(contexts);
+        if (holder == GriefDefenderPlugin.DEFAULT_HOLDER) {
+            holder = GriefDefenderPlugin.GD_OPTION_HOLDER;
+        }
+        Node node = null;
+        if (value == null) {
+            node = MetaNode.builder().key(key).context(contextSet).build();
+        } else {
+            node = MetaNode.builder().key(key).value(value).context(contextSet).build();
+        }
+        return this.createOptionFuture(holder, node, key, value, true);
+    }
+
+    public CompletableFuture<PermissionResult> setTransientPermission(GDPermissionHolder holder, String permission, Tristate value, Set<Context> contexts) {
+        // If no server context exists, add global
+        this.checkServerContext(contexts);
+        MutableContextSet contextSet = this.getLPContexts(contexts);
+        if (holder == GriefDefenderPlugin.DEFAULT_HOLDER) {
+            holder = GriefDefenderPlugin.GD_OPTION_HOLDER;
+        }
+        final Node node = this.luckPermsApi.getNodeBuilderRegistry().forPermission().permission(permission).value(value.asBoolean()).context(contextSet).build();
+        return this.createPermissionFuture(PermissionUtil.getInstance().getGDPermissionHolder(holder, contexts), Arrays.asList(node), value, true);
+    }
+
+    private CompletableFuture<PermissionResult> createOptionFuture(GDPermissionHolder holder, Node node, String key, String value, boolean isTransient) {
+        if (holder instanceof GDPermissionGroup) {
+            return CompletableFuture.supplyAsync(() -> {
+                Group group = null;
+                try {
+                    group = this.luckPermsApi.getGroupManager().loadGroup(holder.getFriendlyName()).get().orElse(null);
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                }
+                if (group != null) {
+                    if (isTransient) {
+                        return this.applyTransientOptionNode(holder, group, node, value);
+                    }
+                    return this.applyOptionNode(holder, group, node, key, value);
+                }
+                return new GDPermissionResult(ResultTypes.FAILURE, TextComponent.builder().append("COULD NOT LOAD GROUP " + holder.getFriendlyName()).build());
+            }, GriefDefenderPlugin.getInstance().executor);
+         } else {
+             return CompletableFuture.supplyAsync(() -> {
+                 User user = null;
+                 try {
+                     user = this.luckPermsApi.getUserManager().loadUser(((GDPermissionUser) holder).getUniqueId()).get();
+                 } catch (Throwable t) {
+                     t.printStackTrace();
+                 }
+                 if (user != null) {
+                     if (isTransient) {
+                         return this.applyTransientOptionNode(holder, user, node, value);
+                     }
+                     return this.applyOptionNode(holder, user, node, key, value);
+                 }
+                 return new GDPermissionResult(ResultTypes.FAILURE, TextComponent.builder().append("COULD NOT LOAD USER " + holder.getFriendlyName()).build());
+             }, GriefDefenderPlugin.getInstance().executor);
+        }
+    }
+
+    private CompletableFuture<PermissionResult> createPermissionFuture(GDPermissionHolder holder, List<Node> nodes, Tristate value, boolean isTransient) {
+        if (holder instanceof GDPermissionGroup) {
+            return CompletableFuture.supplyAsync(() -> {
+                Group group = null;
+                try {
+                    group = this.luckPermsApi.getGroupManager().loadGroup(holder.getFriendlyName()).get().orElse(null);
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                }
+                if (group != null) {
+                    if (isTransient) {
+                        return this.applyTransientPermissionNodes(holder, group, nodes, value);
+                    }
+                    return this.applyPermissionNodes(holder, group, nodes, value, true);
+                }
+                return new GDPermissionResult(ResultTypes.FAILURE, TextComponent.builder().append("COULD NOT LOAD GROUP " + holder.getFriendlyName()).build());
+            }, GriefDefenderPlugin.getInstance().executor);
+         } else {
+             return CompletableFuture.supplyAsync(() -> {
+                 User user = null;
+                 try {
+                     user = this.luckPermsApi.getUserManager().loadUser(((GDPermissionUser) holder).getUniqueId()).get();
+                 } catch (Throwable t) {
+                     t.printStackTrace();
+                 }
+                 if (user != null) {
+                     if (isTransient) {
+                         return this.applyTransientPermissionNodes(holder, user, nodes, value);
+                     }
+                     return this.applyPermissionNodes(holder, user, nodes, value, true);
+                 }
+                 return new GDPermissionResult(ResultTypes.FAILURE, TextComponent.builder().append("COULD NOT LOAD USER " + holder.getFriendlyName()).build());
+             }, GriefDefenderPlugin.getInstance().executor);
+        }
+    }
+
+    public PermissionResult applyOptionNode(GDPermissionHolder holder, PermissionHolder lpHolder, Node node, String key, String value) {
         final Option option = OptionRegistryModule.getInstance().getById(key).orElse(null);
         if (option == null) {
             new GDPermissionResult(ResultTypes.FAILURE);
         }
 
-        final Node node = MetaNode.builder().key(key).value(value).context(set).build();
+        DataMutateResult result = null;
         if (!value.equalsIgnoreCase("undefined")) {
             if (!option.multiValued()) {
-                this.clearMeta(permissionHolder, key, set);
+                this.clearMeta(lpHolder, option.getPermission(), node.getContexts());
             }
-            result = permissionHolder.data().add(node);
+            result = lpHolder.data().add(node);
         } else {
-            this.clearMeta(permissionHolder, key, set);
-            this.savePermissionHolder(permissionHolder);
+            this.clearMeta(lpHolder, option.getPermission(), node.getContexts());
+            this.savePermissionHolder(lpHolder);
             return new GDPermissionResult(ResultTypes.SUCCESS);
         }
         if (result != null) {
             if (result.wasSuccessful()) {
-                this.savePermissionHolder(permissionHolder);
+                this.savePermissionHolder(lpHolder);
+                return new GDPermissionResult(ResultTypes.SUCCESS, TextComponent.builder().append(result.name()).build());
+            }
+
+            return new GDPermissionResult(ResultTypes.FAILURE, TextComponent.builder().append(result.name()).build());
+        }
+
+        return new GDPermissionResult(ResultTypes.FAILURE);
+    }
+
+    public PermissionResult applyTransientOptionNode(GDPermissionHolder holder, PermissionHolder lpHolder, Node node, String value) {
+        DataMutateResult result = null;
+        if (value == null) {
+            result = lpHolder.transientData().remove(node);
+        } else {
+            result = lpHolder.transientData().add(node);
+        }
+
+        if (result != null) {
+            if (result.wasSuccessful()) {
                 return new GDPermissionResult(ResultTypes.SUCCESS, TextComponent.builder().append(result.name()).build());
             }
             return new GDPermissionResult(ResultTypes.FAILURE, TextComponent.builder().append(result.name()).build());
@@ -777,84 +958,35 @@ public class LuckPermsProvider implements PermissionProvider {
         return new GDPermissionResult(ResultTypes.FAILURE);
     }
 
-    public PermissionResult setPermissionValue(GDPermissionHolder holder, String permission, Tristate value, Set<Context> contexts, boolean check, boolean save) {
+    public PermissionResult applyPermissionNodes(GDPermissionHolder holder, PermissionHolder lpHolder, List<Node> nodes, Tristate value, boolean save) {
         DataMutateResult result = null;
-        if (check) {
-            // If no server context exists, add global
-            this.checkServerContext(contexts);
-        }
-        ImmutableContextSet set = this.getLPContexts(contexts).immutableCopy();
-        final Node node = this.luckPermsApi.getNodeBuilderRegistry().forPermission().permission(permission).value(value.asBoolean()).context(set).build();
-        final PermissionHolder permissionHolder = this.getLuckPermsHolder(holder);
-        if (permissionHolder == null) {
-            return new GDPermissionResult(ResultTypes.FAILURE);
-        }
-
-        if (value == Tristate.UNDEFINED) {
-            result = permissionHolder.data().remove(node);
-        } else {
-            result = permissionHolder.data().add(node);
-        }
-
-        if (result.wasSuccessful()) {
-            if (permissionHolder instanceof Group) {
-                // If a group is changed, we invalidate all cache
-                PermissionHolderCache.getInstance().invalidateAllPermissionCache();
+        for (Node node : nodes) {
+            if (value == Tristate.UNDEFINED) {
+                result = lpHolder.data().remove(node);
             } else {
-                // We need to invalidate cache outside of LP listener so we can guarantee proper result returns
-                PermissionHolderCache.getInstance().getOrCreatePermissionCache(holder).invalidateAll();
+                result = lpHolder.data().add(node);
             }
-
-            if (save) {
-                this.savePermissionHolder(permissionHolder);
-            }
-
-            return new GDPermissionResult(ResultTypes.SUCCESS, TextComponent.builder().append(result.name()).build());
-        }
-
-        return new GDPermissionResult(ResultTypes.FAILURE, TextComponent.builder().append(result.name()).build());
-    }
-
-    public PermissionResult setTransientOption(GDPermissionHolder holder, String permission, String value, Set<Context> contexts) {
-        // If no server context exists, add global
-        this.checkServerContext(contexts);
-        MutableContextSet contextSet = this.getLPContexts(contexts);
-        final PermissionHolder permissionHolder = this.getLuckPermsHolder(holder);
-        if (permissionHolder == null) {
-            return new GDPermissionResult(ResultTypes.FAILURE, TextComponent.builder().append("invalid").build());
-        }
-
-        DataMutateResult result = null;
-        if (value == null) {
-            final Node node = this.luckPermsApi.getNodeBuilderRegistry().forMeta().key(permission).context(contextSet).build();
-            result = permissionHolder.transientData().remove(node);
-        } else {
-            final Node node = this.luckPermsApi.getNodeBuilderRegistry().forMeta().key(permission).value(value).context(contextSet).build();
-            result = permissionHolder.transientData().add(node);
         }
 
         if (result.wasSuccessful()) {
+            if (save) {
+                this.savePermissionHolder(lpHolder);
+            }
+
             return new GDPermissionResult(ResultTypes.SUCCESS, TextComponent.builder().append(result.name()).build());
         }
+
         return new GDPermissionResult(ResultTypes.FAILURE, TextComponent.builder().append(result.name()).build());
     }
 
-    public PermissionResult setTransientPermission(GDPermissionHolder holder, String permission, Tristate value, Set<Context> contexts) {
-        // If no server context exists, add global
-        this.checkServerContext(contexts);
-        MutableContextSet contextSet = this.getLPContexts(contexts);
-        final PermissionHolder permissionHolder = this.getLuckPermsHolder(holder);
-        if (permissionHolder == null) {
-            return new GDPermissionResult(ResultTypes.FAILURE, TextComponent.builder().append("invalid").build());
-        }
-
+    public PermissionResult applyTransientPermissionNodes(GDPermissionHolder holder, PermissionHolder lpHolder, List<Node> nodes, Tristate value) {
         DataMutateResult result = null;
-        if (value == Tristate.UNDEFINED) {
-            final Node node = this.luckPermsApi.getNodeBuilderRegistry().forPermission().permission(permission).value(value.asBoolean()).context(contextSet).build();
-            result = permissionHolder.transientData().remove(node);
-        } else {
-            final PermissionNode node = this.luckPermsApi.getNodeBuilderRegistry().forPermission().permission(permission).value(value.asBoolean()).context(contextSet).build();
-            result =  permissionHolder.transientData().add(node);
+        for (Node node : nodes) {
+            if (value == null || value == Tristate.UNDEFINED) {
+                result = lpHolder.transientData().remove(node);
+            } else {
+                result = lpHolder.transientData().add(node);
+            }
         }
 
         if (result.wasSuccessful()) {
@@ -864,10 +996,23 @@ public class LuckPermsProvider implements PermissionProvider {
     }
 
     public void savePermissionHolder(PermissionHolder holder) {
+        // Always wait for completion to avoid save race conditions
         if (holder instanceof User) {
-            this.luckPermsApi.getUserManager().saveUser((User) holder);
+            try {
+                this.luckPermsApi.getUserManager().saveUser((User) holder).get();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+            }
         } else {
-            this.luckPermsApi.getGroupManager().saveGroup((Group) holder);
+            try {
+                this.luckPermsApi.getGroupManager().saveGroup((Group) holder).get();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -950,11 +1095,45 @@ public class LuckPermsProvider implements PermissionProvider {
 
         @Override
         public Comparator<DataType> getOrderComparator(Identifier identifier) {
-            if (identifier.getType() == Identifier.GROUP_TYPE && identifier.getName().equalsIgnoreCase("default")) {
+            if (identifier.getType() == Identifier.GROUP_TYPE && (identifier.getName().equalsIgnoreCase(GriefDefenderPlugin.DEFAULT_GROUP_NAME) || identifier.getName().startsWith("griefdefender_"))) {
                 return DataQueryOrder.TRANSIENT_LAST;
             }
 
             return DataQueryOrder.TRANSIENT_FIRST;
+        }
+    }
+
+    private static class DefaultTransientOnlyDataFilter implements DataTypeFilterFunction {
+
+        @Override
+        public @NonNull Predicate<DataType> getTypeFilter(@NonNull Identifier identifier) {
+            if (identifier.getType() == Identifier.GROUP_TYPE && (identifier.getName().equalsIgnoreCase(GriefDefenderPlugin.DEFAULT_GROUP_NAME) || identifier.getName().startsWith("griefdefender_"))) {
+                return DataTypeFilter.TRANSIENT_ONLY;
+            }
+            return DataTypeFilter.ALL;
+        }
+        
+    }
+
+    private static class DefaultPersistentOnlyDataFilter implements DataTypeFilterFunction {
+
+        @Override
+        public @NonNull Predicate<DataType> getTypeFilter(@NonNull Identifier identifier) {
+            if (identifier.getType() == Identifier.GROUP_TYPE && (identifier.getName().equalsIgnoreCase(GriefDefenderPlugin.DEFAULT_GROUP_NAME) || identifier.getName().startsWith("griefdefender_"))) {
+                return DataTypeFilter.NORMAL_ONLY;
+            }
+            return DataTypeFilter.ALL;
+        }
+    }
+
+    private static class UserPersistentOnlyDataFilter implements DataTypeFilterFunction {
+
+        @Override
+        public @NonNull Predicate<DataType> getTypeFilter(@NonNull Identifier identifier) {
+            if (identifier.getType() == Identifier.GROUP_TYPE && (identifier.getName().equalsIgnoreCase(GriefDefenderPlugin.DEFAULT_GROUP_NAME) || identifier.getName().startsWith("griefdefender_"))) {
+                return DataTypeFilter.NONE;
+            }
+            return DataTypeFilter.NORMAL_ONLY;
         }
     }
 }

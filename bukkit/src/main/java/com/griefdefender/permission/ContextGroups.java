@@ -30,22 +30,32 @@ import com.griefdefender.api.permission.ContextKeys;
 public class ContextGroups {
 
     // Entity groups
-    public static final Context SOURCE_ALL = new Context(ContextKeys.SOURCE, ContextGroupKeys.ALL);
+    public static final Context SOURCE_ANY = new Context(ContextKeys.SOURCE, ContextGroupKeys.ANY);
     public static final Context SOURCE_AMBIENT = new Context(ContextKeys.SOURCE, ContextGroupKeys.AMBIENT);
     public static final Context SOURCE_ANIMAL = new Context(ContextKeys.SOURCE, ContextGroupKeys.ANIMAL);
     public static final Context SOURCE_AQUATIC = new Context(ContextKeys.SOURCE, ContextGroupKeys.AQUATIC);
+    public static final Context SOURCE_CROPS = new Context(ContextKeys.SOURCE, ContextGroupKeys.CROPS);
+    public static final Context SOURCE_HANGING = new Context(ContextKeys.SOURCE, ContextGroupKeys.HANGING);
     public static final Context SOURCE_MISC = new Context(ContextKeys.SOURCE, ContextGroupKeys.MISC);
     public static final Context SOURCE_MONSTER = new Context(ContextKeys.SOURCE, ContextGroupKeys.MONSTER);
+    public static final Context SOURCE_PET = new Context(ContextKeys.SOURCE, ContextGroupKeys.PET);
     public static final Context SOURCE_VEHICLE = new Context(ContextKeys.SOURCE, ContextGroupKeys.VEHICLE);
-    public static final Context TARGET_ALL = new Context(ContextKeys.TARGET, ContextGroupKeys.ALL);
+    public static final Context TARGET_ANY = new Context(ContextKeys.TARGET, ContextGroupKeys.ANY);
     public static final Context TARGET_AMBIENT = new Context(ContextKeys.TARGET, ContextGroupKeys.AMBIENT);
     public static final Context TARGET_ANIMAL = new Context(ContextKeys.TARGET, ContextGroupKeys.ANIMAL);
     public static final Context TARGET_AQUATIC = new Context(ContextKeys.TARGET, ContextGroupKeys.AQUATIC);
+    public static final Context TARGET_CROPS = new Context(ContextKeys.TARGET, ContextGroupKeys.CROPS);
+    public static final Context TARGET_HANGING = new Context(ContextKeys.TARGET, ContextGroupKeys.HANGING);
     public static final Context TARGET_MISC = new Context(ContextKeys.TARGET, ContextGroupKeys.MISC);
     public static final Context TARGET_MONSTER = new Context(ContextKeys.TARGET, ContextGroupKeys.MONSTER);
+    public static final Context TARGET_PET = new Context(ContextKeys.TARGET, ContextGroupKeys.PET);
     public static final Context TARGET_VEHICLE = new Context(ContextKeys.TARGET, ContextGroupKeys.VEHICLE);
 
     // Item groups
     public static final Context SOURCE_FOOD = new Context(ContextKeys.SOURCE, ContextGroupKeys.FOOD);
     public static final Context TARGET_FOOD = new Context(ContextKeys.TARGET, ContextGroupKeys.FOOD);
+
+    // Custom mod groups
+    public static final Context SOURCE_PIXELMON = new Context(ContextKeys.SOURCE, "#pixelmon:animal");
+    public static final Context TARGET_PIXELMON = new Context(ContextKeys.TARGET, "#pixelmon:animal");
 }

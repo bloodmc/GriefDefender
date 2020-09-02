@@ -16,15 +16,18 @@ public class CommandPagination extends BaseCommand {
     @CommandAlias("gd:pagination")
     @Description("Used internally by GD for pagination purposes.")
     public void execute(CommandSender src, String[] args) throws CommandException {
-        String id = args[0];
+        if (args == null || args.length == 0) {
+            return;
+        }
 
+        final String id = args[0];
         final ActivePagination activePagination = GDPaginationHolder.getInstance().getActivePagination(src, id);
         if (activePagination == null) {
             TextAdapter.sendComponent(src, TextComponent.of("Source " + src.getName() + " has no paginations!", TextColor.RED));
             return;
         }
 
-        String action = args[1];
+        final String action = args[1];
         if (action.equals("page")) {
             activePagination.currentPage();
         } else if (action.equals("next")) {

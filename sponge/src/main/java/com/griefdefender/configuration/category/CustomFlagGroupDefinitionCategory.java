@@ -26,13 +26,15 @@ package com.griefdefender.configuration.category;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.permission.Context;
-import com.griefdefender.api.permission.flag.FlagData;
 import com.griefdefender.api.permission.flag.FlagDefinition;
+import com.griefdefender.cache.PermissionHolderCache;
+import com.griefdefender.permission.GDPermissionHolder;
 import com.griefdefender.permission.flag.GDFlagDefinition;
 import com.griefdefender.registry.FlagDefinitionRegistryModule;
 import com.griefdefender.util.PermissionUtil;
@@ -85,27 +87,39 @@ public class CustomFlagGroupDefinitionCategory extends ConfigCategory {
                     continue;
                 }
                 Set<Context> contexts = new HashSet<>(flagDefinition.getContexts());
-                for (FlagData flagData : flagDefinition.getFlagData()) {
-                    Set<Context> permissionContexts = new HashSet<>(contexts);
-                    permissionContexts.addAll(flagData.getContexts());
-                    boolean shouldApply = false;
-                    boolean isOverride = false;
-                    for (Context context : permissionContexts) {
-                        if (context.getKey().equalsIgnoreCase("gd_claim_default")) {
-                            shouldApply = true;
-                            break;
-                        } else if (context.getKey().equalsIgnoreCase("gd_claim_override")) {
-                            shouldApply = true;
-                            isOverride = true;
+                Set<Context> defaultContexts = new HashSet<>();
+                Set<Context> overrideContexts = new HashSet<>();
+                String groupStr = null;
+                final Iterator<Context> iterator = contexts.iterator();
+                while (iterator.hasNext()) {
+                    final Context context = iterator.next();
+                    if (context.getKey().equalsIgnoreCase("gd_claim_default")) {
+                        defaultContexts.add(context);
+                    } else if (context.getKey().equalsIgnoreCase("gd_claim_override")) {
+                        if (context.getValue().equalsIgnoreCase("claim")) {
+                            iterator.remove();
+                            continue;
+                        }
+                        overrideContexts.add(context);
+                    } else if (context.getKey().equalsIgnoreCase("group")) {
+                        groupStr = context.getValue();
+                    }
+                }
+                GDPermissionHolder holder = GriefDefenderPlugin.GD_DEFINITION_HOLDER;
+                if (groupStr != null) {
+                    if (PermissionUtil.getInstance().hasGroupSubject(groupStr)) {
+                        holder = PermissionHolderCache.getInstance().getOrCreateGroup(groupStr);
+                        if (holder == null) {
+                            holder = GriefDefenderPlugin.GD_DEFINITION_HOLDER;
                         }
                     }
-                    if (shouldApply) {
-                        if (isOverride) {
-                            PermissionUtil.getInstance().setPermissionValue(GriefDefenderPlugin.DEFAULT_HOLDER, flagData.getFlag().getPermission(), flagDefinition.getDefaultValue(), permissionContexts);
-                        } else {
-                            PermissionUtil.getInstance().setTransientPermission(GriefDefenderPlugin.DEFAULT_HOLDER, flagData.getFlag().getPermission(), flagDefinition.getDefaultValue(), permissionContexts);
-                        }
-                    }
+                }
+
+                if (!defaultContexts.isEmpty()) {
+                    PermissionUtil.getInstance().setFlagDefinition(holder, flagDefinition, flagDefinition.getDefaultValue(), defaultContexts, false);
+                }
+                if (!overrideContexts.isEmpty()) {
+                    PermissionUtil.getInstance().setFlagDefinition(holder, flagDefinition, flagDefinition.getDefaultValue(), overrideContexts, false);
                 }
             }
         }

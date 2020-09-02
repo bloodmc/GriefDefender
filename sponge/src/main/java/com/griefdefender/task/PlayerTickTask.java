@@ -32,17 +32,20 @@ import com.griefdefender.api.permission.option.Options;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.permission.GDPermissionManager;
-
+import com.griefdefender.permission.option.GDOptions;
 import net.kyori.text.TextComponent;
 import net.kyori.text.adapter.spongeapi.TextAdapter;
 import net.kyori.text.format.TextColor;
 
 import org.spongepowered.api.Sponge;
+import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.gamemode.GameMode;
 import org.spongepowered.api.entity.living.player.gamemode.GameModes;
 import org.spongepowered.api.world.World;
+
+import java.util.Iterator;
 
 public class PlayerTickTask implements Runnable {
 
@@ -59,13 +62,26 @@ public class PlayerTickTask implements Runnable {
                 }
                 final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
                 final GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAtPlayer(playerData, player.getLocation());
+                // send queued visuals
+                int count = 0;
+                final Iterator<BlockSnapshot> iterator = playerData.queuedVisuals.iterator();
+                while (iterator.hasNext()) {
+                    final BlockSnapshot snapshot = iterator.next();
+                    if (count > GriefDefenderPlugin.getGlobalConfig().getConfig().visual.clientVisualsPerTick) {
+                        break;
+                    }
+                    player.sendBlockChange(snapshot.getPosition(), snapshot.getState());
+                    iterator.remove();
+                    count++;
+                }
+
                 // chat capture
                 playerData.updateRecordChat();
                 // health regen
                 if (world.getProperties().getTotalTime() % 100 == 0L) {
                     final GameMode gameMode = player.get(Keys.GAME_MODE).get();
                     // Handle player health regen
-                    if (gameMode != GameModes.CREATIVE && gameMode != GameModes.SPECTATOR) {
+                    if (gameMode != GameModes.CREATIVE && gameMode != GameModes.SPECTATOR && GDOptions.isOptionEnabled(Options.PLAYER_HEALTH_REGEN)) {
                         final double maxHealth = player.get(Keys.MAX_HEALTH).get();
                         final double currentHealth = player.get(Keys.HEALTH).get();
                         if (currentHealth < maxHealth) {

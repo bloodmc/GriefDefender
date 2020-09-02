@@ -49,12 +49,11 @@ public class GDOption<T> implements Option<T> {
 
     private static final List<String> GLOBAL_OPTIONS = Arrays.asList(
             "abandon-return-ratio", "accrued-blocks", "bonus-blocks", "blocks-accrued-per-hour", "chest-expiration", "economy-block-cost", 
-            "economy-block-sell-return", "expiration", "initial-blocks", "max-accrued-blocks", "radius-list", 
-            "radius-list");
+            "economy-block-sell-return", "expiration", "initial-blocks", "max-accrued-blocks");
     private static final List<String> ADMIN_OPTIONS = Arrays.asList(
-            "player-command", "player-deny-godmode", "player-deny-hunger", "player-gamemode",
+            "player-command", "player-deny-godmode", "player-deny-hunger", "player-fly-speed", "player-gamemode",
             "player-health-regen", "player-keep-inventory", "player-keep-level", "player-walk-speed",
-            "radius-inspect", "radius-list");
+            "player-teleport-delay", "radius-inspect", "rent-restore", "spawn-limit");
 
     private final String id;
     private final String name;

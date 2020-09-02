@@ -53,7 +53,7 @@ public class CommandClaimMode extends BaseCommand {
         playerData.claimMode = !playerData.claimMode;
         playerData.claimSubdividing = null;
         if (!playerData.claimMode) {
-            playerData.revertActiveVisual(player);
+            playerData.revertAllVisuals();
             // check for any active WECUI visuals
             if (GriefDefenderPlugin.getInstance().getWorldEditProvider() != null) {
                 GriefDefenderPlugin.getInstance().getWorldEditProvider().revertVisuals(player, playerData, null);

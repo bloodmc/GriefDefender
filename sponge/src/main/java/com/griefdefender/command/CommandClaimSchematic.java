@@ -150,9 +150,9 @@ public class CommandClaimSchematic extends BaseCommand {
         return confirm -> {
             final Component schematicConfirmationText = TextComponent.builder("")
                     .append("\n[")
-                    .append("Confirm", TextColor.GREEN)
+                    .append(MessageCache.getInstance().LABEL_CONFIRM.color(TextColor.GREEN))
                     .append("]\n")
-                    .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createConfirmationConsumer(src, claim, schematic))))
+                    .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(src, createConfirmationConsumer(src, claim, schematic), true)))
                     .hoverEvent(HoverEvent.showText(GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.SCHEMATIC_RESTORE_CONFIRMATION))).build();
             TextAdapter.sendComponent(src, schematicConfirmationText);
         };

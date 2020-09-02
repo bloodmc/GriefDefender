@@ -34,18 +34,12 @@ import co.aikar.commands.annotation.Syntax;
 import com.google.common.collect.ImmutableMap;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
-import com.griefdefender.api.claim.ClaimResultType;
 import com.griefdefender.cache.MessageCache;
-import com.griefdefender.claim.GDClaimResult;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.permission.GDPermissions;
 import net.kyori.text.Component;
-import net.kyori.text.TextComponent;
-import net.kyori.text.adapter.spongeapi.TextAdapter;
-import net.kyori.text.format.TextColor;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.living.player.Player;
-import org.spongepowered.api.event.CauseStackManager;
 import org.spongepowered.api.service.economy.Currency;
 import org.spongepowered.api.service.economy.account.Account;
 import org.spongepowered.api.service.economy.transaction.ResultType;
@@ -62,10 +56,13 @@ public class CommandClaimSellBlocks extends BaseCommand {
     @Syntax("[<amount>]")
     @Subcommand("sell blocks")
     public void execute(Player player, @Optional Integer blockCount) {
-        final boolean economyMode = GriefDefenderPlugin.getInstance().isEconomyModeEnabled();
         // if economy is disabled, don't do anything
         if (!GriefDefenderPlugin.getInstance().economyService.isPresent()) {
             GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().ECONOMY_NOT_INSTALLED);
+            return;
+        }
+        if (GriefDefenderPlugin.getInstance().isEconomyModeEnabled()) {
+            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().COMMAND_NOT_AVAILABLE_ECONOMY);
             return;
         }
 
@@ -89,11 +86,11 @@ public class CommandClaimSellBlocks extends BaseCommand {
             return;
         }
 
-        int availableBlocks = economyMode ? playerData.getAccruedClaimBlocks() + playerData.getBonusClaimBlocks() : playerData.getInternalRemainingClaimBlocks();
+        int availableBlocks = playerData.getInternalRemainingClaimBlocks();
         if (blockCount == null) {
             final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_BLOCK_PURCHASE_COST,
                     ImmutableMap.of(
-                    "amount", playerData.getEconomyClaimBlockReturn(),
+                    "amount", "$" + String.format("%.2f", playerData.getEconomyClaimBlockReturn()),
                     "balance", availableBlocks));
             GriefDefenderPlugin.sendMessage(player, message);
             return;
@@ -118,20 +115,6 @@ public class CommandClaimSellBlocks extends BaseCommand {
                 return;
             }
 
-            final BigDecimal currentFunds = playerAccount.getBalance(defaultCurrency);
-            Component message = null;
-            if (economyMode) {
-                message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_MODE_BLOCK_SALE_CONFIRMATION,
-                        ImmutableMap.of(
-                        "deposit", economyTotalValue,
-                        "balance", String.valueOf("$" + currentFunds),
-                        "amount", playerData.getRemainingClaimBlocks()));
-            } else {
-                message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_BLOCK_SALE_CONFIRMATION,
-                    ImmutableMap.of(
-                    "deposit", economyTotalValue,
-                    "amount", playerData.getRemainingClaimBlocks()));
-            }
             int bonusBlocks = playerData.getBonusClaimBlocks();
             int accruedBlocks = playerData.getAccruedClaimBlocks();
             if (bonusBlocks > 0) {
@@ -148,6 +131,10 @@ public class CommandClaimSellBlocks extends BaseCommand {
                 playerData.setAccruedClaimBlocks(accruedBlocks);
             }
 
+            final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_BLOCK_SALE_CONFIRMATION,
+                    ImmutableMap.of(
+                    "deposit", "$" + String.format("%.2f", economyTotalValue),
+                    "amount", playerData.getRemainingClaimBlocks()));
             GriefDefenderPlugin.sendMessage(player, message);
         }
     }

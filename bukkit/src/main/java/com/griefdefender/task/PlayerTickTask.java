@@ -33,7 +33,10 @@ import com.griefdefender.api.permission.option.Options;
 import com.griefdefender.cache.MessageCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.configuration.MessageStorage;
+import com.griefdefender.internal.block.BlockSnapshot;
+import com.griefdefender.internal.util.NMSUtil;
 import com.griefdefender.permission.GDPermissionManager;
+import com.griefdefender.permission.option.GDOptions;
 import com.griefdefender.text.action.GDCallbackHolder;
 
 import net.kyori.text.TextComponent;
@@ -42,6 +45,7 @@ import net.kyori.text.event.ClickEvent;
 import net.kyori.text.event.HoverEvent;
 import net.kyori.text.format.TextColor;
 
+import java.util.Iterator;
 import java.util.function.Consumer;
 
 import org.bukkit.Bukkit;
@@ -66,13 +70,26 @@ public class PlayerTickTask extends BukkitRunnable {
                 }
                 final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
                 final GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAtPlayer(playerData, player.getLocation());
+                // send queued visuals
+                int count = 0;
+                final Iterator<BlockSnapshot> iterator = playerData.queuedVisuals.iterator();
+                while (iterator.hasNext()) {
+                    final BlockSnapshot snapshot = iterator.next();
+                    if (count > GriefDefenderPlugin.getGlobalConfig().getConfig().visual.clientVisualsPerTick) {
+                        break;
+                    }
+                    NMSUtil.getInstance().sendBlockChange(player, snapshot);
+                    iterator.remove();
+                    count++;
+                }
+
                 // chat capture
                 playerData.updateRecordChat();
                 // health regen
                 if (world.getFullTime() % 100 == 0L) {
                     final GameMode gameMode = player.getGameMode();
                     // Handle player health regen
-                    if (gameMode != GameMode.CREATIVE && gameMode != GameMode.SPECTATOR) {
+                    if (gameMode != GameMode.CREATIVE && gameMode != GameMode.SPECTATOR && GDOptions.isOptionEnabled(Options.PLAYER_HEALTH_REGEN)) {
                         final double maxHealth = player.getMaxHealth();
                         if (player.getHealth() < maxHealth) {
                             final double regenAmount = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Double.class), playerData.getSubject(), Options.PLAYER_HEALTH_REGEN, claim);

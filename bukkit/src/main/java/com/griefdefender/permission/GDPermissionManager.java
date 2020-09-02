@@ -42,7 +42,6 @@ import com.griefdefender.api.permission.PermissionManager;
 import com.griefdefender.api.permission.PermissionResult;
 import com.griefdefender.api.permission.ResultTypes;
 import com.griefdefender.api.permission.flag.Flag;
-import com.griefdefender.api.permission.flag.FlagData;
 import com.griefdefender.api.permission.flag.FlagDefinition;
 import com.griefdefender.api.permission.flag.Flags;
 import com.griefdefender.api.permission.option.Option;
@@ -57,6 +56,7 @@ import com.griefdefender.cache.EventResultCache;
 import com.griefdefender.cache.MessageCache;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
+import com.griefdefender.claim.GDClaimManager;
 import com.griefdefender.command.CommandHelper;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.configuration.category.BanCategory;
@@ -66,9 +66,14 @@ import com.griefdefender.internal.registry.BlockTypeRegistryModule;
 import com.griefdefender.internal.registry.EntityTypeRegistryModule;
 import com.griefdefender.internal.registry.GDEntityType;
 import com.griefdefender.internal.registry.ItemTypeRegistryModule;
+import com.griefdefender.internal.tracking.chunk.GDChunk;
 import com.griefdefender.internal.util.NMSUtil;
+import com.griefdefender.permission.option.GDOptions;
+import com.griefdefender.provider.PermissionProvider.PermissionDataType;
 import com.griefdefender.registry.FlagRegistryModule;
+import com.griefdefender.util.EconomyUtil;
 import com.griefdefender.util.PermissionUtil;
+import com.griefdefender.util.PlayerUtil;
 
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
@@ -87,6 +92,7 @@ import org.bukkit.block.CreatureSpawner;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Vehicle;
 import org.bukkit.event.Event;
@@ -101,6 +107,7 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -178,6 +185,8 @@ public class GDPermissionManager implements PermissionManager {
         final GDPermissionUser user = permissionHolder instanceof GDPermissionUser ? (GDPermissionUser) permissionHolder : null;
         this.eventSubject = user;
         this.eventMessage = null;
+        this.eventSourceId = "none";
+        this.eventTargetId = "none";
         if (permissionHolder != null) {
             if (user != null) {
                 playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(claim.getWorldUniqueId(), user.getUniqueId());
@@ -189,10 +198,8 @@ public class GDPermissionManager implements PermissionManager {
         // refresh contexts
         this.eventContexts = new HashSet<>();
 
-        if (user != null) {
-            if (user.getOnlinePlayer() != null) {
-                this.addPlayerContexts(user.getOnlinePlayer(), contexts);
-            }
+        if (source instanceof Player && flag != Flags.COLLIDE_BLOCK && flag != Flags.COLLIDE_ENTITY) {
+            this.addPlayerContexts((Player) source, contexts, flag);
         }
 
         final Set<Context> sourceContexts = this.getPermissionContexts((GDClaim) claim, source, true);
@@ -211,25 +218,24 @@ public class GDPermissionManager implements PermissionManager {
         this.eventPlayerData = playerData;
         final String targetPermission = flag.getPermission();
 
-        if (flag == Flags.ENTITY_SPAWN) {
+        if (flag == Flags.ENTITY_SPAWN && GDOptions.isOptionEnabled(Options.SPAWN_LIMIT) && target instanceof LivingEntity) {
             // Check spawn limit
-            final int spawnLimit = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), GriefDefenderPlugin.DEFAULT_HOLDER, Options.SPAWN_LIMIT, claim, new HashSet<>(contexts));
+            final GDClaim gdClaim = (GDClaim) claim;
+            final int spawnLimit = gdClaim.getSpawnLimit(contexts);
             if (spawnLimit > -1) {
-                if (target instanceof Entity) {
-                    final Entity entity = (Entity) target;
-                    final int currentEntityCount = ((GDClaim) claim).countEntities(entity .getType());
-                    if (currentEntityCount >= spawnLimit) {
-                        if (user != null && user.getOnlinePlayer() != null && source == SpawnReason.ENDER_PEARL || source == SpawnReason.SPAWNER_EGG || source == SpawnReason.SPAWNER) {
-                            final String name = entity.getType().getName() == null ? entity.getType().name().toLowerCase() : entity.getType().getName();
-                            final GDEntityType entityType = EntityTypeRegistryModule.getInstance().getById(name).orElse(null);
-                            final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.OPTION_APPLY_SPAWN_LIMIT,
-                                    ImmutableMap.of(
-                                    "type", entityType.getName(),
-                                    "limit", spawnLimit));
-                            GriefDefenderPlugin.sendMessage(user.getOnlinePlayer(), message);
-                        }
-                        return this.processResult(claim, flag.getPermission(), "spawn-limit", Tristate.FALSE, this.eventSubject);
+                final Entity entity = (Entity) target;
+                final int currentEntityCount = gdClaim.countEntities(entity);
+                if (currentEntityCount >= spawnLimit) {
+                    if (user != null && user.getOnlinePlayer() != null && (source == SpawnReason.ENDER_PEARL || source == SpawnReason.SPAWNER_EGG || source == SpawnReason.SPAWNER)) {
+                        final String name = entity.getType().getName() == null ? entity.getType().name().toLowerCase() : entity.getType().getName();
+                        final GDEntityType entityType = EntityTypeRegistryModule.getInstance().getById(name).orElse(null);
+                        final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.OPTION_APPLY_SPAWN_LIMIT,
+                                ImmutableMap.of(
+                                "type", entityType.getId(),
+                                "limit", spawnLimit));
+                        GriefDefenderPlugin.sendMessage(user.getOnlinePlayer(), message);
                     }
+                    return this.processResult(claim, flag.getPermission(), "spawn-limit", Tristate.FALSE, this.eventSubject);
                 }
             }
         }
@@ -238,11 +244,10 @@ public class GDPermissionManager implements PermissionManager {
             return processResult(claim, targetPermission, "ignore", Tristate.TRUE, user);
         }
         if (checkOverride) {
-            Tristate override = Tristate.UNDEFINED;
             // First check for claim flag overrides
-            override = getFlagOverride(claim, permissionHolder == null ? GriefDefenderPlugin.DEFAULT_HOLDER : permissionHolder, playerData, targetPermission);
+            final Tristate override = getFlagOverride(claim, permissionHolder == null ? GriefDefenderPlugin.DEFAULT_HOLDER : permissionHolder, playerData, targetPermission);
             if (override != Tristate.UNDEFINED) {
-                return override;
+                return processResult(claim, targetPermission, type == null ? "none" : type.getName().toLowerCase(), override, user);
             }
         }
 
@@ -259,18 +264,63 @@ public class GDPermissionManager implements PermissionManager {
             }
         }
         if (user != null) {
+            // check if rented
+            if (claim.getEconomyData() != null && claim.getEconomyData().isRented() && 
+                    flag != Flags.COMMAND_EXECUTE && 
+                    flag != Flags.COMMAND_EXECUTE_PVP && 
+                    flag != Flags.ENTER_CLAIM && 
+                    flag != Flags.EXIT_CLAIM &&
+                    flag != Flags.ENTITY_TELEPORT_FROM &&
+                    flag != Flags.ENTITY_TELEPORT_TO &&
+                    flag != Flags.INTERACT_INVENTORY_CLICK) {
+                if (claim.getOwnerUniqueId() != null && user != null && claim.getOwnerUniqueId().equals(user.getUniqueId())) {
+                    return processResult(claim, targetPermission, "rent-owner-deny", Tristate.FALSE, user);
+                }
+
+                if (EconomyUtil.getInstance().isRenter(claim, user) && (targetPermission.contains("interact") || targetPermission.contains("block"))) {
+                    if ((targetPermission.contains("interact") || targetPermission.contains("block-place"))) {
+                        final boolean hasInventory = NMSUtil.getInstance().isTileInventory(location) || location.getBlock().getType() == Material.ENDER_CHEST;
+                        if (!hasInventory || flag == Flags.BLOCK_PLACE) {
+                            return processResult(claim, targetPermission, "renter-interact", Tristate.TRUE, user);
+                        }
+                        // check entity interactions
+                        if (targetPermission.contains("interact-entity") && target instanceof LivingEntity) {
+                            // Allow interaction with all living entities
+                            return processResult(claim, targetPermission, "renter-interact", Tristate.TRUE, user);
+                        }
+                    }
+
+                    // Allow renters to break/change their own blocks
+                    final GDClaimManager claimWorldManager = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(location.getWorld().getUID());
+                    final GDChunk gdChunk = claimWorldManager.getChunk(location.getBlock().getChunk());
+                    final GDPermissionUser owner = gdChunk.getBlockOwner(location);
+                    if (owner != null && owner.getUniqueId().equals(user.getUniqueId())) {
+                        // allow
+                        return processResult(claim, targetPermission, "renter-owned", Tristate.TRUE, user);
+                    }
+                }
+            }
             if (type != null) {
                 if (((GDClaim) claim).isUserTrusted(user, type)) {
+                    // check persisted flags
+                    if (!claim.isWilderness()) {
+                        if ((claim.isAdminClaim() && !user.getInternalPlayerData().canManageAdminClaims) || !user.getUniqueId().equals(claim.getOwnerUniqueId())) {
+                            final Tristate result = getUserPermission(user, claim, targetPermission, PermissionDataType.USER_PERSISTENT);
+                            if (result != Tristate.UNDEFINED) {
+                                return processResult(claim, targetPermission, result, user);
+                            }
+                        }
+                    }
                     return processResult(claim, targetPermission, type.getName().toLowerCase(), Tristate.TRUE, permissionHolder);
                 }
             }
-            return getUserPermission(user, claim, targetPermission);
+            return getUserPermission(user, claim, targetPermission, PermissionDataType.PERSISTENT);
         }
 
         return getClaimFlagPermission(claim, targetPermission);
     }
 
-    private Tristate getUserPermission(GDPermissionHolder holder, Claim claim, String permission) {
+    private Tristate getUserPermission(GDPermissionHolder holder, Claim claim, String permission, PermissionDataType dataType) {
         final List<Claim> inheritParents = claim.getInheritedParents();
         final Set<Context> contexts = new HashSet<>();
         contexts.addAll(this.eventContexts);
@@ -279,7 +329,7 @@ public class GDPermissionManager implements PermissionManager {
             GDClaim parent = (GDClaim) parentClaim;
             // check parent context
             contexts.add(parent.getContext());
-            Tristate value = PermissionUtil.getInstance().getPermissionValue((GDClaim) claim, holder, permission, contexts);
+            Tristate value = PermissionUtil.getInstance().getPermissionValue((GDClaim) claim, holder, permission, contexts, dataType);
             if (value != Tristate.UNDEFINED) {
                 return processResult(claim, permission, value, holder);
             }
@@ -289,37 +339,35 @@ public class GDPermissionManager implements PermissionManager {
 
         // Check claim context
         contexts.add(claim.getContext());
-        Tristate value = PermissionUtil.getInstance().getPermissionValue((GDClaim) claim, holder, permission, contexts);
+        Tristate value = PermissionUtil.getInstance().getPermissionValue((GDClaim) claim, holder, permission, contexts, dataType);
         if (value != Tristate.UNDEFINED) {
             return processResult(claim, permission, value, holder);
         }
-        // Check default type context
-        contexts.add(claim.getType().getContext());
-        value = PermissionUtil.getInstance().getPermissionValue((GDClaim) claim, holder, permission, contexts);
-        if (value != Tristate.UNDEFINED) {
-            return processResult(claim, permission, value, holder);
+        if (dataType == PermissionDataType.USER_PERSISTENT) {
+            // don't log, just return result
+            return value;
         }
 
-        if (holder == GriefDefenderPlugin.DEFAULT_HOLDER) {
-            return getFlagDefaultPermission(claim, permission, contexts);
-        }
-
-        return getClaimFlagPermission(claim, permission, contexts);
+        // Group MUST inherit default group or above will return undefined if no permission set on non-default group/user.
+        contexts.remove(claim.getContext());
+        return getFlagDefaultPermission(claim, permission, contexts);
     }
 
     private Tristate getClaimFlagPermission(Claim claim, String permission) {
-        return this.getClaimFlagPermission(claim, permission, new HashSet<>());
+        return this.getClaimFlagPermission(claim, permission, new HashSet<>(), null);
     }
 
-    private Tristate getClaimFlagPermission(Claim claim, String permission, Set<Context> contexts) {
+    private Tristate getClaimFlagPermission(Claim claim, String permission, Set<Context> contexts, List<Claim> inheritParents) {
         if (contexts.isEmpty()) {
-            final List<Claim> inheritParents = claim.getInheritedParents();
+            if (inheritParents == null) {
+                inheritParents = claim.getInheritedParents();
+            }
             contexts.addAll(this.eventContexts);
             for (Claim parentClaim : inheritParents) {
                 GDClaim parent = (GDClaim) parentClaim;
                 // check parent context
                 contexts.add(parent.getContext());
-                Tristate value = PermissionUtil.getInstance().getPermissionValue((GDClaim) claim, GriefDefenderPlugin.DEFAULT_HOLDER, permission, contexts);
+                Tristate value = PermissionUtil.getInstance().getPermissionValue((GDClaim) claim, GriefDefenderPlugin.DEFAULT_HOLDER, permission, contexts, PermissionDataType.PERSISTENT);
                 if (value != Tristate.UNDEFINED) {
                     return processResult(claim, permission, value, GriefDefenderPlugin.DEFAULT_HOLDER);
                 }
@@ -329,7 +377,7 @@ public class GDPermissionManager implements PermissionManager {
             contexts.add(claim.getContext());
         }
 
-        Tristate value = PermissionUtil.getInstance().getPermissionValue((GDClaim) claim, GriefDefenderPlugin.DEFAULT_HOLDER, permission, contexts);
+        Tristate value = PermissionUtil.getInstance().getPermissionValue((GDClaim) claim, GriefDefenderPlugin.DEFAULT_HOLDER, permission, contexts, PermissionDataType.PERSISTENT);
         if (value != Tristate.UNDEFINED) {
             return processResult(claim, permission, value, GriefDefenderPlugin.DEFAULT_HOLDER);
         }
@@ -340,15 +388,33 @@ public class GDPermissionManager implements PermissionManager {
     // Only uses world and claim type contexts
     private Tristate getFlagDefaultPermission(Claim claim, String permission, Set<Context> contexts) {
         contexts.add(claim.getDefaultTypeContext());
-        Tristate value = PermissionUtil.getInstance().getPermissionValue((GDClaim) claim, GriefDefenderPlugin.DEFAULT_HOLDER, permission, contexts);
+        Tristate value = PermissionUtil.getInstance().getPermissionValue((GDClaim) claim, GriefDefenderPlugin.DEFAULT_HOLDER, permission, contexts, PermissionDataType.PERSISTENT);
         if (value != Tristate.UNDEFINED) {
             return processResult(claim, permission, value, GriefDefenderPlugin.DEFAULT_HOLDER);
         }
         contexts.remove(claim.getDefaultTypeContext());
-        contexts.add(ClaimContexts.GLOBAL_DEFAULT_CONTEXT);
-        value = PermissionUtil.getInstance().getPermissionValue((GDClaim) claim, GriefDefenderPlugin.DEFAULT_HOLDER, permission, contexts);
+        if (!claim.isWilderness()) {
+            contexts.add(ClaimContexts.GLOBAL_DEFAULT_CONTEXT);
+            contexts.add(ClaimContexts.USER_DEFAULT_CONTEXT);
+            value = PermissionUtil.getInstance().getPermissionValue((GDClaim) claim, GriefDefenderPlugin.DEFAULT_HOLDER, permission, contexts, PermissionDataType.PERSISTENT);
+            if (value != Tristate.UNDEFINED) {
+                return processResult(claim, permission, value, GriefDefenderPlugin.DEFAULT_HOLDER);
+            }
+            contexts.remove(ClaimContexts.USER_DEFAULT_CONTEXT);
+        } else {
+            contexts.add(ClaimContexts.GLOBAL_DEFAULT_CONTEXT);
+            value = PermissionUtil.getInstance().getPermissionValue((GDClaim) claim, GriefDefenderPlugin.DEFAULT_HOLDER, permission, contexts, PermissionDataType.PERSISTENT);
+            if (value != Tristate.UNDEFINED) {
+                return processResult(claim, permission, value, GriefDefenderPlugin.DEFAULT_HOLDER);
+            }
+        }
+
+        contexts.remove(ClaimContexts.GLOBAL_DEFAULT_CONTEXT);
+        contexts.add(ClaimContexts.USER_DEFAULT_CONTEXT);
+        contexts.add(claim.getDefaultTypeContext());
+        value = PermissionUtil.getInstance().getPermissionValue((GDClaim) claim, GriefDefenderPlugin.GD_DEFAULT_HOLDER, permission, contexts, PermissionDataType.TRANSIENT);
         if (value != Tristate.UNDEFINED) {
-            return processResult(claim, permission, value, GriefDefenderPlugin.DEFAULT_HOLDER);
+            return processResult(claim, permission, value, GriefDefenderPlugin.GD_DEFAULT_HOLDER);
         }
 
         return processResult(claim, permission, Tristate.UNDEFINED, GriefDefenderPlugin.DEFAULT_HOLDER);
@@ -363,39 +429,56 @@ public class GDPermissionManager implements PermissionManager {
         Set<Context> contexts = new HashSet<>();
         if (claim.isAdminClaim()) {
             contexts.add(ClaimContexts.ADMIN_OVERRIDE_CONTEXT);
-            //contexts.add(claim.world.getContext());
         } else if (claim.isTown()) {
             contexts.add(ClaimContexts.TOWN_OVERRIDE_CONTEXT);
-            //contexts.add(claim.world.getContext());
         } else if (claim.isBasicClaim()) {
             contexts.add(ClaimContexts.BASIC_OVERRIDE_CONTEXT);
-            //contexts.add(claim.world.getContext());
         } else if (claim.isWilderness()) {
             contexts.add(ClaimContexts.WILDERNESS_OVERRIDE_CONTEXT);
             player = permissionHolder instanceof GDPermissionUser ? ((GDPermissionUser) permissionHolder).getOnlinePlayer() : null;
         }
+        if (!claim.isWilderness()) {
+            contexts.add(ClaimContexts.USER_OVERRIDE_CONTEXT);
+        }
 
         contexts.add(((GDClaim) claim).getWorldContext());
-        contexts.add(claim.getOverrideClaimContext());
         contexts.add(ClaimContexts.GLOBAL_OVERRIDE_CONTEXT);
         contexts.addAll(this.eventContexts);
 
-        Tristate value = PermissionUtil.getInstance().getPermissionValue((GDClaim) claim, permissionHolder, flagPermission, contexts);
-       /* if (value == Tristate.UNDEFINED) {
-            // Check claim specific override
-            contexts = PermissionUtils.getActiveContexts(subject, playerData, claim);
-            contexts.add(claim.getContext());
-            contexts.add(ClaimContexts.CLAIM_OVERRIDE_CONTEXT);
-            value = subject.getPermissionValue(contexts, flagPermission);
-        }*/
+        Tristate value = PermissionUtil.getInstance().getPermissionValue((GDClaim) claim, permissionHolder, flagPermission, contexts, PermissionDataType.PERSISTENT);
+        if (value == Tristate.UNDEFINED) {
+            // check claim owner parent override
+            /*final List<Claim> inheritParents = claim.getInheritedParents();
+            contexts = new HashSet<>();
+            contexts.add(((GDClaim) claim).getWorldContext());
+            contexts.addAll(this.eventContexts);
+            for (Claim parentClaim : inheritParents) {
+                GDClaim parent = (GDClaim) parentClaim;
+                // check parent override claim context
+                contexts.add(parent.getOverrideClaimContext());
+                value = PermissionUtil.getInstance().getPermissionValue((GDClaim) claim, permissionHolder, flagPermission, contexts);
+                if (value != Tristate.UNDEFINED) {
+                    if (value == Tristate.FALSE) {
+                        this.eventMessage = MessageCache.getInstance().PERMISSION_OVERRIDE_DENY;
+                    }
+                    return processResult(claim, flagPermission, value, permissionHolder);
+                }
+
+                contexts.remove(parent.getOverrideClaimContext());
+            }*/
+
+            // check claim owner override
+            contexts = new HashSet<>();
+            contexts.add(((GDClaim) claim).getWorldContext());
+            contexts.addAll(this.eventContexts);
+            contexts.add(claim.getOverrideClaimContext());
+            value = PermissionUtil.getInstance().getPermissionValue((GDClaim) claim, permissionHolder, flagPermission, contexts, PermissionDataType.PERSISTENT);
+        }
         if (value != Tristate.UNDEFINED) {
             if (value == Tristate.FALSE) {
                 this.eventMessage = MessageCache.getInstance().PERMISSION_OVERRIDE_DENY;
             }
             return processResult(claim, flagPermission, value, permissionHolder);
-        }
-        if (permissionHolder != GriefDefenderPlugin.DEFAULT_HOLDER) {
-            return getFlagOverride(claim, GriefDefenderPlugin.DEFAULT_HOLDER, playerData, flagPermission);
         }
 
         return Tristate.UNDEFINED;
@@ -406,7 +489,7 @@ public class GDPermissionManager implements PermissionManager {
     }
 
     public Tristate processResult(Claim claim, String permission, String trust, Tristate permissionValue, GDPermissionHolder permissionHolder) {
-        if (GriefDefenderPlugin.debugActive) {
+        if (GriefDefenderPlugin.debugActive && this.currentEvent != null) {
             // Use the event subject always if available
             // This prevents debug showing 'default' for users
             if (eventSubject != null) {
@@ -420,7 +503,7 @@ public class GDPermissionManager implements PermissionManager {
                 }
             }
 
-            if (this.currentEvent != null && (this.currentEvent instanceof BlockPhysicsEvent)) {
+            if (this.currentEvent instanceof BlockPhysicsEvent) {
                 if (((GDClaim) claim).getWorld().getTime() % 100 != 0L) {
                     return permissionValue;
                 }
@@ -439,6 +522,37 @@ public class GDPermissionManager implements PermissionManager {
         return permissionValue;
     }
 
+    public void processEventLog(Event event, Location location, Claim claim, String permission, Object source, Object target, GDPermissionHolder user, String trust, Tristate value) {
+        final String sourceId = this.getPermissionIdentifier(source, true);
+        final String targetId = this.getPermissionIdentifier(target);
+        final Set<Context> sourceContexts = this.getPermissionContexts((GDClaim) claim, source, true);
+        if (sourceContexts == null) {
+            return;
+        }
+
+        final Set<Context> targetContexts = this.getPermissionContexts((GDClaim) claim, target, false);
+        if (targetContexts == null) {
+            return;
+        }
+
+        final Set<Context> contexts = new HashSet<>();
+        contexts.addAll(sourceContexts);
+        contexts.addAll(targetContexts);
+        contexts.add(((GDClaim) claim).getWorldContext());
+        if (GriefDefenderPlugin.debugActive) {
+            if (user == null) {
+                final Object root = GDCauseStackManager.getInstance().getCurrentCause().root();
+                if (source instanceof GDPermissionUser) {
+                    user = (GDPermissionUser) root;
+                } else {
+                    user = GriefDefenderPlugin.DEFAULT_HOLDER;
+                }
+            }
+
+            GriefDefenderPlugin.addEventLogEntry(event, claim, location, sourceId, targetId, user, permission, trust.toLowerCase(), value, contexts);
+        }
+    }
+
     public String getPermissionIdentifier(Object obj) {
         return getPermissionIdentifier(obj, false);
     }
@@ -447,29 +561,51 @@ public class GDPermissionManager implements PermissionManager {
         if (obj != null) {
             if (obj instanceof Entity) {
                 Entity targetEntity = (Entity) obj;
-                final String name = targetEntity.getType().getName() == null ? targetEntity.getType().name().toLowerCase() : targetEntity.getType().getName();
-                final GDEntityType type = EntityTypeRegistryModule.getInstance().getById(name).orElse(null);
-                if (type == null) {
-                    // Should never happen
+
+                if (targetEntity instanceof Item) {
+                    return getPermissionIdentifier(((Item) targetEntity).getItemStack(), isSource);
+                }
+                if (targetEntity.getType() == null) {
+                    // Plugin sending fake player and violating API contract so just ignore...
                     return "unknown";
                 }
 
-                String id = type.getId();
-                if (!(targetEntity instanceof Player) && type.getEnumCreatureTypeId() != null) {
-                    id = type.getEnumCreatureTypeId() + "." + type.getName();
+                final String name = targetEntity.getType().getName() == null ? targetEntity.getType().name().toLowerCase() : targetEntity.getType().getName();
+                final GDEntityType type = EntityTypeRegistryModule.getInstance().getByBukkitType(targetEntity);
+                if (type == null) {
+                    // Should never happen
+                    return name;
                 }
 
-                if (targetEntity instanceof Item) {
-                    id = ((Item) targetEntity).getItemStack().getType().name().toLowerCase();
-                }
+                String id = type.getId();
 
                 return populateEventSourceTarget(id, isSource);
             } else if (obj instanceof Block) {
-                final String id = BlockTypeRegistryModule.getInstance().getNMSKey((Block) obj);
+                final Block block = (Block) obj;
+                if (GriefDefenderPlugin.getInstance().getSlimefunProvider() != null) { 
+                    final String customItemId = GriefDefenderPlugin.getInstance().getSlimefunProvider().getSlimeBlockId(block);
+                    if (customItemId != null && !customItemId.isEmpty()) {
+                        return populateEventSourceTarget(customItemId, isSource);
+                    }
+                }
+
+                final String id = BlockTypeRegistryModule.getInstance().getNMSKey(block);
                 return populateEventSourceTarget(id, isSource);
             } else if (obj instanceof BlockState) {
                 final BlockState blockstate = (BlockState) obj;
+                if (blockstate.getBlock().getType() != blockstate.getType()) {
+                    return populateEventSourceTarget(blockstate.getType().name().toLowerCase(), isSource);
+                }
+                if (GriefDefenderPlugin.getInstance().getSlimefunProvider() != null) { 
+                    final String customItemId = GriefDefenderPlugin.getInstance().getSlimefunProvider().getSlimeBlockId(blockstate.getBlock());
+                    if (customItemId != null && !customItemId.isEmpty()) {
+                        return populateEventSourceTarget(customItemId, isSource);
+                    }
+                }
                 final String id = BlockTypeRegistryModule.getInstance().getNMSKey(blockstate);
+                return populateEventSourceTarget(id, isSource);
+            } else if (obj instanceof Material) {
+                final String id = ((Material) obj).name().toLowerCase();
                 return populateEventSourceTarget(id, isSource);
             } /*else if (obj instanceof TileEntity) {
                 TileEntity tileEntity = (TileEntity) obj;
@@ -486,6 +622,18 @@ public class GDPermissionManager implements PermissionManager {
                 
             } else if (obj instanceof ItemStack) {
                 final ItemStack itemstack = (ItemStack) obj;
+                if (GriefDefenderPlugin.getInstance().isCustomItemsInstalled) {
+                    final String customItemId = NMSUtil.getInstance().getItemStackNBTString(itemstack, "com.jojodmo.customitems.itemID");
+                    if (customItemId != null && !customItemId.isEmpty()) {
+                        return populateEventSourceTarget("customitems:" + customItemId, isSource);
+                    }
+                }
+                if (GriefDefenderPlugin.getInstance().getSlimefunProvider() != null) { 
+                    final String customItemId = GriefDefenderPlugin.getInstance().getSlimefunProvider().getSlimeItemId(itemstack);
+                    if (customItemId != null && !customItemId.isEmpty()) {
+                        return populateEventSourceTarget(customItemId, isSource);
+                    }
+                }
                 String id = ItemTypeRegistryModule.getInstance().getNMSKey(itemstack);
                 return populateEventSourceTarget(id, isSource);
             } else if (obj instanceof DamageCause) {
@@ -513,84 +661,142 @@ public class GDPermissionManager implements PermissionManager {
 
     public Set<Context> getPermissionContexts(GDClaim claim, Object obj, boolean isSource) {
         final Set<Context> contexts = new HashSet<>();
-        if (obj != null) {
-            if (obj instanceof Entity) {
-                Entity targetEntity = (Entity) obj;
-
-                if (targetEntity instanceof Item) {
-                    return getPermissionContexts(claim, ((Item) targetEntity).getItemStack(), isSource);
-                }
-                if (targetEntity.getType() == null) {
-                    // Plugin sending fake player and violating API contract so just ignore...
-                    return contexts;
-                }
-
-                final String name = targetEntity.getType().getName() == null ? targetEntity.getType().name().toLowerCase() : targetEntity.getType().getName();
-                final GDEntityType type = EntityTypeRegistryModule.getInstance().getById(name).orElse(null);
-                if (type == null) {
-                    // Should never happen
-                    return contexts;
-                }
-
-                String id = type.getId();
-
-                if (!(targetEntity instanceof Player)) {
-                    addCustomEntityTypeContexts(targetEntity, id, contexts, type, isSource);
-                }
-
-                if (this.isObjectIdBanned(claim, id, BanType.ENTITY)) {
-                    return null;
-                }
-                return populateEventSourceTargetContext(contexts, id, isSource);
-            } else if (obj instanceof Block) {
-                final Block block = (Block) obj;
-                final String id = BlockTypeRegistryModule.getInstance().getNMSKey(block);
-                this.addBlockPropertyContexts(contexts, block);
-                if (this.isObjectIdBanned(claim, id, BanType.BLOCK)) {
-                    return null;
-                }
-                return populateEventSourceTargetContext(contexts, id, isSource);
-            } else if (obj instanceof BlockState) {
-                final BlockState blockstate = (BlockState) obj;
-                final String id = BlockTypeRegistryModule.getInstance().getNMSKey(blockstate);
-                this.addBlockPropertyContexts(contexts, blockstate.getBlock());
-                if (this.isObjectIdBanned(claim, id, BanType.BLOCK)) {
-                    return null;
-                }
-                return populateEventSourceTargetContext(contexts, id, isSource);
-            } else if (obj instanceof Inventory) {
-                final String id = ((Inventory) obj).getType().name().toLowerCase();
-                return populateEventSourceTargetContext(contexts, id, isSource);
-            } else if (obj instanceof InventoryType) {
-                final String id = ((InventoryType) obj).name().toLowerCase();
-                return populateEventSourceTargetContext(contexts, id, isSource);
-            } else if (obj instanceof ItemStack) {
-                final ItemStack itemstack = (ItemStack) obj;
-                if (NMSUtil.getInstance().isItemFood(itemstack)) {
-                    if (isSource) {
-                        contexts.add(ContextGroups.SOURCE_FOOD);
-                    } else {
-                        contexts.add(ContextGroups.TARGET_FOOD);
-                    }
-                }
-                String id = ItemTypeRegistryModule.getInstance().getNMSKey(itemstack);
-                if (this.isObjectIdBanned(claim, id, BanType.ITEM)) {
-                    return null;
-                }
-                return populateEventSourceTargetContext(contexts, id, isSource);
-            } else if (obj instanceof DamageCause) {
-                final DamageCause damageCause = (DamageCause) obj;
-                String id = damageCause.name().toLowerCase();
-                return populateEventSourceTargetContext(contexts, id, isSource);
-            } else if (obj instanceof SpawnReason) {
-                return populateEventSourceTargetContext(contexts, "spawnreason:" + ((SpawnReason) obj).name().toLowerCase(), isSource);
-            } else if (obj instanceof CreatureSpawner) {
-                final CreatureSpawner spawner = (CreatureSpawner) obj;
-                return this.getPermissionContexts(claim, spawner.getBlock(), isSource);
-            }  else if (obj instanceof String) {
-                final String id = obj.toString().toLowerCase();
-                return populateEventSourceTargetContext(contexts, id, isSource);
+        if (obj == null) {
+            if (isSource) {
+                contexts.add(ContextGroups.SOURCE_ANY);
+            } else {
+                contexts.add(ContextGroups.TARGET_ANY);
             }
+            return contexts;
+        }
+
+        if (obj instanceof Entity) {
+            Entity targetEntity = (Entity) obj;
+
+            if (targetEntity instanceof Item) {
+                return getPermissionContexts(claim, ((Item) targetEntity).getItemStack(), isSource);
+            }
+            if (targetEntity.getType() == null) {
+                // Plugin sending fake player and violating API contract so just ignore...
+                return contexts;
+            }
+
+            final GDEntityType type = EntityTypeRegistryModule.getInstance().getByBukkitType(targetEntity);
+            String id = type.getId();
+
+            if (!(targetEntity instanceof Player)) {
+                addCustomEntityTypeContexts(targetEntity, id, contexts, type, isSource);
+            } else {
+                final Player player = (Player) targetEntity;
+                if (PlayerUtil.getInstance().isFakePlayer(player)) { 
+                    final String modId = EntityTypeRegistryModule.getInstance().findModIdFromBukkit(targetEntity);
+                    id = modId + ":fakeplayer_" + EntityTypeRegistryModule.getInstance().getFriendlyName(targetEntity.getName());
+                }
+            }
+
+            if (this.isObjectIdBanned(claim, id, BanType.ENTITY)) {
+                return null;
+            }
+            return populateEventSourceTargetContext(contexts, id, isSource);
+        } else if (obj instanceof Block) {
+            final Block block = (Block) obj;
+            if (GriefDefenderPlugin.getInstance().getSlimefunProvider() != null) { 
+                final String customItemId = GriefDefenderPlugin.getInstance().getSlimefunProvider().getSlimeBlockId(block, contexts);
+                if (customItemId != null && !customItemId.isEmpty()) {
+                    return populateEventSourceTargetContext(contexts, customItemId, isSource);
+                }
+            }
+            final String id = BlockTypeRegistryModule.getInstance().getNMSKey(block);
+            this.addBlockContexts(contexts, block, isSource);
+            if (this.isObjectIdBanned(claim, id, BanType.BLOCK)) {
+                return null;
+            }
+
+            return populateEventSourceTargetContext(contexts, id, isSource);
+        } else if (obj instanceof BlockState) {
+            final BlockState blockstate = (BlockState) obj;
+            if (blockstate.getBlock().getType() != blockstate.getType()) {
+                return populateEventSourceTargetContext(contexts, blockstate.getType().name().toLowerCase(), isSource);
+            }
+            if (GriefDefenderPlugin.getInstance().getSlimefunProvider() != null) { 
+                final String customItemId = GriefDefenderPlugin.getInstance().getSlimefunProvider().getSlimeBlockId(blockstate.getBlock(), contexts);
+                if (customItemId != null && !customItemId.isEmpty()) {
+                    return populateEventSourceTargetContext(contexts, customItemId, isSource);
+                }
+            }
+            final String id = BlockTypeRegistryModule.getInstance().getNMSKey(blockstate);
+            this.addBlockContexts(contexts, blockstate.getBlock(), isSource);
+            if (this.isObjectIdBanned(claim, id, BanType.BLOCK)) {
+                return null;
+            }
+
+            return populateEventSourceTargetContext(contexts, id, isSource);
+        } else if (obj instanceof Material) {
+            final String id = ((Material) obj).name().toLowerCase();
+            return populateEventSourceTargetContext(contexts, id, isSource);
+        } else if (obj instanceof Inventory) {
+            final String id = ((Inventory) obj).getType().name().toLowerCase();
+            return populateEventSourceTargetContext(contexts, id, isSource);
+        } else if (obj instanceof InventoryType) {
+            final String id = ((InventoryType) obj).name().toLowerCase();
+            return populateEventSourceTargetContext(contexts, id, isSource);
+        } else if (obj instanceof ItemStack) {
+            final ItemStack itemstack = (ItemStack) obj;
+            if (GriefDefenderPlugin.getInstance().isCustomItemsInstalled) {
+                final String customItemId = NMSUtil.getInstance().getItemStackNBTString(itemstack, "com.jojodmo.customitems.itemID");
+                if (customItemId != null && !customItemId.isEmpty()) {
+                    return populateEventSourceTargetContext(contexts, "customitems:" + customItemId, isSource);
+                }
+            }
+            if (GriefDefenderPlugin.getInstance().getSlimefunProvider() != null) { 
+                final String customItemId = GriefDefenderPlugin.getInstance().getSlimefunProvider().getSlimeItemId(itemstack, contexts);
+                if (customItemId != null && !customItemId.isEmpty()) {
+                    return populateEventSourceTargetContext(contexts, customItemId, isSource);
+                }
+            }
+            if (NMSUtil.getInstance().isItemFood(itemstack)) {
+                if (isSource) {
+                    contexts.add(ContextGroups.SOURCE_FOOD);
+                } else {
+                    contexts.add(ContextGroups.TARGET_FOOD);
+                }
+            }
+            if (NMSUtil.getInstance().isItemHanging(itemstack)) {
+                if (isSource) {
+                    contexts.add(ContextGroups.SOURCE_HANGING);
+                } else {
+                    contexts.add(ContextGroups.TARGET_HANGING);
+                }
+            }
+            if (NMSUtil.getInstance().isItemBoat(itemstack) || NMSUtil.getInstance().isItemMinecart(itemstack)) {
+                if (isSource) {
+                    contexts.add(ContextGroups.SOURCE_VEHICLE);
+                } else {
+                    contexts.add(ContextGroups.TARGET_VEHICLE);
+                }
+            }
+            String id = ItemTypeRegistryModule.getInstance().getNMSKey(itemstack);
+            if (this.isObjectIdBanned(claim, id, BanType.ITEM)) {
+                return null;
+            }
+
+            return populateEventSourceTargetContext(contexts, id, isSource);
+        } else if (obj instanceof DamageCause) {
+            final DamageCause damageCause = (DamageCause) obj;
+            String id = damageCause.name().toLowerCase();
+            return populateEventSourceTargetContext(contexts, id, isSource);
+        } else if (obj instanceof TeleportCause) {
+            final TeleportCause teleportCause = (TeleportCause) obj;
+            String id = teleportCause.name().toLowerCase();
+            return populateEventSourceTargetContext(contexts, id, isSource);
+        } else if (obj instanceof SpawnReason) {
+            return populateEventSourceTargetContext(contexts, "spawnreason:" + ((SpawnReason) obj).name().toLowerCase(), isSource);
+        } else if (obj instanceof CreatureSpawner) {
+            final CreatureSpawner spawner = (CreatureSpawner) obj;
+            return this.getPermissionContexts(claim, spawner.getBlock(), isSource);
+        }  else if (obj instanceof String) {
+            final String id = obj.toString().toLowerCase();
+            return populateEventSourceTargetContext(contexts, id, isSource);
         }
 
         return contexts;
@@ -667,9 +873,11 @@ public class GDPermissionManager implements PermissionManager {
 
     public void addCustomEntityTypeContexts(Entity targetEntity, String id, Set<Context> contexts, GDEntityType type, boolean isSource) {
         if (isSource) {
-            contexts.add(ContextGroups.SOURCE_ALL);
+            contexts.add(ContextGroups.SOURCE_ANY);
+            contexts.add(new Context(ContextKeys.SOURCE, "#" + type.getModId().toLowerCase() + ":any"));
         } else {
-            contexts.add(ContextGroups.TARGET_ALL);
+            contexts.add(ContextGroups.TARGET_ANY);
+            contexts.add(new Context(ContextKeys.TARGET, "#" + type.getModId().toLowerCase() + ":any"));
         }
         // check vehicle
         if (targetEntity instanceof Vehicle) {
@@ -679,68 +887,104 @@ public class GDPermissionManager implements PermissionManager {
                 contexts.add(ContextGroups.TARGET_VEHICLE);
             }
         }
+        // pixelmon
+        if (targetEntity.getType() != null && targetEntity.getType().name().equalsIgnoreCase("pixelmon_pixelmon") || targetEntity.getType().name().equalsIgnoreCase("pixelmon")) {
+            if (isSource) {
+                contexts.add(ContextGroups.SOURCE_PIXELMON);
+            } else {
+                contexts.add(ContextGroups.TARGET_PIXELMON);
+            }
+        }
         final String creatureType = type.getEnumCreatureTypeId();
         if (creatureType == null) {
             return;
         }
 
-        //contexts.add(new Context(contextKey, "#" + creatureType));
+        final String modId = type.getModId().toLowerCase();
         if (creatureType.contains("animal")) {
             if (isSource) {
                 contexts.add(ContextGroups.SOURCE_ANIMAL);
+                contexts.add(new Context(ContextKeys.SOURCE, "#" + modId + ":animal"));
             } else {
                 contexts.add(ContextGroups.TARGET_ANIMAL);
+                contexts.add(new Context(ContextKeys.TARGET, "#" + modId + ":animal"));
             }
-            this.checkPetContext(targetEntity, id, contexts);
+            this.checkPetContext(targetEntity, modId, contexts, isSource);
         } else if (creatureType.contains("aquatic")) {
             if (isSource) {
                 contexts.add(ContextGroups.SOURCE_AQUATIC);
+                contexts.add(new Context(ContextKeys.SOURCE, "#" + modId + ":aquatic"));
             } else {
                 contexts.add(ContextGroups.TARGET_AQUATIC);
+                contexts.add(new Context(ContextKeys.TARGET, "#" + modId + ":aquatic"));
             }
-            this.checkPetContext(targetEntity, id, contexts);
+            this.checkPetContext(targetEntity, modId, contexts, isSource);
         } else if (creatureType.contains("monster")) {
             if (isSource) {
                 contexts.add(ContextGroups.SOURCE_MONSTER);
+                contexts.add(new Context(ContextKeys.SOURCE, "#" + modId + ":monster"));
             } else {
                 contexts.add(ContextGroups.TARGET_MONSTER);
+                contexts.add(new Context(ContextKeys.TARGET, "#" + modId + ":monster"));
             }
         }  else if (creatureType.contains("ambient")) {
             if (isSource) {
                 contexts.add(ContextGroups.SOURCE_AMBIENT);
+                contexts.add(new Context(ContextKeys.SOURCE, "#" + modId + ":ambient"));
             } else {
                 contexts.add(ContextGroups.TARGET_AMBIENT);
+                contexts.add(new Context(ContextKeys.TARGET, "#" + modId + ":ambient"));
             }
-            this.checkPetContext(targetEntity, id, contexts);
+            this.checkPetContext(targetEntity, modId, contexts, isSource);
         } else {
             if (isSource) {
                 contexts.add(ContextGroups.SOURCE_MISC);
+                contexts.add(new Context(ContextKeys.SOURCE, "#" + modId + ":misc"));
             } else {
                 contexts.add(ContextGroups.TARGET_MISC);
+                contexts.add(new Context(ContextKeys.TARGET, "#" + modId + ":misc"));
             }
         }
     }
 
-    private void checkPetContext(Entity targetEntity, String id, Set<Context> contexts) {
+    private void checkPetContext(Entity targetEntity, String modId, Set<Context> contexts, boolean isSource) {
         if (this.eventSubject != null && this.eventSubject instanceof GDPermissionUser) {
             final GDPermissionUser user = (GDPermissionUser) this.eventSubject;
             final UUID uuid = NMSUtil.getInstance().getTameableOwnerUUID(targetEntity);
             if (uuid != null && uuid.equals(user.getUniqueId())) {
-                contexts.add(new Context(ContextGroupKeys.PET, id));
+                if (isSource) {
+                    contexts.add(ContextGroups.SOURCE_PET);
+                    if (modId != null && !modId.isEmpty()) {
+                        contexts.add(new Context(ContextKeys.SOURCE, "#" + modId + ":pet"));
+                    }
+                } else {
+                    contexts.add(ContextGroups.TARGET_PET);
+                    if (modId != null && !modId.isEmpty()) {
+                        contexts.add(new Context(ContextKeys.TARGET, "#" + modId + ":pet"));
+                    }
+                }
             }
         }
     }
 
-    private void addPlayerContexts(Player player, Set<Context> contexts) {
-        if(!PermissionUtil.getInstance().containsKey(contexts, "used_item")) {
+    private void addPlayerContexts(Player player, Set<Context> contexts, Flag flag) {
+        Context usedItemContext = null;
+        for (Context context : contexts) {
+            if (context.getKey().equals(ContextKeys.USED_ITEM)) {
+                usedItemContext = context;
+                break;
+            }
+        }
+        if(usedItemContext == null) {
             // special case
             if (this.currentEvent instanceof PlayerBucketEvent) {
                 final PlayerBucketEvent bucketEvent = (PlayerBucketEvent) this.currentEvent;
-                contexts.add(new Context("used_item", "minecraft:" + bucketEvent.getBucket().name().toLowerCase()));
+                contexts.add(new Context(ContextKeys.USED_ITEM, "minecraft:" + bucketEvent.getBucket().name().toLowerCase()));
             } else {
                 final ItemStack stack = NMSUtil.getInstance().getActiveItem(player, this.currentEvent);
                 if (stack != null && stack.getType() != Material.AIR) {
-                    contexts.add(new Context("used_item", getPermissionIdentifier(stack)));
+                    final String stackId = getPermissionIdentifier(stack);
+                    contexts.add(new Context(ContextKeys.USED_ITEM, stackId));
                     if (stack.getItemMeta() != null && stack.getItemMeta().getDisplayName() != null) {
                         String itemName = stack.getItemMeta().getDisplayName().replaceAll("[^A-Za-z0-9]", "").toLowerCase();
                         if (itemName != null && !itemName.isEmpty()) {
@@ -748,6 +992,31 @@ public class GDPermissionManager implements PermissionManager {
                                 itemName = "minecraft:" + itemName;
                             }
                             contexts.add(new Context("item_name", itemName));
+                        }
+                    }
+                    // populate item tag
+                    if (GriefDefenderPlugin.getInstance().getTagProvider() != null) {
+                        final Set<Context> tagContexts = GriefDefenderPlugin.getInstance().getTagProvider().getTagMap().get(stackId);
+                        if (tagContexts != null) {
+                            for (Context context : tagContexts) {
+                                contexts.add(new Context(ContextKeys.USED_ITEM, "#" + context.getKey() + ":" + context.getValue()));
+                                if (context.getKey().equalsIgnoreCase("minecraft")) {
+                                    contexts.add(new Context(ContextKeys.USED_ITEM, "#" + context.getValue()));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } else {
+            // populate item tag
+            if (GriefDefenderPlugin.getInstance().getTagProvider() != null) {
+                final Set<Context> tagContexts = GriefDefenderPlugin.getInstance().getTagProvider().getTagMap().get(usedItemContext.getValue());
+                if (tagContexts != null) {
+                    for (Context context : tagContexts) {
+                        contexts.add(new Context(ContextKeys.USED_ITEM, "#" + context.getKey() + ":" + context.getValue()));
+                        if (context.getKey().equalsIgnoreCase("minecraft")) {
+                            contexts.add(new Context(ContextKeys.USED_ITEM, "#" + context.getValue()));
                         }
                     }
                 }
@@ -771,67 +1040,23 @@ public class GDPermissionManager implements PermissionManager {
         }
     }
 
-    private Set<Context> addBlockPropertyContexts(Set<Context> contexts, Block block) {
+    private Set<Context> addBlockContexts(Set<Context> contexts, Block block, boolean isSource) {
         Matcher matcher = BLOCKSTATE_PATTERN.matcher(NMSUtil.getInstance().getBlockDataString((Block) block));
         if (matcher.find()) {
             final String properties[] = matcher.group(0).split(",");
             for (String property : properties) {
-                contexts.add(new Context("state", property.replace("=", ":")));
+                contexts.add(new Context(ContextKeys.STATE, property.replace("=", ":")));
+            }
+        }
+
+        if (NMSUtil.getInstance().isBlockCrops(block)) {
+            if (isSource) {
+                contexts.add(ContextGroups.SOURCE_CROPS);
+            } else {
+                contexts.add(ContextGroups.TARGET_CROPS);
             }
         }
         return contexts;
-    }
-
-    public String getSourcePermission(String flagPermission) {
-        final int index = flagPermission.indexOf(".source.");
-        if (index != -1) {
-            return flagPermission.substring(index + 8);
-        }
-
-        return null;
-    }
-
-    public String getTargetPermission(String flagPermission) {
-        flagPermission = StringUtils.replace(flagPermission, "griefdefender.flag.", "");
-        boolean found = false;
-        for (Flag flag : FlagRegistryModule.getInstance().getAll()) {
-            if (flagPermission.contains(flag.toString() + ".")) {
-                found = true;
-            }
-            flagPermission = StringUtils.replace(flagPermission, flag.toString() + ".", "");
-        }
-        if (!found) {
-            return null;
-        }
-        final int sourceIndex = flagPermission.indexOf(".source.");
-        if (sourceIndex != -1) {
-            flagPermission = StringUtils.replace(flagPermission, flagPermission.substring(sourceIndex, flagPermission.length()), "");
-        }
-
-        return flagPermission;
-    }
-
-    // Used for debugging
-    public String getPermission(Object source, Object target, String flagPermission) {
-        String sourceId = getPermissionIdentifier(source, true);
-        String targetPermission = flagPermission;
-        String targetId = getPermissionIdentifier(target);
-        if (!targetId.isEmpty()) {
-            if (!sourceId.isEmpty()) {
-                // move target meta to end of permission
-                Matcher m = PATTERN_META.matcher(targetId);
-                String targetMeta = "";
-                if (m.find()) {
-                    targetMeta = m.group(0);
-                    targetId = StringUtils.replace(targetId, targetMeta, "");
-                }
-                targetPermission += "." + targetId + ".source." + sourceId + targetMeta;
-            } else {
-                targetPermission += "." + targetId;
-            }
-        }
-        targetPermission = StringUtils.replace(targetPermission, ":", ".");
-        return targetPermission;
     }
 
     public String getIdentifierWithoutMeta(String targetId) {
@@ -848,6 +1073,10 @@ public class GDPermissionManager implements PermissionManager {
         if (!id.contains(":")) {
             id = "minecraft:" + id;
         }
+        contexts = this.populateTagContextsForId(contexts, id, isSource);
+        // always add source/target any contexts
+        contexts.add(ContextGroups.SOURCE_ANY);
+        contexts.add(ContextGroups.TARGET_ANY);
         final String[] parts = id.split(":");
         final String modId = parts[0];
         if (isSource) {
@@ -859,6 +1088,34 @@ public class GDPermissionManager implements PermissionManager {
             contexts.add(new Context("target", this.eventTargetId));
             contexts.add(new Context("target", modId + ":any"));
         }
+
+        return contexts;
+    }
+
+    public Set<Context> populateTagContextsForId(Set<Context> contexts, String id, boolean isSource) {
+        if (GriefDefenderPlugin.getInstance().getTagProvider() == null) {
+            return contexts;
+        }
+
+        final Set<Context> tagContexts = GriefDefenderPlugin.getInstance().getTagProvider().getTagMap().get(id);
+        if (tagContexts == null) {
+            return contexts;
+        }
+
+        for (Context context : tagContexts) {
+            if (isSource) {
+                contexts.add(new Context(ContextKeys.SOURCE, "#" + context.getKey() + ":" + context.getValue()));
+                if (context.getKey().equalsIgnoreCase("minecraft")) {
+                    contexts.add(new Context(ContextKeys.SOURCE, "#" + context.getValue()));
+                }
+            } else {
+                contexts.add(new Context(ContextKeys.TARGET, "#" + context.getKey() + ":" + context.getValue()));
+                if (context.getKey().equalsIgnoreCase("minecraft")) {
+                    contexts.add(new Context(ContextKeys.TARGET, "#" + context.getValue()));
+                }
+            }
+        }
+
         return contexts;
     }
 
@@ -952,8 +1209,7 @@ public class GDPermissionManager implements PermissionManager {
             return result;
         }
 
-        result.complete(PermissionUtil.getInstance().setPermissionValue((GDPermissionHolder) subject, flag, value, contexts));
-        return result;
+        return PermissionUtil.getInstance().setPermissionValue((GDPermissionHolder) subject, flag, value, contexts);
     }
 
     // internal
@@ -982,8 +1238,8 @@ public class GDPermissionManager implements PermissionManager {
             return result;
         }
 
-        final Player player = GDCauseStackManager.getInstance().getCurrentCause().first(Player.class).orElse(null);
-        CommandSender commandSource = player != null ? player : Bukkit.getConsoleSender();
+        final GDPermissionUser user = GDCauseStackManager.getInstance().getCurrentCause().first(GDPermissionUser.class).orElse(null);
+        CommandSender commandSource = user != null && user.getOnlinePlayer() != null ? user.getOnlinePlayer() : Bukkit.getConsoleSender();
         result.complete(CommandHelper.addFlagPermission(commandSource, subject, claim, flag, target, value, contexts));
         return result;
     }
@@ -1029,7 +1285,7 @@ public class GDPermissionManager implements PermissionManager {
     }
 
     public <T> T getInternalOptionValue(TypeToken<T> type, OfflinePlayer player, Option<T> option) {
-        return getInternalOptionValue(type, player, option, null);
+        return getInternalOptionValue(type, player, option, (ClaimType) null);
     }
 
     public <T> T getInternalOptionValue(TypeToken<T> type, OfflinePlayer player, Option<T> option, Claim claim) {
@@ -1038,6 +1294,11 @@ public class GDPermissionManager implements PermissionManager {
             return this.getInternalOptionValue(type, holder, option, claim, claim.getType(), new HashSet<>());
         }
         return this.getInternalOptionValue(type, holder, option, (ClaimType) null);
+    }
+
+    public <T> T getInternalOptionValue(TypeToken<T> type, OfflinePlayer player, Option<T> option, ClaimType claimType) {
+        final GDPermissionHolder holder = PermissionHolderCache.getInstance().getOrCreateHolder(player.getUniqueId().toString());
+        return this.getInternalOptionValue(type, holder, option, null, claimType, new HashSet<>());
     }
 
     public <T> T getInternalOptionValue(TypeToken<T> type, GDPermissionHolder holder, Option<T> option) {
@@ -1074,49 +1335,87 @@ public class GDPermissionManager implements PermissionManager {
             PermissionUtil.getInstance().addActiveContexts(contexts, holder, playerData, claim);
         }
 
+        Set<Context> optionContexts = new HashSet<>(contexts);
         if (!option.isGlobal() && (claim != null || claimType != null)) {
             // check claim
             if (claim != null) {
-                contexts.add(claim.getContext());
-                final T value = this.getOptionActualValue(type, holder, option, contexts);
+                // check override
+                if (claim.isAdminClaim()) {
+                    optionContexts.add(ClaimContexts.ADMIN_OVERRIDE_CONTEXT);
+                } else if (claim.isTown()) {
+                    optionContexts.add(ClaimContexts.TOWN_OVERRIDE_CONTEXT);
+                } else if (claim.isBasicClaim()) {
+                    optionContexts.add(ClaimContexts.BASIC_OVERRIDE_CONTEXT);
+                } else if (claim.isWilderness()) {
+                    optionContexts.add(ClaimContexts.WILDERNESS_OVERRIDE_CONTEXT);
+                }
+                if (!claim.isWilderness()) {
+                    optionContexts.add(ClaimContexts.USER_OVERRIDE_CONTEXT);
+                }
+
+                optionContexts.add(((GDClaim) claim).getWorldContext());
+                optionContexts.add(ClaimContexts.GLOBAL_OVERRIDE_CONTEXT);
+
+                T value = this.getOptionActualValue(type, holder, option, optionContexts);
                 if (value != null) {
                     return value;
                 }
-                contexts.remove(claim.getContext());
+
+
+                // check claim owner override
+                optionContexts = new HashSet<>(contexts);
+                optionContexts.add(((GDClaim) claim).getWorldContext());
+                optionContexts.add(claim.getOverrideClaimContext());
+                value = this.getOptionActualValue(type, holder, option, optionContexts);
+                if (value != null) {
+                    return value;
+                }
+
+                optionContexts = new HashSet<>(contexts);
+                optionContexts.add(claim.getContext());
+                value = this.getOptionActualValue(type, holder, option, optionContexts);
+                if (value != null) {
+                    return value;
+                }
             }
 
             // check claim type
             if (claimType != null) {
-                contexts.add(claimType.getContext());
-                final T value = this.getOptionActualValue(type, holder, option, contexts);
+                optionContexts = new HashSet<>(contexts);
+                optionContexts.add(claimType.getContext());
+                final T value = this.getOptionActualValue(type, holder, option, optionContexts);
                 if (value != null) {
                     return value;
                 }
-                contexts.remove(claimType.getContext());
             }
         }
 
+        optionContexts = new HashSet<>(contexts);
         // Check only active contexts
-        T value = this.getOptionActualValue(type, holder, option, contexts);
+        T value = this.getOptionActualValue(type, holder, option, optionContexts);
         if (value != null) {
             return value;
         }
 
-        // Check type/global default context
-        if (claimType != null) {
-            contexts.add(claimType.getDefaultContext());
+        if (claim != null) {
+            optionContexts.add(claim.getDefaultTypeContext());
+            value = this.getOptionActualValue(type, holder, option, optionContexts);
+            if (value != null) {
+                return value;
+            }
+            optionContexts.remove(claim.getDefaultTypeContext());
         }
-        contexts.add(ClaimContexts.GLOBAL_DEFAULT_CONTEXT);
-        value = this.getOptionActualValue(type, holder, option, contexts);
+
+        optionContexts.add(ClaimContexts.GLOBAL_DEFAULT_CONTEXT);
+        if (claim != null && !claim.isWilderness()) {
+            optionContexts.add(ClaimContexts.USER_DEFAULT_CONTEXT);
+        }
+        value = this.getOptionActualValue(type, holder, option, optionContexts);
         if (value != null) {
             return value;
         }
-        contexts.remove(ClaimContexts.GLOBAL_DEFAULT_CONTEXT);
-        if (claimType != null) {
-            contexts.remove(claimType.getDefaultContext());
-        }
 
-        // Check global
+        // Check default holder
         if (holder != GriefDefenderPlugin.DEFAULT_HOLDER) {
             return getInternalOptionValue(type, GriefDefenderPlugin.DEFAULT_HOLDER, option, claim, claimType, contexts);
         }
@@ -1320,14 +1619,12 @@ public class GDPermissionManager implements PermissionManager {
 
     @Override
     public CompletableFuture<PermissionResult> setOption(Option option, String value, Set<Context> contexts) {
-        final PermissionResult result = PermissionUtil.getInstance().setOptionValue(GriefDefenderPlugin.DEFAULT_HOLDER, option.getPermission(), value, contexts);
-        return CompletableFuture.completedFuture(result);
+        return PermissionUtil.getInstance().setOptionValue(GriefDefenderPlugin.DEFAULT_HOLDER, option.getPermission(), value, contexts);
     }
 
     @Override
     public CompletableFuture<PermissionResult> setOption(Option option, Subject subject, String value, Set<Context> contexts) {
-        final PermissionResult result = PermissionUtil.getInstance().setOptionValue((GDPermissionHolder) subject, option.getPermission(), value, contexts);
-        return CompletableFuture.completedFuture(result);
+        return PermissionUtil.getInstance().setOptionValue((GDPermissionHolder) subject, option.getPermission(), value, contexts);
     }
 
     @Override
@@ -1358,21 +1655,43 @@ public class GDPermissionManager implements PermissionManager {
 
     @Override
     public CompletableFuture<PermissionResult> setFlagDefinition(Subject subject, FlagDefinition flagDefinition, Tristate value) {
-        final Set<Context> contexts = new HashSet<>();
-        contexts.addAll(flagDefinition.getContexts());
-        PermissionResult result = null;
-        CompletableFuture<PermissionResult> future = new CompletableFuture<>();
-        for (FlagData flagData : flagDefinition.getFlagData()) {
-            final Set<Context> flagContexts = new HashSet<>(contexts);
-            flagContexts.addAll(flagData.getContexts());
-            result = PermissionUtil.getInstance().setPermissionValue((GDPermissionHolder) subject, flagData.getFlag(), value, flagContexts);
-            if (!result.successful()) {
-                future.complete(result);
-                return future;
+        Set<Context> contexts = new HashSet<>(flagDefinition.getContexts());
+        Set<Context> defaultContexts = new HashSet<>();
+        Set<Context> overrideContexts = new HashSet<>();
+        String groupStr = null;
+        final Iterator<Context> iterator = contexts.iterator();
+        while (iterator.hasNext()) {
+            final Context context = iterator.next();
+            if (context.getKey().equalsIgnoreCase("gd_claim_default")) {
+                defaultContexts.add(context);
+            } else if (context.getKey().equalsIgnoreCase("gd_claim_override")) {
+                if (context.getValue().equalsIgnoreCase("claim")) {
+                    iterator.remove();
+                    continue;
+                }
+                overrideContexts.add(context);
+            } else if (context.getKey().equalsIgnoreCase("group")) {
+                groupStr = context.getValue();
+            }
+        }
+        GDPermissionHolder holder = GriefDefenderPlugin.DEFAULT_HOLDER;
+        if (groupStr != null) {
+            if (PermissionUtil.getInstance().hasGroupSubject(groupStr)) {
+                holder = PermissionHolderCache.getInstance().getOrCreateGroup(groupStr);
+                if (holder == null) {
+                    holder = GriefDefenderPlugin.DEFAULT_HOLDER;
+                }
             }
         }
 
-        future.complete(result);
-        return future;
+        CompletableFuture<PermissionResult> result = new CompletableFuture<>();
+        if (!defaultContexts.isEmpty()) {
+            result = PermissionUtil.getInstance().setFlagDefinition(holder, flagDefinition, flagDefinition.getDefaultValue(), defaultContexts, true);
+        }
+        if (!overrideContexts.isEmpty()) {
+            result = PermissionUtil.getInstance().setFlagDefinition(holder, flagDefinition, flagDefinition.getDefaultValue(), overrideContexts, false);
+        }
+        PermissionUtil.getInstance().save(holder);
+        return result;
     }
 }

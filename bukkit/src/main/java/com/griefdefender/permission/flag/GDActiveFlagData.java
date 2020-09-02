@@ -33,12 +33,16 @@ import net.kyori.text.format.TextColor;
 import net.kyori.text.format.TextDecoration;
 
 import java.util.Set;
+import java.util.UUID;
 
 public class GDActiveFlagData {
 
     public enum Type {
         CLAIM,
+        CLAIM_PARENT_INHERIT,
         DEFAULT,
+        OWNER_OVERRIDE,
+        OWNER_OVERRIDE_PARENT_INHERIT,
         OVERRIDE,
         UNDEFINED
     }
@@ -48,6 +52,8 @@ public class GDActiveFlagData {
     private final Tristate value;
     private final Type type;
     private final Set<Context> contexts;
+    private final Component inheritParentFriendlyType;
+    private final UUID inheritParentUniqueId;
 
     public GDActiveFlagData(GDFlagDefinition flagDefinition, FlagData flagData, Tristate value, Set<Context> contexts, Type type) {
         this.flagDefinition = flagDefinition;
@@ -55,6 +61,18 @@ public class GDActiveFlagData {
         this.value = value;
         this.type = type;
         this.contexts = contexts;
+        this.inheritParentFriendlyType = null;
+        this.inheritParentUniqueId = null;
+    }
+
+    public GDActiveFlagData(GDFlagDefinition flagDefinition, FlagData flagData, Tristate value, Set<Context> contexts, UUID parentUniqueId, Component parentType, Type type) {
+        this.flagDefinition = flagDefinition;
+        this.flagData = flagData;
+        this.value = value;
+        this.type = type;
+        this.contexts = contexts;
+        this.inheritParentFriendlyType = parentType;
+        this.inheritParentUniqueId = parentUniqueId;
     }
 
     public FlagData getFlagData() {
@@ -69,8 +87,14 @@ public class GDActiveFlagData {
         if (this.type == Type.CLAIM) {
             return TextColor.YELLOW;
         }
+        if (this.type == Type.CLAIM_PARENT_INHERIT) {
+            return TextColor.AQUA;
+        }
         if (this.type == Type.OVERRIDE) {
             return TextColor.RED;
+        }
+        if (this.type == Type.OWNER_OVERRIDE_PARENT_INHERIT) {
+            return TextColor.DARK_RED;
         }
         if (this.type == Type.DEFAULT) {
             return TextColor.LIGHT_PURPLE;
@@ -82,7 +106,15 @@ public class GDActiveFlagData {
         return this.type;
     }
 
-    public Component getComponent() {
+    public UUID getInheritParentUniqueId() {
+        return this.inheritParentUniqueId;
+    }
+
+    public Component getInheritParentFriendlyType() {
+        return this.inheritParentFriendlyType;
+    }
+
+    public Component getComponent(String flagGroup) {
         String descr = "Active Claim Result: ";
         final TextColor valueColor = this.getColor();
         TextComponent valueComponent = TextComponent.of(this.value.toString().toLowerCase()).color(valueColor);
@@ -101,19 +133,26 @@ public class GDActiveFlagData {
                     .append(this.flagData.getFlag().getName(), TextColor.GREEN);
 
         if (!this.flagData.getContexts().isEmpty()) {
-            builder.append("\nContexts: ");
+            builder.append("\nContexts: \n");
         }
+
+        final boolean contextNewLine = this.flagDefinition.getFlagData().size() <= 2;
         for (Context context : this.contexts) {
-            if (!this.flagDefinition.isAdmin() && context.getKey().contains("gd_claim")) {
+            if (context.getKey().contains("default") || context.getKey().contains("override")) {
+                // Only used in config for startup
                 continue;
             }
-            builder.append("\n");
             final String key = context.getKey();
             final String value = context.getValue();
             TextColor keyColor = TextColor.AQUA;
             builder.append(key, keyColor)
                     .append("=", TextColor.WHITE)
                     .append(value.replace("minecraft:", ""), TextColor.GRAY);
+            if (contextNewLine) {
+                builder.append("\n");
+            } else {
+                builder.append(" ");
+            }
         }
 
         return builder.build();

@@ -71,6 +71,17 @@ public class GDRemoveClaimEvent extends GDClaimEvent implements RemoveClaimEvent
         }
     }
 
+    public static class Expire extends GDRemoveClaimEvent implements RemoveClaimEvent.Expire {
+
+        public Expire(Claim claim) {
+            super(claim);
+        }
+
+        public Expire(List<Claim> claims) {
+            super(claims);
+        }
+    }
+
     @Override
     public boolean isRestoring() {
         return shouldRestore;

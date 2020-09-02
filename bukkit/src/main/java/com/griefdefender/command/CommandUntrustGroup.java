@@ -102,7 +102,7 @@ public class CommandUntrustGroup extends BaseCommand {
         if(claim.allowGrantPermission(player) != null) {
             final Component message = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PERMISSION_TRUST,
                     ImmutableMap.of(
-                    "player", claim.getOwnerName()));
+                    "player", claim.getOwnerDisplayName()));
             GriefDefenderPlugin.sendMessage(player, message);
             return;
         }

@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.griefdefender.GriefDefenderPlugin;
+import com.griefdefender.api.Subject;
 import com.griefdefender.api.Tristate;
 import com.griefdefender.api.permission.Context;
 import com.griefdefender.api.permission.flag.Flag;
@@ -48,27 +49,20 @@ public class GDFlagDefinition implements FlagDefinition {
     private boolean adminDefinition = false;
     private Set<Context> definitionContexts = new HashSet<>();
     private List<FlagData> data = new ArrayList<>();
+    private Subject subject;
     private String displayName;
     private String groupName;
     private Tristate defaultValue = Tristate.UNDEFINED;
     private Component description;
 
-    public GDFlagDefinition(List<FlagData> flagData, String displayName, Component description, String groupName, boolean isAdmin, Set<Context> contexts) {
+    public GDFlagDefinition(List<FlagData> flagData, String displayName, Component description, String groupName, Subject subject, boolean isAdmin, Set<Context> contexts) {
         this.data = flagData;
         this.displayName = displayName;
         this.description = description;
         this.groupName = groupName;
         this.definitionContexts = contexts;
+        this.subject = subject;
         this.adminDefinition = isAdmin;
-    }
-
-    public void addFlagData(Flag flag, Set<Context> contexts) {
-        this.data.add(new GDFlagData(flag, contexts));
-    }
-
-    @Override
-    public void addFlagData(FlagData flagData) {
-        this.data.add(new GDFlagData(flagData.getFlag(), flagData.getContexts()));
     }
 
     @Override
@@ -140,6 +134,11 @@ public class GDFlagDefinition implements FlagDefinition {
     }
 
     @Override
+    public Subject getSubject() {
+        return this.subject;
+    }
+
+    @Override
     public void setDefaultValue(Tristate value) {
         this.defaultValue = value;
     }
@@ -150,6 +149,7 @@ public class GDFlagDefinition implements FlagDefinition {
         private boolean isAdmin = false;
         private Set<Context> contexts = new HashSet<>();
         private List<FlagData> data = new ArrayList<>();
+        private Subject subject = GriefDefenderPlugin.GD_DEFINITION_HOLDER;
         private String displayName;
         private String groupName;
         private Tristate defaultValue = Tristate.UNDEFINED;
@@ -216,6 +216,12 @@ public class GDFlagDefinition implements FlagDefinition {
         }
 
         @Override
+        public Builder subject(Subject subject) {
+            this.subject = subject;
+            return this;
+        }
+
+        @Override
         public Builder reset() {
             this.enabled = true;
             this.isAdmin = false;
@@ -225,6 +231,7 @@ public class GDFlagDefinition implements FlagDefinition {
             this.groupName = "";
             this.defaultValue = Tristate.UNDEFINED;
             this.description = TextComponent.empty();
+            this.subject = GriefDefenderPlugin.GD_DEFINITION_HOLDER;
             return this;
         }
 
@@ -234,7 +241,7 @@ public class GDFlagDefinition implements FlagDefinition {
             checkNotNull(this.displayName);
             checkNotNull(this.groupName);
             checkNotNull(this.description);
-            final GDFlagDefinition definition = new GDFlagDefinition(this.data, this.displayName, this.description, this.groupName, this.isAdmin, this.contexts);
+            final GDFlagDefinition definition = new GDFlagDefinition(this.data, this.displayName, this.description, this.groupName, this.subject, this.isAdmin, this.contexts);
             definition.setIsEnabled(this.enabled);
             definition.setDefaultValue(this.defaultValue);
             return definition;

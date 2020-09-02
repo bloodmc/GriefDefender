@@ -71,19 +71,14 @@ public class CommandAdjustBonusClaimBlocks extends BaseCommand {
             return;
         }
 
-        // parse the adjustment amount
-        int adjustment = amount;
-        //User user = args.<User>getOne("user").get();
-
-        // give blocks to player
         GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(worldProperties.getUniqueId(), user.getUniqueId());
-        playerData.setBonusClaimBlocks(playerData.getBonusClaimBlocks() + adjustment);
+        playerData.setBonusClaimBlocks(playerData.getBonusClaimBlocks() + amount);
         final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ADJUST_BONUS_BLOCKS_SUCCESS, ImmutableMap.of(
                 "player", user.getName(),
-                "amount", adjustment,
-                "total", playerData.getBonusClaimBlocks()));
+                "amount", amount,
+                "total", playerData.getBonusClaimBlocks() + amount));
         TextAdapter.sendComponent(src, message);
         GriefDefenderPlugin.getInstance().getLogger().info(
-                src.getName() + " adjusted " + user.getName() + "'s bonus claim blocks by " + adjustment + ".");
+                src.getName() + " adjusted " + user.getName() + "'s bonus claim blocks by " + amount + ".");
     }
 }

@@ -26,10 +26,9 @@ package com.griefdefender.configuration.type;
 
 import com.griefdefender.configuration.category.GuiCategory;
 import com.griefdefender.configuration.category.DynmapCategory;
-import com.griefdefender.configuration.category.EconomyCategory;
 import com.griefdefender.configuration.category.MessageCategory;
 import com.griefdefender.configuration.category.MigratorCategory;
-import com.griefdefender.configuration.category.ModuleCategory;
+import com.griefdefender.configuration.category.ModCategory;
 import com.griefdefender.configuration.category.PlayerDataCategory;
 import com.griefdefender.configuration.category.ThreadCategory;
 import com.griefdefender.configuration.category.TownCategory;
@@ -40,19 +39,17 @@ public class GlobalConfig extends ConfigBase {
     @Setting
     public DynmapCategory dynmap = new DynmapCategory();
     @Setting
-    public EconomyCategory economy = new EconomyCategory();
-    @Setting
     public GuiCategory gui = new GuiCategory();
     @Setting
     public PlayerDataCategory playerdata = new PlayerDataCategory();
     @Setting
     public MessageCategory message = new MessageCategory();
+    @Setting
+    public ModCategory mod = new ModCategory();
     @Setting(comment = 
             "List of migrators that convert old or other protection data into the current GD claim data format." + 
             "\nNote: It is recommended to backup data before using.")
     public MigratorCategory migrator = new MigratorCategory();
-    @Setting(value = "modules")
-    public ModuleCategory modules = new ModuleCategory();
     @Setting
     public ThreadCategory thread = new ThreadCategory();
 

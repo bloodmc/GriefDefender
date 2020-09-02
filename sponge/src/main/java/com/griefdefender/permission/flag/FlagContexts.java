@@ -29,40 +29,58 @@ import com.griefdefender.api.permission.ContextKeys;
 
 public class FlagContexts {
 
-    public static final Context SOURCE_PLAYER = new Context(ContextKeys.SOURCE, "minecraft:player");
-    public static final Context SOURCE_TNT = new Context(ContextKeys.SOURCE, "minecraft:tnt");
+    public static final Context SOURCE_AIR = new Context(ContextKeys.SOURCE, "minecraft:air");
+    public static final Context SOURCE_ARROW = new Context(ContextKeys.SOURCE, "minecraft:arrow");
     public static final Context SOURCE_CREEPER = new Context(ContextKeys.SOURCE, "minecraft:creeper");
     public static final Context SOURCE_ENDERDRAGON = new Context(ContextKeys.SOURCE, "minecraft:enderdragon");
-    public static final Context SOURCE_GHAST = new Context(ContextKeys.SOURCE, "minecraft:ghast");
     public static final Context SOURCE_ENDERMAN = new Context(ContextKeys.SOURCE, "minecraft:enderman");
-    public static final Context SOURCE_SNOWMAN = new Context(ContextKeys.SOURCE, "minecraft:snowman");
-    public static final Context SOURCE_WITHER = new Context(ContextKeys.SOURCE, "minecraft:wither");
-    public static final Context SOURCE_LAVA_1_12 = new Context(ContextKeys.SOURCE, "minecraft:flowing_lava");
-    public static final Context SOURCE_WATER_1_12 = new Context(ContextKeys.SOURCE, "minecraft:flowing_water");
-    public static final Context SOURCE_LAVA = new Context(ContextKeys.SOURCE, "minecraft:lava");
-    public static final Context SOURCE_WATER = new Context(ContextKeys.SOURCE, "minecraft:water");
-    public static final Context SOURCE_LIGHTNING_BOLT = new Context(ContextKeys.SOURCE, "minecraft:lightning_bolt");
+    public static final Context SOURCE_END_PORTAL = new Context(ContextKeys.SOURCE, "minecraft:end_portal");
     public static final Context SOURCE_FALL = new Context(ContextKeys.SOURCE, "minecraft:fall");
+    public static final Context SOURCE_FALLING_BLOCK = new Context(ContextKeys.SOURCE, "minecraft:falling_block");
+    public static final Context SOURCE_FARMLAND = new Context(ContextKeys.SOURCE, "minecraft:farmland");
     public static final Context SOURCE_FIRE = new Context(ContextKeys.SOURCE, "minecraft:fire");
+    public static final Context SOURCE_FIRE_TICK = new Context(ContextKeys.SOURCE, "minecraft:fire_tick");
     public static final Context SOURCE_FIREWORKS = new Context(ContextKeys.SOURCE, "minecraft:fireworks");
+    public static final Context SOURCE_GHAST = new Context(ContextKeys.SOURCE, "minecraft:ghast");
     public static final Context SOURCE_ICE = new Context(ContextKeys.SOURCE, "minecraft:ice");
+    public static final Context SOURCE_LAVA = new Context(ContextKeys.SOURCE, "minecraft:lava");
+    public static final Context SOURCE_LAVA_1_12 = new Context(ContextKeys.SOURCE, "minecraft:flowing_lava");
+    public static final Context SOURCE_LIGHTNING_BOLT = new Context(ContextKeys.SOURCE, "minecraft:lightning_bolt");
+    public static final Context SOURCE_MAGMA_BLOCK = new Context(ContextKeys.SOURCE, "minecraft:magma_block");
+    public static final Context SOURCE_NETHER_PORTAL = new Context(ContextKeys.SOURCE, "minecraft:nether_portal");
     public static final Context SOURCE_PISTON = new Context(ContextKeys.SOURCE, "minecraft:piston");
-    public static final Context SOURCE_VINE = new Context(ContextKeys.SOURCE, "minecraft:vine");
+    public static final Context SOURCE_PISTON_STICKY = new Context(ContextKeys.SOURCE, "minecraft:sticky_piston");
+    public static final Context SOURCE_PLAYER = new Context(ContextKeys.SOURCE, "minecraft:player");
+    public static final Context SOURCE_SNOW = new Context(ContextKeys.SOURCE, "minecraft:snow");
+    public static final Context SOURCE_SNOW_1_12 = new Context(ContextKeys.SOURCE, "minecraft:snow_layer");
+    public static final Context SOURCE_SNOWMAN = new Context(ContextKeys.SOURCE, "minecraft:snow_golem");
+    public static final Context SOURCE_SNOWMAN_1_12 = new Context(ContextKeys.SOURCE, "minecraft:snowman");
+    public static final Context SOURCE_TNT = new Context(ContextKeys.SOURCE, "minecraft:tnt");
+    public static final Context SOURCE_TURTLE_EGG = new Context(ContextKeys.SOURCE, "minecraft:turtle_egg");
     public static final Context SOURCE_TYPE_MONSTER = new Context(ContextKeys.SOURCE, "#monster");
+    public static final Context SOURCE_WATER = new Context(ContextKeys.SOURCE, "minecraft:water");
+    public static final Context SOURCE_WATER_1_12 = new Context(ContextKeys.SOURCE, "minecraft:flowing_water");
+    public static final Context SOURCE_WITHER = new Context(ContextKeys.SOURCE, "minecraft:wither");
+    public static final Context SOURCE_VILLAGER = new Context(ContextKeys.SOURCE, "minecraft:villager");
+    public static final Context SOURCE_VINE = new Context(ContextKeys.SOURCE, "minecraft:vine");
 
     // Block States
     public static final Context STATE_FARMLAND_DRY = new Context("state", "moisture:0");
 
     // Targets
     public static final Context TARGET_AIR = new Context(ContextKeys.TARGET, "minecraft:air");
+    public static final Context TARGET_ANY = new Context(ContextKeys.TARGET, "#any");
+    public static final Context TARGET_ARMOR_STAND = new Context(ContextKeys.TARGET, "minecraft:armor_stand");
     public static final Context TARGET_BED = new Context(ContextKeys.TARGET, "minecraft:bed");
     public static final Context TARGET_BOAT = new Context(ContextKeys.TARGET, "minecraft:boat");
     public static final Context TARGET_CHEST = new Context(ContextKeys.TARGET, "minecraft:chest");
     public static final Context TARGET_CHORUS_FRUIT = new Context(ContextKeys.TARGET, "minecraft:chorus_fruit");
-    public static final Context TARGET_ENDERPEARL = new Context(ContextKeys.TARGET, "minecraft:enderpearl");
+    public static final Context TARGET_ENDERPEARL = new Context(ContextKeys.TARGET, "minecraft:ender_pearl");
+    public static final Context TARGET_END_CRYSTAL = new Context(ContextKeys.TARGET, "minecraft:end_crystal");
     public static final Context TARGET_FARMLAND = new Context(ContextKeys.TARGET, "minecraft:farmland");
     public static final Context TARGET_FLINTANDSTEEL = new Context(ContextKeys.TARGET, "minecraft:flint_and_steel");
     public static final Context TARGET_GRASS= new Context(ContextKeys.TARGET, "minecraft:grass");
+    public static final Context TARGET_HANGING = new Context(ContextKeys.TARGET, "#hanging");
     public static final Context TARGET_ITEM_FRAME = new Context(ContextKeys.TARGET, "minecraft:item_frame");
     public static final Context TARGET_LAVA_BUCKET = new Context(ContextKeys.TARGET, "minecraft:lava_bucket");
     public static final Context TARGET_MINECART = new Context(ContextKeys.TARGET, "minecraft:minecart");
@@ -72,19 +90,20 @@ public class FlagContexts {
     public static final Context TARGET_PLAYER = new Context(ContextKeys.TARGET, "minecraft:player");
     public static final Context TARGET_ICE_FORM = new Context(ContextKeys.TARGET, "minecraft:ice");
     public static final Context TARGET_ICE_MELT = new Context(ContextKeys.TARGET, "minecraft:water");
-    public static final Context TARGET_SNOW_1_12 = new Context(ContextKeys.TARGET, "minecraft:snow_layer");
     public static final Context TARGET_SNOW = new Context(ContextKeys.TARGET, "minecraft:snow");
+    public static final Context TARGET_SNOW_1_12 = new Context(ContextKeys.TARGET, "minecraft:snow_layer");
     public static final Context TARGET_TURTLE_EGG = new Context(ContextKeys.TARGET, "minecraft:turtle_egg");
+    public static final Context TARGET_VILLAGER = new Context(ContextKeys.TARGET, "minecraft:villager");
     public static final Context TARGET_VINE = new Context(ContextKeys.TARGET, "minecraft:vine");
     public static final Context TARGET_WATER_BUCKET = new Context(ContextKeys.TARGET, "minecraft:water_bucket");
     public static final Context TARGET_XP_ORB = new Context(ContextKeys.TARGET, "minecraft:xp_orb");
     public static final Context TARGET_TYPE_ANIMAL = new Context(ContextKeys.TARGET, "#animal");
-    public static final Context TARGET_TYPE_CROP = new Context(ContextKeys.TARGET, "#crop");
+    public static final Context TARGET_TYPE_CROP = new Context(ContextKeys.TARGET, "#crops");
     public static final Context TARGET_TYPE_AMBIENT = new Context(ContextKeys.TARGET, "#ambient");
     public static final Context TARGET_TYPE_AQUATIC = new Context(ContextKeys.TARGET, "#aquatic");
+    public static final Context TARGET_TYPE_FOOD = new Context(ContextKeys.TARGET, "#food");
     public static final Context TARGET_TYPE_MONSTER = new Context(ContextKeys.TARGET, "#monster");
     public static final Context TARGET_TYPE_MUSHROOM = new Context(ContextKeys.TARGET, "#mushroom");
-    public static final Context TARGET_TYPE_PORTAL = new Context(ContextKeys.TARGET, "#portal");
     public static final Context TARGET_TYPE_VEHICLE = new Context(ContextKeys.TARGET, "#vehicle");
 
     public static final Context USED_ITEM_LAVA_BUCKET = new Context(ContextKeys.USED_ITEM, "minecraft:lava_bucket");

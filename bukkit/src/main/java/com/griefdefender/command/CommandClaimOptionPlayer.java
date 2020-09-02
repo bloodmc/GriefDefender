@@ -45,7 +45,7 @@ public class CommandClaimOptionPlayer extends ClaimOptionBase {
         super(ClaimSubjectType.PLAYER);
     }
 
-    @CommandCompletion("@gdplayers @gdoptions @gddummy")
+    @CommandCompletion("@gdplayers @gdoptions @gdcontexts @gddummy")
     @CommandAlias("cop")
     @Description("Gets/Sets option for a player in claim you are standing in.")
     @Syntax("<player> <option> <value> [context[key=value]]")

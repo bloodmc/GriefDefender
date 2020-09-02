@@ -38,6 +38,7 @@ import com.griefdefender.api.claim.Claim;
 import com.griefdefender.api.permission.Context;
 import com.griefdefender.api.permission.PermissionResult;
 import com.griefdefender.api.permission.flag.Flag;
+import com.griefdefender.api.permission.flag.FlagDefinition;
 import com.griefdefender.api.permission.option.Option;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.permission.GDPermissionHolder;
@@ -49,6 +50,13 @@ import com.griefdefender.permission.GDPermissionHolder;
  * to provide permissions lookups for GriefDefender.</p>
  */
 public interface PermissionProvider {
+
+    public enum PermissionDataType {
+        ALL,
+        TRANSIENT,
+        PERSISTENT,
+        USER_PERSISTENT
+    }
 
     /**
      * Get server name.
@@ -64,6 +72,14 @@ public interface PermissionProvider {
      * @return whether the group exists
      */
     boolean hasGroupSubject(String identifier);
+
+    /**
+     * Creates the default group used by GriefDefender.
+     * 
+     * @param identifier
+     * @return whether the group was created
+     */
+    boolean createDefaultGroup(String identifier);
 
     /**
      * Performs a lookup for a UUID with matching 
@@ -161,6 +177,13 @@ public interface PermissionProvider {
     Map<String, String> getOptions(GDPermissionHolder holder, Set<Context> contexts);
 
     /**
+     * Gets all persisted permissions.
+     * 
+     * @return An immutable map of persisted permissions or empty if none.
+     */
+    Map<Set<Context>, Map<String, Boolean>> getAllPermanentPermissions();
+
+    /**
      * Gets all persisted permissions with associated contexts of holder.
      * 
      * @param holder The holder
@@ -243,10 +266,10 @@ public interface PermissionProvider {
      * @param holder The holder
      * @param permission The permission to check
      * @param contexts The contexts
-     * @param checkTransient Whether to check transient permissions
+     * @param type The data type
      * @return The permission value
      */
-    Tristate getPermissionValue(GDClaim claim, GDPermissionHolder holder, String permission, Set<Context> contexts, boolean checkTransient);
+    Tristate getPermissionValue(GDClaim claim, GDPermissionHolder holder, String permission, Set<Context> contexts, PermissionDataType type);
 
     /**
      * Gets the current value of a permission assigned to a holder.
@@ -257,19 +280,6 @@ public interface PermissionProvider {
      * @return The permission value
      */
     Tristate getPermissionValue(GDPermissionHolder holder, String permission, Set<Context> contexts);
-
-    /**
-     * Gets the current value of a permission that contains all passed contexts
-     * assigned to a holder.
-     * 
-     * @param claim The current claim
-     * @param holder The holder
-     * @param permission The permission to check
-     * @param contexts The contexts required
-     * @param contextFilter The context key to ignore for required contexts
-     * @return The permission value
-     */
-    Tristate getPermissionValueWithRequiredContexts(GDClaim claim, GDPermissionHolder holder, String permission, Set<Context> contexts, String contextFilter);
 
     /**
      * Gets the current value of an option assigned to a holder.
@@ -294,6 +304,18 @@ public interface PermissionProvider {
     List<String> getOptionValueList(GDPermissionHolder holder, Option option, Set<Context> contexts);
 
     /**
+     * Sets a flag definition with contexts to a holder.
+     * 
+     * @param holder The holder
+     * @param definition The flag definition
+     * @param value The value
+     * @param contexts The contexts
+     * @param isTransient Whether the definition should be applied as transient
+     * @return Whether the set flag definition operation was successful
+     */
+    CompletableFuture<PermissionResult> setFlagDefinition(GDPermissionHolder holder, FlagDefinition definition, Tristate value, Set<Context> contexts, boolean isTransient);
+
+    /**
      * Sets an option and value with contexts to a holder.
      * 
      * @param holder The holder
@@ -303,7 +325,7 @@ public interface PermissionProvider {
      * @param check Whether to check and apply a server context if none exists
      * @return The permission result
      */
-    default PermissionResult setOptionValue(GDPermissionHolder holder, String permission, String value, Set<Context> contexts) {
+    default CompletableFuture<PermissionResult> setOptionValue(GDPermissionHolder holder, String permission, String value, Set<Context> contexts) {
         return this.setOptionValue(holder, permission, value, contexts, true);
     }
 
@@ -317,7 +339,7 @@ public interface PermissionProvider {
      * @param check Whether to check and apply a server context if none exists
      * @return The permission result
      */
-    PermissionResult setOptionValue(GDPermissionHolder holder, String permission, String value, Set<Context> contexts, boolean check);
+    CompletableFuture<PermissionResult> setOptionValue(GDPermissionHolder holder, String permission, String value, Set<Context> contexts, boolean check);
 
     /**
      * Sets a permission and value with contexts to a holder.
@@ -328,7 +350,7 @@ public interface PermissionProvider {
      * @param contexts The contexts
      * @return The permission result
      */
-    default PermissionResult setPermissionValue(GDPermissionHolder holder, Flag flag, Tristate value, Set<Context> contexts) {
+    default CompletableFuture<PermissionResult> setPermissionValue(GDPermissionHolder holder, Flag flag, Tristate value, Set<Context> contexts) {
         return this.setPermissionValue(holder, flag.getPermission(), value, contexts, true, true);
     }
 
@@ -343,7 +365,7 @@ public interface PermissionProvider {
      * @param save Whether a save should occur
      * @return The permission result
      */
-    default PermissionResult setPermissionValue(GDPermissionHolder holder, Flag flag, Tristate value, Set<Context> contexts, boolean check, boolean save) {
+    default CompletableFuture<PermissionResult> setPermissionValue(GDPermissionHolder holder, Flag flag, Tristate value, Set<Context> contexts, boolean check, boolean save) {
         return this.setPermissionValue(holder, flag.getPermission(), value, contexts, check, save);
     }
 
@@ -356,7 +378,7 @@ public interface PermissionProvider {
      * @param contexts The contexts
      * @return Whether the set permission operation was successful
      */
-    default PermissionResult setPermissionValue(GDPermissionHolder holder, String permission, Tristate value, Set<Context> contexts) {
+    default CompletableFuture<PermissionResult> setPermissionValue(GDPermissionHolder holder, String permission, Tristate value, Set<Context> contexts) {
         return this.setPermissionValue(holder, permission, value, contexts, true, true);
     }
 
@@ -371,7 +393,7 @@ public interface PermissionProvider {
      * @param save Whether a save should occur
      * @return Whether the set permission operation was successful
      */
-    PermissionResult setPermissionValue(GDPermissionHolder holder, String permission, Tristate value, Set<Context> contexts, boolean check, boolean save);
+    CompletableFuture<PermissionResult> setPermissionValue(GDPermissionHolder holder, String permission, Tristate value, Set<Context> contexts, boolean check, boolean save);
 
     /**
      * Sets a transient option and value with contexts to a holder.
@@ -382,7 +404,7 @@ public interface PermissionProvider {
      * @param contexts The contexts
      * @return Whether the set permission operation was successful
      */
-    PermissionResult setTransientOption(GDPermissionHolder holder, String permission, String value, Set<Context> contexts);
+    CompletableFuture<PermissionResult> setTransientOption(GDPermissionHolder holder, String permission, String value, Set<Context> contexts);
 
     /**
      * Sets a transient permission and value with contexts to a holder.
@@ -393,7 +415,7 @@ public interface PermissionProvider {
      * @param contexts The contexts
      * @return Whether the set permission operation was successful
      */
-    PermissionResult setTransientPermission(GDPermissionHolder holder, String permission, Tristate value, Set<Context> contexts);
+    CompletableFuture<PermissionResult> setTransientPermission(GDPermissionHolder holder, String permission, Tristate value, Set<Context> contexts);
 
     /**
      * Refreshes all cached permission data of holder.

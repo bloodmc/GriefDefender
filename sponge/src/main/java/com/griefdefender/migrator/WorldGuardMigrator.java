@@ -42,6 +42,7 @@ import com.griefdefender.configuration.ClaimDataConfig;
 import com.griefdefender.internal.util.BlockUtil;
 import com.griefdefender.permission.GDPermissionManager;
 import com.griefdefender.permission.GDPermissionUser;
+import com.griefdefender.permission.flag.FlagContexts;
 
 import net.kyori.text.TextComponent;
 import net.kyori.text.serializer.legacy.LegacyComponentSerializer;
@@ -338,7 +339,7 @@ public class WorldGuardMigrator {
                             }
                             break;
                         case "damage-animals":
-                            contexts.add(TARGET_TYPE_ANIMAL);
+                            contexts.add(FlagContexts.TARGET_TYPE_ANIMAL);
                             if (valueNode.getString().equals("deny")) {
                                 PERMISSION_MANAGER.setFlagPermission(Flags.ENTITY_DAMAGE, Tristate.FALSE, contexts);
                             } else {
@@ -346,7 +347,7 @@ public class WorldGuardMigrator {
                             }
                             break;
                         case "chest-access":
-                            contexts.add(TARGET_CHEST);
+                            contexts.add(FlagContexts.TARGET_CHEST);
                             if (valueNode.getString().equals("deny")) {
                                 PERMISSION_MANAGER.setFlagPermission(Flags.INTERACT_BLOCK_SECONDARY, Tristate.FALSE, contexts);
                             } else {
@@ -361,8 +362,8 @@ public class WorldGuardMigrator {
                             }
                             break;
                         case "pvp":
-                            contexts.add(SOURCE_PLAYER);
-                            contexts.add(TARGET_PLAYER);
+                            contexts.add(FlagContexts.SOURCE_PLAYER);
+                            contexts.add(FlagContexts.TARGET_PLAYER);
                             if (valueNode.getString().equals("deny")) {
                                 PERMISSION_MANAGER.setFlagPermission(Flags.ENTITY_DAMAGE, Tristate.FALSE, contexts);
                             } else {
@@ -370,7 +371,7 @@ public class WorldGuardMigrator {
                             }
                             break;
                         case "sleep":
-                            contexts.add(TARGET_BED);
+                            contexts.add(FlagContexts.TARGET_BED);
                             if (valueNode.getString().equals("deny")) {
                                 PERMISSION_MANAGER.setFlagPermission(Flags.INTERACT_BLOCK_SECONDARY, Tristate.FALSE, contexts);
                             } else {
@@ -378,7 +379,7 @@ public class WorldGuardMigrator {
                             }
                             break;
                         case "tnt":
-                            contexts.add(SOURCE_TNT);
+                            contexts.add(FlagContexts.SOURCE_TNT);
                             if (valueNode.getString().equals("deny")) {
                                 PERMISSION_MANAGER.setFlagPermission(Flags.EXPLOSION_BLOCK, Tristate.FALSE, contexts);
                                 PERMISSION_MANAGER.setFlagPermission(Flags.EXPLOSION_ENTITY, Tristate.FALSE, contexts);
@@ -388,7 +389,7 @@ public class WorldGuardMigrator {
                             }
                             break;
                         case "vehicle-place":
-                            contexts.add(TARGET_TYPE_VEHICLE);
+                            contexts.add(FlagContexts.TARGET_TYPE_VEHICLE);
                             if (valueNode.getString().equals("deny")) {
                                 PERMISSION_MANAGER.setFlagPermission(Flags.INTERACT_BLOCK_SECONDARY, Tristate.FALSE, contexts);
                             } else {
@@ -396,7 +397,7 @@ public class WorldGuardMigrator {
                             }
                             break;
                         case "lighter":
-                            contexts.add(TARGET_FLINTANDSTEEL);
+                            contexts.add(FlagContexts.TARGET_FLINTANDSTEEL);
                             if (valueNode.getString().equals("deny")) {
                                 PERMISSION_MANAGER.setFlagPermission(Flags.INTERACT_ITEM_SECONDARY, Tristate.FALSE, contexts);
                             } else {
@@ -404,8 +405,8 @@ public class WorldGuardMigrator {
                             }
                             break;
                         case "block-trampling":
-                            contexts.add(TARGET_FARMLAND);
-                            contexts.add(TARGET_TURTLE_EGG);
+                            contexts.add(FlagContexts.TARGET_FARMLAND);
+                            contexts.add(FlagContexts.TARGET_TURTLE_EGG);
                             if (valueNode.getString().equals("deny")) {
                                 PERMISSION_MANAGER.setFlagPermission(Flags.COLLIDE_BLOCK, Tristate.FALSE, contexts);
                                 PERMISSION_MANAGER.setFlagPermission(Flags.COLLIDE_BLOCK, Tristate.FALSE, contexts);
@@ -417,7 +418,7 @@ public class WorldGuardMigrator {
                         case "frosted-ice-form":
                             break;
                         case "creeper-explosion":
-                            contexts.add(SOURCE_CREEPER);
+                            contexts.add(FlagContexts.SOURCE_CREEPER);
                             if (valueNode.getString().equals("deny")) {
                                 PERMISSION_MANAGER.setFlagPermission(Flags.EXPLOSION_BLOCK, Tristate.FALSE, contexts);
                                 PERMISSION_MANAGER.setFlagPermission(Flags.EXPLOSION_ENTITY, Tristate.FALSE, contexts);
@@ -427,7 +428,7 @@ public class WorldGuardMigrator {
                             }
                             break;
                         case "enderdragon-block-damage":
-                            contexts.add(SOURCE_ENDERDRAGON);
+                            contexts.add(FlagContexts.SOURCE_ENDERDRAGON);
                             if (valueNode.getString().equals("deny")) {
                                 PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_BREAK, Tristate.FALSE, contexts);
                                 PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_MODIFY, Tristate.FALSE, contexts);
@@ -437,7 +438,7 @@ public class WorldGuardMigrator {
                             }
                             break;
                         case "ghast-fireball":
-                            contexts.add(SOURCE_GHAST);
+                            contexts.add(FlagContexts.SOURCE_GHAST);
                             if (valueNode.getString().equals("deny")) {
                                 PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_BREAK, Tristate.FALSE, contexts);
                                 PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_MODIFY, Tristate.FALSE, contexts);
@@ -466,7 +467,7 @@ public class WorldGuardMigrator {
                             }
                             break;
                         case "enderman-grief":
-                            contexts.add(SOURCE_ENDERMAN);
+                            contexts.add(FlagContexts.SOURCE_ENDERMAN);
                             if (valueNode.getString().equals("deny")) {
                                 PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_BREAK, Tristate.FALSE, contexts);
                                 PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_MODIFY, Tristate.FALSE, contexts);
@@ -476,7 +477,7 @@ public class WorldGuardMigrator {
                             }
                             break;
                         case "snowman-trail":
-                            contexts.add(SOURCE_SNOWMAN);
+                            contexts.add(FlagContexts.SOURCE_SNOWMAN);
                             if (valueNode.getString().equals("deny")) {
                                 PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_MODIFY, Tristate.FALSE, contexts);
                             } else {
@@ -484,7 +485,7 @@ public class WorldGuardMigrator {
                             }
                             break;
                         case "mob-damage": 
-                            contexts.add(TARGET_TYPE_MONSTER);
+                            contexts.add(FlagContexts.TARGET_TYPE_MONSTER);
                             if (valueNode.getString().equals("deny")) {
                                 PERMISSION_MANAGER.setFlagPermission(Flags.ENTITY_DAMAGE, Tristate.FALSE, contexts);
                             } else {
@@ -502,7 +503,7 @@ public class WorldGuardMigrator {
                             PERMISSION_MANAGER.setFlagPermission(Flags.ENTITY_SPAWN, Tristate.FALSE, contexts);
                             break;
                         case "entity-painting-destroy": 
-                            contexts.add(TARGET_PAINTING);
+                            contexts.add(FlagContexts.TARGET_PAINTING);
                             if (valueNode.getString().equals("deny")) {
                                 PERMISSION_MANAGER.setFlagPermission(Flags.ENTITY_DAMAGE, Tristate.FALSE, contexts);
                             } else {
@@ -510,7 +511,7 @@ public class WorldGuardMigrator {
                             }
                             break;
                         case "entity-item-frame-destroy": 
-                            contexts.add(TARGET_ITEM_FRAME);
+                            contexts.add(FlagContexts.TARGET_ITEM_FRAME);
                             if (valueNode.getString().equals("deny")) {
                                 PERMISSION_MANAGER.setFlagPermission(Flags.ENTITY_DAMAGE, Tristate.FALSE, contexts);
                             } else {
@@ -518,7 +519,7 @@ public class WorldGuardMigrator {
                             }
                             break;
                         case "wither-damage":
-                            contexts.add(SOURCE_WITHER);
+                            contexts.add(FlagContexts.SOURCE_WITHER);
                             if (valueNode.getString().equals("deny")) {
                                 PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_BREAK, Tristate.FALSE, contexts);
                                 PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_MODIFY, Tristate.FALSE, contexts);
@@ -530,7 +531,11 @@ public class WorldGuardMigrator {
                             }
                             break;
                         case "lava-fire": 
-                            contexts.add(SOURCE_LAVA);
+                            if (GriefDefenderPlugin.getMajorMinecraftVersion() > 12) {
+                                contexts.add(FlagContexts.SOURCE_LAVA);
+                            } else {
+                                contexts.add(FlagContexts.SOURCE_LAVA_1_12);
+                            }
                             if (valueNode.getString().equals("deny")) {
                                 PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_SPREAD, Tristate.FALSE, contexts);
                             } else {
@@ -538,7 +543,7 @@ public class WorldGuardMigrator {
                             }
                             break;
                         case "lightning": 
-                            contexts.add(SOURCE_LIGHTNING_BOLT);
+                            contexts.add(FlagContexts.SOURCE_LIGHTNING_BOLT);
                             if (valueNode.getString().equals("deny")) {
                                 PERMISSION_MANAGER.setFlagPermission(Flags.ENTITY_DAMAGE, Tristate.FALSE, contexts);
                             } else {
@@ -546,7 +551,11 @@ public class WorldGuardMigrator {
                             }
                             break;
                         case "water-flow": 
-                            contexts.add(SOURCE_WATER);
+                            if (GriefDefenderPlugin.getMajorMinecraftVersion() > 12) {
+                                contexts.add(FlagContexts.SOURCE_WATER);
+                            } else {
+                                contexts.add(FlagContexts.SOURCE_WATER_1_12);
+                            }
                             if (valueNode.getString().equals("deny")) {
                                 PERMISSION_MANAGER.setFlagPermission(Flags.LIQUID_FLOW, Tristate.FALSE, contexts);
                             } else {
@@ -554,7 +563,11 @@ public class WorldGuardMigrator {
                             }
                             break;
                         case "lava-flow": 
-                            contexts.add(SOURCE_LAVA);
+                            if (GriefDefenderPlugin.getMajorMinecraftVersion() > 12) {
+                                contexts.add(FlagContexts.SOURCE_LAVA);
+                            } else {
+                                contexts.add(FlagContexts.SOURCE_LAVA_1_12);
+                            }
                             if (valueNode.getString().equals("deny")) {
                                 PERMISSION_MANAGER.setFlagPermission(Flags.LIQUID_FLOW, Tristate.FALSE, contexts);
                             } else {
@@ -562,7 +575,11 @@ public class WorldGuardMigrator {
                             }
                             break;
                         case "snow-fall": 
-                            contexts.add(TARGET_SNOW_LAYER);
+                            if (GriefDefenderPlugin.getMajorMinecraftVersion() > 12) {
+                                contexts.add(FlagContexts.TARGET_SNOW);
+                            } else {
+                                contexts.add(FlagContexts.TARGET_SNOW_1_12);
+                            }
                             if (valueNode.getString().equals("deny")) {
                                 PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_PLACE, Tristate.FALSE, contexts);
                             } else {
@@ -570,7 +587,11 @@ public class WorldGuardMigrator {
                             }
                             break;
                         case "snow-melt": 
-                            contexts.add(TARGET_SNOW_LAYER);
+                            if (GriefDefenderPlugin.getMajorMinecraftVersion() > 12) {
+                                contexts.add(FlagContexts.TARGET_SNOW);
+                            } else {
+                                contexts.add(FlagContexts.TARGET_SNOW_1_12);
+                            }
                             if (valueNode.getString().equals("deny")) {
                                 PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_BREAK, Tristate.FALSE, contexts);
                             } else {
@@ -578,7 +599,7 @@ public class WorldGuardMigrator {
                             }
                             break;
                         case "ice-form": 
-                            contexts.add(TARGET_ICE_FORM);
+                            contexts.add(FlagContexts.TARGET_ICE_FORM);
                             if (valueNode.getString().equals("deny")) {
                                 PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_MODIFY, Tristate.FALSE, contexts);
                             } else {
@@ -586,7 +607,7 @@ public class WorldGuardMigrator {
                             }
                             break;
                         case "ice-melt": 
-                            contexts.add(TARGET_ICE_MELT);
+                            contexts.add(FlagContexts.TARGET_ICE_MELT);
                             if (valueNode.getString().equals("deny")) {
                                 PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_MODIFY, Tristate.FALSE, contexts);
                             } else {
@@ -596,7 +617,7 @@ public class WorldGuardMigrator {
                         case "frosted-ice-melt":
                             break;
                         case "mushroom-growth":
-                            contexts.add(TARGET_TYPE_MUSHROOM);
+                            contexts.add(FlagContexts.TARGET_TYPE_MUSHROOM);
                             if (valueNode.getString().equals("deny")) {
                                 PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_GROW, Tristate.FALSE, contexts);
                             } else {
@@ -611,7 +632,7 @@ public class WorldGuardMigrator {
                             }
                             break;
                         case "grass-growth":
-                            contexts.add(TARGET_GRASS);
+                            contexts.add(FlagContexts.TARGET_GRASS);
                             if (valueNode.getString().equals("deny")) {
                                 PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_GROW, Tristate.FALSE, contexts);
                             } else {
@@ -619,9 +640,15 @@ public class WorldGuardMigrator {
                             }
                             break;
                         case "mycelium-spread":
+                            contexts.add(FlagContexts.TARGET_MYCELIUM);
+                            if (valueNode.getString().equals("deny")) {
+                                PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_SPREAD, Tristate.FALSE, contexts);
+                            } else {
+                                PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_SPREAD, Tristate.TRUE, contexts);
+                            }
                             break;
                         case "vine-growth":
-                            contexts.add(TARGET_VINE);
+                            contexts.add(FlagContexts.TARGET_VINE);
                             if (valueNode.getString().equals("deny")) {
                                 PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_GROW, Tristate.FALSE, contexts);
                             } else {
@@ -629,7 +656,7 @@ public class WorldGuardMigrator {
                             }
                             break;
                         case "crop-growth":
-                            contexts.add(TARGET_TYPE_CROP);
+                            contexts.add(FlagContexts.TARGET_TYPE_CROP);
                             if (valueNode.getString().equals("deny")) {
                                 PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_GROW, Tristate.FALSE, contexts);
                             } else {
@@ -637,7 +664,7 @@ public class WorldGuardMigrator {
                             }
                             break;
                         case "soil-dry":
-                            contexts.add(STATE_FARMLAND_DRY);
+                            contexts.add(FlagContexts.STATE_FARMLAND_DRY);
                             if (valueNode.getString().equals("deny")) {
                                 PERMISSION_MANAGER.setFlagPermission(Flags.BLOCK_MODIFY, Tristate.FALSE, contexts);
                             } else {
@@ -645,7 +672,7 @@ public class WorldGuardMigrator {
                             }
                             break;
                         case "entry":
-                            contexts.add(TARGET_PLAYER);
+                            contexts.add(FlagContexts.TARGET_PLAYER);
                             if (valueNode.getString().equals("deny")) {
                                 PERMISSION_MANAGER.setFlagPermission(Flags.ENTER_CLAIM, Tristate.FALSE, contexts);
                             } else {
@@ -653,7 +680,7 @@ public class WorldGuardMigrator {
                             }
                             break;
                         case "exit":
-                            contexts.add(TARGET_PLAYER);
+                            contexts.add(FlagContexts.TARGET_PLAYER);
                             if (valueNode.getString().equals("deny")) {
                                 PERMISSION_MANAGER.setFlagPermission(Flags.EXIT_CLAIM, Tristate.FALSE, contexts);
                             } else {
@@ -679,7 +706,7 @@ public class WorldGuardMigrator {
                                 claimDataConfig.setFarewell(LegacyComponentSerializer.legacy().deserialize(farewell, '&'));
                             }
                         case "enderpearl":
-                            contexts.add(TARGET_ENDERPEARL);
+                            contexts.add(FlagContexts.TARGET_ENDERPEARL);
                             if (valueNode.getString().equals("deny")) {
                                 PERMISSION_MANAGER.setFlagPermission(Flags.INTERACT_ITEM_SECONDARY, Tristate.FALSE, contexts);
                             } else {
@@ -687,7 +714,7 @@ public class WorldGuardMigrator {
                             }
                             break;
                         case "chorus-fruit-teleport":
-                            contexts.add(TARGET_CHORUS_FRUIT);
+                            contexts.add(FlagContexts.TARGET_CHORUS_FRUIT);
                             if (valueNode.getString().equals("deny")) {
                                 PERMISSION_MANAGER.setFlagPermission(Flags.INTERACT_ITEM_SECONDARY, Tristate.FALSE, contexts);
                             } else {
@@ -714,7 +741,7 @@ public class WorldGuardMigrator {
                             }
                             break;
                         case "exp-drop":
-                            contexts.add(TARGET_XP_ORB);
+                            contexts.add(FlagContexts.TARGET_XP_ORB);
                             if (valueNode.getString().equals("deny")) {
                                 PERMISSION_MANAGER.setFlagPermission(Flags.ITEM_DROP, Tristate.FALSE, contexts);
                             } else {
@@ -724,13 +751,13 @@ public class WorldGuardMigrator {
                         case "deny-message":
                             break;
                         case "invincible":
-                            contexts.add(TARGET_PLAYER);
+                            contexts.add(FlagContexts.TARGET_PLAYER);
                             if (valueNode.getString().equals("allow")) {
                                 PERMISSION_MANAGER.setFlagPermission(Flags.ENTITY_DAMAGE, Tristate.FALSE, contexts);
                             }
                             break;
                         case "fall-damage":
-                            contexts.add(SOURCE_FALL);
+                            contexts.add(FlagContexts.SOURCE_FALL);
                             if (valueNode.getString().equals("deny")) {
                                 PERMISSION_MANAGER.setFlagPermission(Flags.ENTITY_DAMAGE, Tristate.FALSE, contexts);
                             } else {
@@ -738,7 +765,7 @@ public class WorldGuardMigrator {
                             }
                             break;
                         case "firework-damage":
-                            contexts.add(SOURCE_FIREWORKS);
+                            contexts.add(FlagContexts.SOURCE_FIREWORKS);
                             if (valueNode.getString().equals("deny")) {
                                 PERMISSION_MANAGER.setFlagPermission(Flags.ENTITY_DAMAGE, Tristate.FALSE, contexts);
                             } else {

@@ -39,10 +39,10 @@ import com.griefdefender.api.permission.flag.Flags;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.configuration.ClaimDataConfig;
-import com.griefdefender.internal.util.BlockUtil;
 import com.griefdefender.permission.GDPermissionManager;
 import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.permission.flag.FlagContexts;
+import com.griefdefender.util.BlockUtil;
 
 import net.kyori.text.TextComponent;
 import net.kyori.text.serializer.legacy.LegacyComponentSerializer;

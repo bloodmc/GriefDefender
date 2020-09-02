@@ -49,16 +49,12 @@ public class CommandClaimOptionGroup extends ClaimOptionBase {
         super(ClaimSubjectType.GROUP);
     }
 
-    @CommandCompletion("@gdgroups @gdoptions @gddummy")
+    @CommandCompletion("@gdgroups @gdoptions @gdcontexts @gddummy")
     @CommandAlias("cog")
     @Description("Gets/Sets option for a group in claim you are standing in.")
     @Syntax("<group> <option> <value> [context[key=value]]")
     @Subcommand("option group")
     public void execute(Player player, String group, @Optional String[] args) throws InvalidCommandArgument {
-        if (args.length < 2 || args.length > 4) {
-            throw new InvalidCommandArgument();
-        }
-
         if (!PermissionUtil.getInstance().hasGroupSubject(group)) {
             final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.COMMAND_INVALID_GROUP, ImmutableMap.of(
                     "group", group));

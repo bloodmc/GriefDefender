@@ -24,14 +24,25 @@
  */
 package com.griefdefender.configuration;
 
+import java.util.Map;
+
+import com.google.common.collect.Maps;
+import com.griefdefender.api.permission.flag.Flag;
+import com.griefdefender.api.permission.flag.Flags;
 import com.griefdefender.configuration.category.ConfigCategory;
 import com.griefdefender.configuration.category.CustomFlagGroupDefinitionCategory;
 import com.griefdefender.configuration.category.DefaultFlagCategory;
+import com.griefdefender.registry.FlagRegistryModule;
+
 import ninja.leaping.configurate.objectmapping.Setting;
 import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
 
 @ConfigSerializable
 public class FlagStorage extends ConfigCategory {
+
+    @Setting(value = "flag-control", comment = "Controls which flags are enabled.\nNote: Disabling a flag will cause GD to bypass all functionality for it." 
+            + "\nNote: If you want full protection, it is recommended to keep everything enabled.")
+    public Map<String, Boolean> control = Maps.newHashMap();
 
     @Setting(value = "default-flags")
     public DefaultFlagCategory defaultFlagCategory = new DefaultFlagCategory();
@@ -68,4 +79,23 @@ public class FlagStorage extends ConfigCategory {
                     + "\nNote: Available contexts are : flag, source, target, state, used_item, item_name"
                     + "\nThese contexts may change, See https://github.com/bloodmc/GriefDefender/wiki for latest information.")
     public CustomFlagGroupDefinitionCategory customFlags = new CustomFlagGroupDefinitionCategory();
+
+    public FlagStorage() {
+        for (Flag flag : FlagRegistryModule.getInstance().getAll()) {
+            if (flag == Flags.ENTITY_CHUNK_SPAWN || flag == Flags.PORTAL_USE) {
+                this.control.put(flag.getName().toLowerCase(), false);
+            } else {
+                this.control.put(flag.getName().toLowerCase(), true);
+            }
+        }
+    }
+
+    public boolean isFlagEnabled(String flag) {
+        final Boolean result = this.control.get(flag);
+        if (result == null) {
+            return false;
+        }
+
+        return result;
+    }
 }

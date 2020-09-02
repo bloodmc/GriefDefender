@@ -31,15 +31,19 @@ import java.util.Set;
 import java.util.UUID;
 
 import com.google.common.reflect.TypeToken;
+import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.Tristate;
 import com.griefdefender.api.permission.Context;
 import com.griefdefender.api.permission.ContextKeys;
 import com.griefdefender.api.permission.flag.Flag;
 import com.griefdefender.api.permission.flag.FlagData;
 import com.griefdefender.api.permission.flag.FlagDefinition;
+import com.griefdefender.cache.PermissionHolderCache;
+import com.griefdefender.permission.GDPermissionHolder;
 import com.griefdefender.permission.flag.GDFlagData;
 import com.griefdefender.permission.flag.GDFlagDefinition;
 import com.griefdefender.registry.FlagRegistryModule;
+import com.griefdefender.util.PermissionUtil;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.serializer.legacy.LegacyComponentSerializer;
@@ -96,6 +100,9 @@ public class FlagDefinitionSerializer implements TypeSerializer<FlagDefinition> 
                     switch (key) {
                         case ContextKeys.SOURCE:
                         case ContextKeys.TARGET:
+                            if (value.equalsIgnoreCase("any")) {
+                                break;
+                            }
                             if (!value.contains(":") && !value.contains("#")) {
                                 value = "minecraft:" + value;
                             }
@@ -126,6 +133,7 @@ public class FlagDefinitionSerializer implements TypeSerializer<FlagDefinition> 
         }
 
         Set<Context> contexts = new HashSet<>();
+        GDPermissionHolder subject = GriefDefenderPlugin.GD_DEFINITION_HOLDER;
         if (contextList != null) {
             for (String context : contextList) {
                 final String parts[] = context.split("=");
@@ -136,13 +144,13 @@ public class FlagDefinitionSerializer implements TypeSerializer<FlagDefinition> 
                 final String value = parts[1];
                 if (key.equalsIgnoreCase("default") || key.equalsIgnoreCase("gd_claim_default")) {
                     if (!value.equalsIgnoreCase("global") && !value.equalsIgnoreCase("basic") && !value.equalsIgnoreCase("admin")
-                            && !value.equalsIgnoreCase("subdivision") && !value.equalsIgnoreCase("town")) {
+                            && !value.equalsIgnoreCase("subdivision") && !value.equalsIgnoreCase("town") && !value.equalsIgnoreCase("user")) {
                         throw new ObjectMappingException("Invalid context '" + key + "' with value '" + value + "'.");
                     }
                     contexts.add(new Context("gd_claim_default", value));
                 } else if (key.equalsIgnoreCase("override") || key.equalsIgnoreCase("gd_claim_override")) {
                     if (!value.equalsIgnoreCase("global") && !value.equalsIgnoreCase("basic") && !value.equalsIgnoreCase("admin")
-                            && !value.equalsIgnoreCase("subdivision") && !value.equalsIgnoreCase("town")) {
+                            && !value.equalsIgnoreCase("subdivision") && !value.equalsIgnoreCase("town") && !value.equalsIgnoreCase("claim")  && !value.equalsIgnoreCase("wilderness")) {
                         // try UUID
                         if (value.length() == 36) {
                             try {
@@ -155,13 +163,22 @@ public class FlagDefinitionSerializer implements TypeSerializer<FlagDefinition> 
                         }
                     }
                     contexts.add(new Context("gd_claim_override", value));
+                } else if (key.equalsIgnoreCase("group")) {
+                    if (value != null) {
+                        if (PermissionUtil.getInstance().hasGroupSubject(value)) {
+                            subject = PermissionHolderCache.getInstance().getOrCreateGroup(value);
+                            if (subject == null) {
+                                subject = GriefDefenderPlugin.GD_DEFINITION_HOLDER;
+                            }
+                        }
+                    }
                 } else {
                     contexts.add(new Context(key, value));
                 }
             }
         }
 
-        final GDFlagDefinition flagDefinition = new GDFlagDefinition(flagDataList, flagDisplayName, description, groupName, adminGroup, contexts);
+        final GDFlagDefinition flagDefinition = new GDFlagDefinition(flagDataList, flagDisplayName, description, groupName, subject, adminGroup, contexts);
         flagDefinition.setIsEnabled(enabled);
         flagDefinition.setDefaultValue(Tristate.fromBoolean(defaultValue));
         return flagDefinition;

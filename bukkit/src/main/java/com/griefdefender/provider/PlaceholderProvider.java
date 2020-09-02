@@ -36,17 +36,19 @@ import com.griefdefender.GDBootstrap;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.GriefDefender;
-import com.griefdefender.api.Subject;
 import com.griefdefender.api.claim.Claim;
 import com.griefdefender.api.claim.ClaimType;
 import com.griefdefender.api.claim.ClaimTypes;
 import com.griefdefender.api.claim.TrustTypes;
+import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.internal.util.VecHelper;
 import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.util.PlayerUtil;
 
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
+import net.kyori.text.Component;
+import net.kyori.text.serializer.plain.PlainComponentSerializer;
 
 public class PlaceholderProvider {
 
@@ -68,17 +70,17 @@ public class PlaceholderProvider {
         }
 
         @Override
-        public String onRequest(OfflinePlayer user, String identifier) {
-            final Player player = user instanceof Player ? (Player) user : null;
-            final Subject subject = GriefDefender.getCore().getSubject(user.getUniqueId().toString());
+        public String onRequest(OfflinePlayer offlinePlayer, String identifier) {
+            final Player player = offlinePlayer instanceof Player ? (Player) offlinePlayer : null;
+            final GDPermissionUser user = PermissionHolderCache.getInstance().getOrCreateUser(offlinePlayer);
             GDPlayerData playerData = null;
             Claim claim = null;
             if (player != null) {
                 final World world = player.getWorld();
                 claim = GriefDefender.getCore().getClaimManager(world.getUID()).getClaimAt(VecHelper.toVector3i(player.getLocation()));
-                playerData = (GDPlayerData) GriefDefender.getCore().getPlayerData(world.getUID(), player.getUniqueId()).get();
+                playerData = user.getInternalPlayerData();
             } else {
-                playerData = (GDPlayerData) GriefDefender.getCore().getPlayerData(Bukkit.getWorlds().get(0).getUID(), user.getUniqueId()).get();
+                playerData = user.getInternalPlayerData();
             }
             switch (identifier) {
                 case "claim_admin" :
@@ -97,43 +99,61 @@ public class PlaceholderProvider {
                     return this.getAllPlayerClaims(playerData, ClaimTypes.SUBDIVISION);
                 case "claims_town" :
                     return this.getAllPlayerClaims(playerData, ClaimTypes.TOWN);
+                case "claim_town_tag" :
+                    if (claim == null || !playerData.inTown) {
+                        return "";
+                    }
+                    final GDClaim town = (GDClaim) claim.getTown().orElse(null);
+                    if (town == null) {
+                        return "";
+                    }
+                    final Component tag = town.getTownData().getTownTag().orElse(null);
+                    if (tag == null) {
+                        return "";
+                    }
+                    return PlainComponentSerializer.INSTANCE.serialize(tag);
                 case "claims_town_basic" :
                     return this.getAllTownChildrenClaims(playerData, ClaimTypes.BASIC);
                 case "claims_town_subdivision" :
                     return this.getAllTownChildrenClaims(playerData, ClaimTypes.SUBDIVISION);
+                case "claim_for_rent" :
+                    if (claim == null || GriefDefenderPlugin.getInstance().getVaultProvider() == null || claim.getEconomyData() == null) {
+                        return "false";
+                    }
+                    return String.valueOf(claim.getEconomyData().isForRent());
                 case "claim_for_sale" :
-                    if (claim == null) {
+                    if (claim == null || GriefDefenderPlugin.getInstance().getVaultProvider() == null || claim.getEconomyData() == null) {
                         return "false";
                     }
                     return String.valueOf(claim.getEconomyData().isForSale());
                 case "claim_name" :
                     if (claim == null) {
-                        return "none";
+                        return "";
                     }
                     return ((GDClaim) claim).getFriendlyName();
                 case "claim_owner" :
                     if (claim == null) {
-                        return "none";
+                        return "";
                     }
                     if (claim.isWilderness()) {
                         return "wilderness";
                     }
-                    return ((GDClaim) claim).getOwnerFriendlyName();
+                    return ((GDClaim) claim).getOwnerName();
                 case "claim_trust" : 
                     if (claim == null) {
-                        return "[unknown]";
+                        return "";
                     }
                     return String.valueOf(claim.isUserTrusted(player.getUniqueId(), TrustTypes.ACCESSOR));
                 case "claim_type" :
                     if (claim == null) {
-                        return "none";
+                        return "";
                     }
                     return claim.getType().getName();
                 case "pvp" : 
                     if (claim == null) {
-                        return "[unknown]";
+                        return "";
                     }
-                    return String.valueOf(PlayerUtil.getInstance().canPlayerPvP((GDClaim) claim, ((GDPermissionUser) subject)));
+                    return String.valueOf(PlayerUtil.getInstance().canPlayerPvP((GDClaim) claim, user));
                 case "blocks_total" :
                     final int initial = playerData.getInitialClaimBlocks();
                     final int accrued = playerData.getAccruedClaimBlocks();

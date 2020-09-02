@@ -42,16 +42,12 @@ import com.griefdefender.permission.GDPermissions;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextColor;
-import net.minecraft.entity.EnumCreatureType;
-import net.minecraft.entity.IEntityOwnable;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.EntityType;
 import org.spongepowered.api.entity.living.Villager;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.world.World;
-import org.spongepowered.common.SpongeImplHooks;
-import org.spongepowered.common.entity.SpongeEntityType;
 
 import java.util.UUID;
 
@@ -106,55 +102,50 @@ public class CommandClaimClear extends BaseCommand {
         int count = 0;
         String[] parts = target.split(":");
         String modId = "minecraft";
-        EnumCreatureType creatureType = null;
+        final boolean containsCreatureType = NMSUtil.getInstance().containsCreatureType(parts[0]);
         if (parts.length > 1) {
             modId = parts[0];
-            creatureType = NMSUtil.SPAWN_TYPES.get(parts[1]);
         } else {
-            creatureType = NMSUtil.SPAWN_TYPES.get(parts[0]);
-            if (creatureType == null) {
+            if (containsCreatureType) {
                 target = "minecraft:" + target;
             }
         }
 
         for (Entity entity : world.getEntities()) {
-            net.minecraft.entity.Entity mcEntity = (net.minecraft.entity.Entity) entity;
             if (entity instanceof Villager) {
                 continue;
             }
-            if (entity instanceof IEntityOwnable) {
-                IEntityOwnable ownable = (IEntityOwnable) entity;
-                if (ownable.getOwnerId() != null) {
-                    continue;
-                }
+            final UUID ownerUniqueId = NMSUtil.getInstance().getEntityOwnerUUID(entity);
+            if (ownerUniqueId != null) {
+                continue;
             }
 
             if (isPixelmonAnimal) {
-                if (parts[1].equalsIgnoreCase(mcEntity.getName().toLowerCase())) {
+                if (parts[1].equalsIgnoreCase(NMSUtil.getInstance().getEntityName(entity).toLowerCase())) {
                     GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAt(entity.getLocation());
                     if (claim != null && claim.getUniqueId().equals(claimUniqueId)) {
-                        mcEntity.setDead();
+                        entity.remove();
                         count++;
                     }
                 }
-            } else if (creatureType != null && SpongeImplHooks.isCreatureOfType(mcEntity, creatureType)) {
+            } else if (containsCreatureType && NMSUtil.getInstance().isCreatureOfType(entity, target)) {
                 GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAt(entity.getLocation());
                 if (claim != null && claim.getUniqueId().equals(claimUniqueId)) {
                     // check modId
-                    String mod = ((SpongeEntityType) entity.getType()).getModId();
+                    String mod = NMSUtil.getInstance().getEntityModId(entity);
                     if (modId.equalsIgnoreCase(mod)) {
-                        mcEntity.setDead();
+                        entity.remove();
                         count++;
                     }
                 }
             } else {
-                if (entityType == null || !entityType.equals(((SpongeEntityType) entity.getType()))) {
+                if (entityType == null || !entityType.equals(entity.getType())) {
                     continue;
                 }
 
                 GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAt(entity.getLocation());
                 if (claim != null && claim.getUniqueId().equals(claimUniqueId)) {
-                    mcEntity.setDead();
+                    entity.remove();
                     count++;
                 }
             }

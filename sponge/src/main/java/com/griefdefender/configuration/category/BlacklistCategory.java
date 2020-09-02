@@ -24,6 +24,8 @@
  */
 package com.griefdefender.configuration.category;
 
+import com.griefdefender.api.permission.flag.Flag;
+import com.griefdefender.registry.FlagRegistryModule;
 import ninja.leaping.configurate.objectmapping.Setting;
 import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
 
@@ -33,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.spongepowered.api.event.cause.entity.damage.DamageTypes;
 
 @ConfigSerializable
 public class BlacklistCategory extends ConfigCategory {
@@ -45,6 +48,21 @@ public class BlacklistCategory extends ConfigCategory {
 
     @Setting(value = "global-target", comment = "A global list of target id's that are ignored by events. \nNote: This only affects events where the id specified is the target.")
     public List<String> globalTargetBlacklist = new ArrayList<>();
+
+    @Setting(value = "entity-damage-source-blacklist", comment = "A global list of entity damage sources that are ignored in events by default.")
+    public List<String> entityDamageSourceBlacklist = new ArrayList<>();
+
+    public BlacklistCategory() {
+        for (Flag flag : FlagRegistryModule.getInstance().getAll()) {
+            this.flagIdBlacklist.put(flag.getName().toLowerCase(), new ArrayList<>());
+        }
+        this.flagIdBlacklist.put("block-pre", new ArrayList<>());
+        this.entityDamageSourceBlacklist.add(DamageTypes.CONTACT.getId().toLowerCase());
+        this.entityDamageSourceBlacklist.add(DamageTypes.DROWN.getId().toLowerCase());
+        this.entityDamageSourceBlacklist.add(DamageTypes.HUNGER.getId().toLowerCase());
+        this.entityDamageSourceBlacklist.add(DamageTypes.SUFFOCATE.getId().toLowerCase());
+        this.entityDamageSourceBlacklist.add(DamageTypes.VOID.getId().toLowerCase());
+    }
 
     public List<String> getGlobalSourceBlacklist() {
         return this.globalSourceBlacklist;

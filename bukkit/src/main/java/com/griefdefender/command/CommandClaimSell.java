@@ -79,10 +79,6 @@ public class CommandClaimSell extends BaseCommand {
         }
 
         Double salePrice = null;
-        if (!claim.getEconomyData().isForSale()) {
-            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().ECONOMY_CLAIM_NOT_FOR_SALE);
-            return;
-        }
         if (arg.equalsIgnoreCase("cancel")) {
             claim.getEconomyData().setForSale(false);
             claim.getEconomyData().setSalePrice(-1);
@@ -111,9 +107,9 @@ public class CommandClaimSell extends BaseCommand {
 
         final Component saleConfirmationText = TextComponent.builder("")
                 .append("\n[")
-                .append("Confirm", TextColor.GREEN)
+                .append(MessageCache.getInstance().LABEL_CONFIRM.color(TextColor.GREEN))
                 .append("]\n")
-                .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createSaleConfirmationConsumer(player, claim, salePrice))))
+                .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(player, createSaleConfirmationConsumer(player, claim, salePrice), true)))
                 .build();
         GriefDefenderPlugin.sendMessage(player, saleConfirmationText);
     }

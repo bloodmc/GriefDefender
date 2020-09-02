@@ -67,19 +67,22 @@ public final class GDCauseStackManager {
         if (obj instanceof OfflinePlayer) {
             obj = PermissionHolderCache.getInstance().getOrCreateUser((OfflinePlayer) obj);
         }
-        if (tick_stored == NMSUtil.getInstance().getRunningServerTicks()) {
+        /*if (tick_stored == NMSUtil.getInstance().getRunningServerTicks()) {
             this.cause.push(obj);
             return this;
-        }
+        }*/
 
+        tick_stored = NMSUtil.getInstance().getRunningServerTicks();
         this.cached_cause = null;
         this.cause.push(obj);
-        tick_stored = NMSUtil.getInstance().getRunningServerTicks();
         return this;
     }
 
     public Object popCause() {
         this.cached_cause = null;
+        if (this.cause.isEmpty()) {
+            return null;
+        }
         return this.cause.pop();
     }
 

@@ -135,7 +135,7 @@ public class PlayerDataMigrator {
                 } else {
                     final String contextType = GriefDefenderPlugin.getGlobalConfig().getConfig().playerdata.contextType;
                     if (contextType.equalsIgnoreCase("world")) {
-                        contexts.add(new Context("world", world.getName().toLowerCase()));
+                        // ignore
                     } else if (contextType.equalsIgnoreCase("global")) {
                         contexts.add(new Context("server", "global"));
                     } else {

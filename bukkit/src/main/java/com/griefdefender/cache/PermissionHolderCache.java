@@ -27,17 +27,14 @@ package com.griefdefender.cache;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.griefdefender.GriefDefenderPlugin;
-import com.griefdefender.api.Tristate;
 import com.griefdefender.permission.GDPermissionGroup;
 import com.griefdefender.permission.GDPermissionHolder;
 import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.util.PermissionUtil;
 
-import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 public class PermissionHolderCache {
@@ -47,7 +44,6 @@ public class PermissionHolderCache {
             .build();
     private final Cache<String, GDPermissionGroup> groupCache = Caffeine.newBuilder().expireAfterAccess(10, TimeUnit.MINUTES)
             .build();
-    private final ConcurrentHashMap<GDPermissionHolder, Cache<Integer, Tristate>> permissionCache = new ConcurrentHashMap<>();
 
     public GDPermissionUser getOrCreateUser(OfflinePlayer user) {
         if (user == null) {
@@ -118,21 +114,6 @@ public class PermissionHolderCache {
         }
 
         return this.getOrCreateUser(uuid);
-    }
-
-    public Cache<Integer, Tristate> getOrCreatePermissionCache(GDPermissionHolder holder) {
-        Cache<Integer, Tristate> cache = this.permissionCache.get(holder);
-        if (cache == null) {
-            cache = Caffeine.newBuilder().expireAfterAccess(10, TimeUnit.MINUTES).build();
-            this.permissionCache.put(holder, cache);
-        }
-        return cache;
-    }
-
-    public void invalidateAllPermissionCache() {
-        for (Cache<Integer, Tristate> cache : this.permissionCache.values()) {
-            cache.invalidateAll();
-        }
     }
 
     static {

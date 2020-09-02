@@ -48,7 +48,7 @@ public class CommandClaimBank extends BaseCommand {
     @Syntax("<withdraw|deposit> <amount>")
     @Subcommand("claim bank")
     public void execute(Player player, @Optional String[] args) throws CommandException {
-        if (!GriefDefenderPlugin.getActiveConfig(player.getWorld().getUID()).getConfig().claim.bankTaxSystem) {
+        if (!GriefDefenderPlugin.getActiveConfig(player.getWorld().getUID()).getConfig().economy.bankSystem) {
             GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().BANK_TAX_SYSTEM_DISABLED);
             return;
         }

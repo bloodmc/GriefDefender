@@ -37,12 +37,12 @@ import com.griefdefender.api.permission.option.Options;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.configuration.ClaimDataConfig;
 import com.griefdefender.configuration.ClaimStorageData;
-import com.griefdefender.internal.util.BlockUtil;
 import com.griefdefender.permission.GDPermissionHolder;
 import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.permission.flag.FlagContexts;
 import com.griefdefender.permission.option.OptionContexts;
 import com.griefdefender.storage.BaseStorage;
+import com.griefdefender.util.BlockUtil;
 import com.griefdefender.util.PermissionUtil;
 
 import net.kyori.text.serializer.legacy.LegacyComponentSerializer;
@@ -342,7 +342,7 @@ public class GriefPreventionMigrator {
                         PermissionUtil.getInstance().setPermissionValue(DEFAULT_HOLDER, Flags.EXPLOSION_ENTITY.getPermission(), Tristate.FALSE, contexts);
                         break;
                     case FLAG_NO_FALL_DAMAGE :
-                        contexts.add(new Context(ContextKeys.SOURCE, "fall"));
+                        contexts.add(FlagContexts.SOURCE_FALL);
                         contexts.add(FlagContexts.TARGET_PLAYER);
                         PermissionUtil.getInstance().setPermissionValue(DEFAULT_HOLDER, Flags.ENTITY_DAMAGE.getPermission(), Tristate.FALSE, contexts);
                         break;
@@ -352,7 +352,7 @@ public class GriefPreventionMigrator {
                         PermissionUtil.getInstance().setPermissionValue(DEFAULT_HOLDER, Flags.ENTITY_DAMAGE.getPermission(), Tristate.FALSE, contexts);
                         break;
                     case FLAG_NO_FIRE_SPREAD :
-                        contexts.add(new Context(ContextKeys.SOURCE, "fire"));
+                        contexts.add(FlagContexts.SOURCE_FIRE);
                         PermissionUtil.getInstance().setPermissionValue(DEFAULT_HOLDER, Flags.BLOCK_SPREAD.getPermission(), Tristate.FALSE, contexts);
                         break;
                     case FLAG_NO_FLIGHT :
@@ -384,15 +384,15 @@ public class GriefPreventionMigrator {
                         break;
                     case FLAG_NO_MOB_DAMAGE :
                         contexts.add(FlagContexts.SOURCE_PLAYER);
-                        contexts.add(new Context(ContextKeys.TARGET, "#monster"));
+                        contexts.add(FlagContexts.TARGET_TYPE_MONSTER);
                         PermissionUtil.getInstance().setPermissionValue(DEFAULT_HOLDER, Flags.ENTITY_DAMAGE.getPermission(), Tristate.FALSE, contexts);
                         break;
                     case FLAG_NO_MOB_SPAWNS :
-                        contexts.add(new Context(ContextKeys.TARGET, "#monster"));
+                        contexts.add(FlagContexts.TARGET_TYPE_MONSTER);
                         PermissionUtil.getInstance().setPermissionValue(DEFAULT_HOLDER, Flags.ENTITY_SPAWN.getPermission(), Tristate.FALSE, contexts);
                         break;
                     case FLAG_NO_PLAYER_DAMAGE :
-                        contexts.add(new Context(ContextKeys.TARGET, "player"));
+                        contexts.add(FlagContexts.TARGET_PLAYER);
                         PermissionUtil.getInstance().setPermissionValue(DEFAULT_HOLDER, Flags.ENTITY_DAMAGE.getPermission(), Tristate.FALSE, contexts);
                         break;
                     case FLAG_NO_SNOW_FORM :
@@ -475,11 +475,14 @@ public class GriefPreventionMigrator {
         }
 
         File[] files = path.toFile().listFiles();
+        final List<File> fileList = new ArrayList<>();
         if (files != null) {
-            GriefDefenderPlugin.getInstance().getLogger().info("Migrating " + files.length + " player data files...");
+            GriefDefenderPlugin.getInstance().getLogger().info("Scanning " + files.length + " player data files...");
             for (int i = 0; i < files.length; i++) {
                 final File file = files[i];
-                GriefDefenderPlugin.getInstance().getLogger().info("Migrating playerdata " + file.getName() + "...");
+                if (file.getName().endsWith("ignore")) {
+                    continue;
+                }
                 UUID uuid = null;
                 try {
                     uuid = UUID.fromString(file.getName().replaceFirst("[.][^.]+$", ""));
@@ -497,23 +500,86 @@ public class GriefPreventionMigrator {
                 if (lines.size() < 3) {
                     continue;
                 }
-                try {
-                    final int accruedBlocks = Integer.parseInt(lines.get(1));
-                    final int bonusBlocks = Integer.parseInt(lines.get(2));
-                    final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(world, uuid);
-                    // Set directly in storage as subject data has not been initialized
-                    playerData.setAccruedClaimBlocks(accruedBlocks);
-                    playerData.setBonusClaimBlocks(bonusBlocks);
-                } catch (NumberFormatException e) {
-                    e.printStackTrace();
-                    continue;
-                }
+                fileList.add(file);
+            }
+
+            GriefDefenderPlugin.getInstance().getLogger().info("Migrating " + files.length + " player data files...");
+            // Migrate each meta separately to avoid race conditions in LP
+            for (File file : fileList) {
+                GriefDefenderPlugin.getInstance().getLogger().info("Migrating playerdata " + file.getName() + " accrued blocks...");
+                migrateAccruedBlocks(world, file);
+            }
+            for (File file : fileList) {
+                GriefDefenderPlugin.getInstance().getLogger().info("Migrating playerdata " + file.getName() + " bonus blocks...");
+                migrateBonusBlocks(world, file);
             }
         }
 
         try {
-            Files.createFile(gpBukkitPlayerDataMigrated.toPath());
+            final Path gpPlayerDataPath = gpBukkitPlayerDataMigrated.toPath();
+            if (Files.notExists(gpPlayerDataPath.getParent())) {
+                Files.createDirectories(gpPlayerDataPath.getParent());
+            }
+            if (Files.notExists(gpPlayerDataPath)) {
+                Files.createFile(gpPlayerDataPath);
+            }
         } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void migrateAccruedBlocks(World world, File file) {
+        UUID uuid = null;
+        try {
+            uuid = UUID.fromString(file.getName().replaceFirst("[.][^.]+$", ""));
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+            return;
+        }
+        List<String> lines;
+        try {
+            lines = Files.readAllLines(file.toPath());
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
+        if (lines.size() < 3) {
+            return;
+        }
+        try {
+            final int accruedBlocks = Integer.parseInt(lines.get(1));
+            final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(world, uuid);
+            // Set directly in storage as subject data has not been initialized
+            playerData.setAccruedClaimBlocks(accruedBlocks, false);
+        } catch (NumberFormatException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void migrateBonusBlocks(World world, File file) {
+        UUID uuid = null;
+        try {
+            uuid = UUID.fromString(file.getName().replaceFirst("[.][^.]+$", ""));
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+            return;
+        }
+        List<String> lines;
+        try {
+            lines = Files.readAllLines(file.toPath());
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
+        if (lines.size() < 3) {
+            return;
+        }
+        try {
+            final int bonusBlocks = Integer.parseInt(lines.get(2));
+            final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(world, uuid);
+            // Set directly in storage as subject data has not been initialized
+            playerData.setBonusClaimBlocks(bonusBlocks);
+        } catch (NumberFormatException e) {
             e.printStackTrace();
         }
     }

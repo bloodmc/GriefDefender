@@ -34,13 +34,12 @@ import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.cache.MessageCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.configuration.MessageStorage;
-import com.griefdefender.internal.util.BlockUtil;
+import com.griefdefender.internal.util.RestoreUtil;
 import com.griefdefender.permission.GDPermissions;
 import com.griefdefender.text.action.GDCallbackHolder;
 
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
-import net.kyori.text.adapter.bukkit.TextAdapter;
 import net.kyori.text.event.ClickEvent;
 import net.kyori.text.event.HoverEvent;
 import net.kyori.text.format.TextColor;
@@ -82,18 +81,23 @@ public class CommandRestoreClaim extends BaseCommand {
         final Component schematicConfirmationText = TextComponent.builder("")
                 .append("Are you sure you want to restore this claim?")
                 .append("\n[")
-                .append("Confirm", TextColor.GREEN)
+                .append(MessageCache.getInstance().LABEL_CONFIRM.color(TextColor.GREEN))
                 .append("]\n")
-                .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createConfirmationConsumer(src, claim))))
+                .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(src, createConfirmationConsumer(src, claim), true)))
                 .hoverEvent(HoverEvent.showText(TextComponent.of("Clicking confirm will restore ENTIRE claim back to default world gen state. Use cautiously!"))).build();
-        TextAdapter.sendComponent(src, schematicConfirmationText);
+        GriefDefenderPlugin.sendMessage(src, schematicConfirmationText);
     }
 
     private static Consumer<CommandSender> createConfirmationConsumer(CommandSender src, GDClaim claim) {
         return confirm -> {
-            BlockUtil.getInstance().restoreClaim(claim);
-            final Component message = MessageCache.getInstance().CLAIM_RESTORE_SUCCESS;
-            GriefDefenderPlugin.sendMessage(src, message);
+            GriefDefenderPlugin.sendMessage(src, MessageCache.getInstance().CLAIM_RESTORE_IN_PROGRESS);
+            if (GriefDefenderPlugin.getMajorMinecraftVersion() <= 12 || GriefDefenderPlugin.getInstance().getWorldEditProvider() == null) {
+                RestoreUtil.getInstance().restoreClaim(claim);
+            } else {
+                GriefDefenderPlugin.getInstance().getWorldEditProvider().regenerateClaim(claim);
+            }
+
+            GriefDefenderPlugin.sendMessage(src, MessageCache.getInstance().CLAIM_RESTORE_SUCCESS);
         };
     }
 }

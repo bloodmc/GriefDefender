@@ -64,18 +64,21 @@ public class WorldEventHandler implements Listener {
         }
 
         claimWorldManager.save();
-        claimWorldManager.playerIndexStorage.savePlayerDatData();
 
         GDTimings.WORLD_SAVE_EVENT.stopTiming();
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onChunkLoad(ChunkLoadEvent event) {
+        if (!GriefDefenderPlugin.getInstance().claimsEnabledForWorld(event.getWorld().getUID())) {
+            return;
+        }
+
         final GDClaimManager claimWorldManager = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(event.getWorld().getUID());
-        final GDChunk gpChunk = claimWorldManager.getChunk(event.getChunk());
-        if (gpChunk != null) {
+        final GDChunk gdChunk = claimWorldManager.getChunk(event.getChunk());
+        if (gdChunk != null) {
             try {
-                gpChunk.loadChunkTrackingData();
+                gdChunk.loadChunkTrackingData();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -84,13 +87,17 @@ public class WorldEventHandler implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onChunkUnload(ChunkUnloadEvent event) {
+        if (!GriefDefenderPlugin.getInstance().claimsEnabledForWorld(event.getWorld().getUID())) {
+            return;
+        }
+
         final GDClaimManager claimWorldManager = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(event.getWorld().getUID());
-        final GDChunk gpChunk = claimWorldManager.getChunk(event.getChunk());
-        if (gpChunk != null) {
-            if (gpChunk.getTrackedShortPlayerPositions().size() > 0) {
-                gpChunk.saveChunkTrackingData();
+        final GDChunk gdChunk = claimWorldManager.getChunk(event.getChunk(), false);
+        if (gdChunk != null) {
+            if (gdChunk.getTrackedShortPlayerPositions().size() > 0) {
+                gdChunk.saveChunkTrackingData();
             }
-            claimWorldManager.removeChunk(event.getChunk());
+            claimWorldManager.removeChunk(gdChunk.getChunkKey());
         }
     }
 }

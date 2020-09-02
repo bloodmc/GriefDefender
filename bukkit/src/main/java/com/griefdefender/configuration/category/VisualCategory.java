@@ -34,11 +34,23 @@ public class VisualCategory extends ConfigCategory {
 
     @Setting(value = "hide-borders-when-using-wecui", comment = "Whether to hide the glowstone/gold block borders when using WECUI.")
     public boolean hideBorders = false;
+    @Setting(value = "hide-fillers-when-using-wecui", comment = "Whether to hide the block fillers when using WECUI.")
+    public boolean hideFillers = false;
     @Setting(value = "hide-wecui-drag-visuals-2d", comment = "Whether drag visuals should be shown while creating a claim in 2D mode.")
     public boolean hideDrag2d = true;
-
+    @Setting(value = "client-visuals-per-tick", comment = "The amount of block visuals a client can receive per tick when showing/hiding claims. Default: 12")
+    public int clientVisualsPerTick = 12;
     @Setting(value = "claim-create-block", comment = "The visual block used during claim creation. (Default: minecraft:diamond_block)")
     public String claimCreateStartBlock = "minecraft:diamond_block";
+    @Setting(value = "filler-spacing", comment = "The space between each filler visual block.")
+    public int fillerSpacing = 10;
+    @Setting(value = "active-claim-visual-time", comment = "The active time, in seconds, to keep a claim's visuals shown to a player. (Default: 60)"
+            + "\nNote: If value is <= 0, GD will use the default value.")
+    public int claimVisualTime = 60;
+    @Setting(value = "active-create-block-visual-time", comment = "The active time, in seconds, to keep a claim's create block visual shown to a player. (Default: 180)"
+            + "\nNote: This only applies during claim creation."
+            + "\nNote: If value is <= 0, GD will use the default value.")
+    public int createBlockVisualTime = 180;
 
     @Setting(value = "admin-accent-block", comment = "The visual accent block used for admin claims. (Default: minecraft:pumpkin)")
     public String visualAdminAccentBlock = "minecraft:pumpkin";

@@ -66,6 +66,13 @@ public class GDBootstrap extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        // check if reload
+        if (instance != null) {
+            instance = this;
+            GriefDefenderPlugin.getInstance().onEnable(true);
+            return;
+        }
+
         instance = this;
         final JSONParser parser = new JSONParser();
         String bukkitJsonVersion = null;
@@ -86,8 +93,12 @@ public class GDBootstrap extends JavaPlugin {
             bukkitJsonVersion = "1.15.2";
         } else if (Bukkit.getVersion().contains("1.15")) {
             bukkitJsonVersion = "1.15";
+        } else if (Bukkit.getVersion().contains("1.16.1")) {
+            bukkitJsonVersion = "1.16.1";
+        } else if (Bukkit.getVersion().contains("1.16.2")) {
+            bukkitJsonVersion = "1.16.2";
         } else {
-            this.getLogger().severe("Detected unsupported version '" + Bukkit.getVersion() + "'. GriefDefender only supports 1.8.8, 1.12.2, 1.13.2, 1.14.x, 1.15.0-1.15.2. GriefDefender will NOT load.");
+            this.getLogger().severe("Detected unsupported version '" + Bukkit.getVersion() + "'. GriefDefender only supports 1.8.8, 1.12.2, 1.13.2, 1.14.x, 1.15.0-1.15.2, 1.16.1. GriefDefender will NOT load.");
             return;
         }
         try {

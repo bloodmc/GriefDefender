@@ -31,7 +31,7 @@ import com.griefdefender.api.claim.ClaimTypes;
 import com.griefdefender.api.data.EconomyData;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.configuration.category.ConfigCategory;
-import com.griefdefender.internal.util.BlockUtil;
+import com.griefdefender.util.BlockUtil;
 
 import net.kyori.text.Component;
 import ninja.leaping.configurate.objectmapping.Setting;
@@ -78,8 +78,6 @@ public class ClaimDataConfig extends ConfigCategory implements IClaimData {
     private boolean allowFlagOverrides = true;
     @Setting(value = ClaimStorageData.MAIN_REQUIRES_CLAIM_BLOCKS)
     private boolean requiresClaimBlocks = true;
-    @Setting(value = ClaimStorageData.MAIN_CLAIM_PVP)
-    private Tristate pvpOverride = Tristate.UNDEFINED;
     @Setting(value = ClaimStorageData.MAIN_CLAIM_DATE_CREATED)
     private String dateCreated = Instant.now().toString();
     @Setting(value = ClaimStorageData.MAIN_CLAIM_DATE_LAST_ACTIVE)
@@ -155,11 +153,6 @@ public class ClaimDataConfig extends ConfigCategory implements IClaimData {
     @Override
     public boolean allowDenyMessages() {
         return this.allowDenyMessages;
-    }
-
-    @Override
-    public Tristate getPvpOverride() {
-        return this.pvpOverride;
     }
 
     @Override
@@ -301,12 +294,6 @@ public class ClaimDataConfig extends ConfigCategory implements IClaimData {
     }
 
     @Override
-    public void setPvpOverride(Tristate pvp) {
-        this.requiresSave = true;
-        this.pvpOverride = pvp;
-    }
-
-    @Override
     public void setResizable(boolean resizable) {
         this.requiresSave = true;
         this.isResizable = resizable;
@@ -436,6 +423,13 @@ public class ClaimDataConfig extends ConfigCategory implements IClaimData {
         this.requiresSave = true;
         this.spawnPos = spawnPos;
         this.claimSpawn = BlockUtil.getInstance().posToString(spawnPos);
+    }
+
+    @Override
+    public void setSpawnPos(int x, int y, int z) {
+        this.requiresSave = true;
+        this.spawnPos = new Vector3i(x, y, z);
+        this.claimSpawn = BlockUtil.getInstance().posToString(this.spawnPos);
     }
 
     @Override

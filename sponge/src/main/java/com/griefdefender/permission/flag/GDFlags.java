@@ -25,6 +25,7 @@
 package com.griefdefender.permission.flag;
 
 import com.griefdefender.GriefDefenderPlugin;
+import com.griefdefender.api.permission.flag.Flag;
 import com.griefdefender.api.permission.flag.Flags;
 
 public class GDFlags {
@@ -56,6 +57,7 @@ public class GDFlags {
     public static boolean INTERACT_ITEM_SECONDARY;
     public static boolean INTERACT_INVENTORY;
     public static boolean INTERACT_INVENTORY_CLICK;
+    public static boolean INVENTORY_ITEM_MOVE;
     public static boolean ITEM_DROP;
     public static boolean ITEM_PICKUP;
     public static boolean ITEM_SPAWN;
@@ -67,41 +69,49 @@ public class GDFlags {
     public static boolean PROJECTILE_IMPACT_ENTITY;
 
     public static void populateFlagStatus() {
-        BLOCK_BREAK = GriefDefenderPlugin.getGlobalConfig().getConfig().modules.isProtectionModuleEnabled(Flags.BLOCK_BREAK.getName());
-        BLOCK_GROW = GriefDefenderPlugin.getGlobalConfig().getConfig().modules.isProtectionModuleEnabled(Flags.BLOCK_GROW.getName());
-        BLOCK_MODIFY = GriefDefenderPlugin.getGlobalConfig().getConfig().modules.isProtectionModuleEnabled(Flags.BLOCK_MODIFY.getName());
-        BLOCK_PLACE = GriefDefenderPlugin.getGlobalConfig().getConfig().modules.isProtectionModuleEnabled(Flags.BLOCK_PLACE.getName());
-        BLOCK_SPREAD  = GriefDefenderPlugin.getGlobalConfig().getConfig().modules.isProtectionModuleEnabled(Flags.BLOCK_SPREAD.getName());
-        COLLIDE_BLOCK  = GriefDefenderPlugin.getGlobalConfig().getConfig().modules.isProtectionModuleEnabled(Flags.COLLIDE_BLOCK.getName());
-        COLLIDE_ENTITY  = GriefDefenderPlugin.getGlobalConfig().getConfig().modules.isProtectionModuleEnabled(Flags.COLLIDE_ENTITY.getName());
-        COMMAND_EXECUTE  = GriefDefenderPlugin.getGlobalConfig().getConfig().modules.isProtectionModuleEnabled(Flags.COMMAND_EXECUTE.getName());
-        COMMAND_EXECUTE_PVP  = GriefDefenderPlugin.getGlobalConfig().getConfig().modules.isProtectionModuleEnabled(Flags.COMMAND_EXECUTE_PVP.getName());
-        ENTER_CLAIM  = GriefDefenderPlugin.getGlobalConfig().getConfig().modules.isProtectionModuleEnabled(Flags.ENTER_CLAIM.getName());
-        ENTITY_CHUNK_SPAWN  = GriefDefenderPlugin.getGlobalConfig().getConfig().modules.isProtectionModuleEnabled(Flags.ENTITY_CHUNK_SPAWN.getName());
-        ENTITY_DAMAGE  = GriefDefenderPlugin.getGlobalConfig().getConfig().modules.isProtectionModuleEnabled(Flags.ENTITY_DAMAGE.getName());
-        ENTITY_RIDING  = GriefDefenderPlugin.getGlobalConfig().getConfig().modules.isProtectionModuleEnabled(Flags.ENTITY_RIDING.getName());
-        ENTITY_SPAWN  = GriefDefenderPlugin.getGlobalConfig().getConfig().modules.isProtectionModuleEnabled(Flags.ENTITY_SPAWN.getName());
-        ENTITY_TELEPORT_FROM  = GriefDefenderPlugin.getGlobalConfig().getConfig().modules.isProtectionModuleEnabled(Flags.ENTITY_TELEPORT_FROM.getName());
-        ENTITY_TELEPORT_TO  = GriefDefenderPlugin.getGlobalConfig().getConfig().modules.isProtectionModuleEnabled(Flags.ENTITY_TELEPORT_TO.getName());
-        EXIT_CLAIM  = GriefDefenderPlugin.getGlobalConfig().getConfig().modules.isProtectionModuleEnabled(Flags.EXIT_CLAIM.getName());
-        EXPLOSION_BLOCK  = GriefDefenderPlugin.getGlobalConfig().getConfig().modules.isProtectionModuleEnabled(Flags.EXPLOSION_BLOCK.getName());
-        EXPLOSION_ENTITY  = GriefDefenderPlugin.getGlobalConfig().getConfig().modules.isProtectionModuleEnabled(Flags.EXPLOSION_ENTITY.getName());
-        INTERACT_BLOCK_PRIMARY  = GriefDefenderPlugin.getGlobalConfig().getConfig().modules.isProtectionModuleEnabled(Flags.INTERACT_BLOCK_PRIMARY.getName());
-        INTERACT_BLOCK_SECONDARY  = GriefDefenderPlugin.getGlobalConfig().getConfig().modules.isProtectionModuleEnabled(Flags.INTERACT_BLOCK_SECONDARY.getName());
-        INTERACT_ENTITY_PRIMARY  = GriefDefenderPlugin.getGlobalConfig().getConfig().modules.isProtectionModuleEnabled(Flags.INTERACT_ENTITY_PRIMARY.getName());
-        INTERACT_ENTITY_SECONDARY  = GriefDefenderPlugin.getGlobalConfig().getConfig().modules.isProtectionModuleEnabled(Flags.INTERACT_ENTITY_SECONDARY.getName());
-        INTERACT_INVENTORY  = GriefDefenderPlugin.getGlobalConfig().getConfig().modules.isProtectionModuleEnabled(Flags.INTERACT_INVENTORY.getName());
-        INTERACT_INVENTORY_CLICK  = GriefDefenderPlugin.getGlobalConfig().getConfig().modules.isProtectionModuleEnabled(Flags.INTERACT_INVENTORY_CLICK.getName());
-        INTERACT_ITEM_PRIMARY  = GriefDefenderPlugin.getGlobalConfig().getConfig().modules.isProtectionModuleEnabled(Flags.INTERACT_ITEM_PRIMARY.getName());
-        INTERACT_ITEM_SECONDARY  = GriefDefenderPlugin.getGlobalConfig().getConfig().modules.isProtectionModuleEnabled(Flags.INTERACT_ITEM_SECONDARY.getName());
-        ITEM_DROP  = GriefDefenderPlugin.getGlobalConfig().getConfig().modules.isProtectionModuleEnabled(Flags.ITEM_DROP.getName());
-        ITEM_PICKUP  = GriefDefenderPlugin.getGlobalConfig().getConfig().modules.isProtectionModuleEnabled(Flags.ITEM_PICKUP.getName());
-        ITEM_SPAWN  = GriefDefenderPlugin.getGlobalConfig().getConfig().modules.isProtectionModuleEnabled(Flags.ITEM_SPAWN.getName());
-        ITEM_USE  = GriefDefenderPlugin.getGlobalConfig().getConfig().modules.isProtectionModuleEnabled(Flags.ITEM_USE.getName());
-        LEAF_DECAY  = GriefDefenderPlugin.getGlobalConfig().getConfig().modules.isProtectionModuleEnabled(Flags.LEAF_DECAY.getName());
-        LIQUID_FLOW  = GriefDefenderPlugin.getGlobalConfig().getConfig().modules.isProtectionModuleEnabled(Flags.LIQUID_FLOW.getName());
-        PORTAL_USE  = GriefDefenderPlugin.getGlobalConfig().getConfig().modules.isProtectionModuleEnabled(Flags.PORTAL_USE.getName());
-        PROJECTILE_IMPACT_BLOCK  = GriefDefenderPlugin.getGlobalConfig().getConfig().modules.isProtectionModuleEnabled(Flags.PROJECTILE_IMPACT_BLOCK.getName());
-        PROJECTILE_IMPACT_ENTITY  = GriefDefenderPlugin.getGlobalConfig().getConfig().modules.isProtectionModuleEnabled(Flags.PROJECTILE_IMPACT_ENTITY.getName());
+        BLOCK_BREAK = GriefDefenderPlugin.getFlagConfig().getConfig().isFlagEnabled(Flags.BLOCK_BREAK.getName());
+        BLOCK_GROW = GriefDefenderPlugin.getFlagConfig().getConfig().isFlagEnabled(Flags.BLOCK_GROW.getName());
+        BLOCK_MODIFY = GriefDefenderPlugin.getFlagConfig().getConfig().isFlagEnabled(Flags.BLOCK_MODIFY.getName());
+        BLOCK_PLACE = GriefDefenderPlugin.getFlagConfig().getConfig().isFlagEnabled(Flags.BLOCK_PLACE.getName());
+        BLOCK_SPREAD  = GriefDefenderPlugin.getFlagConfig().getConfig().isFlagEnabled(Flags.BLOCK_SPREAD.getName());
+        COLLIDE_BLOCK  = GriefDefenderPlugin.getFlagConfig().getConfig().isFlagEnabled(Flags.COLLIDE_BLOCK.getName());
+        COLLIDE_ENTITY  = GriefDefenderPlugin.getFlagConfig().getConfig().isFlagEnabled(Flags.COLLIDE_ENTITY.getName());
+        COMMAND_EXECUTE  = GriefDefenderPlugin.getFlagConfig().getConfig().isFlagEnabled(Flags.COMMAND_EXECUTE.getName());
+        COMMAND_EXECUTE_PVP  = GriefDefenderPlugin.getFlagConfig().getConfig().isFlagEnabled(Flags.COMMAND_EXECUTE_PVP.getName());
+        ENTER_CLAIM  = GriefDefenderPlugin.getFlagConfig().getConfig().isFlagEnabled(Flags.ENTER_CLAIM.getName());
+        ENTITY_CHUNK_SPAWN  = GriefDefenderPlugin.getFlagConfig().getConfig().isFlagEnabled(Flags.ENTITY_CHUNK_SPAWN.getName());
+        ENTITY_DAMAGE  = GriefDefenderPlugin.getFlagConfig().getConfig().isFlagEnabled(Flags.ENTITY_DAMAGE.getName());
+        ENTITY_RIDING  = GriefDefenderPlugin.getFlagConfig().getConfig().isFlagEnabled(Flags.ENTITY_RIDING.getName());
+        ENTITY_SPAWN  = GriefDefenderPlugin.getFlagConfig().getConfig().isFlagEnabled(Flags.ENTITY_SPAWN.getName());
+        ENTITY_TELEPORT_FROM  = GriefDefenderPlugin.getFlagConfig().getConfig().isFlagEnabled(Flags.ENTITY_TELEPORT_FROM.getName());
+        ENTITY_TELEPORT_TO  = GriefDefenderPlugin.getFlagConfig().getConfig().isFlagEnabled(Flags.ENTITY_TELEPORT_TO.getName());
+        EXIT_CLAIM  = GriefDefenderPlugin.getFlagConfig().getConfig().isFlagEnabled(Flags.EXIT_CLAIM.getName());
+        EXPLOSION_BLOCK  = GriefDefenderPlugin.getFlagConfig().getConfig().isFlagEnabled(Flags.EXPLOSION_BLOCK.getName());
+        EXPLOSION_ENTITY  = GriefDefenderPlugin.getFlagConfig().getConfig().isFlagEnabled(Flags.EXPLOSION_ENTITY.getName());
+        INTERACT_BLOCK_PRIMARY  = GriefDefenderPlugin.getFlagConfig().getConfig().isFlagEnabled(Flags.INTERACT_BLOCK_PRIMARY.getName());
+        INTERACT_BLOCK_SECONDARY  = GriefDefenderPlugin.getFlagConfig().getConfig().isFlagEnabled(Flags.INTERACT_BLOCK_SECONDARY.getName());
+        INTERACT_ENTITY_PRIMARY  = GriefDefenderPlugin.getFlagConfig().getConfig().isFlagEnabled(Flags.INTERACT_ENTITY_PRIMARY.getName());
+        INTERACT_ENTITY_SECONDARY  = GriefDefenderPlugin.getFlagConfig().getConfig().isFlagEnabled(Flags.INTERACT_ENTITY_SECONDARY.getName());
+        INTERACT_INVENTORY  = GriefDefenderPlugin.getFlagConfig().getConfig().isFlagEnabled(Flags.INTERACT_INVENTORY.getName());
+        INTERACT_INVENTORY_CLICK  = GriefDefenderPlugin.getFlagConfig().getConfig().isFlagEnabled(Flags.INTERACT_INVENTORY_CLICK.getName());
+        INTERACT_ITEM_PRIMARY  = GriefDefenderPlugin.getFlagConfig().getConfig().isFlagEnabled(Flags.INTERACT_ITEM_PRIMARY.getName());
+        INTERACT_ITEM_SECONDARY  = GriefDefenderPlugin.getFlagConfig().getConfig().isFlagEnabled(Flags.INTERACT_ITEM_SECONDARY.getName());
+        INVENTORY_ITEM_MOVE  = GriefDefenderPlugin.getFlagConfig().getConfig().isFlagEnabled(Flags.INVENTORY_ITEM_MOVE.getName());
+        ITEM_DROP  = GriefDefenderPlugin.getFlagConfig().getConfig().isFlagEnabled(Flags.ITEM_DROP.getName());
+        ITEM_PICKUP  = GriefDefenderPlugin.getFlagConfig().getConfig().isFlagEnabled(Flags.ITEM_PICKUP.getName());
+        ITEM_SPAWN  = GriefDefenderPlugin.getFlagConfig().getConfig().isFlagEnabled(Flags.ITEM_SPAWN.getName());
+        ITEM_USE  = GriefDefenderPlugin.getFlagConfig().getConfig().isFlagEnabled(Flags.ITEM_USE.getName());
+        LEAF_DECAY  = GriefDefenderPlugin.getFlagConfig().getConfig().isFlagEnabled(Flags.LEAF_DECAY.getName());
+        LIQUID_FLOW  = GriefDefenderPlugin.getFlagConfig().getConfig().isFlagEnabled(Flags.LIQUID_FLOW.getName());
+        PORTAL_USE  = GriefDefenderPlugin.getFlagConfig().getConfig().isFlagEnabled(Flags.PORTAL_USE.getName());
+        PROJECTILE_IMPACT_BLOCK  = GriefDefenderPlugin.getFlagConfig().getConfig().isFlagEnabled(Flags.PROJECTILE_IMPACT_BLOCK.getName());
+        PROJECTILE_IMPACT_ENTITY  = GriefDefenderPlugin.getFlagConfig().getConfig().isFlagEnabled(Flags.PROJECTILE_IMPACT_ENTITY.getName());
+    }
+
+    public static boolean isFlagEnabled(Flag flag) {
+        if (flag == null) {
+            return false;
+        }
+        return GriefDefenderPlugin.getFlagConfig().getConfig().isFlagEnabled(flag.getName().toLowerCase());
     }
 }

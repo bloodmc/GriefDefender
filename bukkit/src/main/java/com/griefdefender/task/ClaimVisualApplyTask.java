@@ -26,27 +26,31 @@ package com.griefdefender.task;
 
 import com.griefdefender.GDBootstrap;
 import com.griefdefender.GDPlayerData;
+import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.internal.block.BlockSnapshot;
-import com.griefdefender.internal.util.NMSUtil;
-import com.griefdefender.internal.visual.ClaimVisual;
+import com.griefdefender.internal.block.BlockTransaction;
+import com.griefdefender.internal.visual.GDClaimVisual;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 public class ClaimVisualApplyTask implements Runnable {
 
-    private ClaimVisual visualization;
+    private GDClaimVisual visualization;
     private Player player;
     private GDPlayerData playerData;
     private boolean resetActive;
 
-    public ClaimVisualApplyTask(Player player, GDPlayerData playerData, ClaimVisual visualization) {
+    public ClaimVisualApplyTask(Player player, GDPlayerData playerData, GDClaimVisual visualization) {
         this(player, playerData, visualization, true);
     }
 
-    public ClaimVisualApplyTask(Player player, GDPlayerData playerData, ClaimVisual visualization, boolean resetActive) {
+    public ClaimVisualApplyTask(Player player, GDPlayerData playerData, GDClaimVisual visualization, boolean resetActive) {
         this.visualization = visualization;
         this.playerData = playerData;
         this.player = player;
@@ -55,31 +59,56 @@ public class ClaimVisualApplyTask implements Runnable {
 
     @Override
     public void run() {
+        if (!this.player.isOnline()) {
+            this.playerData.revertAllVisuals();
+            return;
+        }
         // Only revert active visual if we are not currently creating a claim
-        if (!this.playerData.visualBlocks.isEmpty() && this.playerData.lastShovelLocation == null) {
+        if (!this.playerData.visualClaimBlocks.isEmpty() && this.playerData.lastShovelLocation == null) {
             if (this.resetActive) {
-                this.playerData.revertActiveVisual(this.player);
+                this.playerData.revertAllVisuals();
             }
         }
 
-        for (int i = 0; i < this.visualization.visualTransactions.size(); i++) {
-            BlockSnapshot snapshot = this.visualization.visualTransactions.get(i).getFinal();
-            NMSUtil.getInstance().sendBlockChange(this.player, snapshot);
+        for (BlockTransaction transaction : this.visualization.getVisualTransactions()) {
+            this.playerData.queuedVisuals.add(transaction.getFinal());
         }
 
         if (this.visualization.getClaim() != null) {
-            this.playerData.visualClaimId = this.visualization.getClaim().getUniqueId();
             this.visualization.getClaim().playersWatching.add(this.player.getUniqueId());
         }
-        // If we still have active visuals to revert, combine with new
-        if (!this.playerData.visualBlocks.isEmpty()) {
-            this.playerData.visualBlocks.addAll(this.visualization.visualTransactions);
+
+        UUID visualUniqueId = null;
+        if (this.visualization.getClaim() == null) {
+            visualUniqueId = UUID.randomUUID();
+            playerData.tempVisualUniqueId = visualUniqueId;
         } else {
-            this.playerData.visualBlocks = new ArrayList<>(this.visualization.visualTransactions);
+            visualUniqueId = this.visualization.getClaim().getUniqueId();
         }
 
-        if (playerData.lastShovelLocation == null) {
-            this.playerData.visualRevertTask = Bukkit.getServer().getScheduler().runTaskLaterAsynchronously(GDBootstrap.getInstance(), new ClaimVisualRevertTask(this.player, this.playerData), 1200);
+        final List<BlockTransaction> blockTransactions = this.playerData.visualClaimBlocks.get(visualUniqueId);
+        if (blockTransactions == null) {
+            this.playerData.visualClaimBlocks.put(visualUniqueId, new ArrayList<>(this.visualization.getVisualTransactions()));
+        } else {
+            // support multi layer visuals i.e. water
+            blockTransactions.addAll(this.visualization.getVisualTransactions());
+            // cancel existing task
+            final BukkitTask task = this.playerData.claimVisualRevertTasks.get(visualUniqueId);
+            if (task != null) {
+                task.cancel();
+                this.playerData.claimVisualRevertTasks.remove(visualUniqueId);
+            }
         }
+
+        int tickTime = (this.playerData.lastShovelLocation != null && this.visualization.getClaim() == null ? GriefDefenderPlugin.getGlobalConfig().getConfig().visual.createBlockVisualTime : GriefDefenderPlugin.getGlobalConfig().getConfig().visual.claimVisualTime) * 20;
+        if (tickTime <= 0) {
+            tickTime = this.playerData.lastShovelLocation == null ? 1200 : 3600;
+        }
+        final ClaimVisualRevertTask runnable = new ClaimVisualRevertTask(visualUniqueId, this.player, this.playerData);
+        if (this.playerData.lastShovelLocation != null && this.visualization.getClaim() == null) {
+            this.playerData.createBlockVisualTransactions.put(visualUniqueId, new ArrayList<>(this.visualization.getVisualTransactions()));
+            this.playerData.createBlockVisualRevertRunnables.put(visualUniqueId, runnable);
+        }
+        this.playerData.claimVisualRevertTasks.put(visualUniqueId, Bukkit.getServer().getScheduler().runTaskLaterAsynchronously(GDBootstrap.getInstance(), runnable, tickTime));
     }
 }

@@ -45,6 +45,7 @@ import com.griefdefender.cache.MessageCache;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.configuration.MessageStorage;
+import com.griefdefender.internal.visual.GDClaimVisual;
 import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.permission.GDPermissions;
 import com.griefdefender.provider.VaultProvider;
@@ -190,12 +191,15 @@ public class CommandClaimExpand extends BaseCommand {
                     GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.RESIZE_SUCCESS_2D, params));
                 }
             }
-            playerData.revertActiveVisual(player);
+            playerData.revertClaimVisual(claim);
             claim.getVisualizer().resetVisuals();
-            claim.getVisualizer().createClaimBlockVisuals(player.getEyeLocation().getBlockY(), player.getLocation(), playerData);
-            claim.getVisualizer().apply(player);
+            final GDClaimVisual visual = claim.getVisualizer();
+            if (visual.getVisualTransactions().isEmpty()) {
+                visual.createClaimBlockVisuals(player.getEyeLocation().getBlockY(), player.getLocation(), playerData);
+            }
+            visual.apply(player);
             if (GriefDefenderPlugin.getInstance().getWorldEditProvider() != null) {
-                GriefDefenderPlugin.getInstance().getWorldEditProvider().visualizeClaim(claim, player, playerData, false);
+                GriefDefenderPlugin.getInstance().getWorldEditProvider().displayClaimCUIVisual(claim, player, playerData, false);
             }
         }
     }

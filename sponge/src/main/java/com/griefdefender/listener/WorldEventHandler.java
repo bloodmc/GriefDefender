@@ -24,14 +24,11 @@
  */
 package com.griefdefender.listener;
 
-import com.griefdefender.GDBootstrap;
 import com.griefdefender.GDTimings;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.claim.GDClaimManager;
+import com.griefdefender.internal.tracking.chunk.GDChunk;
 import com.griefdefender.internal.util.NMSUtil;
-import com.griefdefender.task.TaxApplyTask;
-import com.griefdefender.util.TaskUtil;
-import org.spongepowered.api.Sponge;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.Order;
 import org.spongepowered.api.event.world.LoadWorldEvent;
@@ -40,8 +37,6 @@ import org.spongepowered.api.event.world.UnloadWorldEvent;
 import org.spongepowered.api.event.world.chunk.LoadChunkEvent;
 import org.spongepowered.api.event.world.chunk.UnloadChunkEvent;
 import org.spongepowered.common.SpongeImpl;
-
-import java.util.concurrent.TimeUnit;
 
 public class WorldEventHandler {
 
@@ -54,19 +49,8 @@ public class WorldEventHandler {
         GDTimings.WORLD_LOAD_EVENT.startTimingIfSync();
         GriefDefenderPlugin.getInstance().dataStore.registerWorld(event.getTargetWorld());
         GriefDefenderPlugin.getInstance().dataStore.loadWorldData(event.getTargetWorld());
-
         NMSUtil.getInstance().addEntityRemovalListener(event.getTargetWorld());
         GDTimings.WORLD_LOAD_EVENT.stopTimingIfSync();
-        if (!GriefDefenderPlugin.getActiveConfig(event.getTargetWorld().getProperties()).getConfig().claim.bankTaxSystem) {
-            return;
-        }
-        if (GriefDefenderPlugin.getInstance().economyService.isPresent()) {
-            // run tax task
-            TaxApplyTask taxTask = new TaxApplyTask(event.getTargetWorld().getProperties());
-            int taxHour = GriefDefenderPlugin.getActiveConfig(event.getTargetWorld().getProperties()).getConfig().claim.taxApplyHour;
-            long delay = TaskUtil.computeDelay(taxHour, 0, 0);
-            Sponge.getScheduler().createTaskBuilder().delay(delay, TimeUnit.SECONDS).interval(1, TimeUnit.DAYS).execute(taxTask).submit(GDBootstrap.getInstance());
-        }
     }
 
     @Listener(order = Order.FIRST, beforeModifications = true)
@@ -93,5 +77,28 @@ public class WorldEventHandler {
 
         claimWorldManager.save();
         GDTimings.WORLD_SAVE_EVENT.stopTimingIfSync();
+    }
+
+    @Listener(order = Order.EARLY)
+    public void onChunkLoad(LoadChunkEvent event) {
+        if (!GriefDefenderPlugin.getInstance().claimsEnabledForWorld(event.getTargetChunk().getWorld().getUniqueId())) {
+            return;
+        }
+
+        final GDClaimManager claimWorldManager = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(event.getTargetChunk().getWorld().getUniqueId());
+        claimWorldManager.getChunk(event.getTargetChunk());
+    }
+
+    @Listener
+    public void onChunkUnload(UnloadChunkEvent event) {
+        if (!GriefDefenderPlugin.getInstance().claimsEnabledForWorld(event.getTargetChunk().getWorld().getUniqueId())) {
+            return;
+        }
+
+        final GDClaimManager claimWorldManager = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(event.getTargetChunk().getWorld().getUniqueId());
+        final GDChunk gdChunk = claimWorldManager.getChunk(event.getTargetChunk(), false);
+        if (gdChunk != null) {
+            claimWorldManager.removeChunk(gdChunk.getChunkKey());
+        }
     }
 }

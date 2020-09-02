@@ -33,7 +33,6 @@ import com.griefdefender.cache.MessageCache;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.internal.util.NMSUtil;
-import com.griefdefender.permission.ContextGroupKeys;
 import com.griefdefender.permission.ContextGroups;
 import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.permission.GDPermissions;
@@ -131,7 +130,7 @@ public class CauseContextHelper {
 
     public static Object getEventFakePlayerSource(Event event) {
         Object source = event.getSource();
-        if (source instanceof net.minecraft.entity.Entity && NMSUtil.getInstance().isFakePlayer(source)) {
+        if (NMSUtil.getInstance().isFakePlayer(source)) {
             final Object actualSource = event.getCause().last(Object.class).orElse(null);
             if (actualSource != source && (actualSource instanceof TileEntity || actualSource instanceof Entity)) {
                 return actualSource;
@@ -228,6 +227,8 @@ public class CauseContextHelper {
                     contextSet.add(ClaimContexts.SUBDIVISION_DEFAULT_CONTEXT);
                 } else if (arg1.equals("town")) {
                     contextSet.add(ClaimContexts.TOWN_DEFAULT_CONTEXT);
+                } else if (arg1.equalsIgnoreCase("user")) {
+                    contextSet.add(ClaimContexts.USER_DEFAULT_CONTEXT);
                 } else if (arg1.equals("wilderness")) {
                     contextSet.add(ClaimContexts.WILDERNESS_DEFAULT_CONTEXT);
                 } else { 
@@ -253,6 +254,8 @@ public class CauseContextHelper {
                     contextSet.add(ClaimContexts.SUBDIVISION_OVERRIDE_CONTEXT);
                 } else if (arg1.equals("town")) {
                     contextSet.add(ClaimContexts.TOWN_OVERRIDE_CONTEXT);
+                } else if (arg1.equalsIgnoreCase("user")) {
+                    contextSet.add(ClaimContexts.USER_OVERRIDE_CONTEXT);
                 } else if (arg1.equals("wilderness")) {
                     contextSet.add(ClaimContexts.WILDERNESS_OVERRIDE_CONTEXT);
                 } else if (arg1.equals("claim")) {
@@ -298,14 +301,6 @@ public class CauseContextHelper {
             }
         }
 
-        if (permission.equals(Options.SPAWN_LIMIT.getPermission())) {
-            if (!hasSourceContext) {
-                contextSet.add(ContextGroups.SOURCE_ALL);
-            }
-            if (!hasTargetContext) {
-                contextSet.add(ContextGroups.TARGET_ALL);
-            }
-        }
         return contextSet;
     }
 }

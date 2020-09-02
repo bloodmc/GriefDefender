@@ -53,6 +53,10 @@ public class CommandTownTag extends BaseCommand {
     @Syntax("<tag>")
     @Subcommand("town tag")
     public void execute(Player player, String tag) {
+        if (!GriefDefenderPlugin.getGlobalConfig().getConfig().town.townChatEnabled) {
+            return;
+        }
+
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
         final GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAtPlayer(playerData, player.getLocation());
         if (claim == null || !claim.isInTown()) {

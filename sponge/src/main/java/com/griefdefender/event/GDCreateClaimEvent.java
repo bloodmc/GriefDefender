@@ -33,14 +33,14 @@ public class GDCreateClaimEvent extends GDClaimEvent implements CreateClaimEvent
         super(claim);
     }
 
-    public static class Pre extends GDCreateClaimEvent {
+    public static class Pre extends GDCreateClaimEvent implements CreateClaimEvent.Pre {
 
         public Pre(Claim claim) {
             super(claim);
         }
     }
 
-    public static class Post extends GDCreateClaimEvent {
+    public static class Post extends GDCreateClaimEvent implements CreateClaimEvent.Post {
 
         public Post(Claim claim) {
             super(claim);

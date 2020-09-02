@@ -29,6 +29,7 @@ import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.CommandCompletion;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Description;
+import co.aikar.commands.annotation.Optional;
 import co.aikar.commands.annotation.Subcommand;
 import co.aikar.commands.annotation.Syntax;
 
@@ -39,11 +40,15 @@ import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.GriefDefender;
 import com.griefdefender.api.claim.Claim;
 import com.griefdefender.cache.MessageCache;
+import com.griefdefender.cache.PermissionHolderCache;
+import com.griefdefender.claim.GDClaimManager;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.event.GDCauseStackManager;
 import com.griefdefender.event.GDRemoveClaimEvent;
+import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.permission.GDPermissions;
 import com.griefdefender.text.action.GDCallbackHolder;
+import com.griefdefender.util.PermissionUtil;
 
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
@@ -52,10 +57,14 @@ import net.kyori.text.event.ClickEvent;
 import net.kyori.text.event.HoverEvent;
 import net.kyori.text.format.TextColor;
 
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.Consumer;
 
-import org.bukkit.OfflinePlayer;
+import org.bukkit.Bukkit;
+import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -63,52 +72,110 @@ import org.bukkit.entity.Player;
 @CommandPermission(GDPermissions.COMMAND_DELETE_CLAIMS)
 public class CommandClaimDeleteAll extends BaseCommand {
 
-    @CommandCompletion("@gdplayers @gddummy")
+    @CommandCompletion("@gdplayers @gdworlds @gddummy")
     @CommandAlias("deleteall")
     @Description("Delete all of another player's claims.")
-    @Syntax("<player>")
+    @Syntax("<player> [<world>]")
     @Subcommand("delete all")
-    public void execute(Player src, OfflinePlayer otherPlayer) {
-        final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(src.getWorld(), otherPlayer.getUniqueId());
-        int originalClaimCount = playerData.getInternalClaims().size();
-
-        if (originalClaimCount == 0) {
-            TextAdapter.sendComponent(src, TextComponent.of("Player " + otherPlayer.getName() + " has no claims to delete.", TextColor.RED));
+    public void execute(Player src, String otherPlayer, @Optional String worldName) {
+        final UUID playerUniqueId = PermissionUtil.getInstance().lookupUserUniqueId(otherPlayer);
+        if (playerUniqueId == null) {
+            GriefDefenderPlugin.sendMessage(src, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.COMMAND_INVALID_PLAYER,
+                    ImmutableMap.of(
+                    "player", otherPlayer)));
             return;
         }
 
+        final GDPermissionUser user = PermissionHolderCache.getInstance().getOrCreateUser(playerUniqueId);
+        final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(src.getWorld(), user.getUniqueId());
+        int originalClaimCount = playerData.getInternalClaims().size();
+        World world = null;
+        if (worldName != null) {
+            world = Bukkit.getWorld(worldName);
+            if (world == null) {
+                TextAdapter.sendComponent(src, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.COMMAND_WORLD_NOT_FOUND,
+                        ImmutableMap.of("world", worldName)));
+                return;
+            }
+            final GDClaimManager claimManager = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(world.getUID());
+            final Set<Claim> claims = claimManager.getPlayerClaims(user.getUniqueId());
+            if (claims == null || claims.isEmpty()) {
+                originalClaimCount = 0;
+            }
+        }
+
+        if (originalClaimCount == 0) {
+            final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PLAYER_NO_CLAIMS_TO_DELETE, ImmutableMap.of(
+                    "player", user.getFriendlyName()));
+            TextAdapter.sendComponent(src, message);
+            return;
+        }
+
+        Component message = null;
+        if (world != null) {
+            message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.DELETE_ALL_PLAYER_WARNING_WORLD, ImmutableMap.of(
+                    "player", TextComponent.of(user.getFriendlyName()).color(TextColor.AQUA),
+                    "world", world.getName()));
+        } else {
+            message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.DELETE_ALL_PLAYER_WARNING, ImmutableMap.of(
+                    "player", TextComponent.of(user.getFriendlyName()).color(TextColor.AQUA)));
+        }
         final Component confirmationText = TextComponent.builder("")
-                .append(GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.DELETE_ALL_PLAYER_WARNING, 
-                        ImmutableMap.of("player", TextComponent.of(otherPlayer.getName()).color(TextColor.AQUA))))
+                .append(message)
                 .append(TextComponent.builder()
                     .append("\n[")
-                    .append("Confirm", TextColor.GREEN)
+                    .append(MessageCache.getInstance().LABEL_CONFIRM.color(TextColor.GREEN))
                     .append("]\n")
-                    .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createConfirmationConsumer(src, otherPlayer, playerData))))
+                    .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(src, createConfirmationConsumer(src, user, world), true)))
                     .hoverEvent(HoverEvent.showText(MessageCache.getInstance().UI_CLICK_CONFIRM)).build())
                 .build();
         TextAdapter.sendComponent(src, confirmationText);
     }
 
-    private static Consumer<CommandSender> createConfirmationConsumer(Player src, OfflinePlayer otherPlayer, GDPlayerData playerData) {
+    private static Consumer<CommandSender> createConfirmationConsumer(Player src, GDPermissionUser otherPlayer, World world) {
         return confirm -> {
             GDCauseStackManager.getInstance().pushCause(src);
-            GDRemoveClaimEvent event = new GDRemoveClaimEvent(ImmutableList.copyOf(playerData.getInternalClaims()));
+            Set<Claim> claims;
+            if (world != null) {
+                final GDClaimManager claimManager = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(world.getUID());
+                claims = new HashSet<>(claimManager.getInternalPlayerClaims(otherPlayer.getUniqueId()));
+                final Iterator<Claim> iterator = claims.iterator();
+                while (iterator.hasNext()) {
+                    final Claim claim = iterator.next();
+                    if (!claim.getWorldUniqueId().equals(world.getUID())) {
+                        iterator.remove();
+                    }
+                }
+            } else {
+                claims = otherPlayer.getInternalPlayerData().getInternalClaims();
+            }
+            if (claims.isEmpty()) {
+                final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PLAYER_NO_CLAIMS_TO_DELETE, ImmutableMap.of(
+                        "player", otherPlayer.getFriendlyName()));
+                TextAdapter.sendComponent(src, message);
+                return;
+            }
+            GDRemoveClaimEvent.Delete event = new GDRemoveClaimEvent.Delete(ImmutableList.copyOf(claims));
             GriefDefender.getEventManager().post(event);
             GDCauseStackManager.getInstance().popCause();
             if (event.cancelled()) {
                 GriefDefenderPlugin.sendMessage(src, event.getMessage().orElse(MessageCache.getInstance().PLUGIN_EVENT_CANCEL));
                 return;
             }
-
-            GriefDefenderPlugin.getInstance().dataStore.deleteClaimsForPlayer(otherPlayer.getUniqueId());
-            playerData.onClaimDelete();
+            final UUID worldUniqueId = world != null ? world.getUID() : null;
+            GriefDefenderPlugin.getInstance().dataStore.deleteClaimsForPlayer(otherPlayer.getUniqueId(), worldUniqueId);
+            otherPlayer.getInternalPlayerData().onClaimDelete();
             if (src != null) {
-                final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.DELETE_ALL_PLAYER_SUCCESS, ImmutableMap.of(
-                        "player", TextComponent.of(otherPlayer.getName()).color(TextColor.AQUA)));
+                Component message = null;
+                if (world != null) {
+                    message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.DELETE_ALL_PLAYER_SUCCESS_WORLD, ImmutableMap.of(
+                            "player", TextComponent.of(otherPlayer.getName()).color(TextColor.AQUA),
+                            "world", world.getName()));
+                } else {
+                    message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.DELETE_ALL_PLAYER_SUCCESS, ImmutableMap.of(
+                            "player", TextComponent.of(otherPlayer.getName()).color(TextColor.AQUA)));
+                }
                 GriefDefenderPlugin.sendMessage(src, message);
-                // revert any current visualization
-                playerData.revertActiveVisual(src);
             }
         };
     }

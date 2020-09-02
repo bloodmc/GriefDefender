@@ -45,13 +45,13 @@ public class CommandClaimOption extends ClaimOptionBase {
         super(ClaimSubjectType.GLOBAL);
     }
 
-    @CommandCompletion("@gdoptions @gddummy")
+    @CommandCompletion("@gdoptions @gdcontexts @gddummy")
     @CommandAlias("cod|claimoption")
     @Description("Gets/Sets claim options in the claim you are standing in.")
     @Syntax("[<option> <value> [context[key=value]]")
     @Subcommand("option claim")
     public void execute(Player player, @Optional String[] args) throws InvalidCommandArgument {
-        this.subject = GriefDefenderPlugin.DEFAULT_HOLDER;
+        this.subject = GriefDefenderPlugin.GD_OPTION_HOLDER;
         this.friendlySubjectName = "ALL";
         super.execute(player, args);
     }

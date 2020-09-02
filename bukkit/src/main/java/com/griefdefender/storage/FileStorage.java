@@ -83,7 +83,7 @@ public class FileStorage extends BaseStorage {
             worldsDataFolder.mkdirs();
         }
 
-        rootWorldSavePath = new File(".").toPath();
+        rootWorldSavePath = Bukkit.getWorldContainer().toPath();
 
         super.initialize();
     }
@@ -136,7 +136,13 @@ public class FileStorage extends BaseStorage {
                     final Path path = Paths.get("plugins", "GriefPreventionData", "ClaimData");
                     if (path.toFile().exists()) {
                         GriefPreventionMigrator.migrate(world, path);
-                        Files.createFile(dimPath.resolve(worldName).resolve("_bukkitMigrated"));
+                        final Path bukkitMigratedFile = dimPath.resolve(worldName).resolve("_bukkitMigrated");
+                        if (Files.notExists(bukkitMigratedFile.getParent())) {
+                            Files.createDirectories(bukkitMigratedFile.getParent());
+                        }
+                        if (Files.notExists(bukkitMigratedFile)) {
+                            Files.createFile(bukkitMigratedFile);
+                        }
                     }
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
@@ -450,7 +456,9 @@ public class FileStorage extends BaseStorage {
     public ClaimResult deleteClaimFromStorage(GDClaim claim) {
         final GDPlayerData ownerData = claim.getOwnerPlayerData();
         try {
-            Files.delete(claim.getClaimStorage().filePath);
+            if (claim.getClaimStorage().filePath.toFile().exists()) {
+                Files.delete(claim.getClaimStorage().filePath);
+            }
             if (GriefDefenderPlugin.getInstance().getWorldEditProvider() != null) {
                 final Path schematicPath = GriefDefenderPlugin.getInstance().getWorldEditProvider().getSchematicWorldMap().get(claim.getWorldUniqueId());
                 if (schematicPath != null && Files.exists(schematicPath.resolve(claim.getUniqueId().toString()))) {
@@ -469,7 +477,7 @@ public class FileStorage extends BaseStorage {
 
             PermissionUtil.getInstance().clearPermissions((GDClaim) claim);
             return new GDClaimResult(claim, ClaimResultType.SUCCESS);
-        } catch (IOException e) {
+        } catch (Throwable e) {
             e.printStackTrace();
             GriefDefenderPlugin.getInstance().getLogger().severe("Error: Unable to delete claim file \"" + claim.getClaimStorage().filePath + "\".");
         }

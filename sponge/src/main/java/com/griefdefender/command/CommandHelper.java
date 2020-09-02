@@ -27,7 +27,6 @@ package com.griefdefender.command;
 import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.reflect.TypeToken;
-import com.google.gson.Gson;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.GriefDefender;
@@ -38,8 +37,12 @@ import com.griefdefender.api.claim.ClaimContexts;
 import com.griefdefender.api.claim.ClaimResult;
 import com.griefdefender.api.claim.TrustType;
 import com.griefdefender.api.claim.TrustTypes;
-import com.griefdefender.api.economy.BankTransactionType;
+import com.griefdefender.api.economy.PaymentTransaction;
+import com.griefdefender.api.economy.PaymentType;
+import com.griefdefender.api.economy.TransactionResultType;
+import com.griefdefender.api.economy.TransactionType;
 import com.griefdefender.api.permission.Context;
+import com.griefdefender.api.permission.ContextKeys;
 import com.griefdefender.api.permission.PermissionResult;
 import com.griefdefender.api.permission.ResultTypes;
 import com.griefdefender.api.permission.flag.Flag;
@@ -52,10 +55,10 @@ import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.configuration.GriefDefenderConfig;
 import com.griefdefender.configuration.MessageStorage;
-import com.griefdefender.economy.GDBankTransaction;
+import com.griefdefender.economy.GDPaymentTransaction;
 import com.griefdefender.internal.pagination.PaginationList;
 import com.griefdefender.internal.util.VecHelper;
-import com.griefdefender.internal.visual.ClaimVisual;
+import com.griefdefender.internal.visual.GDClaimVisual;
 import com.griefdefender.permission.GDPermissionHolder;
 import com.griefdefender.permission.GDPermissionManager;
 import com.griefdefender.permission.GDPermissionResult;
@@ -65,7 +68,9 @@ import com.griefdefender.permission.flag.GDFlag;
 import com.griefdefender.permission.ui.MenuType;
 import com.griefdefender.permission.ui.UIHelper;
 import com.griefdefender.text.action.GDCallbackHolder;
+import com.griefdefender.util.EconomyUtil;
 import com.griefdefender.util.PermissionUtil;
+import com.griefdefender.util.PlayerUtil;
 import com.griefdefender.util.TaskUtil;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
@@ -82,7 +87,6 @@ import org.spongepowered.api.block.BlockType;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandMapping;
 import org.spongepowered.api.command.CommandSource;
-import org.spongepowered.api.data.property.entity.EyeLocationProperty;
 import org.spongepowered.api.entity.EntityType;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.CauseStackManager;
@@ -261,6 +265,7 @@ public class CommandHelper {
     public static PermissionResult applyFlagPermission(CommandSource src, GDPermissionHolder subject, Claim claim, Flag flag, String target, Tristate value, Set<Context> contexts, MenuType flagType, boolean clicked) {
         boolean hasDefaultContext = false;
         boolean hasOverrideContext = false;
+        boolean replaceOverrideContext = false;
         Component reason = null;
         Iterator<Context> iterator = contexts.iterator();
         while (iterator.hasNext()) {
@@ -277,8 +282,15 @@ public class CommandHelper {
             if (context.getKey().contains("gd_claim_default")) {
                 hasDefaultContext = true;
             } else if (context.getKey().contains("gd_claim_override")) {
+                if (context.getValue().equalsIgnoreCase("claim")) {
+                    iterator.remove();
+                    replaceOverrideContext = true;
+                }
                 hasOverrideContext = true;
             }
+        }
+        if (replaceOverrideContext) {
+            contexts.add(new Context(ContextKeys.CLAIM_OVERRIDE, claim.getUniqueId().toString()));
         }
         // Add target context
         if (target != null && !target.isEmpty() && !target.equalsIgnoreCase("any")) {
@@ -330,7 +342,13 @@ public class CommandHelper {
         }
 
         if (subject == GriefDefenderPlugin.DEFAULT_HOLDER) {
-            PermissionUtil.getInstance().setPermissionValue(GriefDefenderPlugin.DEFAULT_HOLDER, flag, value, contexts);
+            if (flagType == MenuType.OVERRIDE) {
+                PermissionUtil.getInstance().setPermissionValue(GriefDefenderPlugin.GD_OVERRIDE_HOLDER, flag, value, contexts);
+            } else if (flagType == MenuType.CLAIM) {
+                PermissionUtil.getInstance().setPermissionValue(GriefDefenderPlugin.GD_CLAIM_HOLDER, flag, value, contexts);
+            } else {
+                PermissionUtil.getInstance().setPermissionValue(GriefDefenderPlugin.GD_DEFAULT_HOLDER, flag, value, contexts);
+            }
             if (!clicked && src instanceof Player) {
                 TextAdapter.sendComponent(src, TextComponent.builder("")
                     .append(TextComponent.builder("\n[").append(MessageCache.getInstance().FLAG_UI_RETURN_FLAGS.color(TextColor.AQUA)).append("]\n")
@@ -341,7 +359,7 @@ public class CommandHelper {
                                     "permission", flag.getPermission(),
                                     "contexts", getFriendlyContextString(claim, contexts),
                                     "value", getClickableText(src, (GDClaim) claim, subject, contexts, flag, value, flagType).color(TextColor.LIGHT_PURPLE),
-                                    "target", "ALL")))
+                                    "target", MessageCache.getInstance().TITLE_ALL)))
                         .build());
             }
         } else {
@@ -541,23 +559,43 @@ public class CommandHelper {
         if (visualizeClaims && src instanceof Player) {
             Player player = (Player) src;
             final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
+            boolean hideBorders = true || GriefDefenderPlugin.getInstance().getWorldEditProvider() != null &&
+                    GriefDefenderPlugin.getInstance().getWorldEditProvider().hasCUISupport(player) &&
+                    GriefDefenderPlugin.getActiveConfig(player.getWorld().getUniqueId()).getConfig().visual.hideBorders;
             if (claims.size() > 1) {
-                if (height != 0) {
-                    height = playerData.lastValidInspectLocation != null ? playerData.lastValidInspectLocation.getBlockY() : player.getProperty(EyeLocationProperty.class).get().getValue().getFloorY();
+                if (!hideBorders) {
+                    if (height != 0) {
+                        height = playerData.lastValidInspectLocation != null ? playerData.lastValidInspectLocation.getBlockY() : PlayerUtil.getInstance().getEyeHeight(player);
+                    }
+                    for (Claim claim : claims) {
+                        GDClaimVisual visualization = GDClaimVisual.fromClaim(claim, playerData.getClaimCreateMode() == CreateModeTypes.VOLUME ? height : PlayerUtil.getInstance().getEyeHeight(player), player.getLocation(), playerData, null);
+                        visualization.apply(player);
+                    }
                 }
-                ClaimVisual visualization = ClaimVisual.fromClaims(claims, playerData.getClaimCreateMode() == CreateModeTypes.VOLUME ? height : player.getProperty(EyeLocationProperty.class).get().getValue().getFloorY(), player.getLocation(), playerData, null);
-                visualization.apply(player);
+                if (GriefDefenderPlugin.getInstance().getWorldEditProvider() != null) {
+                    GriefDefenderPlugin.getInstance().getWorldEditProvider().visualizeClaims(claims, player, playerData, true);
+                 }
             } else {
-                for (Claim claim : claims) {
-                    GDClaim gpClaim = (GDClaim) claim;
-                    gpClaim.getVisualizer().createClaimBlockVisuals(height, player.getLocation(), playerData);
-                    gpClaim.getVisualizer().apply(player);
+                if (!hideBorders) {
+                    for (Claim claim : claims) {
+                        GDClaim gdClaim = (GDClaim) claim;
+                        final GDClaimVisual visual = gdClaim.getVisualizer();
+                        if (visual.getVisualTransactions().isEmpty()) {
+                            visual.createClaimBlockVisuals(height, player.getLocation(), playerData);
+                        }
+                        visual.apply(player);
+                    }
                 }
+                if (GriefDefenderPlugin.getInstance().getWorldEditProvider() != null) {
+                    GriefDefenderPlugin.getInstance().getWorldEditProvider().visualizeClaims(claims, player, playerData, true);
+                 }
             }
         }
 
-        PaginationList.Builder builder = PaginationList.builder().title(MessageCache.getInstance().CLAIMLIST_UI_TITLE.color(TextColor.RED)).padding(TextComponent.builder(" ").decoration(TextDecoration.STRIKETHROUGH, true).build()).contents(claimsTextList);
-        builder.sendTo(src);
+        if (!claimsTextList.isEmpty()) {
+            PaginationList.Builder builder = PaginationList.builder().title(MessageCache.getInstance().CLAIMLIST_UI_TITLE.color(TextColor.RED)).padding(TextComponent.builder(" ").decoration(TextDecoration.STRIKETHROUGH, true).build()).contents(claimsTextList);
+            builder.sendTo(src);
+        }
     }
 
     private static Consumer<CommandSource> createShowClaimsConsumer(CommandSource src, Set<Claim> claims, int height, boolean visualizeClaims) {
@@ -579,10 +617,10 @@ public class CommandHelper {
             final Player player = src instanceof Player ? (Player) src : null;
             for (Claim playerClaim : claimList) {
                 GDClaim claim = (GDClaim) playerClaim;
-                if (player != null && !claim.getData().getEconomyData().isForSale() && !claim.isUserTrusted(player, TrustTypes.ACCESSOR)) {
+                if (player != null && !claim.getEconomyData().isForSale() && !claim.getEconomyData().isForRent() && (claim.allowEdit(player) != null && !claim.isUserTrusted(player, TrustTypes.ACCESSOR))) {
                     continue;
                 }
-                if (!listCommand && !overlap && !listChildren && claim.isSubdivision() && !claim.getData().getEconomyData().isForSale()) {
+                if (!listCommand && !overlap && !listChildren && claim.isSubdivision() && !claim.getEconomyData().isForSale() && !claim.getEconomyData().isForRent()) {
                     continue;
                 }
 
@@ -599,7 +637,7 @@ public class CommandHelper {
                 Component ownerLine = TextComponent.builder()
                         .append(MessageCache.getInstance().LABEL_OWNER.color(TextColor.YELLOW))
                         .append(" : ", TextColor.WHITE)
-                        .append(claim.getOwnerName().color(TextColor.GOLD))
+                        .append(claim.getOwnerDisplayName().color(TextColor.GOLD))
                         .append("\n").build();
                 Component claimTypeInfo = TextComponent.builder("Type").color(TextColor.YELLOW)
                         .append(" : ", TextColor.WHITE)
@@ -666,9 +704,22 @@ public class CommandHelper {
                             .append("\n")
                             .append(MessageCache.getInstance().CLAIMLIST_UI_CLICK_PURCHASE).build();
                     buyClaim = TextComponent.builder()
-                        .append(claim.getEconomyData().isForSale() ? TextComponent.builder(" [").append(MessageCache.getInstance().LABEL_BUY.color(TextColor.GREEN)).append("]", TextColor.WHITE).build() : TextComponent.empty())
+                        .append(TextComponent.builder(" [").append(MessageCache.getInstance().LABEL_BUY.color(TextColor.GREEN)).append("]", TextColor.WHITE).build())
                         .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(buyClaimConsumerConfirmation(src, claim))))
                         .hoverEvent(HoverEvent.showText(player.getUniqueId().equals(claim.getOwnerUniqueId()) ? MessageCache.getInstance().CLAIM_OWNER_ALREADY : buyInfo)).build();
+                }
+                Component rentClaim = TextComponent.empty();
+                if (player != null && claim.getEconomyData().isForRent() && player.hasPermission(GDPermissions.USER_RENT_BASE)) {
+                    Component rentInfo = TextComponent.builder()
+                            .append(MessageCache.getInstance().LABEL_PRICE.color(TextColor.AQUA))
+                            .append(" : ", TextColor.WHITE)
+                            .append(String.valueOf(claim.getEconomyData().getRentRate() + " per " + (claim.getEconomyData().getPaymentType() == PaymentType.DAILY ? "day" : "hour")), TextColor.GOLD)
+                            .append("\n")
+                            .append(MessageCache.getInstance().CLAIMLIST_UI_CLICK_RENT).build();
+                    rentClaim = TextComponent.builder()
+                        .append(TextComponent.builder(" [").append(MessageCache.getInstance().LABEL_RENT.color(TextColor.GREEN)).append("]", TextColor.WHITE).build())
+                        .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(EconomyUtil.getInstance().rentClaimConsumerConfirmation(src, claim))))
+                        .hoverEvent(HoverEvent.showText(player.getUniqueId().equals(claim.getOwnerUniqueId()) ? MessageCache.getInstance().CLAIM_OWNER_ALREADY : rentInfo)).build();
                 }
                 if (!childrenTextList.isEmpty()) {
                     Component children = TextComponent.builder("[")
@@ -680,28 +731,41 @@ public class CommandHelper {
                             .append(claimSpawn != null ? claimSpawn.append(TextComponent.of(" ")) : TextComponent.of(""))
                             .append(claimInfoCommandClick)
                             .append(" : ", TextColor.WHITE)
-                            .append(claim.getOwnerName().color(TextColor.GOLD))
+                            .append(claim.getOwnerDisplayName().color(TextColor.GOLD)
+                                    .clickEvent(ClickEvent.suggestCommand("/claimlist " + claim.getOwnerName()))
+                                    .hoverEvent(HoverEvent.showText(MessageCache.getInstance().CLAIMLIST_UI_CLICK_PLAYER_LIST)))
                             .append(" ")
                             .append(claimName == TextComponent.empty() ? TextComponent.of("") : claimName)
                             .append(" ")
                             .append(children)
                             .append(" ")
                             .append(buyClaim)
+                            .append(" ")
+                            .append(rentClaim)
                             .build());
                 } else {
                    claimsTextList.add(TextComponent.builder("")
                            .append(claimSpawn != null ? claimSpawn.append(TextComponent.of(" ")) : TextComponent.of(""))
                            .append(claimInfoCommandClick)
                            .append(" : ", TextColor.WHITE)
-                           .append(claim.getOwnerName().color(TextColor.GOLD))
+                           .append(claim.getOwnerDisplayName().color(TextColor.GOLD)
+                                   .clickEvent(ClickEvent.suggestCommand("/claimlist " + claim.getOwnerName()))
+                                   .hoverEvent(HoverEvent.showText(MessageCache.getInstance().CLAIMLIST_UI_CLICK_PLAYER_LIST)))
                            .append(" ")
                            .append(claimName == TextComponent.empty() ? TextComponent.of("") : claimName)
                            .append(buyClaim)
+                           .append(" ")
+                           .append(rentClaim)
                            .build());
                 }
             }
-            if (claimsTextList.size() == 0) {
-                claimsTextList.add(MessageCache.getInstance().CLAIMLIST_UI_NO_CLAIMS_FOUND.color(TextColor.RED));
+            if (claimsTextList.size() == 0 && player != null) {
+                final GDPermissionUser srcUser = PermissionHolderCache.getInstance().getOrCreateUser(player);
+                if (srcUser.getInternalPlayerData().showNoClaimsFoundMessage) {
+                    claimsTextList.add(MessageCache.getInstance().CLAIMLIST_UI_NO_CLAIMS_FOUND.color(TextColor.RED));
+                } else {
+                    srcUser.getInternalPlayerData().showNoClaimsFoundMessage = true;
+                }
             }
         }
         return claimsTextList;
@@ -738,7 +802,7 @@ public class CommandHelper {
                         .append("\n[")
                         .append(MessageCache.getInstance().LABEL_CONFIRM.color(TextColor.GREEN))
                         .append("]\n")
-                        .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createBuyConsumerConfirmed(src, claim)))).build())
+                        .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(src, createBuyConsumerConfirmed(src, claim), true))).build())
                     .build();
             GriefDefenderPlugin.sendMessage(player, buyConfirmationText);
         };
@@ -1074,8 +1138,8 @@ public class CommandHelper {
                                 "amount", amount));
                         GriefDefenderPlugin.sendMessage(src, message);
                         playerAccount.deposit(economyService.getDefaultCurrency(), BigDecimal.valueOf(amount), Sponge.getCauseStackManager().getCurrentCause());
-                        claim.getData().getEconomyData().addBankTransaction(
-                            new GDBankTransaction(BankTransactionType.WITHDRAW_SUCCESS, playerData.playerID, Instant.now(), amount));
+                        claim.getData().getEconomyData().addPaymentTransaction(
+                            new GDPaymentTransaction(TransactionType.BANK_WITHDRAW, TransactionResultType.SUCCESS, playerData.playerID, Instant.now(), amount));
                     } else {
                         final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.BANK_WITHDRAW_NO_FUNDS,
                             ImmutableMap.of(
@@ -1083,7 +1147,7 @@ public class CommandHelper {
                                 "amount", amount));
                         GriefDefenderPlugin.sendMessage(src, message);
                         claim.getData().getEconomyData()
-                            .addBankTransaction(new GDBankTransaction(BankTransactionType.WITHDRAW_FAIL, playerData.playerID, Instant.now(), amount));
+                            .addPaymentTransaction(new GDPaymentTransaction(TransactionType.BANK_WITHDRAW, TransactionResultType.FAIL, playerData.playerID, Instant.now(), amount));
                         return;
                     }
                 } else if (command.equalsIgnoreCase("deposit")) {
@@ -1096,11 +1160,11 @@ public class CommandHelper {
                             final double taxBalance = claim.getEconomyData().getTaxBalance();
                             depositAmount -= claim.getEconomyData().getTaxBalance();
                             if (depositAmount >= 0) {
-                                claim.getEconomyData().addBankTransaction(new GDBankTransaction(BankTransactionType.TAX_SUCCESS, Instant.now(), taxBalance));
+                                claim.getEconomyData().addPaymentTransaction(new GDPaymentTransaction(TransactionType.TAX, TransactionResultType.SUCCESS, Instant.now(), taxBalance));
                                 claim.getEconomyData().setTaxPastDueDate(null);
                                 claim.getEconomyData().setTaxBalance(0);
                                 claim.getInternalClaimData().setExpired(false);
-                                final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.TAX_CLAIM_PAID_BALANCE,
+                                final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.TAX_PAID_BALANCE,
                                         ImmutableMap.of(
                                             "amount", taxBalance));
                                 GriefDefenderPlugin.sendMessage(src, message);
@@ -1110,7 +1174,7 @@ public class CommandHelper {
                             } else {
                                 final double newTaxBalance = Math.abs(depositAmount);
                                 claim.getEconomyData().setTaxBalance(newTaxBalance);
-                                final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.TAX_CLAIM_PAID_PARTIAL,
+                                final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.TAX_PAID_PARTIAL,
                                        ImmutableMap.of(
                                             "amount", depositAmount,
                                             "balance", newTaxBalance));
@@ -1122,12 +1186,12 @@ public class CommandHelper {
                                 "amount", depositAmount));
                         GriefDefenderPlugin.sendMessage(src, message);
                         bankAccount.deposit(economyService.getDefaultCurrency(), BigDecimal.valueOf(depositAmount), Sponge.getCauseStackManager().getCurrentCause());
-                        claim.getData().getEconomyData().addBankTransaction(
-                            new GDBankTransaction(BankTransactionType.DEPOSIT_SUCCESS, playerData.playerID, Instant.now(), depositAmount));
+                        claim.getEconomyData().addPaymentTransaction(
+                            new GDPaymentTransaction(TransactionType.BANK_DEPOSIT, TransactionResultType.SUCCESS, playerData.playerID, Instant.now(), depositAmount));
                     } else {
                         GriefDefenderPlugin.sendMessage(src, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.BANK_WITHDRAW_NO_FUNDS));
                         claim.getData().getEconomyData()
-                            .addBankTransaction(new GDBankTransaction(BankTransactionType.DEPOSIT_FAIL, playerData.playerID, Instant.now(), amount));
+                            .addPaymentTransaction(new GDPaymentTransaction(TransactionType.BANK_DEPOSIT, TransactionResultType.FAIL, playerData.playerID, Instant.now(), amount));
                         return;
                     }
                 }
@@ -1187,7 +1251,7 @@ public class CommandHelper {
         }
 
         final GriefDefenderConfig<?> activeConfig = GriefDefenderPlugin.getActiveConfig(claim.getWorld().getProperties());
-        final ZonedDateTime withdrawDate = TaskUtil.getNextTargetZoneDate(activeConfig.getConfig().claim.taxApplyHour, 0, 0);
+        final ZonedDateTime withdrawDate = TaskUtil.getNextTargetZoneDate(activeConfig.getConfig().economy.taxApplyHour, 0, 0);
         Duration duration = Duration.between(Instant.now().truncatedTo(ChronoUnit.SECONDS), withdrawDate.toInstant()) ;
         final long s = duration.getSeconds();
         final String timeLeft = String.format("%d:%02d:%02d", s / 3600, (s % 3600) / 60, (s % 60));
@@ -1219,25 +1283,22 @@ public class CommandHelper {
 
     public static Consumer<CommandSource> createBankTransactionsConsumer(CommandSource src, GDClaim claim, boolean checkTown, boolean returnToClaimInfo) {
         return settings -> {
-            List<String> bankTransactions = new ArrayList<>(claim.getData().getEconomyData().getBankTransactionLog());
-            Collections.reverse(bankTransactions);
+            List<PaymentTransaction> paymentTransactions = claim.getData().getEconomyData().getPaymentTransactions(TransactionType.BANK_DEPOSIT);
             List<Component> textList = new ArrayList<>();
             textList.add(TextComponent.builder("")
                     .append("\n[")
                     .append(MessageCache.getInstance().CLAIMINFO_UI_RETURN_BANKINFO.color(TextColor.AQUA))
                     .append("]\n")
                     .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(consumer -> { displayClaimBankInfo(src, claim, checkTown, returnToClaimInfo); }))).build());
-            Gson gson = new Gson();
-            for (String transaction : bankTransactions) {
-                GDBankTransaction bankTransaction = gson.fromJson(transaction, GDBankTransaction.class);
-                final Duration duration = Duration.between(bankTransaction.timestamp, Instant.now().truncatedTo(ChronoUnit.SECONDS)) ;
+            for (PaymentTransaction transaction : paymentTransactions) {
+                final Duration duration = Duration.between(transaction.getTimestamp(), Instant.now().truncatedTo(ChronoUnit.SECONDS)) ;
                 final long s = duration.getSeconds();
-                final GDPermissionUser user = PermissionHolderCache.getInstance().getOrCreateUser(bankTransaction.source);
+                final GDPermissionUser user = PermissionHolderCache.getInstance().getOrCreateUser(transaction.getSource().orElse(null));
                 final String timeLeft = String.format("%dh %02dm %02ds", s / 3600, (s % 3600) / 60, (s % 60)) + " ago";
                 textList.add(TextComponent.builder("")
-                        .append(bankTransaction.type.name(), getTransactionColor(bankTransaction.type))
+                        .append(transaction.getResultType().name(), getTransactionColor(transaction.getResultType()))
                         .append(" | ", TextColor.BLUE)
-                        .append(TextComponent.of(String.valueOf(bankTransaction.amount)))
+                        .append(TextComponent.of(String.valueOf(transaction.getAmount())))
                         .append(" | ", TextColor.BLUE)
                         .append(timeLeft, TextColor.GRAY)
                         .append(user == null ? TextComponent.empty() : TextComponent.builder("")
@@ -1257,15 +1318,48 @@ public class CommandHelper {
         };
     }
 
-    public static TextColor getTransactionColor(BankTransactionType type) {
+    public static Consumer<CommandSource> createRentTransactionsConsumer(CommandSource src, GDClaim claim, boolean checkTown, boolean returnToClaimInfo) {
+        return settings -> {
+            List<PaymentTransaction> paymentTransactions = claim.getData().getEconomyData().getPaymentTransactions(TransactionType.RENT);
+            List<Component> textList = new ArrayList<>();
+            textList.add(TextComponent.builder("")
+                    .append("\n[")
+                    .append(MessageCache.getInstance().RENT_UI_RETURN_INFO.color(TextColor.AQUA))
+                    .append("]\n")
+                    .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(CommandHelper.createCommandConsumer(src, "claimrent", "info")))).build());
+            for (PaymentTransaction transaction : paymentTransactions) {
+                final Duration duration = Duration.between(transaction.getTimestamp(), Instant.now().truncatedTo(ChronoUnit.SECONDS)) ;
+                final long s = duration.getSeconds();
+                final GDPermissionUser user = PermissionHolderCache.getInstance().getOrCreateUser(transaction.getSource().orElse(null));
+                final String timeLeft = String.format("%dh %02dm %02ds", s / 3600, (s % 3600) / 60, (s % 60)) + " ago";
+                textList.add(TextComponent.builder("")
+                        .append(transaction.getResultType().name(), getTransactionColor(transaction.getResultType()))
+                        .append(" | ", TextColor.BLUE)
+                        .append(TextComponent.of(String.valueOf(transaction.getAmount())))
+                        .append(" | ", TextColor.BLUE)
+                        .append(timeLeft, TextColor.GRAY)
+                        .append(user == null ? TextComponent.empty() : TextComponent.builder("")
+                                .append(" | ", TextColor.BLUE)
+                                .append(user.getName(), TextColor.LIGHT_PURPLE)
+                                .build())
+                        .build());
+            }
+            textList.add(TextComponent.builder("")
+                    .append("\n[")
+                    .append(MessageCache.getInstance().RENT_UI_RETURN_INFO.color(TextColor.AQUA))
+                    .append("]\n")
+                    .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(CommandHelper.createCommandConsumer(src, "claimrent", "info")))).build());
+            PaginationList.Builder builder = PaginationList.builder()
+                    .title(MessageCache.getInstance().RENT_UI_TITLE_TRANSACTIONS.color(TextColor.AQUA)).padding(TextComponent.builder(" ").decoration(TextDecoration.STRIKETHROUGH, true).build()).contents(textList);
+            builder.sendTo(src);
+        };
+    }
+
+    public static TextColor getTransactionColor(TransactionResultType type) {
         switch (type) {
-            case DEPOSIT_SUCCESS :
-            case TAX_SUCCESS :
-            case WITHDRAW_SUCCESS :
+            case SUCCESS :
                 return TextColor.GREEN;
-            case DEPOSIT_FAIL :
-            case TAX_FAIL :
-            case WITHDRAW_FAIL :
+            case FAIL :
                 return TextColor.RED;
             default :
                 return TextColor.GREEN;

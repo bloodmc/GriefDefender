@@ -34,6 +34,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 @ConfigSerializable
@@ -48,6 +49,26 @@ public class BlacklistCategory extends ConfigCategory {
     @Setting(value = "global-target", comment = "A global list of target id's that are ignored by events. \nNote: This only affects events where the id specified is the target.")
     public List<String> globalTargetBlacklist = new ArrayList<>();
 
+    @Setting(value = "entity-damage-source-blacklist", comment = "A global list of entity damage sources that are ignored in events by default.")
+    public List<String> entityDamageSourceBlacklist = new ArrayList<>();
+
+    public BlacklistCategory() {
+        for (Flag flag : FlagRegistryModule.getInstance().getAll()) {
+            this.flagIdBlacklist.put(flag.getName().toLowerCase(), new ArrayList<>());
+        }
+        this.flagIdBlacklist.put("block-pre", new ArrayList<>());
+        this.entityDamageSourceBlacklist.add(DamageCause.CONTACT.name().toLowerCase());
+        this.entityDamageSourceBlacklist.add("cramming");
+        this.entityDamageSourceBlacklist.add(DamageCause.DROWNING.name().toLowerCase());
+        this.entityDamageSourceBlacklist.add(DamageCause.FALLING_BLOCK.name().toLowerCase());
+        this.entityDamageSourceBlacklist.add("flyintowall");
+        this.entityDamageSourceBlacklist.add(DamageCause.POISON.name().toLowerCase());
+        this.entityDamageSourceBlacklist.add(DamageCause.STARVATION.name().toLowerCase());
+        this.entityDamageSourceBlacklist.add(DamageCause.SUFFOCATION.name().toLowerCase());
+        this.entityDamageSourceBlacklist.add(DamageCause.SUICIDE.name().toLowerCase());
+        this.entityDamageSourceBlacklist.add(DamageCause.VOID.name().toLowerCase());
+    }
+
     public List<String> getGlobalSourceBlacklist() {
         return this.globalSourceBlacklist;
     }
@@ -56,11 +77,8 @@ public class BlacklistCategory extends ConfigCategory {
         return this.globalTargetBlacklist;
     }
 
-    public BlacklistCategory() {
-        for (Flag flag : FlagRegistryModule.getInstance().getAll()) {
-            this.flagIdBlacklist.put(flag.getId().toLowerCase(), new ArrayList<>());
-        }
-        this.flagIdBlacklist.put("block-pre", new ArrayList<>());
+    public List<String> getEntityDamageSourceBlacklist() {
+        return this.entityDamageSourceBlacklist;
     }
 
     // Used by API

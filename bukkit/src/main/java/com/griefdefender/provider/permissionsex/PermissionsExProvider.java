@@ -21,6 +21,7 @@ import com.griefdefender.api.permission.ContextKeys;
 import com.griefdefender.api.permission.PermissionResult;
 import com.griefdefender.api.permission.ResultTypes;
 import com.griefdefender.api.permission.flag.Flag;
+import com.griefdefender.api.permission.flag.FlagDefinition;
 import com.griefdefender.api.permission.option.Option;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.internal.registry.BlockTypeRegistryModule;
@@ -221,6 +222,14 @@ public class PermissionsExProvider implements PermissionProvider {
     // - Implement API
 
     @Override
+    public boolean createDefaultGroup(String identifier) {
+        if (!this.hasGroupSubject(identifier)) {
+            pex.createSubjectIdentifier(PermissionsEx.SUBJECTS_GROUP, identifier);
+        }
+        return true;
+    }
+
+    @Override
     public String getServerName() {
         return pex.getConfig().getServerTags().get(0);
     }
@@ -316,6 +325,12 @@ public class PermissionsExProvider implements PermissionProvider {
     }
 
     @Override
+    public Map<Set<Context>, Map<String, Boolean>> getAllPermanentPermissions() {
+        // TODO
+        return new HashMap<>();
+    }
+
+    @Override
     public Map<Set<Context>, Map<String, Boolean>> getPermanentPermissions(GDPermissionHolder holder) {
         return tKeys(holderToPEXSubject(holder).data().get().getAllPermissions(), map -> Maps.transformValues(map, this::pValIntegerToBool));
     }
@@ -370,27 +385,16 @@ public class PermissionsExProvider implements PermissionProvider {
 
     @Override
     public Tristate getPermissionValue(GDClaim claim, GDPermissionHolder holder, String permission, Set<Context> contexts) {
-        return getPermissionValue(claim, holder, permission, contexts, true);
+        return tristateFromInt(holderToPEXSubject(holder).getPermission(contextsGDToPEX(contexts), permission));
     }
 
-    /*
-     * The checkTransient value is ignored here -- we shouldn't need to use it since PEX already prioritizes
-     * transient permissions appropriately based on the subject type
-     */
     @Override
-    public Tristate getPermissionValue(GDClaim claim, GDPermissionHolder holder, String permission, Set<Context> contexts, boolean checkTransient) {
+    public Tristate getPermissionValue(GDClaim claim, GDPermissionHolder holder, String permission, Set<Context> contexts, PermissionDataType type) {
         return tristateFromInt(holderToPEXSubject(holder).getPermission(contextsGDToPEX(contexts), permission));
     }
 
     @Override
     public Tristate getPermissionValue(GDPermissionHolder holder, String permission, Set<Context> contexts) {
-        return tristateFromInt(holderToPEXSubject(holder).getPermission(contextsGDToPEX(contexts), permission));
-    }
-
-    @Override
-    public Tristate getPermissionValueWithRequiredContexts(GDClaim claim, GDPermissionHolder holder, String permission,
-            Set<Context> contexts, String contextFilter) {
-        // TODO
         return tristateFromInt(holderToPEXSubject(holder).getPermission(contextsGDToPEX(contexts), permission));
     }
 
@@ -407,18 +411,18 @@ public class PermissionsExProvider implements PermissionProvider {
     }
 
     @Override
-    public PermissionResult setOptionValue(GDPermissionHolder holder, String permission, String value, Set<Context> contexts, boolean check) {
-        return convertResult(holderToPEXSubject(holder).data().update(data -> data.setOption(contextsGDToPEX(contexts), permission, value))).join();
+    public CompletableFuture<PermissionResult> setOptionValue(GDPermissionHolder holder, String permission, String value, Set<Context> contexts, boolean check) {
+        return convertResult(holderToPEXSubject(holder).data().update(data -> data.setOption(contextsGDToPEX(contexts), permission, value)));
     }
 
     @Override
-    public PermissionResult setTransientOption(GDPermissionHolder holder, String permission, String value, Set<Context> contexts) {
-        return convertResult(holderToPEXSubject(holder).transientData().update(data -> data.setOption(contextsGDToPEX(contexts), permission, value))).join();
+    public CompletableFuture<PermissionResult> setTransientOption(GDPermissionHolder holder, String permission, String value, Set<Context> contexts) {
+        return convertResult(holderToPEXSubject(holder).transientData().update(data -> data.setOption(contextsGDToPEX(contexts), permission, value)));
     }
 
     @Override
-    public PermissionResult setTransientPermission(GDPermissionHolder holder, String permission, Tristate value, Set<Context> contexts) {
-        return convertResult(holderToPEXSubject(holder).transientData().update(data -> data.setPermission(contextsGDToPEX(contexts), permission, pValFromBool(value.asBoolean())))).join();
+    public CompletableFuture<PermissionResult> setTransientPermission(GDPermissionHolder holder, String permission, Tristate value, Set<Context> contexts) {
+        return convertResult(holderToPEXSubject(holder).transientData().update(data -> data.setPermission(contextsGDToPEX(contexts), permission, pValFromBool(value.asBoolean()))));
     }
 
     @Override
@@ -428,12 +432,18 @@ public class PermissionsExProvider implements PermissionProvider {
     }
 
     @Override
-    public PermissionResult setPermissionValue(GDPermissionHolder holder, String permission, Tristate value, Set<Context> contexts, boolean check, boolean save) {
-        return convertResult(holderToPEXSubject(holder).data().update(data -> data.setPermission(contextsGDToPEX(contexts), permission, intFromTristate(value)))).join();
+    public CompletableFuture<PermissionResult> setPermissionValue(GDPermissionHolder holder, String permission, Tristate value, Set<Context> contexts, boolean check, boolean save) {
+        return convertResult(holderToPEXSubject(holder).data().update(data -> data.setPermission(contextsGDToPEX(contexts), permission, intFromTristate(value))));
     }
 
     @Override
     public CompletableFuture<Void> save(GDPermissionHolder holder) {
+        // TODO
+        return new CompletableFuture<>();
+    }
+
+    @Override
+    public CompletableFuture<PermissionResult> setFlagDefinition(GDPermissionHolder holder, FlagDefinition definition, Tristate value, Set<Context> contexts, boolean isTransient) {
         // TODO
         return new CompletableFuture<>();
     }

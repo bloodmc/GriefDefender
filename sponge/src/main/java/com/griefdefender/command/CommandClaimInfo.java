@@ -60,6 +60,7 @@ import net.kyori.text.event.ClickEvent;
 import net.kyori.text.event.HoverEvent;
 import net.kyori.text.format.TextColor;
 import net.kyori.text.format.TextDecoration;
+import net.kyori.text.serializer.legacy.LegacyComponentSerializer;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.entity.living.player.Player;
@@ -85,12 +86,12 @@ public class CommandClaimInfo extends BaseCommand {
     private final int DENY_MESSAGES = 2;
     private final int FLAG_OVERRIDES = 3;
     private final int INHERIT_PARENT = 4;
-    private final int PVP_OVERRIDE = 5;
-    private final int RAID_OVERRIDE = 6;
-    private final int RESIZABLE = 7;
-    private final int REQUIRES_CLAIM_BLOCKS = 8;
-    private final int SIZE_RESTRICTIONS = 9;
-    private final int FOR_SALE = 10;
+    private final int RAID_OVERRIDE = 5;
+    private final int RESIZABLE = 6;
+    private final int REQUIRES_CLAIM_BLOCKS = 7;
+    private final int SIZE_RESTRICTIONS = 8;
+    private final int FOR_SALE = 9;
+    private final int IS_EXPIRED = 10;
     private boolean useTownInfo = false;
 
     public CommandClaimInfo() {
@@ -124,7 +125,6 @@ public class CommandClaimInfo extends BaseCommand {
             return;
         }
 
-        boolean isAdmin = src.hasPermission(GDPermissions.COMMAND_ADMIN_CLAIMS);
         final GDPlayerData playerData = player != null ? GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId()) : null;
         Claim claim = null;
         if (claimIdentifier == null) {
@@ -176,10 +176,8 @@ public class CommandClaimInfo extends BaseCommand {
         final GDClaim gdClaim = (GDClaim) claim;
         final GDPermissionUser owner = PermissionHolderCache.getInstance().getOrCreateUser(claim.getOwnerUniqueId());
         final UUID ownerUniqueId = claim.getOwnerUniqueId();
-
-        if (!isAdmin) {
-            isAdmin = playerData.canIgnoreClaim(gdClaim);
-        }
+        final boolean isAdmin = playerData.canManageAdminClaims;
+        final boolean canPlayerTeleport = (player != null && PermissionUtil.getInstance().canPlayerTeleport(player, gdClaim)) ? true : false;
         // if not owner of claim, validate perms
         if (!isAdmin && !player.getUniqueId().equals(claim.getOwnerUniqueId())) {
             if (!gdClaim.getInternalClaimData().getContainers().contains(player.getUniqueId()) 
@@ -247,10 +245,16 @@ public class CommandClaimInfo extends BaseCommand {
         if (claim.isWilderness() && name == null) {
             name = TextComponent.of("Wilderness", TextColor.GREEN);
         }
+        Component nameText = name == null ? NONE : name;
         Component claimName = TextComponent.builder()
-                .append(MessageCache.getInstance().LABEL_NAME.color(TextColor.YELLOW))
+                .append(MessageCache.getInstance().LABEL_NAME.color(TextColor.YELLOW)
+                        .clickEvent(ClickEvent.suggestCommand("/claimname "))
+                        .hoverEvent(HoverEvent.showText(MessageCache.getInstance().CLAIMINFO_UI_CLICK_NAME)))
                 .append(" : ", TextColor.YELLOW)
-                .append(name == null ? NONE : name).build();
+                .append(nameText
+                        .clickEvent(ClickEvent.suggestCommand(name == null ? "/claimname " : "/claimname " + LegacyComponentSerializer.legacy().serialize(name, '&')))
+                        .hoverEvent(HoverEvent.showText(MessageCache.getInstance().CLAIMINFO_UI_CLICK_NAME)))
+                .build();
         Component worldName = TextComponent.builder()
                 .append(MessageCache.getInstance().LABEL_WORLD.color(TextColor.YELLOW))
                 .append(" : ")
@@ -295,7 +299,7 @@ public class CommandClaimInfo extends BaseCommand {
         Component bankInfo = null;
         Component forSaleText = null;
         if (GriefDefenderPlugin.getInstance().economyService.isPresent()) {
-             if (GriefDefenderPlugin.getActiveConfig(gdClaim.getWorld().getProperties()).getConfig().claim.bankTaxSystem) {
+             if (GriefDefenderPlugin.getActiveConfig(gdClaim.getWorld().getProperties()).getConfig().economy.bankSystem) {
                  bankInfo = TextComponent.builder()
                          .append(MessageCache.getInstance().CLAIMINFO_UI_BANK_INFO.color(TextColor.GOLD).decoration(TextDecoration.ITALIC, true))
                          .hoverEvent(HoverEvent.showText(MessageCache.getInstance().CLAIMINFO_UI_BANK_INFO))
@@ -328,6 +332,15 @@ public class CommandClaimInfo extends BaseCommand {
                 .append(MessageCache.getInstance().LABEL_OWNER.color(TextColor.YELLOW))
                 .append(" : ")
                 .append(ownerName != null && !claim.isAdminClaim() && !claim.isWilderness() ? ownerName : "administrator", TextColor.GOLD).build();
+        Component renterLine = null;
+        if (claim.getEconomyData() != null && claim.getEconomyData().isRented()) {
+            final UUID uuid = claim.getEconomyData().getRenters().get(0);
+            final GDPermissionUser renter = PermissionHolderCache.getInstance().getOrCreateUser(uuid);
+            renterLine = TextComponent.builder()
+                    .append(MessageCache.getInstance().LABEL_RENTER.color(TextColor.YELLOW))
+                    .append(" : ")
+                    .append(renter.getFriendlyName(), TextColor.AQUA).build();
+        }
         Component adminShowText = TextComponent.empty();
         Component basicShowText = TextComponent.empty();
         Component subdivisionShowText = TextComponent.empty();
@@ -462,98 +475,111 @@ public class CommandClaimInfo extends BaseCommand {
                 .append(MessageCache.getInstance().LABEL_INHERIT.color(TextColor.YELLOW))
                 .append(" : ")
                 .append(getClickableInfoText(src, claim, INHERIT_PARENT, claim.getData().doesInheritParent() ? TextComponent.of("ON", TextColor.GREEN) : TextComponent.of("OFF", TextColor.RED))).build();
-        Component claimExpired = TextComponent.builder()
+        TextComponent.Builder expireBuilder = TextComponent.builder()
                 .append(MessageCache.getInstance().LABEL_EXPIRED.color(TextColor.YELLOW))
-                .append(" : ")
-                .append(claim.getData().isExpired() ? TextComponent.of("YES", TextColor.RED) : TextComponent.of("NO", TextColor.GRAY)).build();
+                .append(" : ");
+        if (isAdmin && claim.getData().isExpired()) {
+            expireBuilder.append(getClickableInfoText(src, claim, IS_EXPIRED, claim.getData().isExpired() ? MessageCache.getInstance().LABEL_YES.color(TextColor.RED) : MessageCache.getInstance().LABEL_NO.color(TextColor.GRAY)));
+        } else {
+            expireBuilder.append(claim.getData().isExpired() ? MessageCache.getInstance().LABEL_YES.color(TextColor.RED) : MessageCache.getInstance().LABEL_NO.color(TextColor.GRAY));
+        }
+        Component claimExpired = expireBuilder.build();
+        Component farewellText = farewell == null ? NONE : farewell;
+        Component greetingText = greeting == null ? NONE : greeting;
         Component claimFarewell = TextComponent.builder()
-                .append(MessageCache.getInstance().LABEL_FAREWELL.color(TextColor.YELLOW))
+                .append(MessageCache.getInstance().LABEL_FAREWELL.color(TextColor.YELLOW)
+                        .clickEvent(ClickEvent.suggestCommand("/claimfarewell "))
+                        .hoverEvent(HoverEvent.showText(MessageCache.getInstance().CLAIMINFO_UI_CLICK_FAREWELL)))
                 .append(" : ")
-                .append(farewell == null ? NONE : farewell).build();
+                .append(farewellText
+                        .clickEvent(ClickEvent.suggestCommand(farewell == null ? "/claimfarewell " : "/claimfarewell " + LegacyComponentSerializer.legacy().serialize(farewell, '&')))
+                        .hoverEvent(HoverEvent.showText(MessageCache.getInstance().CLAIMINFO_UI_CLICK_FAREWELL)))
+                .build();
         Component claimGreeting = TextComponent.builder()
-                .append(MessageCache.getInstance().LABEL_GREETING.color(TextColor.YELLOW))
+                .append(MessageCache.getInstance().LABEL_GREETING.color(TextColor.YELLOW)
+                        .clickEvent(ClickEvent.suggestCommand("/claimgreeting "))
+                        .hoverEvent(HoverEvent.showText(MessageCache.getInstance().CLAIMINFO_UI_CLICK_GREETING)))
                 .append(" : ")
-                .append(greeting == null ? NONE : greeting).build();
+                .append(greetingText
+                        .clickEvent(ClickEvent.suggestCommand(greeting == null ? "/claimgreeting " : "/claimgreeting " + LegacyComponentSerializer.legacy().serialize(greeting, '&')))
+                        .hoverEvent(HoverEvent.showText(MessageCache.getInstance().CLAIMINFO_UI_CLICK_GREETING)))
+                .build();
         Component claimDenyMessages = TextComponent.builder()
                 .append(MessageCache.getInstance().CLAIMINFO_UI_DENY_MESSAGES.color(TextColor.YELLOW))
                 .append(" : ")
                 .append(getClickableInfoText(src, claim, DENY_MESSAGES, claim.getData().allowDenyMessages() ? TextComponent.of("ON", TextColor.GREEN) : TextComponent.of("OFF", TextColor.RED))).build();
-        Component pvpSetting = TextComponent.of("UNDEFINED", TextColor.GRAY);
-        if (claim.getData().getPvpOverride() == Tristate.TRUE) {
-            pvpSetting = TextComponent.of("ON", TextColor.GREEN);
-        } else if (claim.getData().getPvpOverride() == Tristate.FALSE) {
-            pvpSetting = TextComponent.of("OFF", TextColor.RED);
-        }
-        Component claimPvP = TextComponent.builder()
-                .append("PvP", TextColor.YELLOW)
-                .append(" : ")
-                .append(getClickableInfoText(src, claim, PVP_OVERRIDE, pvpSetting)).build();
        /* Component claimRaid = TextComponent.builder()
                 .append("Raid", TextColor.YELLOW)
                 .append(" : ")
                 .append(getClickableInfoText(src, claim, RAID_OVERRIDE, GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Boolean.class), owner, Options.RAID, gdClaim) == true ? TextComponent.of("ON", TextColor.GREEN) : TextComponent.of("OFF", TextColor.RED))).build();
                 */
         Component claimSpawn = null;
-        if (claim.getData().getSpawnPos().isPresent() && player != null && PermissionUtil.getInstance().canPlayerTeleport(player, gdClaim)) {
+        if (claim.getData().getSpawnPos().isPresent() && player != null) {
             Vector3i spawnPos = claim.getData().getSpawnPos().get();
             Location<World> spawnLoc = new Location<>(gdClaim.getWorld(), spawnPos.getX(), spawnPos.getY(), spawnPos.getZ());
-            claimSpawn = TextComponent.builder()
+            TextComponent.Builder spawnBuilder = TextComponent.builder()
                     .append(MessageCache.getInstance().LABEL_SPAWN.color(TextColor.GREEN))
                     .append(" : ")
-                    .append(spawnPos.toString(), TextColor.GRAY)
-                    .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(CommandHelper.createTeleportConsumer(player, spawnLoc, claim, true))))
-                    .hoverEvent(HoverEvent.showText(MessageCache.getInstance().CLAIMINFO_UI_TELEPORT_SPAWN))
-                    .build();
+                    .append(spawnPos.toString(), TextColor.GRAY);
+            if (canPlayerTeleport) {
+                spawnBuilder.clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(CommandHelper.createTeleportConsumer(player, spawnLoc, claim, true))))
+                    .hoverEvent(HoverEvent.showText(MessageCache.getInstance().CLAIMINFO_UI_TELEPORT_SPAWN));
+            }
+            claimSpawn = spawnBuilder.build();
         }
         Component southCorners = null;
         Component northCorners = null;
-        if (!claim.isWilderness() && player != null && PermissionUtil.getInstance().canPlayerTeleport(player, gdClaim)) {
-            Component southWestCorner = TextComponent.builder()
+        if (!claim.isWilderness() && player != null) {
+            TextComponent.Builder southWestCorner = TextComponent.builder()
                     .append("SW", TextColor.LIGHT_PURPLE)
                     .append(" : ")
-                    .append(VecHelper.toVector3i(southWest).toString(), TextColor.GRAY)
-                    .append(" ")
+                    .append(VecHelper.toVector3i(southWest).toString(), TextColor.GRAY);
+            if (canPlayerTeleport) {
+                southWestCorner.append(" ")
                     .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(CommandHelper.createTeleportConsumer(player, southWest, claim))))
                     .hoverEvent(HoverEvent.showText(MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.CLAIMINFO_UI_TELEPORT_DIRECTION, 
-                            ImmutableMap.of("direction", TextComponent.of("SW").color(TextColor.AQUA)))))
-                    .build();
-            Component southEastCorner = TextComponent.builder()
+                        ImmutableMap.of("direction", TextComponent.of("SW").color(TextColor.AQUA)))));
+            }
+            TextComponent.Builder southEastCorner = TextComponent.builder()
                     .append("SE", TextColor.LIGHT_PURPLE)
                     .append(" : ")
-                    .append(VecHelper.toVector3i(southEast).toString(), TextColor.GRAY)
-                    .append(" ")
+                    .append(VecHelper.toVector3i(southEast).toString(), TextColor.GRAY);
+            if (canPlayerTeleport) {
+                southEastCorner.append(" ")
                     .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(CommandHelper.createTeleportConsumer(player, southEast, claim))))
                     .hoverEvent(HoverEvent.showText(MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.CLAIMINFO_UI_TELEPORT_DIRECTION, 
-                            ImmutableMap.of("direction", TextComponent.of("SE").color(TextColor.AQUA)))))
-                    .build();
+                            ImmutableMap.of("direction", TextComponent.of("SE").color(TextColor.AQUA)))));
+            }
             southCorners = TextComponent.builder()
                     .append(MessageCache.getInstance().CLAIMINFO_UI_SOUTH_CORNERS.color(TextColor.YELLOW))
                     .append(" : ")
-                    .append(southWestCorner)
-                    .append(southEastCorner).build();
-            Component northWestCorner = TextComponent.builder()
+                    .append(southWestCorner.build())
+                    .append(southEastCorner.build()).build();
+            TextComponent.Builder northWestCorner = TextComponent.builder()
                     .append("NW", TextColor.LIGHT_PURPLE)
                     .append(" : ")
-                    .append(VecHelper.toVector3i(northWest).toString(), TextColor.GRAY)
-                    .append(" ")
+                    .append(VecHelper.toVector3i(northWest).toString(), TextColor.GRAY);
+            if (canPlayerTeleport) {
+                northWestCorner.append(" ")
                     .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(CommandHelper.createTeleportConsumer(player, northWest, claim))))
                     .hoverEvent(HoverEvent.showText(MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.CLAIMINFO_UI_TELEPORT_DIRECTION, 
-                            ImmutableMap.of("direction", TextComponent.of("NW").color(TextColor.AQUA)))))
-                    .build();
-            Component northEastCorner = TextComponent.builder()
+                            ImmutableMap.of("direction", TextComponent.of("NW").color(TextColor.AQUA)))));
+            }
+            TextComponent.Builder northEastCorner = TextComponent.builder()
                     .append("NE", TextColor.LIGHT_PURPLE)
                     .append(" : ")
-                    .append(VecHelper.toVector3i(northEast).toString(), TextColor.GRAY)
-                    .append(" ")
+                    .append(VecHelper.toVector3i(northEast).toString(), TextColor.GRAY);
+            if (canPlayerTeleport) {
+                northEastCorner.append(" ")
                     .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(CommandHelper.createTeleportConsumer(player, northEast, claim))))
                     .hoverEvent(HoverEvent.showText(MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.CLAIMINFO_UI_TELEPORT_DIRECTION, 
-                            ImmutableMap.of("direction", TextComponent.of("NE").color(TextColor.AQUA)))))
-                    .build();
+                            ImmutableMap.of("direction", TextComponent.of("NE").color(TextColor.AQUA)))));
+            }
             northCorners = TextComponent.builder()
                     .append(MessageCache.getInstance().CLAIMINFO_UI_NORTH_CORNERS.color(TextColor.YELLOW))
                     .append(" : ")
-                    .append(northWestCorner)
-                    .append(northEastCorner).build();
+                    .append(northWestCorner.build())
+                    .append(northEastCorner.build()).build();
         }
         Component dateCreated = TextComponent.builder()
                 .append(MessageCache.getInstance().LABEL_CREATED.color(TextColor.YELLOW))
@@ -572,6 +598,9 @@ public class CommandClaimInfo extends BaseCommand {
         }
         textList.add(claimName);
         textList.add(ownerLine);
+        if (claim.getEconomyData() != null && claim.getEconomyData().isRented()) {
+            textList.add(renterLine);
+        }
         textList.add(claimTypeInfo);
         if (!claim.isAdminClaim() && !claim.isWilderness()) {
             textList.add(TextComponent.builder()
@@ -583,8 +612,6 @@ public class CommandClaimInfo extends BaseCommand {
             }
         }
         textList.add(TextComponent.builder()
-                .append(claimPvP)
-                .append("   ")
                 .append(claimDenyMessages)
                 .build());
         if (allowEdit == null) {
@@ -624,9 +651,17 @@ public class CommandClaimInfo extends BaseCommand {
         }
         textList.add(claimGreeting);
         textList.add(claimFarewell);
-        textList.add(dateCreated);
-        textList.add(dateLastActive);
-        textList.add(claimId);
+        if (allowEdit == null || isAdmin) {
+            if (src.hasPermission(GDPermissions.COMMAND_CLAIM_INFO_OTHERS_CREATION_DATE)) {
+                textList.add(dateCreated);
+            }
+            if (src.hasPermission(GDPermissions.COMMAND_CLAIM_INFO_OTHERS_LAST_ACTIVE)) {
+                textList.add(dateLastActive);
+            }
+            if (src.hasPermission(GDPermissions.COMMAND_CLAIM_INFO_OTHERS_CLAIM_UUID)) {
+                textList.add(claimId);
+            }
+        }
         if (northCorners != null && southCorners != null) {
             textList.add(northCorners);
             textList.add(southCorners);
@@ -780,19 +815,6 @@ public class CommandClaimInfo extends BaseCommand {
                     gpClaim.getInternalClaimData().setRequiresSave(true);
                     gpClaim.getClaimStorage().save();
                     break;
-                case PVP_OVERRIDE :
-                    Tristate value = gpClaim.getInternalClaimData().getPvpOverride();
-                    if (value == Tristate.UNDEFINED) {
-                        gpClaim.getInternalClaimData().setPvpOverride(Tristate.TRUE);
-                    } else if (value == Tristate.TRUE) {
-                        gpClaim.getInternalClaimData().setPvpOverride(Tristate.FALSE);
-                    } else {
-                        gpClaim.getInternalClaimData().setPvpOverride(Tristate.UNDEFINED);
-                    }
-                    gpClaim.getInternalClaimData().setRequiresSave(true);
-                    gpClaim.getClaimStorage().save();
-                    CommandHelper.executeCommand(src, "claiminfo", gpClaim.getUniqueId().toString());
-                    return;
                 /*case RAID_OVERRIDE :
                     GDPermissionHolder holder = null;
                     final GDPlayerData playerData = ((GDClaim) claim).getOwnerPlayerData();
@@ -836,6 +858,13 @@ public class CommandClaimInfo extends BaseCommand {
                     gpClaim.getClaimStorage().save();
                     CommandHelper.executeCommand(src, "claiminfo", gpClaim.getUniqueId().toString());
                     return;
+                case IS_EXPIRED :
+                    boolean isExpired = gpClaim.getInternalClaimData().isExpired();
+                    gpClaim.getInternalClaimData().setExpired(!isExpired);
+                    gpClaim.getInternalClaimData().setRequiresSave(true);
+                    gpClaim.getClaimStorage().save();
+                    CommandHelper.executeCommand(src, "claiminfo", gpClaim.getUniqueId().toString());
+                    return;
                 default:
             }
             executeAdminSettings(src, gpClaim);
@@ -855,7 +884,8 @@ public class CommandClaimInfo extends BaseCommand {
                 TextAdapter.sendComponent(src, MessageCache.getInstance().CLAIM_NOT_YOURS);
                 return;
             }
-            final ClaimResult result = claim.changeType(clicked, Optional.of(player.getUniqueId()), src);
+            // Use same claim owner when changing claim type
+            final ClaimResult result = claim.changeType(clicked, Optional.empty(), src);
             if (result.successful()) {
                 CommandHelper.executeCommand(src, "claiminfo", gpClaim.getUniqueId().toString());
             } else {

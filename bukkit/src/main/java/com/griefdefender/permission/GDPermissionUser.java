@@ -56,7 +56,13 @@ public class GDPermissionUser extends GDPermissionHolder implements User {
     public GDPermissionUser(OfflinePlayer player) {
         super(player.getUniqueId().toString());
         this.uniqueId = player.getUniqueId();
-        this.userName = player.getName();
+        if (player instanceof Player) {
+            // OfflinePlayer getName returns null sometimes
+            // Always use Player getName if available
+            this.userName = ((Player) player).getName();
+        } else {
+            this.userName = player.getName();
+        }
     }
 
     public GDPermissionUser(UUID uuid, String objectName, String friendlyName) {

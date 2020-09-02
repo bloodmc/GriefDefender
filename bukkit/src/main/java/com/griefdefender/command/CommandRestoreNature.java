@@ -58,7 +58,7 @@ public class CommandRestoreNature extends BaseCommand {
 
         if (!NMSUtil.getInstance().hasItemInOneHand(player, GriefDefenderPlugin.getInstance().modificationTool)) {
             TextAdapter.sendComponent(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.TOOL_NOT_EQUIPPED,
-                    ImmutableMap.of("tool", TextComponent.of(GriefDefenderPlugin.getInstance().modificationTool.getName().toLowerCase(), TextColor.GREEN))));
+                    ImmutableMap.of("tool", TextComponent.of(GriefDefenderPlugin.getInstance().modificationTool.toLowerCase(), TextColor.GREEN))));
             return;
         }
 

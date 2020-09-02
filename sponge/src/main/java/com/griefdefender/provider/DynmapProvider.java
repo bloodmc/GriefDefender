@@ -64,7 +64,6 @@ public class DynmapProvider {
     private DynmapCommonAPI dynmap;
     private MarkerAPI markerapi;
     private DynmapCategory cfg;
-    private DynmapOwnerStyleCategory defaultStyle = new DynmapOwnerStyleCategory();
     private MarkerSet set;
     private boolean disabled = false;
     private boolean reload = false;
@@ -91,7 +90,7 @@ public class DynmapProvider {
         } else {
             info = "<div class=\"regioninfo\">" + this.cfg.infoWindowBasic + "</div>";
         }
-        info = info.replace("%owner%", ((GDClaim) claim).getOwnerFriendlyName());
+        info = info.replace("%owner%", ((GDClaim) claim).getOwnerName());
         info = info.replace("%area%", Integer.toString(claim.getArea()));
         info = info.replace("%claimname%",
                 claim.getData().getName().isPresent()
@@ -177,7 +176,7 @@ public class DynmapProvider {
         return true;
     }
 
-    private void addOwnerStyle(String owner, String worldid, AreaMarker marker, Claim claim) {
+    private void addClaimStyle(Claim claim, AreaMarker marker, String worldid, String owner) {
         DynmapOwnerStyleCategory ownerStyle = null;
 
         if (!this.cfg.ownerStyles.isEmpty()) {
@@ -185,29 +184,36 @@ public class DynmapProvider {
         }
 
         if (ownerStyle == null) {
-            ownerStyle = this.defaultStyle;
+            ownerStyle = this.cfg.claimTypeStyles.get(claim.getType().getName().toLowerCase());
         }
 
-        int sc = 0xFF0000;
-        int fc = 0xFF0000;
-
-        if (claim.getType().equals(ClaimTypes.ADMIN)) {
-            sc = 0xFF0000;
-            fc = 0xFF0000;
-        } else if (claim.getType().equals(ClaimTypes.BASIC)) {
-            sc = 0xFFFF00;
-            fc = 0xFFFF00;
-        } else if (claim.getType().equals(ClaimTypes.TOWN)) {
-            sc = 0x00FF00;
-            fc = 0x00FF00;
-        } else if (claim.getType().equals(ClaimTypes.SUBDIVISION)) {
-            sc = 0xFF9C00;
-            fc = 0xFF9C00;
+        int sc;
+        int fc;
+        try {
+            sc = Integer.parseInt(ownerStyle.strokeColor.replaceAll("#", ""), 16);
+            fc = Integer.parseInt(ownerStyle.fillColor.replaceAll("#", ""), 16);
+        } catch (NumberFormatException e) {
+            if (claim.getType().equals(ClaimTypes.ADMIN)) {
+                sc = 0xFF0000;
+                fc = 0xFF0000;
+            } else if (claim.getType().equals(ClaimTypes.BASIC)) {
+                sc = 0xFFFF00;
+                fc = 0xFFFF00;
+            } else if (claim.getType().equals(ClaimTypes.TOWN)) {
+                sc = 0x00FF00;
+                fc = 0x00FF00;
+            } else if (claim.getType().equals(ClaimTypes.SUBDIVISION)) {
+                sc = 0xFF9C00;
+                fc = 0xFF9C00;
+            } else {
+                sc = 0xFF0000;
+                fc = 0xFF0000;
+            }
         }
 
         marker.setLineStyle(ownerStyle.strokeWeight, ownerStyle.strokeOpacity, sc);
         marker.setFillStyle(ownerStyle.fillOpacity, fc);
-        if (ownerStyle.label != null) {
+        if (ownerStyle.label != null && !ownerStyle.label.isEmpty() && !ownerStyle.label.equalsIgnoreCase("none")) {
             marker.setLabel(ownerStyle.label);
         }
     }
@@ -218,7 +224,7 @@ public class DynmapProvider {
             return;
         }
         final String worldName = world.getName();
-        final String owner = ((GDClaim) claim).getOwnerFriendlyName();
+        final String owner = ((GDClaim) claim).getOwnerName();
         if (isVisible((GDClaim) claim, owner, worldName)) {
             final Vector3i lesserPos = claim.getLesserBoundaryCorner();
             final Vector3i greaterPos = claim.getGreaterBoundaryCorner();
@@ -248,7 +254,7 @@ public class DynmapProvider {
                 marker.setRangeY(greaterPos.getY() + 1.0, lesserPos.getY());
             }
 
-            addOwnerStyle(owner, worldName, marker, claim);
+            addClaimStyle(claim, marker, worldName, owner);
             String desc = getWindowInfo(claim, marker);
             marker.setDescription(desc);
             markerMap.put(markerid, marker);
@@ -259,7 +265,12 @@ public class DynmapProvider {
         Map<String, AreaMarker> newmap = new HashMap<String, AreaMarker>();
         Sponge.getServer().getWorlds().stream().map(w -> GriefDefender.getCore().getClaimManager(w.getUniqueId()))
                 .map(ClaimManager::getWorldClaims).forEach(claims -> {
-                    claims.forEach(claim -> updateClaimMarker(claim, newmap));
+                    for (Claim claim : claims) {
+                        updateClaimMarker(claim, newmap);
+                        for (Claim child : claim.getChildren(true)) {
+                            updateClaimMarker(child, newmap);
+                        }
+                    }
                 });
 
         for (AreaMarker oldm : this.areaMarkers.values()) {
