@@ -885,5 +885,8 @@ public class GDPlayerData implements PlayerData {
         this.commandInputTimestamp = null;
         this.recordChatTimestamp = null;
         this.tempVisualUniqueId = null;
+        if (GriefDefenderPlugin.getInstance().getWorldEditProvider() != null) {
+            GriefDefenderPlugin.getInstance().getWorldEditProvider().revertAllVisuals(this.playerID);
+        }
     }
 }
