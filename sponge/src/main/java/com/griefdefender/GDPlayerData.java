@@ -595,7 +595,7 @@ public class GDPlayerData implements PlayerData {
                     GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().PERMISSION_CLAIM_CREATE);
                 }
                 return false;
-            } else if (!player.hasPermission(GDPermissions.CLAIM_CUBOID_SUBDIVISION)) {
+            } else if (createMode == CreateModeTypes.VOLUME && !player.hasPermission(GDPermissions.CLAIM_CUBOID_SUBDIVISION)) {
                 if (sendMessage) {
                     GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().PERMISSION_CUBOID);
                     GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().COMMAND_CUBOID_DISABLED);
