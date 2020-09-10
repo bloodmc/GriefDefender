@@ -65,7 +65,7 @@ import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextColor;
 
 @CommandAlias("%griefdefender")
-@CommandPermission(GDPermissions.COMMAND_CLAIM_EXPAND)
+@CommandPermission(GDPermissions.COMMAND_CLAIM_CONTRACT)
 public class CommandClaimContract extends BaseCommand {
 
     @CommandCompletion("@gddummy @gdblockfaces @gddummy")
