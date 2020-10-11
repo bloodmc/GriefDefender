@@ -127,6 +127,10 @@ public class BlockEventHandler implements Listener {
         final Inventory targetInventory = event.getDestination();
         final Location sourceLocation = sourceInventory.getLocation();
         final Location targetLocation = targetInventory.getLocation();
+        if (sourceLocation == null || targetLocation == null) {
+            return;
+        }
+
         final GDClaim sourceClaim = GriefDefenderPlugin.getInstance().dataStore.getClaimAt(sourceLocation);
         final GDClaim targetClaim = GriefDefenderPlugin.getInstance().dataStore.getClaimAt(targetLocation);
         if (sourceClaim.isWilderness() && targetClaim.isWilderness() || (GriefDefenderPlugin.getInstance().getVaultProvider() == null)) {
