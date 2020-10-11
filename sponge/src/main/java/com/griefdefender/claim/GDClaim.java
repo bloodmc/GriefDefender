@@ -2962,7 +2962,7 @@ public class GDClaim implements Claim {
                     }
                 }
 
-                if (!GriefDefenderPlugin.getInstance().isEconomyModeEnabled() && claim.isTown() && player != null) {
+                if (claim.isTown() && player != null) {
                     final double townCost = GriefDefenderPlugin.getGlobalConfig().getConfig().town.cost;
                     if (townCost > 0) {
                         Account playerAccount = GriefDefenderPlugin.getInstance().economyService.get().getOrCreateAccount(player.getUniqueId()).orElse(null);
