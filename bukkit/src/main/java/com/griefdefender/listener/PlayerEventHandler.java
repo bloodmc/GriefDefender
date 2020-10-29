@@ -828,7 +828,14 @@ public class PlayerEventHandler implements Listener {
         final String id = GDPermissionManager.getInstance().getPermissionIdentifier(clickedBlock);
         final GDBlockType gdBlock = BlockTypeRegistryModule.getInstance().getById(id).orElse(null);
         if (gdBlock == null || (!gdBlock.isInteractable() && event.getAction() != Action.PHYSICAL)) {
-            return;
+            if (GriefDefenderPlugin.getInstance().getSlimefunProvider() == null) { 
+                return;
+            }
+
+            final String customBlockId = GriefDefenderPlugin.getInstance().getSlimefunProvider().getSlimeBlockId(clickedBlock);
+            if (customBlockId == null || customBlockId.isEmpty()) {
+                return;
+            }
         }
         if (NMSUtil.getInstance().isBlockStairs(clickedBlock) && event.getAction() != Action.PHYSICAL) {
             return;
