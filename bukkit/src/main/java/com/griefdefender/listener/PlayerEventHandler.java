@@ -865,7 +865,7 @@ public class PlayerEventHandler implements Listener {
         final BlockState state = clickedBlock.getState();
         final ItemStack itemInHand = event.getItem();
         final boolean hasInventory = NMSUtil.getInstance().isTileInventory(location) || clickedBlock.getType() == Material.ENDER_CHEST;
-        if (hasInventory) {
+        if (hasInventory || (GriefDefenderPlugin.getInstance().getSlimefunProvider() != null && GriefDefenderPlugin.getInstance().getSlimefunProvider().isInventory(clickedBlock))) {
             onInventoryOpen(event, state.getLocation(), state, player);
             return;
         }

@@ -987,6 +987,12 @@ public class GDPermissionManager implements PermissionManager {
                     contexts.add(new Context(ContextKeys.USED_ITEM, stackId));
                     if (stack.getItemMeta() != null && stack.getItemMeta().getDisplayName() != null) {
                         String itemName = stack.getItemMeta().getDisplayName().replaceAll("[^A-Za-z0-9]", "").toLowerCase();
+                        if (GriefDefenderPlugin.getInstance().getSlimefunProvider() != null) {
+                            final String slimefunId = GriefDefenderPlugin.getInstance().getSlimefunProvider().getSlimeItemDisplayName(stack);
+                            if (slimefunId != null && !slimefunId.isEmpty()) {
+                                itemName = slimefunId;
+                            }
+                        }
                         if (itemName != null && !itemName.isEmpty()) {
                             if (!itemName.contains(":")) {
                                 itemName = "minecraft:" + itemName;

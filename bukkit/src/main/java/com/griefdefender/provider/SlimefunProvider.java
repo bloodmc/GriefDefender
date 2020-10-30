@@ -30,7 +30,10 @@ import org.bukkit.block.Block;
 import org.bukkit.inventory.ItemStack;
 
 import com.griefdefender.api.permission.Context;
-import com.griefdefender.internal.util.NMSUtil;
+
+import me.mrCookieSlime.Slimefun.Objects.SlimefunItem.SlimefunItem;
+import me.mrCookieSlime.Slimefun.api.BlockStorage;
+import me.mrCookieSlime.Slimefun.api.inventory.BlockMenuPreset;
 
 public class SlimefunProvider {
 
@@ -39,6 +42,7 @@ public class SlimefunProvider {
     private static final String SLIME_ITEM_KEY = "slimefun:slimefun_item";
 
     public SlimefunProvider() {
+
     }
 
     public String getSlimeItemId(ItemStack stack) {
@@ -46,29 +50,19 @@ public class SlimefunProvider {
     }
 
     public String getSlimeItemId(ItemStack stack, Set<Context> contexts) {
-        // check item
-        String customItemId = NMSUtil.getInstance().getItemStackNBTString(stack, SLIME_COMPOUND_KEY, SLIME_ITEM_KEY);
-        if (customItemId != null && !customItemId.isEmpty()) {
+        final SlimefunItem slimefunItem = SlimefunItem.getByItem(stack);
+        if (slimefunItem != null) {
             String level = null;
-            if (contexts != null && customItemId.length() > 2 && customItemId.matches("^.*\\_\\d$")) {
-                level = customItemId.substring(customItemId.length() - 1, customItemId.length());
-                customItemId = customItemId.substring(0, customItemId.length() - 2);
+            String id = slimefunItem.getId();
+            if (id.length() > 2 && id.matches("^.*\\_\\d$")) {
+                System.out.println("match!");
+                level = id.substring(id.length() - 1, id.length());
+                id = id.substring(0, id.length() - 2);
                 if (contexts != null) {
                     contexts.add(new Context("slimefun_level", level));
                 }
             }
-            return "slimefun:" + customItemId.toLowerCase();
-        }
-        // check block
-        String customItemBlockId = NMSUtil.getInstance().getItemStackNBTString(stack, SLIME_COMPOUND_KEY, SLIME_BLOCK_KEY);
-        if (customItemBlockId != null && !customItemBlockId.isEmpty()) {
-            String level = null;
-            if (contexts != null && customItemBlockId.length() > 2 && customItemBlockId.matches("^.*\\_\\d$")) {
-                level = customItemBlockId.substring(customItemBlockId.length() - 1, customItemBlockId.length());
-                customItemBlockId = customItemBlockId.substring(0, customItemBlockId.length() - 2);
-                contexts.add(new Context("slimefun_level", level));
-            }
-            return "slimefun:" + customItemBlockId.toLowerCase();
+            return "slimefun:" + id.toLowerCase();
         }
 
         return "";
@@ -79,17 +73,37 @@ public class SlimefunProvider {
     }
 
     public String getSlimeBlockId(Block block, Set<Context> contexts) {
-        String customItemBlockId = NMSUtil.getInstance().getTileEntityNBTString(block, "PublicBukkitValues", "slimefun:slimefun_block");
-        if (customItemBlockId != null && !customItemBlockId.isEmpty()) {
+        final SlimefunItem slimefunBlock = BlockStorage.check(block);
+        if (slimefunBlock != null) {
             String level = null;
-            if (contexts != null && customItemBlockId.length() > 2 && customItemBlockId.matches("^.*\\_\\d$")) {
-                level = customItemBlockId.substring(customItemBlockId.length() - 1, customItemBlockId.length());
-                customItemBlockId = customItemBlockId.substring(0, customItemBlockId.length() - 2);
-                contexts.add(new Context("slimefun_level", level));
+            String id = slimefunBlock.getId();
+            if (id.length() > 2 && id.matches("^.*\\_\\d$")) {
+                level = id.substring(id.length() - 1, id.length());
+                id = id.substring(0, id.length() - 2);
+                if (contexts != null) {
+                    contexts.add(new Context("slimefun_level", level));
+                }
             }
-            return "slimefun:" + customItemBlockId.toLowerCase();
+            return "slimefun:" + id.toLowerCase();
         }
 
         return "";
+    }
+
+    public String getSlimeItemDisplayName(ItemStack stack) {
+        final SlimefunItem slimefunItem = SlimefunItem.getByItem(stack);
+        if (slimefunItem != null) {
+            return "slimefun:" + slimefunItem.getItemName();
+        }
+
+        return "";
+    }
+
+    public boolean isInventory(Block block) {
+        final SlimefunItem slimefunItem = BlockStorage.check(block);
+        if (slimefunItem != null) {
+            return BlockMenuPreset.isInventory(slimefunItem.getId());
+        }
+        return false;
     }
 }
