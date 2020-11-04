@@ -55,7 +55,6 @@ public class SlimefunProvider {
             String level = null;
             String id = slimefunItem.getId();
             if (id.length() > 2 && id.matches("^.*\\_\\d$")) {
-                System.out.println("match!");
                 level = id.substring(id.length() - 1, id.length());
                 id = id.substring(0, id.length() - 2);
                 if (contexts != null) {
