@@ -1145,20 +1145,20 @@ public class GriefDefenderPlugin {
                 for (World world : Sponge.getGame().getServer().getWorlds()) {
                     DimensionType dimType = world.getProperties().getDimensionType();
                     final String[] parts = dimType.getId().split(":");
+                    final String worldName = world.getProperties().getWorldName();
                     final Path dimPath = rootConfigPath.resolve(parts[0]).resolve(dimType.getName());
-                    if (!Files.exists(dimPath.resolve(world.getProperties().getWorldName()))) {
+                    if (!Files.exists(dimPath.resolve(worldName))) {
                         try {
-                            Files.createDirectories(rootConfigPath.resolve(dimType.getId()).resolve(world.getName()));
+                            Files.createDirectories(rootConfigPath.resolve(dimType.getId()).resolve(worldName));
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
                     }
-    
+
                     GriefDefenderConfig<ConfigBase> dimConfig = new GriefDefenderConfig<>(ConfigBase.class, dimPath.resolve("dimension.conf"), BaseStorage.globalConfig);
-                    GriefDefenderConfig<ConfigBase> worldConfig = new GriefDefenderConfig<>(ConfigBase.class, dimPath.resolve(world.getProperties().getWorldName()).resolve("world.conf"), dimConfig);
-    
-                    BaseStorage.dimensionConfigMap.put(world.getProperties().getUniqueId(), dimConfig);
-                    BaseStorage.worldConfigMap.put(world.getProperties().getUniqueId(), worldConfig);
+                    BaseStorage.dimensionConfigMap.put(world.getUniqueId(), dimConfig);
+                    GriefDefenderConfig<ConfigBase> worldConfig = new GriefDefenderConfig<>(ConfigBase.class, dimPath.resolve(worldName).resolve("world.conf"), dimConfig);
+                    BaseStorage.worldConfigMap.put(world.getUniqueId(), worldConfig);
     
                     // refresh player data
                     final GDClaimManager claimManager = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(world.getUniqueId());
@@ -1174,10 +1174,10 @@ public class GriefDefenderPlugin {
                         GriefDefenderPlugin.getGlobalConfig().save();
                     }
                     if (this.worldEditProvider != null && GriefDefenderPlugin.getGlobalConfig().getConfig().claim.useWorldEditSchematics) {
-                        this.getLogger().info("Loading schematics for world " + world.getName() + "...");
+                        this.getLogger().info("Loading schematics for world " + worldName + "...");
                         this.worldEditProvider.loadSchematics(world);
                     } else {
-                        this.getLogger().info("Loading sponge schematics for world " + world.getName() + "...");
+                        this.getLogger().info("Loading sponge schematics for world " + worldName + "...");
                         ((FileStorage) this.dataStore).loadSpongeSchematics(world);
                     }
                 }

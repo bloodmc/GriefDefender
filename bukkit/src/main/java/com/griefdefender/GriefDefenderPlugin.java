@@ -1080,19 +1080,19 @@ public class GriefDefenderPlugin {
             if (this.dataStore != null) {
                 for (World world : Bukkit.getServer().getWorlds()) {
                     final String dimType = world.getEnvironment().name().toLowerCase();
+                    final String worldName = world.getName().toLowerCase();
                     final Path dimPath = rootConfigPath.resolve(dimType);
-                    if (Files.notExists(dimPath.resolve(world.getName()))) {
+                    if (Files.notExists(dimPath.resolve(worldName))) {
                         try {
-                            Files.createDirectories(rootConfigPath.resolve(dimType).resolve(world.getName()));
+                            Files.createDirectories(rootConfigPath.resolve(dimType).resolve(worldName));
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
                     }
-    
+
                     GriefDefenderConfig<ConfigBase> dimConfig = new GriefDefenderConfig<>(ConfigBase.class, dimPath.resolve("dimension.conf"), BaseStorage.globalConfig);
-                    GriefDefenderConfig<ConfigBase> worldConfig = new GriefDefenderConfig<>(ConfigBase.class, dimPath.resolve(world.getName()).resolve("world.conf"), dimConfig);
-    
                     BaseStorage.dimensionConfigMap.put(world.getUID(), dimConfig);
+                    GriefDefenderConfig<ConfigBase> worldConfig = new GriefDefenderConfig<>(ConfigBase.class, dimPath.resolve(worldName).resolve("world.conf"), dimConfig);
                     BaseStorage.worldConfigMap.put(world.getUID(), worldConfig);
     
                     // refresh player data
@@ -1109,7 +1109,7 @@ public class GriefDefenderPlugin {
                         GriefDefenderPlugin.getGlobalConfig().save();
                     }
                     if (this.worldEditProvider != null) {
-                        this.getLogger().info("Loading schematics for world " + world.getName() + "...");
+                        this.getLogger().info("Loading schematics for world " + worldName + "...");
                         this.worldEditProvider.loadSchematics(world);
                     }
                 }
