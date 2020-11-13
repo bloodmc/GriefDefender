@@ -932,6 +932,8 @@ public class PlayerEventHandler implements Listener {
             return;
         }
         GDCauseStackManager.getInstance().pushCause(player);
+        final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
+        playerData.optionNoFly = null; // Reset no fly option on teleports as from/to claim would be the same
         if (!GDFlags.ENTITY_TELEPORT_FROM && !GDFlags.ENTITY_TELEPORT_TO) {
             return;
         }
@@ -954,7 +956,6 @@ public class PlayerEventHandler implements Listener {
         if (type == TeleportCause.UNKNOWN && !sourceLocation.getWorld().getUID().equals(destination.getWorld().getUID())) {
             source = destination.getWorld().getEnvironment().name().toLowerCase().replace("the_", "") + "_portal";
         }
-        final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
         final GDClaim sourceClaim =  this.dataStore.getClaimAtPlayer(playerData, player.getLocation());
         if (playerData.inPvpCombat() && GDOptions.isOptionEnabled(Options.PVP_COMBAT_TELEPORT)) {
             // Cancel event if player is unable to teleport during PvP combat

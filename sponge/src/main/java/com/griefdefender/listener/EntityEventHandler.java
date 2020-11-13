@@ -708,13 +708,17 @@ public class EntityEventHandler {
 
         GDTimings.ENTITY_TELEPORT_EVENT.startTimingIfSync();
         Player player = null;
+        GDClaim sourceClaim = null;
+        GDPlayerData playerData = null;
         GDPermissionUser user = null;
         if (entity instanceof Player) {
             player = (Player) entity;
             user = PermissionHolderCache.getInstance().getOrCreateUser(player);
-            final GDPlayerData playerData = user.getInternalPlayerData();
+            playerData = user.getInternalPlayerData();
+            playerData.optionNoFly = null; // Reset no fly option on teleports as from/to claim would be the same
+            sourceClaim = this.dataStore.getClaimAtPlayer(playerData, player.getLocation());
             // Cancel event if player is unable to teleport during PvP combat
-            final boolean pvpCombatTeleport = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Boolean.class), player, Options.PVP_COMBAT_TELEPORT);
+            final boolean pvpCombatTeleport = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Boolean.class), player, Options.PVP_COMBAT_TELEPORT, sourceClaim);
             if (!pvpCombatTeleport && GDOptions.isOptionEnabled(Options.PVP_COMBAT_TELEPORT)) {
                 final int combatTimeRemaining = playerData.getPvpCombatTimeRemaining();
                 if (combatTimeRemaining > 0) {
@@ -731,6 +735,7 @@ public class EntityEventHandler {
             user = PermissionHolderCache.getInstance().getOrCreateUser(entity.getCreator().orElse(null));
             if (user != null && user.getOnlinePlayer() != null) {
                 player = user.getOnlinePlayer();
+                playerData = user.getInternalPlayerData();
             }
         }
 
@@ -752,12 +757,7 @@ public class EntityEventHandler {
             return;
         }
 
-        GDClaim sourceClaim = null;
-        GDPlayerData playerData = null;
-        if (player != null) {
-            playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
-            sourceClaim = this.dataStore.getClaimAtPlayer(playerData, player.getLocation());
-        } else {
+        if (sourceClaim == null) {
             sourceClaim = this.dataStore.getClaimAt(sourceLocation);
         }
 
