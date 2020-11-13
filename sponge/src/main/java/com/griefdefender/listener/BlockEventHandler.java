@@ -598,6 +598,12 @@ public class BlockEventHandler {
         GDTimings.EXPLOSION_PRE_EVENT.startTimingIfSync();
         final User user = CauseContextHelper.getEventUser(event);
         final Location<World> location = event.getExplosion().getLocation();
+        final GDClaim targetClaim =  GriefDefenderPlugin.getInstance().dataStore.getClaimAt(location);
+        // If affected claim does not inherit parent, skip logic
+        if (!targetClaim.isWilderness() && targetClaim.getParent().isPresent() && !targetClaim.getInternalClaimData().doesInheritParent()) {
+            GDTimings.EXPLOSION_PRE_EVENT.stopTimingIfSync();
+            return;
+        }
         final GDClaim radiusClaim = NMSUtil.getInstance().createClaimFromCenter(location, event.getExplosion().getRadius());
         final GDClaimManager claimManager = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(location.getExtent().getUniqueId());
         final Set<Claim> surroundingClaims = claimManager.findOverlappingClaims(radiusClaim);
@@ -646,7 +652,6 @@ public class BlockEventHandler {
         GDClaim targetClaim = null;
         final List<Location<World>> filteredLocations = new ArrayList<>();
         final String sourceId = GDPermissionManager.getInstance().getPermissionIdentifier(source);
-        final int cancelBlockLimit = GriefDefenderPlugin.getGlobalConfig().getConfig().claim.explosionCancelBlockLimit;
         boolean denySurfaceExplosion = GriefDefenderPlugin.getActiveConfig(world.getUniqueId()).getConfig().claim.explosionBlockSurfaceBlacklist.contains(sourceId);
         if (!denySurfaceExplosion) {
             denySurfaceExplosion = GriefDefenderPlugin.getActiveConfig(world.getUniqueId()).getConfig().claim.explosionBlockSurfaceBlacklist.contains("any");
@@ -665,11 +670,6 @@ public class BlockEventHandler {
             Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, Flags.EXPLOSION_BLOCK, source, location.getBlock(), user, true);
 
             if (result == Tristate.FALSE) {
-                // Avoid lagging server from large explosions.
-                if (event.getAffectedLocations().size() > cancelBlockLimit) {
-                    event.setCancelled(true);
-                    break;
-                }
                 filteredLocations.add(location);
             }
         }

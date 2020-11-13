@@ -41,10 +41,6 @@ public class ClaimCategory extends ConfigCategory {
             + "\nEx. If you add 'minecraft:creeper' to the list, creepers would not be able to hurt entities above sea level."
             + "\nNote: This will have higher priority than 'explosion-entity' flag.")
     public List<String> explosionEntitySurfaceBlacklist = new ArrayList<>();
-    @Setting(value = "explosion-cancel-block-limit", comment = "The affected explosion block size limit to cancel events in order to improve performance."
-            + "\nEx. If set to '50' and an explosion affects 51+ blocks, the event will cancel when the first protected block is found."
-            + "\nNote: To disable, set value to '0'.")
-    public int explosionCancelBlockLimit = 50;
     @Setting(value = "piston-protection-in-claims", comment = "Whether piston protection should be enabled within claims. Note: This does not affect pistons crossing into another claim, that is always protected. This only determines whether or not GD should process pistons if it doesn't cross into another claim.")
     public boolean pistonProtectionInClaims = false;
     @Setting(value = "auto-chest-claim-block-radius", comment = "Radius used (in blocks) for auto-created claim when a chest is placed. Set to -1 to disable chest claim creation.")

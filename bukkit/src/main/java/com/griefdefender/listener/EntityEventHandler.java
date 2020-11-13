@@ -198,6 +198,12 @@ public class EntityEventHandler implements Listener {
         }
 
         final Location location = event.getEntity().getLocation();
+        final GDClaim targetClaim =  GriefDefenderPlugin.getInstance().dataStore.getClaimAt(location);
+        // If affected claim does not inherit parent, skip logic
+        if (!targetClaim.isWilderness() && targetClaim.getParent().isPresent() && !targetClaim.getInternalClaimData().doesInheritParent()) {
+            GDTimings.ENTITY_EXPLOSION_PRE_EVENT.stopTiming();
+            return;
+        }
         final GDClaim radiusClaim = NMSUtil.getInstance().createClaimFromCenter(location, event.getRadius());
         final GDClaimManager claimManager = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(location.getWorld().getUID());
         final Set<Claim> surroundingClaims = claimManager.findOverlappingClaims(radiusClaim);
@@ -248,7 +254,6 @@ public class EntityEventHandler implements Listener {
         }
         GDTimings.EXPLOSION_EVENT.startTiming();
         GDClaim targetClaim = null;
-        final int cancelBlockLimit = GriefDefenderPlugin.getGlobalConfig().getConfig().claim.explosionCancelBlockLimit;
         final List<Block> filteredLocations = new ArrayList<>();
         boolean clearAll = false;
         for (Block block : event.blockList()) {
@@ -261,13 +266,6 @@ public class EntityEventHandler implements Listener {
             }
             final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, Flags.EXPLOSION_BLOCK, source, block, user, true);
             if (result == Tristate.FALSE) {
-                // Avoid lagging server from large explosions.
-                if (event.blockList().size() > cancelBlockLimit) {
-                    // Avoid cancelling as it causing clients not to receive explosion sound
-                    //event.setCancelled(true);
-                    clearAll = true;
-                    break;
-                }
                 filteredLocations.add(block);
             }
         }

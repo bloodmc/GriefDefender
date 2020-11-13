@@ -499,7 +499,6 @@ public class BlockEventHandler implements Listener {
         GDClaim targetClaim = null;
         final List<Block> filteredLocations = new ArrayList<>();
         final String sourceId = GDPermissionManager.getInstance().getPermissionIdentifier(source);
-        final int cancelBlockLimit = GriefDefenderPlugin.getGlobalConfig().getConfig().claim.explosionCancelBlockLimit;
         boolean denySurfaceExplosion = GriefDefenderPlugin.getActiveConfig(world.getUID()).getConfig().claim.explosionBlockSurfaceBlacklist.contains(sourceId);
         if (!denySurfaceExplosion) {
             denySurfaceExplosion = GriefDefenderPlugin.getActiveConfig(world.getUID()).getConfig().claim.explosionBlockSurfaceBlacklist.contains("any");
@@ -517,11 +516,6 @@ public class BlockEventHandler implements Listener {
             }
             Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, Flags.EXPLOSION_BLOCK, source, block, user, true);
             if (result == Tristate.FALSE) {
-                // Avoid lagging server from large explosions.
-                if (event.blockList().size() > cancelBlockLimit) {
-                    event.setCancelled(true);
-                    break;
-                }
                 filteredLocations.add(block);
             }
         }

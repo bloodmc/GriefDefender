@@ -41,10 +41,6 @@ public class ClaimCategory extends ConfigCategory {
             + "\nEx. If you add 'minecraft:creeper' to the list, creepers would not be able to hurt entities above sea level."
             + "\nNote: This will have higher priority than 'explosion-entity' flag.")
     public List<String> explosionEntitySurfaceBlacklist = new ArrayList<>();
-    @Setting(value = "explosion-cancel-block-limit", comment = "The affected explosion block size limit to cancel events."
-            + "\nEx. If set to '50', and a creeper explodes which affects 51+ blocks, the event will cancel when the first protected block is found."
-            + "\nNote: To disable, set value to '0'.")
-    public int explosionCancelBlockLimit = 50;
     @Setting(value = "worldedit-schematics", comment = "Whether to use WorldEdit for schematics. Default: false"
             + "\nNote: If you were using schematics in older GD/GP versions and want old schematics to work then you should keep this setting disabled.")
     public boolean useWorldEditSchematics = false;
