@@ -1222,8 +1222,8 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
         flagContexts = new HashSet<>();
         flagContexts.add(FlagContexts.SOURCE_FIRE);
         definitionContexts = new HashSet<>();
-        definitionContexts.add(ClaimContexts.GLOBAL_OVERRIDE_CONTEXT);
-        //definitionContexts.add(OWNER_OVERRIDE_CONTEXT);
+        definitionContexts.add(ClaimContexts.USER_DEFAULT_CONTEXT);
+        definitionContexts.add(OWNER_OVERRIDE_CONTEXT);
         flagData = new ArrayList<>();
         flagData.add(flagDataBuilder
                         .reset()
