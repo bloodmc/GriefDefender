@@ -1305,7 +1305,7 @@ public class GDClaim implements Claim {
         final Player player = user != null ? user.getOnlinePlayer() : null;
         if (this.cuboid) {
             // make sure resize doesn't cross paths
-            if (minx >= maxx || miny >= maxy || minz >= maxz) {
+            if (minx >= maxx || miny > maxy || minz >= maxz) {
                 return new GDClaimResult(this, ClaimResultType.OVERLAPPING_CLAIM);
             }
         }
