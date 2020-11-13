@@ -782,6 +782,10 @@ public class GDPlayerData implements PlayerData {
     }
 
     public int getPvpCombatTimeRemaining() {
+        return this.getPvpCombatTimeRemaining(null);
+    }
+
+    public int getPvpCombatTimeRemaining(GDClaim claim) {
         final Player player = this.getSubject().getOnlinePlayer();
         if (this.lastPvpTimestamp == null || player == null) {
             return 0;
@@ -790,7 +794,7 @@ public class GDPlayerData implements PlayerData {
         final Instant now = Instant.now();
         int combatTimeout = 0;
         if (GDOptions.isOptionEnabled(Options.PVP_COMBAT_TIMEOUT)) {
-            combatTimeout = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), player, Options.PVP_COMBAT_TIMEOUT);
+            combatTimeout = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), player, Options.PVP_COMBAT_TIMEOUT, claim);
         }
         if (combatTimeout <= 0) {
             return 0;

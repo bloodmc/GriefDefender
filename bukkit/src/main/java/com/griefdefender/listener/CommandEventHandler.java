@@ -177,10 +177,10 @@ public class CommandEventHandler implements Listener {
             return;
         }
 
-        final int combatTimeRemaining = playerData.getPvpCombatTimeRemaining();
+        final int combatTimeRemaining = playerData.getPvpCombatTimeRemaining(claim);
         final boolean inPvpCombat = combatTimeRemaining > 0;
         if (GDOptions.isOptionEnabled(Options.PVP_COMBAT_COMMAND)) {
-            final boolean pvpCombatCommand = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Boolean.class), player, Options.PVP_COMBAT_COMMAND);
+            final boolean pvpCombatCommand = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Boolean.class), player, Options.PVP_COMBAT_COMMAND, claim);
             if (!pvpCombatCommand && inPvpCombat) {
                 final Component denyMessage = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PVP_IN_COMBAT_NOT_ALLOWED,
                         ImmutableMap.of(
