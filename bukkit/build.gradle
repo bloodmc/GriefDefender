@@ -111,7 +111,9 @@ dependencies {
     compileOnly "org.bukkit:bukkit:$spigotVersion"
     compileOnly "org.spigotmc:spigot:$spigotVersion"
     // Plugins
-    compileOnly "ca.stellardrift.permissionsex:permissionsex-bukkit:2.0-SNAPSHOT"
+    compileOnly ("ca.stellardrift.permissionsex:permissionsex-bukkit:2.0-SNAPSHOT") {
+        exclude group: 'org.spongepowered'
+    }
     compileOnly "me.clip:placeholderapi:2.10.4"
     compileOnly "net.ess3:EssentialsX:2.17.1"
     compileOnly "net.milkbowl.vault:VaultAPI:1.7"
