@@ -1358,7 +1358,7 @@ public class GDClaim implements Claim {
         GDChangeClaimEvent.Resize event = new GDChangeClaimEvent.Resize(this, startCorner, endCorner);
         GriefDefender.getEventManager().post(event);
         if (event.cancelled()) {
-            return new GDClaimResult(this, ClaimResultType.CLAIM_EVENT_CANCELLED);
+            return new GDClaimResult(this, ClaimResultType.CLAIM_EVENT_CANCELLED, event.getMessage().orElse(null));
         }
 
         this.lesserBoundaryCorner = newLesserCorner;

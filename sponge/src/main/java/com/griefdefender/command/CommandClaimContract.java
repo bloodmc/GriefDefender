@@ -202,9 +202,6 @@ public class CommandClaimContract extends BaseCommand {
                 visual.createClaimBlockVisuals(PlayerUtil.getInstance().getEyeHeight(player), player.getLocation(), playerData);
             }
             visual.apply(player);
-            if (GriefDefenderPlugin.getInstance().getWorldEditProvider() != null) {
-                GriefDefenderPlugin.getInstance().getWorldEditProvider().displayClaimCUIVisual(claim, player, playerData, false);
-            }
         }
     }
 }

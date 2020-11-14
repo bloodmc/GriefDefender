@@ -93,6 +93,7 @@ public class GDPlayerData implements PlayerData {
     public Location<World> endShovelLocation;
     public Location<World> lastValidInspectLocation;
     public Location<World> lastNonAirInspectLocation;
+    public boolean isInvestigating = false;
     public boolean claimMode = false;
     public boolean claimTool = true;
     public ShovelType shovelMode = ShovelTypes.BASIC;

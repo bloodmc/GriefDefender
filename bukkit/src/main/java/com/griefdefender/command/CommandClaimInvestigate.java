@@ -192,11 +192,10 @@ public class CommandClaimInvestigate extends BaseCommand {
         if (claim != null) {
             // always show visual borders for resize purposes
             final GDClaimVisual visual = claim.getVisualizer();
+            playerData.isInvestigating = true;
             visual.createClaimBlockVisuals(playerData.getClaimCreateMode() == CreateModeTypes.VOLUME ? height : PlayerUtil.getInstance().getEyeHeight(player), player.getLocation(), playerData);
             visual.apply(player);
-            if (worldEditProvider != null) {
-                worldEditProvider.displayClaimCUIVisual(claim, player, playerData, true);
-            }
+            playerData.isInvestigating = false;
             Set<Claim> claims = new HashSet<>();
             claims.add(claim);
             playerData.showNoClaimsFoundMessage = false;

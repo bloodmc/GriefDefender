@@ -92,6 +92,7 @@ public class DynmapProvider {
             info = "<div class=\"regioninfo\">" + this.cfg.infoWindowBasic + "</div>";
         }
         info = info.replace("%owner%", ((GDClaim) claim).getOwnerName());
+        info = info.replace("%owneruuid%", claim.getOwnerUniqueId().toString());
         info = info.replace("%area%", Integer.toString(claim.getArea()));
         info = info.replace("%claimname%",
                 claim.getData().getName().isPresent()

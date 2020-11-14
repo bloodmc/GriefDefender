@@ -915,11 +915,6 @@ public class PlayerEventHandler {
                 playerData.lastShovelLocation = null;
                 playerData.endShovelLocation = null;
                 playerData.claimResizing = null;
-                // always reset to basic claims mode
-                if (playerData.shovelMode != ShovelTypes.BASIC) {
-                    playerData.shovelMode = ShovelTypes.BASIC;
-                    GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().MODE_BASIC);
-                }
 
                 // tell him how many claim blocks he has available
                 if (GriefDefenderPlugin.CLAIM_BLOCK_SYSTEM == ClaimBlockSystem.VOLUME) {
@@ -1543,10 +1538,6 @@ public class PlayerEventHandler {
                     ImmutableMap.of(
                     "type", gdClaim.getFriendlyNameType(true)));
             GriefDefenderPlugin.sendMessage(player, message);
-            if (this.worldEditProvider != null) {
-                this.worldEditProvider.stopDragVisual(player);
-                this.worldEditProvider.displayClaimCUIVisual(gdClaim, player, playerData, false);
-            }
             playerData.revertTempVisuals();
             final GDClaimVisual visual = gdClaim.getVisualizer();
             if (visual.getVisualTransactions().isEmpty()) {
@@ -1647,10 +1638,6 @@ public class PlayerEventHandler {
                 visual.createClaimBlockVisuals(location.getBlockY(), player.getLocation(), playerData);
             }
             visual.apply(player, false);
-            if (this.worldEditProvider != null) {
-                this.worldEditProvider.stopDragVisual(player);
-                this.worldEditProvider.displayClaimCUIVisual(gdClaim, player, playerData, false);
-            }
             playerData.claimSubdividing = null;
             playerData.claimResizing = null;
             playerData.lastShovelLocation = null;
@@ -1705,7 +1692,7 @@ public class PlayerEventHandler {
             final int x = playerData.lastShovelLocation.getBlockX() == claim.lesserBoundaryCorner.getX() ? claim.greaterBoundaryCorner.getX() : claim.lesserBoundaryCorner.getX();
             final int y = playerData.lastShovelLocation.getBlockY() == claim.lesserBoundaryCorner.getY() ? claim.greaterBoundaryCorner.getY() : claim.lesserBoundaryCorner.getY();
             final int z = playerData.lastShovelLocation.getBlockZ() == claim.lesserBoundaryCorner.getZ() ? claim.greaterBoundaryCorner.getZ() : claim.lesserBoundaryCorner.getZ();
-            this.worldEditProvider.displayClaimCUIVisual(claim, new Vector3i(x, y, z), playerData.lastShovelLocation.getBlockPosition(), player, playerData, false);
+            this.worldEditProvider.displayClaimCUIVisual(claim, new Vector3i(x, y, z), playerData.lastShovelLocation.getBlockPosition(), player, playerData);
         }
         // Show visual block for resize corner click
         playerData.revertTempVisuals();
@@ -1823,9 +1810,6 @@ public class PlayerEventHandler {
             visual.resetVisuals();
             visual.createClaimBlockVisuals(location.getBlockY(), player.getLocation(), playerData);
             visual.apply(player);
-            if (this.worldEditProvider != null) {
-                this.worldEditProvider.displayClaimCUIVisual(claim, player, playerData, false);
-            }
         } else {
             if (claimResult.getResultType() == ClaimResultType.OVERLAPPING_CLAIM) {
                 GDClaim overlapClaim = (GDClaim) claimResult.getClaim().get();
@@ -1835,6 +1819,17 @@ public class PlayerEventHandler {
                 CommandHelper.showOverlapClaims(player, claims, location.getBlockY());
             }
 
+            if (claimResult.getResultType() == ClaimResultType.CLAIM_EVENT_CANCELLED) {
+                if (claimResult.getMessage().isPresent()) {
+                    GriefDefenderPlugin.sendMessage(player, claimResult.getMessage().get());
+                }
+                playerData.claimResizing.resetVisuals();
+                playerData.revertTempVisuals();
+                playerData.claimSubdividing = null;
+                playerData.lastShovelLocation = null;
+                playerData.endShovelLocation = null;
+                playerData.claimResizing = null;
+            }
             event.setCancelled(true);
         }
     }
@@ -1967,9 +1962,6 @@ public class PlayerEventHandler {
             final GDClaimVisual visual = claim.getVisualizer();
             visual.createClaimBlockVisuals(playerData.getClaimCreateMode() == CreateModeTypes.VOLUME ? height : PlayerUtil.getInstance().getEyeHeight(player), player.getLocation(), playerData);
             visual.apply(player);
-            if (this.worldEditProvider != null) {
-                this.worldEditProvider.displayClaimCUIVisual(claim, player, playerData, true);
-            }
             Set<Claim> claims = new HashSet<>();
             claims.add(claim);
             playerData.showNoClaimsFoundMessage = false;

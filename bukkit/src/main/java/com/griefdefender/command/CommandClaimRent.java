@@ -284,7 +284,7 @@ public class CommandClaimRent extends BaseCommand {
                 final int max = claim.getEconomyData().getRentMaxTime();
                 Component maxTime = null;
                 Component minTime = null;
-                if (max > 0) {
+                if (max > 0 && claim.getEconomyData().getRentEndDate() != null) {
                     maxTime = EconomyUtil.getInstance().getUserTimeRemaining(claim.getEconomyData().getRentEndDate(), MessageCache.getInstance().RENT_UI_END_DATE);
                 }
                 if (min > 0) {

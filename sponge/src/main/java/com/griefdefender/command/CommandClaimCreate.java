@@ -147,10 +147,6 @@ public class CommandClaimCreate extends BaseCommand {
                     ImmutableMap.of(
                     "type", gdClaim.getFriendlyNameType(true)));
             GriefDefenderPlugin.sendMessage(player, message);
-            if (GriefDefenderPlugin.getInstance().getWorldEditProvider() != null) {
-                GriefDefenderPlugin.getInstance().getWorldEditProvider().stopDragVisual(player);
-                GriefDefenderPlugin.getInstance().getWorldEditProvider().displayClaimCUIVisual(gdClaim, player, playerData, false);
-            }
             final GDClaimVisual visual = gdClaim.getVisualizer();
             if (visual.getVisualTransactions().isEmpty()) {
                 visual.createClaimBlockVisuals(location.getBlockY(), player.getLocation(), playerData);

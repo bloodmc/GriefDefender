@@ -160,10 +160,6 @@ public class EconomyUtil {
                         "type", gdClaim.getFriendlyNameType(true)));
                 GriefDefenderPlugin.sendMessage(player, message);
                 final GDWorldEditProvider worldEditProvider = GriefDefenderPlugin.getInstance().worldEditProvider;
-                if (worldEditProvider != null) {
-                    worldEditProvider.stopDragVisual(player);
-                    worldEditProvider.displayClaimCUIVisual(gdClaim, player, playerData, false);
-                }
                 final GDClaimVisual visual = gdClaim.getVisualizer();
                 if (visual.getVisualTransactions().isEmpty()) {
                     visual.createClaimBlockVisuals(height, player.getLocation(), playerData);
