@@ -348,7 +348,7 @@ public class PlayerEventHandler {
 
         final int combatTimeRemaining = playerData.getPvpCombatTimeRemaining(claim);
         final boolean inPvpCombat = combatTimeRemaining > 0;
-        if (GDOptions.isOptionEnabled(Options.PVP_COMBAT_COMMAND)) {
+        if (GDOptions.PVP_COMBAT_COMMAND) {
             final boolean pvpCombatCommand = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Boolean.class), player, Options.PVP_COMBAT_COMMAND, claim);
             if (!pvpCombatCommand && inPvpCombat) {
                 final Component denyMessage = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PVP_IN_COMBAT_NOT_ALLOWED,
@@ -525,7 +525,7 @@ public class PlayerEventHandler {
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
         final GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAtPlayer(playerData, player.getLocation());
         Tristate keepInventory = Tristate.UNDEFINED;
-        if (GDOptions.isOptionEnabled(Options.PLAYER_KEEP_INVENTORY)) {
+        if (GDOptions.PLAYER_KEEP_INVENTORY) {
             keepInventory = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Tristate.class), playerData.getSubject(), Options.PLAYER_KEEP_INVENTORY, claim);
         }
         if (keepInventory != Tristate.UNDEFINED) {
@@ -538,6 +538,27 @@ public class PlayerEventHandler {
         if (keepLevel != Tristate.UNDEFINED) {
             event.setKeepLevel(keepLevel.asBoolean());
         }*/
+    }
+
+    @Listener(order = Order.FIRST, beforeModifications = true)
+    public void onPlayerDeathDropItem(DropItemEvent.Destruct event, @First Player player) {
+        final GDClaim claim = this.dataStore.getClaimAt(player.getLocation());
+        final GDPlayerData playerData = this.dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
+        if (GDOptions.PLAYER_ITEM_DROP_LOCK || GDOptions.PVP_ITEM_DROP_LOCK) {
+            boolean itemDropLock = false;
+            if (playerData.inPvpCombat() && GDOptions.PVP_ITEM_DROP_LOCK) {
+                itemDropLock = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Boolean.class), player, Options.PVP_ITEM_DROP_LOCK, claim);
+            } else if (GDOptions.PLAYER_ITEM_DROP_LOCK) {
+                itemDropLock = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Boolean.class), player, Options.PLAYER_ITEM_DROP_LOCK, claim);
+            }
+    
+            if (itemDropLock) {
+                if (event.getEntities().size() > 0) {
+                    playerData.lockPlayerDeathDrops = true;
+                    GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().PLAYER_ITEM_DROPS_LOCK);
+                }
+            }
+        }
     }
 
     @Listener(order = Order.FIRST, beforeModifications = true)
@@ -890,6 +911,15 @@ public class PlayerEventHandler {
             event.setCancelled(true);
         }
 
+        if (GDOptions.PLAYER_ITEM_DROP_LOCK || GDOptions.PVP_ITEM_DROP_LOCK) {
+            final UUID creatorUniqueId = event.getTargetEntity().getCreator().orElse(null);
+            if (creatorUniqueId != null && !creatorUniqueId.equals(player.getUniqueId())) {
+                final GDPlayerData ownerPlayerData = this.dataStore.getOrCreatePlayerData(player.getWorld(), creatorUniqueId);
+                if (ownerPlayerData.lockPlayerDeathDrops) {
+                    event.setCancelled(true);
+                }
+            }
+        }
         GDTimings.PLAYER_PICKUP_ITEM_EVENT.stopTimingIfSync();
     }
 

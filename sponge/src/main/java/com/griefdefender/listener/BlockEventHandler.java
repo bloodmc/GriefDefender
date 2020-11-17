@@ -652,6 +652,7 @@ public class BlockEventHandler {
         GDClaim targetClaim = null;
         final List<Location<World>> filteredLocations = new ArrayList<>();
         final String sourceId = GDPermissionManager.getInstance().getPermissionIdentifier(source);
+        final int surfaceBlockLevel = GriefDefenderPlugin.getActiveConfig(world.getUniqueId()).getConfig().claim.explosionSurfaceBlockLevel;
         boolean denySurfaceExplosion = GriefDefenderPlugin.getActiveConfig(world.getUniqueId()).getConfig().claim.explosionBlockSurfaceBlacklist.contains(sourceId);
         if (!denySurfaceExplosion) {
             denySurfaceExplosion = GriefDefenderPlugin.getActiveConfig(world.getUniqueId()).getConfig().claim.explosionBlockSurfaceBlacklist.contains("any");
@@ -661,7 +662,7 @@ public class BlockEventHandler {
                 continue;
             }
             targetClaim =  GriefDefenderPlugin.getInstance().dataStore.getClaimAt(location, targetClaim);
-            if (denySurfaceExplosion && world.getDimension().getType() != DimensionTypes.NETHER && location.getBlockY() >= world.getSeaLevel()) {
+            if (denySurfaceExplosion && world.getDimension().getType() != DimensionTypes.NETHER && location.getBlockY() >= surfaceBlockLevel) {
                 filteredLocations.add(location);
                 GDPermissionManager.getInstance().processEventLog(event, location, targetClaim, Flags.EXPLOSION_BLOCK.getPermission(), source, location.getBlock(), user, "explosion-surface", Tristate.FALSE);
                 continue;

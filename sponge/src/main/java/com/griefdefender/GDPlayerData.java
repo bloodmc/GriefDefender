@@ -112,6 +112,8 @@ public class GDPlayerData implements PlayerData {
     public boolean debugClaimPermissions = false;
     public boolean inTown = false;
     public boolean townChat = false;
+    public boolean lockPlayerDeathDrops = false;
+    public boolean trappedRequest = false;
     public List<Component> chatLines = new ArrayList<>();
     public Instant recordChatTimestamp;
     public Instant commandInputTimestamp;
@@ -142,6 +144,7 @@ public class GDPlayerData implements PlayerData {
     public Location<World> teleportLocation;
 
     public Instant lastPvpTimestamp;
+    public Instant lastTrappedTimestamp;
     public WeatherType lastWeatherType;
 
     // cached global option values
@@ -173,7 +176,6 @@ public class GDPlayerData implements PlayerData {
     public boolean userOptionBypassPlayerGamemode = false;
 
     // option cache
-    public Boolean optionNoFly = null;
     public Boolean optionNoGodMode = null;
     public Double optionFlySpeed = null;
     public Double optionWalkSpeed = null;
@@ -368,7 +370,7 @@ public class GDPlayerData implements PlayerData {
             }
             boolean ignoreVisual = false;
             for (Transaction<BlockSnapshot> createVisualTransaction : createBlockVisualTransactions) {
-                if (createVisualTransaction.getOriginal().getLocation().equals(snapshot.getLocation().get())) {
+                if (createVisualTransaction.getOriginal().getLocation().get().equals(snapshot.getLocation().get())) {
                     ignoreVisual = true;
                     break;
                 }
@@ -799,7 +801,7 @@ public class GDPlayerData implements PlayerData {
 
         final Instant now = Instant.now();
         int combatTimeout = 0;
-        if (GDOptions.isOptionEnabled(Options.PVP_COMBAT_TIMEOUT)) {
+        if (GDOptions.PVP_COMBAT_TIMEOUT) {
             combatTimeout = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), player, Options.PVP_COMBAT_TIMEOUT, claim);
         }
         if (combatTimeout <= 0) {
@@ -865,7 +867,6 @@ public class GDPlayerData implements PlayerData {
     }
 
     public void resetOptionCache() {
-        this.optionNoFly = null;
         this.optionNoGodMode = null;
         this.optionFlySpeed = null;
         this.optionWalkSpeed = null;

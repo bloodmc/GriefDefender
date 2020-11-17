@@ -29,6 +29,7 @@ import com.google.common.reflect.TypeToken;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.api.permission.option.Options;
+import com.griefdefender.cache.MessageCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.permission.GDPermissionManager;
@@ -45,6 +46,7 @@ import org.spongepowered.api.entity.living.player.gamemode.GameMode;
 import org.spongepowered.api.entity.living.player.gamemode.GameModes;
 import org.spongepowered.api.world.World;
 
+import java.time.Instant;
 import java.util.Iterator;
 
 public class PlayerTickTask implements Runnable {
@@ -81,7 +83,7 @@ public class PlayerTickTask implements Runnable {
                 if (world.getProperties().getTotalTime() % 100 == 0L) {
                     final GameMode gameMode = player.get(Keys.GAME_MODE).get();
                     // Handle player health regen
-                    if (gameMode != GameModes.CREATIVE && gameMode != GameModes.SPECTATOR && GDOptions.isOptionEnabled(Options.PLAYER_HEALTH_REGEN)) {
+                    if (gameMode != GameModes.CREATIVE && gameMode != GameModes.SPECTATOR && GDOptions.PLAYER_HEALTH_REGEN) {
                         final double maxHealth = player.get(Keys.MAX_HEALTH).get();
                         final double currentHealth = player.get(Keys.HEALTH).get();
                         if (currentHealth < maxHealth) {
@@ -102,6 +104,11 @@ public class PlayerTickTask implements Runnable {
                     if (playerData.teleportDelay > 0) {
                         final int delay = playerData.teleportDelay - 1;
                         if (delay == 0) {
+                            if (playerData.trappedRequest) {
+                                playerData.lastTrappedTimestamp = Instant.now();
+                                GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().COMMAND_TRAPPED_SUCCESS);
+                            }
+                            // This must be set BEFORE teleport
                             player.setLocation(playerData.teleportLocation);
                             playerData.teleportDelay = 0;
                             playerData.teleportLocation = null;

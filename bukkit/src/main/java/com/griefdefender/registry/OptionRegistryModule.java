@@ -117,6 +117,7 @@ public class OptionRegistryModule implements CatalogRegistryModule<Option> {
         this.createKey("griefdefender:player-fly-speed", Double.class);
         this.createKey("griefdefender:player-gamemode", GameModeType.class);
         this.createKey("griefdefender:player-health-regen", Double.class);
+        this.createKey("griefdefender:player-item-drop-lock", Boolean.class);
         this.createKey("griefdefender:player-keep-inventory", Tristate.class);
         this.createKey("griefdefender:player-keep-level", Tristate.class);
         this.createKey("griefdefender:player-teleport-delay", Integer.class);
@@ -126,6 +127,7 @@ public class OptionRegistryModule implements CatalogRegistryModule<Option> {
         this.createKey("griefdefender:pvp-combat-command", Boolean.class);
         this.createKey("griefdefender:pvp-combat-teleport", Boolean.class);
         this.createKey("griefdefender:pvp-combat-timeout", Integer.class);
+        this.createKey("griefdefender:pvp-item-drop-lock", Boolean.class);
         this.createKey("griefdefender:radius-inspect", Integer.class);
         this.createKey("griefdefender:raid", Boolean.class);
         this.createKey("griefdefender:rent-balance", Double.class);

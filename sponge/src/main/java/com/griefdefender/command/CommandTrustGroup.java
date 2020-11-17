@@ -29,6 +29,7 @@ import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.CommandCompletion;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Description;
+import co.aikar.commands.annotation.Optional;
 import co.aikar.commands.annotation.Subcommand;
 import co.aikar.commands.annotation.Syntax;
 import com.google.common.collect.ImmutableList;
@@ -69,13 +70,18 @@ public class CommandTrustGroup extends BaseCommand {
             + "\nContainer: access to interact with all blocks including inventory."
             + "\nBuilder: access to everything above including ability to place and break blocks."
             + "\nManager: access to everything above including ability to manage claim settings.")
-    @Syntax("<group> <accessor|builder|container|manager>")
+    @Syntax("<group> [<accessor|builder|container|manager>]")
     @Subcommand("trust group")
-    public void execute(Player player, String groupName, String type) {
-        final TrustType trustType = CommandHelper.getTrustType(type);
-        if (trustType == null) {
-            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().TRUST_INVALID);
-            return;
+    public void execute(Player player, String groupName, @Optional String type) {
+        TrustType trustType = null;
+        if (type == null) {
+            trustType = TrustTypes.BUILDER;
+        } else {
+            trustType = CommandHelper.getTrustType(type);
+            if (trustType == null) {
+                GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().TRUST_INVALID);
+                return;
+            }
         }
 
         final GDPermissionGroup group = PermissionHolderCache.getInstance().getOrCreateGroup(groupName);

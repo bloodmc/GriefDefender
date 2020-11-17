@@ -267,11 +267,11 @@ public class PlayerEventHandler implements Listener {
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
         final GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAtPlayer(playerData, player.getLocation());
         Tristate keepInventory = Tristate.UNDEFINED;
-        if (GDOptions.isOptionEnabled(Options.PLAYER_KEEP_INVENTORY)) {
+        if (GDOptions.PLAYER_KEEP_INVENTORY) {
             keepInventory = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Tristate.class), playerData.getSubject(), Options.PLAYER_KEEP_INVENTORY, claim);
         }
         Tristate keepLevel = Tristate.UNDEFINED;
-        if (GDOptions.isOptionEnabled(Options.PLAYER_KEEP_LEVEL)) {
+        if (GDOptions.PLAYER_KEEP_LEVEL) {
             keepLevel = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Tristate.class), playerData.getSubject(), Options.PLAYER_KEEP_LEVEL, claim);
         }
         if (keepInventory != Tristate.UNDEFINED) {
@@ -284,6 +284,25 @@ public class PlayerEventHandler implements Listener {
             event.setKeepLevel(keepLevel.asBoolean());
             if (keepLevel == Tristate.TRUE) {
                 event.setDroppedExp(0);
+            }
+        }
+
+        if (GDOptions.PLAYER_ITEM_DROP_LOCK || GDOptions.PVP_ITEM_DROP_LOCK) {
+            boolean itemDropLock = false;
+            if (playerData.inPvpCombat() && GDOptions.PVP_ITEM_DROP_LOCK) {
+                itemDropLock = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Boolean.class), player, Options.PVP_ITEM_DROP_LOCK, claim);
+            } else if (GDOptions.PLAYER_ITEM_DROP_LOCK) {
+                itemDropLock = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Boolean.class), player, Options.PLAYER_ITEM_DROP_LOCK, claim);
+            }
+
+            if (itemDropLock) {
+                for (ItemStack item : event.getDrops()) {
+                    NMSUtil.getInstance().addItemPersistentData(item, "owner", player.getUniqueId().toString());
+                }
+                if (event.getDrops().size() > 0) {
+                    playerData.lockPlayerDeathDrops = true;
+                    GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().PLAYER_ITEM_DROPS_LOCK);
+                }
             }
         }
     }
@@ -415,6 +434,18 @@ public class PlayerEventHandler implements Listener {
         final GDClaim targetClaim = GriefDefenderPlugin.getInstance().dataStore.getClaimAt(location);
         if (GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, Flags.ITEM_PICKUP, player, event.getItem(), player, TrustTypes.ACCESSOR, true) == Tristate.FALSE) {
             event.setCancelled(true);
+            return;
+        }
+
+        if (GDOptions.PLAYER_ITEM_DROP_LOCK || GDOptions.PVP_ITEM_DROP_LOCK) {
+            final String data = NMSUtil.getInstance().getItemPersistentData(event.getItem().getItemStack(), "owner");
+            if (data != null && !data.equalsIgnoreCase(player.getUniqueId().toString())) {
+                final UUID ownerUniqueId = UUID.fromString(data);
+                final GDPlayerData playerData = this.dataStore.getOrCreatePlayerData(location.getWorld(), ownerUniqueId);
+                if (playerData.lockPlayerDeathDrops) {
+                    event.setCancelled(true);
+                }
+            }
         }
     }
 
@@ -929,8 +960,6 @@ public class PlayerEventHandler implements Listener {
             return;
         }
         GDCauseStackManager.getInstance().pushCause(player);
-        final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
-        playerData.optionNoFly = null; // Reset no fly option on teleports as from/to claim would be the same
         if (!GDFlags.ENTITY_TELEPORT_FROM && !GDFlags.ENTITY_TELEPORT_TO) {
             return;
         }
@@ -953,8 +982,9 @@ public class PlayerEventHandler implements Listener {
         if (type == TeleportCause.UNKNOWN && !sourceLocation.getWorld().getUID().equals(destination.getWorld().getUID())) {
             source = destination.getWorld().getEnvironment().name().toLowerCase().replace("the_", "") + "_portal";
         }
+        final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
         final GDClaim sourceClaim =  this.dataStore.getClaimAtPlayer(playerData, player.getLocation());
-        if (playerData.inPvpCombat() && GDOptions.isOptionEnabled(Options.PVP_COMBAT_TELEPORT)) {
+        if (playerData.inPvpCombat() && GDOptions.PVP_COMBAT_TELEPORT) {
             // Cancel event if player is unable to teleport during PvP combat
             final boolean pvpCombatTeleport = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Boolean.class), player, Options.PVP_COMBAT_TELEPORT, sourceClaim);
             if (!pvpCombatTeleport) {

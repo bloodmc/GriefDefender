@@ -41,6 +41,8 @@ public class ClaimCategory extends ConfigCategory {
             + "\nEx. If you add 'minecraft:creeper' to the list, creepers would not be able to hurt entities above sea level."
             + "\nNote: This will have higher priority than 'explosion-entity' flag.")
     public List<String> explosionEntitySurfaceBlacklist = new ArrayList<>();
+    @Setting(value = "explosion-surface-block-level", comment = "The 'Y' block level that is considered the surface for explosions. (Default: 63)")
+    public int explosionSurfaceBlockLevel = 63;
     @Setting(value = "worldedit-schematics", comment = "Whether to use WorldEdit for schematics. Default: false"
             + "\nNote: If you were using schematics in older GD/GP versions and want old schematics to work then you should keep this setting disabled.")
     public boolean useWorldEditSchematics = false;
@@ -69,6 +71,8 @@ public class ClaimCategory extends ConfigCategory {
     @Setting(value = "claims-enabled",
             comment = "Whether claiming is enabled or not. (0 = Disabled, 1 = Enabled)")
     public int claimsEnabled = 1;
+    @Setting(value = "player-trapped-cooldown", comment = "The cooldown time, in seconds, when using the '/trapped' command. (Default: 300)")
+    public int trappedCooldown = 300;
     @Setting(value = "protect-tamed-entities", comment = "Whether tamed entities should be protected in claims. Default: true")
     public boolean protectTamedEntities = true;
     @Setting(value = "reserved-claim-names", comment = "A list of reserved claim names for use only by administrators."

@@ -503,13 +503,14 @@ public class BlockEventHandler implements Listener {
         if (!denySurfaceExplosion) {
             denySurfaceExplosion = GriefDefenderPlugin.getActiveConfig(world.getUID()).getConfig().claim.explosionBlockSurfaceBlacklist.contains("any");
         }
+        final int surfaceBlockLevel = GriefDefenderPlugin.getActiveConfig(world.getUID()).getConfig().claim.explosionSurfaceBlockLevel;
         for (Block block : event.blockList()) {
             final Location location = block.getLocation();
             if (location.getBlock().isEmpty()) {
                 continue;
             }
             targetClaim =  GriefDefenderPlugin.getInstance().dataStore.getClaimAt(location);
-            if (denySurfaceExplosion && block.getWorld().getEnvironment() != Environment.NETHER && location.getBlockY() >= location.getWorld().getSeaLevel()) {
+            if (denySurfaceExplosion && block.getWorld().getEnvironment() != Environment.NETHER && location.getBlockY() >= surfaceBlockLevel) {
                 filteredLocations.add(block);
                 GDPermissionManager.getInstance().processEventLog(event, location, targetClaim, Flags.EXPLOSION_BLOCK.getPermission(), source, block, user, "explosion-surface", Tristate.FALSE);
                 continue;

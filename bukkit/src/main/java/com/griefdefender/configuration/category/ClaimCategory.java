@@ -41,6 +41,8 @@ public class ClaimCategory extends ConfigCategory {
             + "\nEx. If you add 'minecraft:creeper' to the list, creepers would not be able to hurt entities above sea level."
             + "\nNote: This will have higher priority than 'explosion-entity' flag.")
     public List<String> explosionEntitySurfaceBlacklist = new ArrayList<>();
+    @Setting(value = "explosion-surface-block-level", comment = "The 'Y' block level that is considered the surface for explosions. (Default: 63)")
+    public int explosionSurfaceBlockLevel = 63;
     @Setting(value = "piston-protection-in-claims", comment = "Whether piston protection should be enabled within claims. Note: This does not affect pistons crossing into another claim, that is always protected. This only determines whether or not GD should process pistons if it doesn't cross into another claim.")
     public boolean pistonProtectionInClaims = false;
     @Setting(value = "auto-chest-claim-block-radius", comment = "Radius used (in blocks) for auto-created claim when a chest is placed. Set to -1 to disable chest claim creation.")
@@ -68,6 +70,8 @@ public class ClaimCategory extends ConfigCategory {
     @Setting(value = "claims-enabled",
             comment = "Whether claiming is enabled or not. (0 = Disabled, 1 = Enabled)")
     public int claimsEnabled = 1;
+    @Setting(value = "player-trapped-cooldown", comment = "The cooldown time, in seconds, when using the '/trapped' command. (Default: 300)")
+    public int trappedCooldown = 300;
     @Setting(value = "protect-tamed-entities", comment = "Whether tamed entities should be protected in claims. Default: true")
     public boolean protectTamedEntities = true;
     @Setting(value = "reserved-claim-names", comment = "A list of reserved claim names for use only by administrators."

@@ -110,6 +110,8 @@ public class GDPlayerData implements PlayerData {
     public boolean debugClaimPermissions = false;
     public boolean inTown = false;
     public boolean townChat = false;
+    public boolean lockPlayerDeathDrops = false;
+    public boolean trappedRequest = false;
     public List<Component> chatLines = new ArrayList<>();
     public Instant recordChatTimestamp;
     public Instant commandInputTimestamp;
@@ -140,6 +142,7 @@ public class GDPlayerData implements PlayerData {
     public Location teleportLocation;
 
     public Instant lastPvpTimestamp;
+    public Instant lastTrappedTimestamp;
 
     // cached global option values
     public int minClaimLevel;
@@ -170,7 +173,6 @@ public class GDPlayerData implements PlayerData {
     public boolean userOptionBypassPlayerGamemode = false;
 
     // option cache
-    public Boolean optionNoFly = null;
     public Boolean optionNoGodMode = null;
     public Double optionFlySpeed = null;
     public Double optionWalkSpeed = null;
@@ -356,8 +358,8 @@ public class GDPlayerData implements PlayerData {
 
         for (int i = 0; i < visualTransactions.size(); i++) {
             BlockSnapshot snapshot = visualTransactions.get(i).getOriginal();
-            // If original block does not exist, do not send to player
-            if (!snapshot.matchesWorldState()) {
+            // If original block does not exist or chunk is not loaded, do not send to player
+            if (!snapshot.matchesWorldState() || !snapshot.getLocation().getChunk().isLoaded()) {
                 if (claim != null) {
                     claim.markVisualDirty = true;
                 }
@@ -794,7 +796,7 @@ public class GDPlayerData implements PlayerData {
 
         final Instant now = Instant.now();
         int combatTimeout = 0;
-        if (GDOptions.isOptionEnabled(Options.PVP_COMBAT_TIMEOUT)) {
+        if (GDOptions.PVP_COMBAT_TIMEOUT) {
             combatTimeout = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), player, Options.PVP_COMBAT_TIMEOUT, claim);
         }
         if (combatTimeout <= 0) {
@@ -860,7 +862,6 @@ public class GDPlayerData implements PlayerData {
     }
 
     public void resetOptionCache() {
-        this.optionNoFly = null;
         this.optionNoGodMode = null;
         this.optionFlySpeed = null;
         this.optionWalkSpeed = null;

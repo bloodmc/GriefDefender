@@ -163,6 +163,8 @@ public class MessageStorage {
     public static final String COMMAND_OPTION_EXCEEDS_ADMIN = "command-option-exceeds-admin";
     public static final String COMMAND_PET_INVALID = "command-pet-invalid";
     public static final String COMMAND_PLAYER_NOT_FOUND = "command-player-not-found";
+    public static final String COMMAND_TRAPPED_CANCEL_COOLDOWN = "command-trapped-cancel-cooldown";
+    public static final String COMMAND_TRAPPED_REQUEST = "command-trapped-request";
     public static final String COMMAND_WORLD_NOT_FOUND = "command-world-not-found";
     public static final String CREATE_FAILED_CLAIM_LIMIT = "create-failed-claim-limit";
     public static final String CREATE_FAILED_RESULT = "create-failed-result";

@@ -280,7 +280,7 @@ public class GDPermissionManager implements PermissionManager {
         this.eventPlayerData = playerData;
         final String targetPermission = flag.getPermission();
 
-        if (flag == Flags.ENTITY_SPAWN && GDOptions.isOptionEnabled(Options.SPAWN_LIMIT) && target instanceof Living) {
+        if (flag == Flags.ENTITY_SPAWN && GDOptions.SPAWN_LIMIT && target instanceof Living) {
             // Check spawn limit
             final GDClaim gdClaim = (GDClaim) claim;
             final int spawnLimit = gdClaim.getSpawnLimit(contexts);

@@ -134,6 +134,12 @@ public class MessageCache {
     public Component COMMAND_PET_CONFIRMATION;
     public Component COMMAND_PET_TRANSFER_READY;
     public Component COMMAND_PET_TRANSFER_CANCEL;
+    public Component COMMAND_TRAPPED_BUILD_ACCESS;
+    public Component COMMAND_TRAPPED_CANCEL_MOVE;
+    public Component COMMAND_TRAPPED_PVP_COMBAT;
+    public Component COMMAND_TRAPPED_SUCCESS;
+    public Component COMMAND_UNLOCK_DROPS;
+    public Component COMMAND_UNLOCK_DROPS_NONE;
     public Component COMMAND_WORLDEDIT_MISSING;
     public Component CONFIRM_NOT_FOUND;
     public Component CREATE_CANCEL;
@@ -318,6 +324,7 @@ public class MessageCache {
     public Component LABEL_DEFAULT;
     public Component LABEL_DISPLAYING;
     public Component LABEL_EXPIRED;
+    public Component LABEL_FALSE;
     public Component LABEL_FAREWELL;
     public Component LABEL_FILTER;
     public Component LABEL_FLAG;
@@ -353,6 +360,7 @@ public class MessageCache {
     public Component LABEL_SPAWN;
     public Component LABEL_STATUS;
     public Component LABEL_TARGET;
+    public Component LABEL_TRUE;
     public Component LABEL_TRUST;
     public Component LABEL_TYPE;
     public Component LABEL_WORLD;
@@ -435,6 +443,7 @@ public class MessageCache {
     public Component PERMISSION_PLAYER_VIEW_OTHERS;
     public Component PERMISSION_TAX;
     public Component PERMISSION_VISUAL_CLAIMS_NEARBY;
+    public Component PLAYER_ITEM_DROPS_LOCK;
     public Component PLUGIN_EVENT_CANCEL;
     public Component PLUGIN_RELOAD;
     public Component PVP_CLAIM_NOT_ALLOWED;
@@ -599,6 +608,12 @@ public class MessageCache {
         COMMAND_PET_CONFIRMATION = MessageStorage.MESSAGE_DATA.getMessage("command-pet-confirmation");
         COMMAND_PET_TRANSFER_READY = MessageStorage.MESSAGE_DATA.getMessage("command-pet-transfer-ready");
         COMMAND_PET_TRANSFER_CANCEL = MessageStorage.MESSAGE_DATA.getMessage("command-pet-transfer-cancel");
+        COMMAND_TRAPPED_BUILD_ACCESS = MessageStorage.MESSAGE_DATA.getMessage("command-trapped-build-access");
+        COMMAND_TRAPPED_CANCEL_MOVE = MessageStorage.MESSAGE_DATA.getMessage("command-trapped-cancel-move");
+        COMMAND_TRAPPED_PVP_COMBAT = MessageStorage.MESSAGE_DATA.getMessage("command-trapped-pvp-combat");
+        COMMAND_TRAPPED_SUCCESS = MessageStorage.MESSAGE_DATA.getMessage("command-trapped-success");
+        COMMAND_UNLOCK_DROPS = MessageStorage.MESSAGE_DATA.getMessage("command-unlock-drops");
+        COMMAND_UNLOCK_DROPS_NONE = MessageStorage.MESSAGE_DATA.getMessage("command-unlock-drops-none");
         COMMAND_WORLDEDIT_MISSING = MessageStorage.MESSAGE_DATA.getMessage("command-worldedit-missing");
         CONFIRM_NOT_FOUND = MessageStorage.MESSAGE_DATA.getMessage("confirm-not-found");
         CREATE_CANCEL = MessageStorage.MESSAGE_DATA.getMessage("create-cancel");
@@ -781,6 +796,7 @@ public class MessageCache {
         LABEL_DEFAULT = MessageStorage.MESSAGE_DATA.getMessage("label-default");
         LABEL_DISPLAYING = MessageStorage.MESSAGE_DATA.getMessage("label-displaying");
         LABEL_EXPIRED = MessageStorage.MESSAGE_DATA.getMessage("label-expired");
+        LABEL_FALSE = MessageStorage.MESSAGE_DATA.getMessage("label-false");
         LABEL_FAREWELL = MessageStorage.MESSAGE_DATA.getMessage("label-farewell");
         LABEL_FILTER = MessageStorage.MESSAGE_DATA.getMessage("label-filter");
         LABEL_FLAG = MessageStorage.MESSAGE_DATA.getMessage("label-flag");
@@ -816,6 +832,7 @@ public class MessageCache {
         LABEL_SPAWN = MessageStorage.MESSAGE_DATA.getMessage("label-spawn");
         LABEL_STATUS = MessageStorage.MESSAGE_DATA.getMessage("label-status");
         LABEL_TARGET = MessageStorage.MESSAGE_DATA.getMessage("label-target");
+        LABEL_TRUE = MessageStorage.MESSAGE_DATA.getMessage("label-true");
         LABEL_TRUST = MessageStorage.MESSAGE_DATA.getMessage("label-trust");
         LABEL_TYPE = MessageStorage.MESSAGE_DATA.getMessage("label-type");
         LABEL_UNKNOWN = MessageStorage.MESSAGE_DATA.getMessage("label-unknown");
@@ -898,6 +915,7 @@ public class MessageCache {
         PERMISSION_PLAYER_VIEW_OTHERS = MessageStorage.MESSAGE_DATA.getMessage("permission-player-view-others");
         PERMISSION_TAX = MessageStorage.MESSAGE_DATA.getMessage("permission-tax");
         PERMISSION_VISUAL_CLAIMS_NEARBY = MessageStorage.MESSAGE_DATA.getMessage("permission-visual-claims-nearby");
+        PLAYER_ITEM_DROPS_LOCK = MessageStorage.MESSAGE_DATA.getMessage("player-item-drops-lock");
         PLUGIN_EVENT_CANCEL = MessageStorage.MESSAGE_DATA.getMessage("plugin-event-cancel");
         PLUGIN_RELOAD = MessageStorage.MESSAGE_DATA.getMessage("plugin-reload");
         PVP_CLAIM_NOT_ALLOWED = MessageStorage.MESSAGE_DATA.getMessage("pvp-claim-not-allowed");

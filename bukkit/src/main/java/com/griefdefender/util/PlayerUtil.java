@@ -263,7 +263,7 @@ public class PlayerUtil {
         }
 
         Tristate sourceResult = Tristate.UNDEFINED;
-        if (GDOptions.isOptionEnabled(Options.PVP)) {
+        if (GDOptions.PVP) {
             sourceResult = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Tristate.class), source, Options.PVP, claim);
         }
         if (sourceResult == Tristate.FALSE) {

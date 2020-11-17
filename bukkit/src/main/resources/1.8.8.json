@@ -3,15 +3,15 @@
     "libraries": [
         {
             "name": "com.griefdefender:adapter:1.8.8",
-            "sha1": "c04d370eeb09f0880ee93ada5ba832a24ade4d42",
-            "path": "com/griefdefender/adapter/1.8.8-SNAPSHOT/adapter-1.8.8-20201114.024042-47.jar",
-            "url": "https://repo.glaremasters.me/repository/bloodshot/com/griefdefender/adapter/1.8.8-SNAPSHOT/adapter-1.8.8-20201114.024042-47.jar"
+            "sha1": "65304ed1652fe4d3ea237d0e6c265915afe1c77d",
+            "path": "com/griefdefender/adapter/1.8.8-SNAPSHOT/adapter-1.8.8-20201116.073548-48.jar",
+            "url": "https://repo.glaremasters.me/repository/bloodshot/com/griefdefender/adapter/1.8.8-SNAPSHOT/adapter-1.8.8-20201116.073548-48.jar"
         },
         {
             "name": "com.griefdefender:api:1.0.0",
-            "sha1": "da0dc8ccd0682a439b5d215a2fb5b0d2c9049c97",
-            "path": "com/griefdefender/api/1.0.0-SNAPSHOT/api-1.0.0-20201114.003714-25.jar",
-            "url": "https://repo.glaremasters.me/repository/bloodshot/com/griefdefender/api/1.0.0-SNAPSHOT/api-1.0.0-20201114.003714-25.jar"
+            "sha1": "bceb911861b8df467d6b29b6be56d02b58ac5467",
+            "path": "com/griefdefender/api/1.0.0-SNAPSHOT/api-1.0.0-20201116.204822-26.jar",
+            "url": "https://repo.glaremasters.me/repository/bloodshot/com/griefdefender/api/1.0.0-SNAPSHOT/api-1.0.0-20201116.204822-26.jar"
         },
         {
             "name": "com.griefdefender:reflect-helper:1.0",

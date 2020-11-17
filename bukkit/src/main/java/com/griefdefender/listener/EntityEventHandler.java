@@ -248,6 +248,7 @@ public class EntityEventHandler implements Listener {
         }
 
         final String sourceId = GDPermissionManager.getInstance().getPermissionIdentifier(source);
+        final int surfaceBlockLevel = GriefDefenderPlugin.getActiveConfig(world.getUID()).getConfig().claim.explosionSurfaceBlockLevel;
         boolean denySurfaceExplosion = GriefDefenderPlugin.getActiveConfig(world.getUID()).getConfig().claim.explosionBlockSurfaceBlacklist.contains(sourceId);
         if (!denySurfaceExplosion) {
             denySurfaceExplosion = GriefDefenderPlugin.getActiveConfig(world.getUID()).getConfig().claim.explosionBlockSurfaceBlacklist.contains("any");
@@ -259,7 +260,7 @@ public class EntityEventHandler implements Listener {
         for (Block block : event.blockList()) {
             final Location location = block.getLocation();
             targetClaim =  GriefDefenderPlugin.getInstance().dataStore.getClaimAt(location);
-            if (denySurfaceExplosion && block.getWorld().getEnvironment() != Environment.NETHER && location.getBlockY() >= location.getWorld().getSeaLevel()) {
+            if (denySurfaceExplosion && block.getWorld().getEnvironment() != Environment.NETHER && location.getBlockY() >= surfaceBlockLevel) {
                 filteredLocations.add(block);
                 GDPermissionManager.getInstance().processEventLog(event, location, targetClaim, Flags.EXPLOSION_BLOCK.getPermission(), source, block, user, "explosion-surface", Tristate.FALSE);
                 continue;
@@ -435,6 +436,13 @@ public class EntityEventHandler implements Listener {
         }
         // Ignore entity items
         if (targetEntity instanceof Item) {
+            if (GDOptions.PLAYER_ITEM_DROP_LOCK || GDOptions.PVP_ITEM_DROP_LOCK) {
+                final Item item = (Item) targetEntity;
+                final String data = NMSUtil.getInstance().getItemPersistentData(item.getItemStack(), "owner");
+                if (data != null) {
+                    return true;
+                }
+            }
             return false;
         }
 
@@ -493,11 +501,12 @@ public class EntityEventHandler implements Listener {
 
         if (source instanceof Creeper || source instanceof TNTPrimed || (damageCause != null && damageCause == DamageCause.ENTITY_EXPLOSION)) {
             final String sourceId = GDPermissionManager.getInstance().getPermissionIdentifier(source);
+            final int surfaceBlockLevel = GriefDefenderPlugin.getActiveConfig(world.getUID()).getConfig().claim.explosionSurfaceBlockLevel;
             boolean denySurfaceExplosion = GriefDefenderPlugin.getActiveConfig(world.getUID()).getConfig().claim.explosionEntitySurfaceBlacklist.contains(sourceId);
             if (!denySurfaceExplosion) {
                 denySurfaceExplosion = GriefDefenderPlugin.getActiveConfig(world.getUID()).getConfig().claim.explosionEntitySurfaceBlacklist.contains("any");
             }
-            if (denySurfaceExplosion && world.getEnvironment() != Environment.NETHER && location.getBlockY() >= location.getWorld().getSeaLevel()) {
+            if (denySurfaceExplosion && world.getEnvironment() != Environment.NETHER && location.getBlockY() >= surfaceBlockLevel) {
                 GDPermissionManager.getInstance().processEventLog(event, location, claim, Flags.EXPLOSION_ENTITY.getPermission(), source, targetEntity, user, "explosion-surface", Tristate.FALSE);
                 return true;
             }
@@ -620,7 +629,7 @@ public class EntityEventHandler implements Listener {
         }
 
         // Check options
-        if (GDOptions.isOptionEnabled(Options.PVP)) {
+        if (GDOptions.PVP) {
             sourceResult = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Tristate.class), source, Options.PVP, sourceClaim);
             targetResult = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Tristate.class), target, Options.PVP, claim);
         }

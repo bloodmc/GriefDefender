@@ -107,16 +107,7 @@ public class CommonEntityEventHandler {
         if (targetEntity instanceof Item || targetEntity instanceof Projectile) {
             return true;
         }
-        if ((!GDFlags.ENTER_CLAIM && !GDFlags.EXIT_CLAIM) || fromLocation.getBlockPosition().equals(toLocation.getBlockPosition())) {
-            return true;
-        }
 
-        World world = targetEntity.getWorld();
-        if (!GriefDefenderPlugin.getInstance().claimsEnabledForWorld(world.getUniqueId())) {
-            return true;
-        }
-
-        GDTimings.ENTITY_MOVE_EVENT.startTimingIfSync();
         Player player = null;
         GDPermissionUser user = null;
         boolean onMount = false;
@@ -136,6 +127,27 @@ public class CommonEntityEventHandler {
                 }
             }
         }
+        if ((!GDFlags.ENTER_CLAIM && !GDFlags.EXIT_CLAIM) || fromLocation.getBlockPosition().equals(toLocation.getBlockPosition())) {
+            if (player != null && user != null) {
+                user.getInternalPlayerData().lastAfkCheckLocation = toLocation;
+            }
+            return true;
+        }
+        if (user != null) {
+            user.getInternalPlayerData().lastAfkCheckLocation = null;
+            if (user.getInternalPlayerData().trappedRequest) {
+                GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().COMMAND_TRAPPED_CANCEL_MOVE);
+                user.getInternalPlayerData().trappedRequest = false;
+                user.getInternalPlayerData().teleportDelay = 0;
+            }
+        }
+
+        World world = targetEntity.getWorld();
+        if (!GriefDefenderPlugin.getInstance().claimsEnabledForWorld(world.getUniqueId())) {
+            return true;
+        }
+
+        GDTimings.ENTITY_MOVE_EVENT.startTimingIfSync();
 
         if (user != null && user.getOnlinePlayer() != null) {
             final boolean preInLiquid = user.getInternalPlayerData().inLiquid;
@@ -409,7 +421,7 @@ public class CommonEntityEventHandler {
             // Most likely NPC
             return;
         }
-        if (!GDOptions.isOptionEnabled(Options.PLAYER_COMMAND_ENTER) && !GDOptions.isOptionEnabled(Options.PLAYER_COMMAND_EXIT)) {
+        if (!GDOptions.PLAYER_COMMAND_ENTER && !GDOptions.PLAYER_COMMAND_EXIT) {
             return;
         }
 
@@ -488,7 +500,7 @@ public class CommonEntityEventHandler {
             // Most likely NPC
             return;
         }
-        if (!GDOptions.isOptionEnabled(Options.PLAYER_DENY_FLIGHT)) {
+        if (!GDOptions.PLAYER_DENY_FLIGHT) {
             return;
         }
 
@@ -538,12 +550,8 @@ public class CommonEntityEventHandler {
             return;
         }
 
-        Boolean noFly = playerData.optionNoFly;
-        if (noFly == null || fromClaim != toClaim) {
-            noFly = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Boolean.class), playerData.getSubject(), Options.PLAYER_DENY_FLIGHT, toClaim);
-            playerData.optionNoFly = noFly;
-        }
-        if (noFly) {
+        final Boolean noFly = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Boolean.class), playerData.getSubject(), Options.PLAYER_DENY_FLIGHT, toClaim);
+        if (noFly != null && noFly) {
             player.offer(Keys.CAN_FLY, false);
             player.offer(Keys.IS_FLYING, false);
             playerData.ignoreFallDamage = true;
@@ -567,7 +575,7 @@ public class CommonEntityEventHandler {
             // Most likely NPC
             return;
         }
-        if (!GDOptions.isOptionEnabled(Options.PLAYER_DENY_GODMODE)) {
+        if (!GDOptions.PLAYER_DENY_GODMODE) {
             return;
         }
 
@@ -598,7 +606,7 @@ public class CommonEntityEventHandler {
             // Most likely Citizens NPC
             return;
         }
-        if (!GDOptions.isOptionEnabled(Options.PLAYER_GAMEMODE)) {
+        if (!GDOptions.PLAYER_GAMEMODE) {
             return;
         }
 
@@ -637,7 +645,7 @@ public class CommonEntityEventHandler {
             // Most likely Citizens NPC
             return;
         }
-        if (!GDOptions.isOptionEnabled(Options.PLAYER_FLY_SPEED)) {
+        if (!GDOptions.PLAYER_FLY_SPEED) {
             return;
         }
 
@@ -689,7 +697,7 @@ public class CommonEntityEventHandler {
             // Most likely Citizens NPC
             return;
         }
-        if (!GDOptions.isOptionEnabled(Options.PLAYER_WALK_SPEED)) {
+        if (!GDOptions.PLAYER_WALK_SPEED) {
             return;
         }
 
@@ -741,7 +749,7 @@ public class CommonEntityEventHandler {
             // Most likely Citizens NPC
             return;
         }
-        if (!GDOptions.isOptionEnabled(Options.PLAYER_WEATHER)) {
+        if (!GDOptions.PLAYER_WEATHER) {
             return;
         }
 
