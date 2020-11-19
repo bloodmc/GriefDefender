@@ -445,8 +445,8 @@ public class PlayerEventHandler implements Listener {
                     final GDPlayerData playerData = this.dataStore.getOrCreatePlayerData(location.getWorld(), ownerUniqueId);
                     if (playerData.lockPlayerDeathDrops) {
                         event.setCancelled(true);
+                        return;
                     }
-                    return;
                 }
                 NMSUtil.getInstance().removeItemPersistentData(event.getItem().getItemStack(), "owner");
             }
