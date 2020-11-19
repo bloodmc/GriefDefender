@@ -439,12 +439,16 @@ public class PlayerEventHandler implements Listener {
 
         if (GDOptions.PLAYER_ITEM_DROP_LOCK || GDOptions.PVP_ITEM_DROP_LOCK) {
             final String data = NMSUtil.getInstance().getItemPersistentData(event.getItem().getItemStack(), "owner");
-            if (data != null && !data.equalsIgnoreCase(player.getUniqueId().toString())) {
-                final UUID ownerUniqueId = UUID.fromString(data);
-                final GDPlayerData playerData = this.dataStore.getOrCreatePlayerData(location.getWorld(), ownerUniqueId);
-                if (playerData.lockPlayerDeathDrops) {
-                    event.setCancelled(true);
+            if (data != null) {
+                if(!data.equalsIgnoreCase(player.getUniqueId().toString())) {
+                    final UUID ownerUniqueId = UUID.fromString(data);
+                    final GDPlayerData playerData = this.dataStore.getOrCreatePlayerData(location.getWorld(), ownerUniqueId);
+                    if (playerData.lockPlayerDeathDrops) {
+                        event.setCancelled(true);
+                    }
+                    return;
                 }
+                NMSUtil.getInstance().removeItemPersistentData(event.getItem().getItemStack(), "owner");
             }
         }
     }
