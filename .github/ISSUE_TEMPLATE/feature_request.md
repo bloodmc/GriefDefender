@@ -1,20 +1,20 @@
 ---
 name: Feature request
-about: Suggest an idea for this project
+about: Suggest an improvement or added feature
 title: "[REQUEST]"
-labels: enhancement
+labels:
 assignees: ''
 
 ---
+<!-- Before creating a feature request, make sure you are using the latest Griefdefender(https://www.spigotmc.org/resources/griefdefender.68900/) and that it isn't already implemented. -->
 
-**Is your feature request related to a problem? Please describe.**
-A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+- **Feature information**
+<!-- A clear and concise description of what the improvement or feature entails -->
 
-**Describe the solution you'd like**
-A clear and concise description of what you want to happen.
 
-**Describe alternatives you've considered**
-A clear and concise description of any alternative solutions or features you've considered.
+- **Other plugins or mods related to the request**
+<!-- Links to any other plugins or mods that relate to the feature request. If it has an API, link to that as well. -->
 
-**Additional context**
-Add any other context or screenshots about the feature request here.
+
+- **Additional context**
+<!-- Add any other context or screenshots that help depict what the feature would be like here -->
