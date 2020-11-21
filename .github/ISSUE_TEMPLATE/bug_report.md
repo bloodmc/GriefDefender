@@ -1,32 +1,37 @@
 ---
 name: Bug report
-about: Create a report to help us improve
+about: Create a bug report
 title: "[BUG]"
-labels: bug
+labels:
 assignees: ''
 
 ---
+<!-- Before creating a bug report, make sure you are using the latest or recommended version of your server platform, latest Griefdefender(https://www.spigotmc.org/resources/griefdefender.68900/) and latest Luckperms(https://luckperms.net/). -->
 
-**Describe the bug**
-A clear and concise description of what the bug is.
+<!-- Nobody wants to try and figure out an issue on an old version where something may have already been fixed, and as such outdated versions are unsupported. -->
 
-**To Reproduce**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
+- **Versions**
+Spigot/Paper/Sponge: 
+GriefDefender: 
+LuckPerms: 
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
 
-**Versions**
-Spigot/Paper:
-GriefDefender:
-LuckPerms
+- **Describe the bug**
+<!-- A clear and concise description of what the bug is. -->
 
-**Additional context**
-Add any other context about the problem here.
+
+- **Steps to reproduce the behavior**
+<!-- A clear and concise set of steps to reproduce the behaviour -->
+
+
+- **Expected behavior**
+<!-- A clear and concise description of what you expected to happen. -->
+
+
+- **GDDEBUG**
+<!-- If applicable, such as issues with flags or permissions, provide the link to a gddebug here -->
+
+
+- **Screenshots**
+<!-- If applicable, add screenshots to help explain your problem. -->
