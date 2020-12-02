@@ -542,6 +542,10 @@ public class PlayerEventHandler {
 
     @Listener(order = Order.FIRST, beforeModifications = true)
     public void onPlayerDeathDropItem(DropItemEvent.Destruct event, @First Player player) {
+        if (player.get(Keys.HEALTH).get() > 0) {
+            return;
+        }
+
         final GDClaim claim = this.dataStore.getClaimAt(player.getLocation());
         final GDPlayerData playerData = this.dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
         if (GDOptions.PLAYER_ITEM_DROP_LOCK || GDOptions.PVP_ITEM_DROP_LOCK) {
