@@ -359,7 +359,7 @@ public class GDPlayerData implements PlayerData {
         for (int i = 0; i < visualTransactions.size(); i++) {
             BlockSnapshot snapshot = visualTransactions.get(i).getOriginal();
             // If original block does not exist or chunk is not loaded, do not send to player
-            if (!snapshot.matchesWorldState() || !snapshot.getLocation().getChunk().isLoaded()) {
+            if (!snapshot.getLocation().getChunk().isLoaded() || !snapshot.matchesWorldState()) {
                 if (claim != null) {
                     claim.markVisualDirty = true;
                 }
