@@ -38,7 +38,7 @@ public class EconomyCategory extends ConfigCategory {
             + "\nNote: Using this mode disables the '/buyblocks' command as claim creation will pull funds directly from a player's economy balance."
             + "\nNote: If players have existing claimblocks from past configurations, an admin must use the '/ecomigrateblocks' command to convert remainder to currency.")
     public boolean economyMode = false;
-    @Setting(value = "use-claim-block-task", comment = "Claim blocks earned will be converted to economy based on 'claim-block-cost'." 
+    @Setting(value = "use-claim-block-task", comment = "Claim blocks earned will be converted to economy based on 'economy-block-cost'." 
             + "\n(Default: false)\nNote: This setting can only be used if 'economy-mode' is true.")
     public boolean useClaimBlockTask = false;
     @Setting(value = "bank-system", comment = "Whether to enable the bank system for claims. Set to true to enable.")
