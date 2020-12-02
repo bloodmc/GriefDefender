@@ -128,13 +128,9 @@ public class CommonEntityEventHandler {
             }
         }
         if ((!GDFlags.ENTER_CLAIM && !GDFlags.EXIT_CLAIM) || fromLocation.getBlockPosition().equals(toLocation.getBlockPosition())) {
-            if (player != null && user != null) {
-                user.getInternalPlayerData().lastAfkCheckLocation = toLocation;
-            }
             return true;
         }
         if (user != null) {
-            user.getInternalPlayerData().lastAfkCheckLocation = null;
             if (user.getInternalPlayerData().trappedRequest) {
                 GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().COMMAND_TRAPPED_CANCEL_MOVE);
                 user.getInternalPlayerData().trappedRequest = false;

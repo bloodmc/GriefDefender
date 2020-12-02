@@ -25,19 +25,14 @@
 package com.griefdefender.task;
 
 import com.google.common.reflect.TypeToken;
-import com.griefdefender.GDBootstrap;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
-import com.griefdefender.api.claim.ClaimResultType;
 import com.griefdefender.api.permission.option.Options;
 import com.griefdefender.claim.GDClaim;
-import com.griefdefender.claim.GDClaimResult;
 import com.griefdefender.permission.GDPermissionManager;
-import com.griefdefender.storage.BaseStorage;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.data.manipulator.mutable.entity.VehicleData;
 import org.spongepowered.api.data.property.block.MatterProperty;
-import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.service.economy.Currency;
 import org.spongepowered.api.service.economy.account.Account;
@@ -49,67 +44,49 @@ import java.util.Optional;
 
 public class ClaimBlockTask implements Runnable {
 
-    private Player player;
-
     public ClaimBlockTask() {
-    }
-
-    public ClaimBlockTask(Player player) {
-        this.player = player;
     }
 
     @Override
     public void run() {
-        if (this.player == null) {
-            for (World world : Sponge.getServer().getWorlds()) {
-                int i = 0;
-                for (Entity entity : world.getEntities()) {
-                    if (!(entity instanceof Player)) {
-                        continue;
+        for (World world : Sponge.getServer().getWorlds()) {
+            for (Player player : world.getPlayers()) {
+                final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
+                final GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAtPlayer(playerData, player.getLocation());
+                final int accrualPerHour = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), player, Options.BLOCKS_ACCRUED_PER_HOUR, claim);
+                if (accrualPerHour > 0) {
+                    final Location<World> lastLocation = playerData.lastAfkCheckLocation;
+                    final Optional<MatterProperty> matterProperty = player.getLocation().getBlock().getProperty(MatterProperty.class);
+                    if (!player.get(VehicleData.class).isPresent() &&
+                            (lastLocation == null || lastLocation.getPosition().distanceSquared(player.getLocation().getPosition()) >= 0) &&
+                            matterProperty.isPresent() && matterProperty.get().getValue() != MatterProperty.Matter.LIQUID) {
+                        int accruedBlocks = playerData.getBlocksAccruedPerHour() / 12;
+                        if (accruedBlocks < 0) {
+                            accruedBlocks = 1;
+                        }
+
+                        if (GriefDefenderPlugin.getInstance().isEconomyModeEnabled()) {
+                            final Account playerAccount = GriefDefenderPlugin.getInstance().economyService.get().getOrCreateAccount(player.getUniqueId()).orElse(null);
+                            if (playerAccount == null) {
+                                return;
+                            }
+
+                            final Currency defaultCurrency = GriefDefenderPlugin.getInstance().economyService.get().getDefaultCurrency();
+                            playerAccount.deposit(defaultCurrency, BigDecimal.valueOf(accruedBlocks), Sponge.getCauseStackManager().getCurrentCause());
+                        } else {
+                            int currentTotal = playerData.getAccruedClaimBlocks();
+                            if ((currentTotal + accruedBlocks) > playerData.getMaxAccruedClaimBlocks()) {
+                                playerData.setAccruedClaimBlocks(playerData.getMaxAccruedClaimBlocks());
+                                playerData.lastAfkCheckLocation = player.getLocation();
+                                return;
+                            }
+
+                            playerData.setAccruedClaimBlocks(playerData.getAccruedClaimBlocks() + accruedBlocks);
+                        }
                     }
 
-                    final Player player = (Player) entity;
-                    final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
-                    final GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAtPlayer(playerData, player.getLocation());
-                    final int accrualPerHour = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), player, Options.BLOCKS_ACCRUED_PER_HOUR, claim);
-                    if (accrualPerHour > 0) {
-                        ClaimBlockTask newTask = new ClaimBlockTask(player);
-                        Sponge.getGame().getScheduler().createTaskBuilder().delayTicks(i++).execute(newTask)
-                                .submit(GDBootstrap.getInstance());
-                    }
+                    playerData.lastAfkCheckLocation = player.getLocation();
                 }
-            }
-            return;
-        }
-
-        final BaseStorage dataStore = GriefDefenderPlugin.getInstance().dataStore;
-        final GDPlayerData playerData = dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
-        final Location<World> lastLocation = playerData.lastAfkCheckLocation;
-        final Optional<MatterProperty> matterProperty = player.getLocation().getBlock().getProperty(MatterProperty.class);
-        if (!player.get(VehicleData.class).isPresent() &&
-                (lastLocation == null || lastLocation.getPosition().distanceSquared(player.getLocation().getPosition()) >= 0) &&
-                matterProperty.isPresent() && matterProperty.get().getValue() != MatterProperty.Matter.LIQUID) {
-            int accruedBlocks = playerData.getBlocksAccruedPerHour() / 12;
-            if (accruedBlocks < 0) {
-                accruedBlocks = 1;
-            }
-
-            if (GriefDefenderPlugin.getInstance().isEconomyModeEnabled()) {
-                final Account playerAccount = GriefDefenderPlugin.getInstance().economyService.get().getOrCreateAccount(player.getUniqueId()).orElse(null);
-                if (playerAccount == null) {
-                    return;
-                }
-
-                final Currency defaultCurrency = GriefDefenderPlugin.getInstance().economyService.get().getDefaultCurrency();
-                playerAccount.deposit(defaultCurrency, BigDecimal.valueOf(accruedBlocks), Sponge.getCauseStackManager().getCurrentCause());
-            } else {
-                int currentTotal = playerData.getAccruedClaimBlocks();
-                if ((currentTotal + accruedBlocks) > playerData.getMaxAccruedClaimBlocks()) {
-                    playerData.setAccruedClaimBlocks(playerData.getMaxAccruedClaimBlocks());
-                    return;
-                }
-
-                playerData.setAccruedClaimBlocks(playerData.getAccruedClaimBlocks() + accruedBlocks);
             }
         }
     }

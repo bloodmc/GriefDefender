@@ -112,13 +112,9 @@ public class CommonEntityEventHandler {
         final Player player = targetEntity instanceof Player ? (Player) targetEntity : null;
         final GDPermissionUser user = player != null ? PermissionHolderCache.getInstance().getOrCreateUser(player) : null;
         if (fromPos.equals(toPos)) {
-            if (user != null) {
-                user.getInternalPlayerData().lastAfkCheckLocation = toLocation;
-            }
             return true;
         }
         if (user != null) {
-            user.getInternalPlayerData().lastAfkCheckLocation = null;
             if (user.getInternalPlayerData().trappedRequest) {
                 GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().COMMAND_TRAPPED_CANCEL_MOVE);
                 user.getInternalPlayerData().trappedRequest = false;
