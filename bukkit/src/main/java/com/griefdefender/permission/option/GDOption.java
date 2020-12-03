@@ -193,6 +193,8 @@ public class GDOption<T> implements Option<T> {
     public boolean validateStringValue(String value, boolean log) {
         if (value.equalsIgnoreCase("undefined")) {
             return false;
+        } else if (this.allowed == String.class) {
+            return true;
         } else if (this.allowed == List.class) {
             return true;
         } else if (this.allowed == Integer.class) {
