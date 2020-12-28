@@ -1018,11 +1018,15 @@ public class CommandHelper {
 
         Command commandMapping = NMSUtil.getInstance().getBukkitCommandMap().getCommand(command);
         if (commandMapping == null) {
-            TextAdapter.sendComponent(src, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PLUGIN_COMMAND_NOT_FOUND,
-                    ImmutableMap.of(
-                        "command", command,
-                        "id", pluginId)));
-            return false;
+            // check mod command mapping
+            commandMapping = NMSUtil.getInstance().getModCommandMap().getCommand(command);
+            if (commandMapping == null) {
+                TextAdapter.sendComponent(src, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.PLUGIN_COMMAND_NOT_FOUND,
+                        ImmutableMap.of(
+                            "command", command,
+                            "id", pluginId)));
+                return false;
+            }
         }
         return true;
     }

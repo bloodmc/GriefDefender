@@ -75,7 +75,7 @@ public class CommandPlayerInfo extends BaseCommand {
 
     @CommandCompletion("@gdplayers @gddummy")
     @CommandAlias("gdplayerinfo|playerinfo")
-    @Description("Gets information about a player.")
+    @Description("%player-info")
     @Syntax("[<player>|<player> <world>]")
     @Subcommand("player info")
     public void execute(CommandSource src, @Optional String[] args) throws InvalidCommandArgument {

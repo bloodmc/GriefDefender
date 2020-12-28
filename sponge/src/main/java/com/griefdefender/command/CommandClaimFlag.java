@@ -46,7 +46,7 @@ public class CommandClaimFlag extends ClaimFlagBase {
 
     @CommandCompletion("@gdflags @gdmcids @gdtristates @gdcontexts @gddummy")
     @CommandAlias("cf|claimflag")
-    @Description("Gets/Sets claim flags in the claim you are standing in.")
+    @Description("%flag-claim")
     @Syntax("<flag> <target> <value> [context[key=value]]")
     @Subcommand("flag claim")
     public void execute(Player player, @Optional String[] args) throws InvalidCommandArgument {

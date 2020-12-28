@@ -78,7 +78,7 @@ public class CommandClaimAbandonAll extends BaseCommand {
 
     @CommandCompletion("@gdworlds @gddummy")
     @CommandAlias("abandonall|abandonallclaims")
-    @Description("Abandons ALL your claims")
+    @Description("%abandon-all")
     @Subcommand("abandon all")
     public void execute(Player player, @Optional String worldName) {
         final GDPermissionUser user = PermissionHolderCache.getInstance().getOrCreateUser(player);

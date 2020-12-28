@@ -41,7 +41,7 @@ import org.bukkit.entity.Player;
 public class CommandTownChat extends BaseCommand {
 
     @CommandAlias("townchat")
-    @Description("Toggles town chat.")
+    @Description("%town-chat")
     @Subcommand("town chat")
     public void execute(Player player) {
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());

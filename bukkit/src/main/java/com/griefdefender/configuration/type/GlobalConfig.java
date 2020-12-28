@@ -25,6 +25,7 @@
 package com.griefdefender.configuration.type;
 
 import com.griefdefender.configuration.category.GuiCategory;
+import com.griefdefender.configuration.category.ContextCategory;
 import com.griefdefender.configuration.category.DynmapCategory;
 import com.griefdefender.configuration.category.MessageCategory;
 import com.griefdefender.configuration.category.MigratorCategory;
@@ -36,6 +37,8 @@ import ninja.leaping.configurate.objectmapping.Setting;
 
 public class GlobalConfig extends ConfigBase {
 
+    @Setting
+    public ContextCategory context = new ContextCategory();
     @Setting
     public DynmapCategory dynmap = new DynmapCategory();
     @Setting

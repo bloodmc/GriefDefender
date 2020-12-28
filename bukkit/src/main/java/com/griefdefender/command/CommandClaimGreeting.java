@@ -49,7 +49,7 @@ import org.bukkit.entity.Player;
 public class CommandClaimGreeting extends BaseCommand {
 
     @CommandAlias("claimgreeting")
-    @Description("Sets the greeting message of your claim.")
+    @Description("%claim-greeting")
     @Syntax("<message>|clear")
     @Subcommand("claim greeting")
     public void execute(Player player, String message) {

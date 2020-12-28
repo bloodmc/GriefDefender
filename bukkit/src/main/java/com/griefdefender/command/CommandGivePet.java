@@ -22,7 +22,7 @@ public class CommandGivePet extends BaseCommand {
 
     @CommandCompletion("@gdplayers @gddummy")
     @CommandAlias("givepet")
-    @Description("Transfers a pet to a new owner.")
+    @Description("%player-give-pet")
     @Syntax("<player>")
     @Subcommand("givepet")
     public void execute(Player player, OfflinePlayer newOwner) {

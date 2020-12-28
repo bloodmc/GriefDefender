@@ -51,7 +51,7 @@ public class CommandContainerTrust extends BaseCommand {
 
     @CommandCompletion("@gdplayers")
     @CommandAlias("ct|containertrust")
-    @Description("Grants a player access to interact with all blocks including inventory.")
+    @Description("%trust-container")
     @Syntax("<player>")
     public void execute(Player src, String target) {
 

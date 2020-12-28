@@ -635,7 +635,7 @@ public class GriefDefenderPlugin {
         Bukkit.getPluginManager().registerEvents(new PlayerEventHandler(dataStore), GDBootstrap.getInstance());
         Bukkit.getPluginManager().registerEvents(new EntityEventHandler(dataStore), GDBootstrap.getInstance());
         Bukkit.getPluginManager().registerEvents(new WorldEventHandler(), GDBootstrap.getInstance());
-        Bukkit.getPluginManager().registerEvents(new NMSUtil(), GDBootstrap.getInstance());
+        Bukkit.getPluginManager().registerEvents(NMSUtil.getInstance(), GDBootstrap.getInstance());
 
         // run cleanup task
         int cleanupTaskInterval = GriefDefenderPlugin.getGlobalConfig().getConfig().claim.expirationCleanupInterval;
@@ -691,7 +691,7 @@ public class GriefDefenderPlugin {
         }
         new PlayerTickTask();
         if (GriefDefenderPlugin.getGlobalConfig().getConfig().economy.rentSystem && GriefDefenderPlugin.getGlobalConfig().getConfig().economy.isRentSignEnabled()) {
-            this.runningTasks.add(new SignUpdateTask(100));
+            this.runningTasks.add(new SignUpdateTask(GriefDefenderPlugin.getGlobalConfig().getConfig().economy.signUpdateInterval));
         }
         if (GriefDefenderPlugin.getInstance().getVaultProvider() != null && GriefDefenderPlugin.getGlobalConfig().getConfig().economy.rentSystem) {
             this.runningTasks.add(new RentDelinquentApplyTask());
@@ -744,7 +744,91 @@ public class GriefDefenderPlugin {
     public void registerBaseCommands() {
         PaperCommandManager manager = new PaperCommandManager(GDBootstrap.getInstance());
         this.commandManager = manager;
-        manager.getCommandReplacements().addReplacement("griefdefender", "gd|griefdefender");
+        manager.getCommandReplacements().addReplacements(
+            "griefdefender", "gd|griefdefender",
+            "abandon-all", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_ABANDON_ALL),
+            "abandon-claim", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_ABANDON_CLAIM),
+            "abandon-top", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_ABANDON_TOP),
+            "abandon-world", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_ABANDON_WORLD),
+            "buy-blocks", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_BUY_BLOCKS),
+            "buy-claim", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_BUY_CLAIM),
+            "callback", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CALLBACK),
+            "claim-ban", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CLAIM_BAN),
+            "claim-bank", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CLAIM_BANK),
+            "claim-clear", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CLAIM_CLEAR),
+            "claim-contract", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CLAIM_CONTRACT),
+            "claim-create", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CLAIM_CREATE),
+            "claim-debug", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CLAIM_DEBUG),
+            "claim-expand", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CLAIM_EXPAND),
+            "claim-farewell", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CLAIM_FAREWELL),
+            "claim-greeting", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CLAIM_GREETING),
+            "claim-ignore", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CLAIM_IGNORE),
+            "claim-info", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CLAIM_INFO),
+            "claim-inherit", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CLAIM_INHERIT),
+            "claim-investigate", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CLAIM_INVESTIGATE),
+            "claim-list", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CLAIM_LIST),
+            "claim-name", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CLAIM_NAME),
+            "claim-rent", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CLAIM_RENT),
+            "claim-reserve", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CLAIM_RESERVE),
+            "claim-restore", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CLAIM_RESTORE),
+            "claim-setspawn", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CLAIM_SETSPAWN),
+            "claim-spawn", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CLAIM_SPAWN),
+            "claim-tax", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CLAIM_TAX),
+            "claim-tool", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CLAIM_TOOL),
+            "claim-transfer", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CLAIM_TRANSFER),
+            "claim-unban", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CLAIM_UNBAN),
+            "claim-worldedit", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CLAIM_WORLDEDIT),
+            "confirm", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CONFIRM),
+            "cuboid", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CUBOID),
+            "debug", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_DEBUG),
+            "delete-all", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_DELETE_ALL),
+            "delete-all-admin", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_DELETE_ALL_ADMIN),
+            "delete-claim", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_DELETE_CLAIM),
+            "delete-top", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_DELETE_TOP),
+            "economy-block-transfer", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_ECONOMY_BLOCK_TRANSFER),
+            "flag-claim", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_FLAG_CLAIM),
+            "flag-group", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_FLAG_GROUP),
+            "flag-player", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_FLAG_PLAYER),
+            "flag-reset", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_FLAG_RESET),
+            "help", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_HELP),
+            "mode-admin", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_MODE_ADMIN),
+            "mode-basic", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_MODE_BASIC),
+            "mode-claim", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_MODE_CLAIM),
+            "mode-nature", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_MODE_NATURE),
+            "mode-subdivision", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_MODE_SUBDIVISION),
+            "mode-town", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_MODE_TOWN),
+            "option-claim", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_OPTION_CLAIM),
+            "option-group", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_OPTION_GROUP),
+            "option-player", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_OPTION_PLAYER),
+            "permission-group", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_PERMISSION_GROUP),
+            "permission-player", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_PERMISSION_PLAYER),
+            "player-adjust-bonus-blocks", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_PLAYER_ADJUST_BONUS_BLOCKS),
+            "player-adjust-bonus-blocks-all", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_PLAYER_ADJUST_BONUS_BLOCKS_ALL),
+            "player-give-blocks", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_PLAYER_GIVE_BLOCKS),
+            "player-give-pet", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_PLAYER_GIVE_PET),
+            "player-info", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_PLAYER_INFO),
+            "player-set-accrued-blocks", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_PLAYER_SET_ACCRUED_BLOCKS),
+            "player-unlock-drops", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_PLAYER_UNLOCK_DROPS),
+            "reload", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_RELOAD),
+            "schematic", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_SCHEMATIC),
+            "sell-blocks", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_SELL_BLOCKS),
+            "sell-claim", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_SELL_CLAIM),
+            "town-chat", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_TOWN_CHAT),
+            "town-tag", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_TOWN_TAG),
+            "trapped", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_TRAPPED),
+            "trust-access", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_TRUST_ACCESS),
+            "trust-container", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_TRUST_CONTAINER),
+            "trust-group", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_TRUST_GROUP),
+            "trust-group-all", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_TRUST_GROUP_ALL),
+            "trust-list", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_TRUST_LIST),
+            "trust-player", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_TRUST_PLAYER),
+            "trust-player-all", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_TRUST_PLAYER_ALL),
+            "untrust-group", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_UNTRUST_GROUP),
+            "untrust-group-all", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_UNTRUST_GROUP_ALL),
+            "untrust-player", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_UNTRUST_PLAYER),
+            "untrust-player-all", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_UNTRUST_PLAYER_ALL),
+            "version", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_VERSION)
+        );
         manager.registerCommand(new CommandAccessTrust());
         manager.registerCommand(new CommandAdjustBonusClaimBlocks());
         manager.registerCommand(new CommandAdjustBonusClaimBlocksAll());
@@ -1017,6 +1101,10 @@ public class GriefDefenderPlugin {
         manager.getCommandCompletions().registerCompletion("gddummy", c -> {
             return ImmutableList.of();
         });
+    }
+
+    private String getCommandDescriptionTranslation(String message) {
+        return PlainComponentSerializer.INSTANCE.serialize(messageData.getDescription(message));
     }
 
     public PaperCommandManager getCommandManager() {

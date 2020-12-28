@@ -44,7 +44,7 @@ import org.bukkit.entity.Player;
 public class CommandClaimFlagDebug extends BaseCommand {
 
     @CommandAlias("cfdebug")
-    @Description("Toggles claim flag debug mode.")
+    @Description("%claim-debug")
     @Subcommand("claim debug")
     public void execute(Player player) {
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());

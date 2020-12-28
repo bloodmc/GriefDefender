@@ -36,7 +36,7 @@ import java.util.function.Consumer;
 public class CommandCallback extends BaseCommand {
 
     @CommandAlias("gd:callback")
-    @Description("Execute a callback registered as part of a Text object. Primarily for internal use")
+    @Description("%callback")
     public void execute(CommandSender src, String[] args) {
         final UUID callbackId = UUID.fromString(args[0]);
         final Consumer<CommandSender> callback = GDCallbackHolder.getInstance().getCallbackForUUID(callbackId);

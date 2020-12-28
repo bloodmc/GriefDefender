@@ -34,15 +34,18 @@ import com.griefdefender.api.claim.ClaimContexts;
 import com.griefdefender.api.permission.Context;
 import com.griefdefender.api.permission.flag.Flag;
 import com.griefdefender.api.permission.flag.Flags;
+import com.griefdefender.permission.GDPermissionHolder;
 
 import net.kyori.text.format.TextColor;
 
 public class UIFlagData {
 
+    public GDPermissionHolder holder;
     public Flag flag;
     public Map<Integer, FlagContextHolder> flagContextMap = new HashMap<>();
 
-    public UIFlagData(Flag flag, Boolean value, MenuType type, Set<Context> contexts) {
+    public UIFlagData(GDPermissionHolder holder, Flag flag, Boolean value, MenuType type, Set<Context> contexts) {
+        this.holder = holder;
         this.flag = flag;
         this.addContexts(flag, value, type, contexts);
     }
@@ -104,6 +107,10 @@ public class UIFlagData {
         }
         this.flagContextMap.put(Objects.hash(filteredContexts), new FlagContextHolder(flag, value, type, contexts));
         return true;
+    }
+
+    public void setHolder(GDPermissionHolder holder) {
+        this.holder = holder;
     }
 
     public class FlagContextHolder {

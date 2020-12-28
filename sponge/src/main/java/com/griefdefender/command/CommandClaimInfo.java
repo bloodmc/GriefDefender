@@ -27,6 +27,7 @@ package com.griefdefender.command;
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.CommandPermission;
+import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Subcommand;
 import co.aikar.commands.annotation.Syntax;
 import com.flowpowered.math.vector.Vector3i;
@@ -103,6 +104,7 @@ public class CommandClaimInfo extends BaseCommand {
     }
 
     @CommandAlias("claiminfo")
+    @Description("%claim-info")
     @Syntax("[claim_uuid]")
     @Subcommand("claim info")
     public void execute(CommandSource src, String[] args) {

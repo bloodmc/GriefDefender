@@ -49,7 +49,7 @@ import org.bukkit.entity.Player;
 public class CommandClaimSellBlocks extends BaseCommand {
 
     @CommandAlias("sellclaim|sellclaimblocks|sellblocks")
-    @Description("Sell your claim blocks for server money.\nNote: Requires economy plugin.")
+    @Description("%sell-blocks")
     @Syntax("[<amount>]")
     @Subcommand("sell blocks")
     public void execute(Player player, @Optional Integer blockCount) {

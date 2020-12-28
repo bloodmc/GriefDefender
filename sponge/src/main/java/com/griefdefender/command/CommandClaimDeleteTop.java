@@ -41,7 +41,7 @@ public class CommandClaimDeleteTop extends CommandClaimDelete {
     }
 
     @CommandAlias("deletetop")
-    @Description("Deletes the claim you're standing in, even if it's not your claim.")
+    @Description("%delete-top")
     @Subcommand("delete top")
     public void execute(Player player) {
         super.execute(player);

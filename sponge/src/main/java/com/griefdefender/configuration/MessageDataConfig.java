@@ -44,6 +44,16 @@ public class MessageDataConfig extends ConfigCategory {
     @Setting("messages")
     public Map<String, String> messageMap = new HashMap<>();
 
+    public Component getDescription(String message) {
+        String rawMessage = this.descriptionMap.get(message);
+        if (rawMessage == null) {
+            // Should never happen but in case it does, return empty
+            return TextComponent.empty();
+        }
+
+        return LegacyComponentSerializer.legacy().deserialize(rawMessage, '&');
+    }
+
     public Component getMessage(String message) {
         return this.getMessage(message, ImmutableMap.of());
     }

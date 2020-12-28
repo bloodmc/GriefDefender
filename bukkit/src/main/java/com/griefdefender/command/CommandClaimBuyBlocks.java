@@ -54,7 +54,7 @@ import org.bukkit.entity.Player;
 public class CommandClaimBuyBlocks extends BaseCommand {
 
     @CommandAlias("buyclaim|buyclaimblocks|buyblocks")
-    @Description("Purchases additional claim blocks with server money.\nNote: Requires economy plugin.")
+    @Description("%buy-blocks")
     @Syntax("[<amount>]")
     @Subcommand("buy blocks")
     public void execute(Player player, @Optional Integer blockCount) {
@@ -78,6 +78,11 @@ public class CommandClaimBuyBlocks extends BaseCommand {
 
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
         final double economyBlockCost = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Double.class), player, Options.ECONOMY_BLOCK_COST);
+        if (economyBlockCost <= 0) {
+            GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().ECONOMY_BLOCK_BUY_SELL_DISABLED);
+            return;
+        }
+
         final double balance = economy.getBalance(player);
         if (blockCount == null) {
             final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_BLOCK_PURCHASE_COST, ImmutableMap.of(

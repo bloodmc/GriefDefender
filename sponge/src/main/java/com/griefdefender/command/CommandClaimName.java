@@ -51,7 +51,7 @@ public class CommandClaimName extends BaseCommand {
 
     @CommandAlias("claimname")
     @Syntax("<name>|clear")
-    @Description("Sets the name of your claim.")
+    @Description("%claim-name")
     @Subcommand("claim name")
     public void execute(Player player, String name) {
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());

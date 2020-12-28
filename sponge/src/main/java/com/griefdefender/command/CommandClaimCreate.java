@@ -71,7 +71,7 @@ public class CommandClaimCreate extends BaseCommand {
 
     @CommandCompletion("@gddummy @gdclaimtypes @gddummy")
     @CommandAlias("claimcreate")
-    @Description("Creates a claim around the player.")
+    @Description("%claim-create")
     @Syntax("<radius> [type]")
     @Subcommand("claim create")
     public void execute(Player player, int radius, @Optional String type) {

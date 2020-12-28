@@ -36,6 +36,7 @@ import com.griefdefender.api.permission.option.Options;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.event.GDCauseStackManager;
+import com.griefdefender.internal.util.NMSUtil;
 import com.griefdefender.permission.GDPermissionManager;
 import com.griefdefender.permission.flag.GDFlags;
 import com.griefdefender.permission.option.GDOptions;
@@ -158,7 +159,13 @@ public class CommandEventHandler implements Listener {
                 pluginId = pluginCommand.getPlugin().getName().toLowerCase();
             }
             if (pluginId == null) {
-                pluginId = "minecraft";
+                // check modId for hybrid servers
+                final String modId = NMSUtil.getInstance().getCommandModId(command);
+                if (modId != null) {
+                    pluginId = modId;
+                } else {
+                    pluginId = "minecraft";
+                }
             }
         }
 

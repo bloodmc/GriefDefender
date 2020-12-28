@@ -159,7 +159,10 @@ public class BlockEventHandler {
             sourceLocation = sourceEntity.getLocation();
         }
         final boolean pistonExtend = context.containsKey(EventContextKeys.PISTON_EXTEND);
-        final boolean isLiquidSource = context.containsKey(EventContextKeys.LIQUID_FLOW);
+        boolean isLiquidSource = context.containsKey(EventContextKeys.LIQUID_FLOW);
+        if (!isLiquidSource && locatableBlock != null && locatableBlock.getBlockState().getType() == BlockTypes.FLOWING_WATER) {
+            isLiquidSource = true;
+        }
         final boolean isFireSource = isLiquidSource ? false : context.containsKey(EventContextKeys.FIRE_SPREAD);
         final boolean isLeafDecay = context.containsKey(EventContextKeys.LEAVES_DECAY);
         if (!GDFlags.LEAF_DECAY && isLeafDecay) {

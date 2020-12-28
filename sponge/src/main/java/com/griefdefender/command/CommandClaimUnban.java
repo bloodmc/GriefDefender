@@ -53,7 +53,7 @@ public class CommandClaimUnban extends BaseCommand {
 
     @CommandCompletion("@gdbantypes @gdmcids @gddummy")
     @CommandAlias("claimunban")
-    @Description("Unbans target id allowing it to be used again.")
+    @Description("%claim-unban")
     @Syntax("hand | <type> <target>")
     @Subcommand("unban")
     public void execute(Player player, String type, @Optional String id) {

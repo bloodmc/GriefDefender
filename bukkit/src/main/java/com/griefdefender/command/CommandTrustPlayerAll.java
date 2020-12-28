@@ -64,11 +64,7 @@ public class CommandTrustPlayerAll extends BaseCommand {
 
     @CommandCompletion("@gdplayers @gdtrusttypes @gddummy")
     @CommandAlias("trustall")
-    @Description("Grants a player access to all your claims."
-            + "\nAccessor: access to interact with all blocks except inventory."
-            + "\nContainer: access to interact with all blocks including inventory."
-            + "\nBuilder: access to everything above including ability to place and break blocks."
-            + "\nManager: access to everything above including ability to manage claim settings.")
+    @Description("%trust-player-all")
     @Syntax("<player> <accessor|builder|container|manager>")
     @Subcommand("trustall player")
     public void execute(Player player, String target, @Optional String type) {

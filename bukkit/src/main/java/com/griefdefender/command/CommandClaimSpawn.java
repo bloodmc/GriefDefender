@@ -59,7 +59,7 @@ import org.bukkit.entity.Player;
 public class CommandClaimSpawn extends BaseCommand {
 
     @CommandAlias("claimspawn")
-    @Description("Teleports you to claim spawn if available.")
+    @Description("%claim-spawn")
     @Syntax("[name] [user]")
     @Subcommand("claim spawn")
     public void execute(Player player, @Optional String claimName, @Optional OfflinePlayer targetPlayer) {

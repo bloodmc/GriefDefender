@@ -68,7 +68,7 @@ public class CommandClaimPermissionPlayer extends BaseCommand {
 
     @CommandCompletion("@gdplayers @gddummy")
     @CommandAlias("cpp")
-    @Description("Sets a permission on a player with a claim context.")
+    @Description("%permission-player")
     @Syntax("<player> [<permission> <value>]")
     @Subcommand("permission player")
     public void execute(Player player, User user, @Optional String[] args) throws CommandException, InvalidCommandArgument {

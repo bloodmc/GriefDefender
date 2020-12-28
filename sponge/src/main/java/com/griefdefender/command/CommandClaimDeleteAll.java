@@ -73,7 +73,7 @@ public class CommandClaimDeleteAll extends BaseCommand {
 
     @CommandCompletion("@gdplayers @gdworlds @gddummy")
     @CommandAlias("deleteall")
-    @Description("Delete all of another player's claims.")
+    @Description("%delete-all")
     @Syntax("<player> [<world>]")
     @Subcommand("delete all")
     public void execute(Player src, String otherPlayer, @Optional String worldName) {

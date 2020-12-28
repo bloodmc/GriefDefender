@@ -24,67 +24,12 @@
  */
 package com.griefdefender.provider;
 
-import com.griefdefender.GDBootstrap;
-import com.griefdefender.GDPlayerData;
-import com.griefdefender.GriefDefenderPlugin;
-import com.griefdefender.storage.BaseStorage;
-import com.griefdefender.util.SpongeUtil;
-import io.github.nucleuspowered.nucleus.api.NucleusAPI;
-import io.github.nucleuspowered.nucleus.api.chat.NucleusChatChannel;
-import io.github.nucleuspowered.nucleus.api.exceptions.PluginAlreadyRegisteredException;
-import io.github.nucleuspowered.nucleus.api.service.NucleusMessageTokenService;
-import io.github.nucleuspowered.nucleus.api.service.NucleusPrivateMessagingService;
-import net.kyori.text.Component;
 import org.spongepowered.api.entity.living.player.Player;
-import org.spongepowered.api.plugin.PluginContainer;
 import org.spongepowered.api.text.channel.MessageChannel;
 
-import java.util.Optional;
+public interface NucleusProvider {
 
-public class NucleusProvider {
+    boolean isSocialSpy(Player player);
 
-
-    public NucleusProvider() {
-    }
-
-    public static Optional<NucleusPrivateMessagingService> getPrivateMessagingService() {
-        return NucleusAPI.getPrivateMessagingService();
-    }
-
-    public void registerTokens() {
-        NucleusMessageTokenService messageTokenService = NucleusAPI.getMessageTokenService();
-        PluginContainer pc = GDBootstrap.getInstance().pluginContainer;
-        final BaseStorage dataStore = GriefDefenderPlugin.getInstance().dataStore;
-        try {
-            messageTokenService.register(GDBootstrap.getInstance().pluginContainer,
-                    (tokenInput, commandSource, variables) -> {
-                        // Each token will require something like this.
-
-                        // This token, town, will give the name of the town the player is currently in.
-                        // Will be registered in Nucleus as "{{pl:griefdefender:town}}", with the shortened version of "{{town}}"
-                        // This will return the name of the town the player is currently in.
-                        if (tokenInput.equalsIgnoreCase("town") && commandSource instanceof Player) {
-                            Player player = (Player) commandSource;
-                            final GDPlayerData data = dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
-
-                            // Shamelessly stolen from PlayerEventHandler
-                            if (data.inTown) {
-                                final Component component = dataStore.getClaimAtPlayer(data, player.getLocation()).getTownClaim().getTownData().getTownTag().orElse(null);
-                                return Optional.ofNullable(SpongeUtil.getSpongeText(component));
-                            }
-                        }
-
-                        return Optional.empty();
-                    });
-        } catch (PluginAlreadyRegisteredException ignored) {
-            // already been done.
-        }
-
-        // register {{town}} from {{pl:griefdefender:town}}
-        messageTokenService.registerPrimaryToken("town", pc, "town");
-    }
-
-    public boolean isChatChannel(MessageChannel channel) {
-        return channel instanceof NucleusChatChannel;
-    }
+    boolean isChatChannel(MessageChannel channel);
 }

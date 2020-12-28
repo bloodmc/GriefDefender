@@ -67,7 +67,7 @@ import java.util.function.Consumer;
 public class CommandClaimSchematic extends BaseCommand {
 
     @CommandAlias("claimschematic")
-    @Description("Manages claim schematics. Use '/claimschematic create <name>' to create a live backup of claim.")
+    @Description("%schematic")
     @Syntax("<create|delete> <name>")
     @Subcommand("schematic")
     public void execute(Player player, @Optional String[] args) throws CommandException, InvalidCommandArgument {

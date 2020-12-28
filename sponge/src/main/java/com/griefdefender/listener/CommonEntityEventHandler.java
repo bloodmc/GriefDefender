@@ -256,8 +256,10 @@ public class CommonEntityEventHandler {
                         if (welcomeMessage != null && !welcomeMessage.equals(TextComponent.empty()) && !fromClaim.isParent(toClaim)) {
                             ChatType chatType = gpEvent.getEnterMessageChatType();
                             if (showGpPrefix) {
+                                final Component enterPrefix = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.CLAIM_PREFIX_ENTER, ImmutableMap.of(
+                                        "owner", toClaim.getOwnerDisplayName()));
                                 TextAdapter.sendComponent(player, TextComponent.builder("")
-                                        .append(enterClanTag != null ? enterClanTag : GriefDefenderPlugin.GD_TEXT)
+                                        .append(enterClanTag != null ? enterClanTag : enterPrefix)
                                         .append(welcomeMessage).build(), SpongeUtil.getSpongeChatType(chatType));
                             } else {
                                 TextAdapter.sendComponent(player, enterClanTag != null ? enterClanTag : welcomeMessage, SpongeUtil.getSpongeChatType(chatType));
@@ -268,8 +270,10 @@ public class CommonEntityEventHandler {
                         if (farewellMessage != null && farewellMessage != TextComponent.empty() && !toClaim.isParent(fromClaim)) {
                             ChatType chatType = gpEvent.getExitMessageChatType();
                             if (showGpPrefix) {
+                                final Component exitPrefix = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.CLAIM_PREFIX_EXIT, ImmutableMap.of(
+                                        "owner", fromClaim.getOwnerDisplayName()));
                                 TextAdapter.sendComponent(player, TextComponent.builder("")
-                                        .append(exitClanTag != null ? exitClanTag : GriefDefenderPlugin.GD_TEXT)
+                                        .append(exitClanTag != null ? exitClanTag : exitPrefix)
                                         .append(farewellMessage)
                                         .build(), SpongeUtil.getSpongeChatType(chatType));
                             } else {
@@ -361,8 +365,10 @@ public class CommonEntityEventHandler {
                 if (welcomeMessage != null && !welcomeMessage.equals(TextComponent.empty()) && !fromClaim.isParent(toClaim)) {
                     ChatType chatType = gpEvent.getEnterMessageChatType();
                     if (showGpPrefix) {
+                        final Component enterPrefix = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.CLAIM_PREFIX_ENTER, ImmutableMap.of(
+                                "owner", toClaim.getOwnerDisplayName()));
                         TextAdapter.sendComponent(player, TextComponent.builder("")
-                                .append(enterClanTag != null ? enterClanTag : GriefDefenderPlugin.GD_TEXT)
+                                .append(enterClanTag != null ? enterClanTag : enterPrefix)
                                 .append(welcomeMessage)
                                 .build(), SpongeUtil.getSpongeChatType(chatType));
                     } else {
@@ -374,8 +380,10 @@ public class CommonEntityEventHandler {
                 if (farewellMessage != null && !farewellMessage.equals(TextComponent.empty()) && !toClaim.isParent(fromClaim)) {
                     ChatType chatType = gpEvent.getExitMessageChatType();
                     if (showGpPrefix) {
+                        final Component exitPrefix = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.CLAIM_PREFIX_EXIT, ImmutableMap.of(
+                                "owner", fromClaim.getOwnerDisplayName()));
                         TextAdapter.sendComponent(player, TextComponent.builder("")
-                                .append(exitClanTag != null ? exitClanTag : GriefDefenderPlugin.GD_TEXT)
+                                .append(exitClanTag != null ? exitClanTag : exitPrefix)
                                 .append(farewellMessage)
                                 .build(), SpongeUtil.getSpongeChatType(chatType));
                     } else {

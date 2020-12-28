@@ -992,7 +992,7 @@ public class PlayerEventHandler implements Listener {
             // Cancel event if player is unable to teleport during PvP combat
             final boolean pvpCombatTeleport = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Boolean.class), player, Options.PVP_COMBAT_TELEPORT, sourceClaim);
             if (!pvpCombatTeleport) {
-                final int combatTimeRemaining = playerData.getPvpCombatTimeRemaining();
+                final int combatTimeRemaining = playerData.getPvpCombatTimeRemaining(sourceClaim);
                 if (combatTimeRemaining > 0) {
                     final Component denyMessage = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PVP_IN_COMBAT_NOT_ALLOWED,
                             ImmutableMap.of(

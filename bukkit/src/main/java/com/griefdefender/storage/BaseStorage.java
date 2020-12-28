@@ -295,6 +295,13 @@ public abstract class BaseStorage {
     }
 
     public GDPlayerData getOrCreateGlobalPlayerData(UUID playerUniqueId) {
+        if (BaseStorage.USE_GLOBAL_PLAYER_STORAGE) {
+            final GDPlayerData playerData = GLOBAL_PLAYER_DATA.get(playerUniqueId);
+            if (playerData != null) {
+                return playerData;
+            }
+        }
+
         GDClaimManager claimWorldManager = this.getClaimWorldManager(null);
         return claimWorldManager.getOrCreatePlayerData(playerUniqueId);
     }
@@ -304,6 +311,13 @@ public abstract class BaseStorage {
     }
 
     public GDPlayerData getOrCreatePlayerData(UUID worldUniqueId, UUID playerUniqueId) {
+        if (BaseStorage.USE_GLOBAL_PLAYER_STORAGE) {
+            final GDPlayerData playerData = GLOBAL_PLAYER_DATA.get(playerUniqueId);
+            if (playerData != null) {
+                return playerData;
+            }
+        }
+
         GDClaimManager claimWorldManager = this.getClaimWorldManager(worldUniqueId);
         return claimWorldManager.getOrCreatePlayerData(playerUniqueId);
     }

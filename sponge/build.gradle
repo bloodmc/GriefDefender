@@ -128,6 +128,7 @@ dependencies {
     compileOnly ("io.github.nucleuspowered:nucleus-api:1.14.1-S7.1"){
         exclude module: 'spongeapi'
     }
+    compile "com.github.rojo8399:PlaceholderAPI:4.5.1"
     compile "com.github.bloodmc:mcclans-api:develop-SNAPSHOT"
     compileOnly "com.sk89q.worldedit:worldedit-core:6.1.4-SNAPSHOT"
     compileOnly "com.github.lucko:luckperms:master-SNAPSHOT"

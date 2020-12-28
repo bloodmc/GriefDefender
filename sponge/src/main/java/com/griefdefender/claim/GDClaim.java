@@ -53,6 +53,8 @@ import com.griefdefender.api.claim.TrustType;
 import com.griefdefender.api.claim.TrustTypes;
 import com.griefdefender.api.data.ClaimData;
 import com.griefdefender.api.permission.Context;
+import com.griefdefender.api.permission.ContextKeys;
+import com.griefdefender.api.permission.flag.Flags;
 import com.griefdefender.api.permission.option.Options;
 import com.griefdefender.cache.MessageCache;
 import com.griefdefender.cache.PermissionHolderCache;
@@ -2688,6 +2690,15 @@ public class GDClaim implements Claim {
         }
 
         return null;
+    }
+
+    @Override
+    public boolean isPvpAllowed() {
+        final Set<Context> contexts = new HashSet<>();
+        contexts.add(new Context(ContextKeys.SOURCE, "minecraft:player"));
+        contexts.add(new Context(ContextKeys.TARGET, "minecraft:player"));
+        final Tristate result = GDPermissionManager.getInstance().getActiveFlagPermissionValue(this, GriefDefenderPlugin.DEFAULT_HOLDER, Flags.ENTITY_DAMAGE, contexts);
+        return result == Tristate.TRUE;
     }
 
     public static class ClaimBuilder implements Builder {

@@ -42,7 +42,7 @@ import com.griefdefender.permission.GDPermissions;
 public class CommandUnlockDrops extends BaseCommand {
 
     @CommandAlias("unlockdrops")
-    @Description("Allows other players to pickup any items dropped from death.")
+    @Description("%player-unlock-drops")
     @Subcommand("player unlockdrops")
     public void execute(Player player) {
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());

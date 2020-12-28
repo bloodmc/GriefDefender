@@ -44,7 +44,7 @@ public class CommandClaimBank extends BaseCommand {
     protected boolean townOnly = false;
 
     @CommandAlias("claimbank")
-    @Description("Used for claim bank queries")
+    @Description("%claim-bank")
     @Syntax("<withdraw|deposit> <amount>")
     @Subcommand("claim bank")
     public void execute(Player player, @Optional String[] args) throws CommandException {

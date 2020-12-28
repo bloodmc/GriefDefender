@@ -41,7 +41,7 @@ import org.bukkit.entity.Player;
 public class CommandClaimTown extends BaseCommand {
 
     @CommandAlias("modetown|townclaims")
-    @Description("Switches the shovel tool to town claims mode.")
+    @Description("%mode-town")
     @Subcommand("mode town")
     public void execute(Player player) {
 

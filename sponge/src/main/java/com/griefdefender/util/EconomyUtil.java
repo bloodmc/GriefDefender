@@ -322,8 +322,8 @@ public class EconomyUtil {
             }
 
             final double salePrice = claim.getEconomyData().getSalePrice();
-            final TransactionResult response = depositFunds(owner.getOfflinePlayer().getUniqueId(), salePrice);
-            if (response.getResult() == ResultType.SUCCESS) {
+            final ResultType transactionResult = owner.getOfflinePlayer() == null ? ResultType.SUCCESS :  depositFunds(owner.getOfflinePlayer().getUniqueId(), salePrice).getResult();
+            if (transactionResult == ResultType.SUCCESS) {
                 final TransactionResult withdrawResponse = withdrawFunds(player.getUniqueId(), salePrice);
                 final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_CLAIM_BUY_CONFIRMED,
                     ImmutableMap.of(

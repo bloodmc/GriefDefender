@@ -52,8 +52,12 @@ public class ModCategory {
             + "\nThe wildcard '*' represents zero or more characters."
             + "\nFor more information on usage, see https://commons.apache.org/proper/commons-io/javadocs/api-2.5/org/apache/commons/io/FilenameUtils.html#wildcardMatch(java.lang.String,%20java.lang.String)")
     public Map<String, String> modIdMap = new HashMap<>();
+    @Setting(value = "block-id-convert-list", comment = "Used to override generic block id's to their actual id during TE and item usage if available. Add the target block id to list if you want to force a conversion when detected."
+            + "\nNote: This is useful for mods such as IC2 which uses the generic id 'ic2:te' for its multi-block.")
+    public List<String> blockIdConvertList = new ArrayList<>();
 
     public ModCategory() {
+        this.blockIdConvertList.add("ic2:te");
         this.fakePlayerIdentifiers.add("41C82C87-7AfB-4024-BA57-13D2C99CAE77"); // Forge FakePlayer
         this.fakePlayerIdentifiers.add("BFC3377F-C3C9-3382-9DA6-79B50A9AFE57"); // OpenMods
         this.fakePlayerIdentifiers.add("0D0C4CA0-4FF1-11E4-916C-0800200C9A66"); // ComputerCraft
@@ -73,6 +77,13 @@ public class ModCategory {
             if (FilenameUtils.wildcardMatch(player.getName().toLowerCase(), str.toLowerCase())) {
                 return true;
             }
+        }
+        return false;
+    }
+
+    public boolean convertBlockId(String id) {
+        if (this.blockIdConvertList.contains(id)) {
+            return true;
         }
         return false;
     }

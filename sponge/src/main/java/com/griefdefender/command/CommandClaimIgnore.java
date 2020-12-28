@@ -44,7 +44,7 @@ import org.spongepowered.api.entity.living.player.Player;
 public class CommandClaimIgnore extends BaseCommand {
 
     @CommandAlias("claimignore|ignoreclaims|ic")
-    @Description("Toggles ignore claims mode.")
+    @Description("%claim-ignore")
     @Subcommand("claim ignore")
     public void execute(Player player) {
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());

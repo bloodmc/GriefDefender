@@ -41,7 +41,7 @@ import org.bukkit.entity.Player;
 public class CommandClaimSubdivision extends BaseCommand {
 
     @CommandAlias("modesubdivide|subdivideclaims|sc")
-    @Description("Switches the shovel tool to subdivision mode, used to subdivide your claims.")
+    @Description("%mode-subdivision")
     @Subcommand("mode subdivide")
     public void execute(Player player) {
 

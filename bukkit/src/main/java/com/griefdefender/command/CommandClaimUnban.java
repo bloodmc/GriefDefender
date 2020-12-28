@@ -42,7 +42,6 @@ import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.internal.registry.BlockTypeRegistryModule;
 import com.griefdefender.internal.registry.EntityTypeRegistryModule;
 import com.griefdefender.internal.registry.ItemTypeRegistryModule;
-import com.griefdefender.internal.util.NMSUtil;
 import com.griefdefender.permission.GDPermissions;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -53,7 +52,7 @@ public class CommandClaimUnban extends BaseCommand {
 
     @CommandCompletion("@gdbantypes @gdmcids @gddummy")
     @CommandAlias("claimunban")
-    @Description("Unbans target id allowing it to be used again.")
+    @Description("%claim-unban")
     @Syntax("hand | <type> <target>")
     @Subcommand("unban")
     public void execute(Player player, String type, @Optional String id) {

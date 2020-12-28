@@ -190,14 +190,16 @@ public class CommonEntityEventHandler {
                 TextComponent welcomeMessage = (TextComponent) gpEvent.getEnterMessage().orElse(null);
                 if (welcomeMessage != null && !welcomeMessage.equals(TextComponent.empty()) && !fromClaim.isParent(toClaim)) {
                     ChatType chatType = gpEvent.getEnterMessageChatType();
+                    final Component enterPrefix = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.CLAIM_PREFIX_ENTER, ImmutableMap.of(
+                            "owner", toClaim.getOwnerDisplayName()));
                     if (chatType == ChatTypes.ACTION_BAR) {
                         TextAdapter.sendActionBar(player, TextComponent.builder("")
-                                .append(showGpPrefix ? GriefDefenderPlugin.GD_TEXT : TextComponent.empty())
+                                .append(showGpPrefix ? enterPrefix : TextComponent.empty())
                                 .append(welcomeMessage)
                                 .build());
                     } else {
                         TextAdapter.sendComponent(player, TextComponent.builder("")
-                                .append(showGpPrefix ? GriefDefenderPlugin.GD_TEXT : TextComponent.empty())
+                                .append(showGpPrefix ? enterPrefix : TextComponent.empty())
                                 .append(welcomeMessage)
                                 .build());
                     }
@@ -206,14 +208,16 @@ public class CommonEntityEventHandler {
                 Component farewellMessage = gpEvent.getExitMessage().orElse(null);
                 if (farewellMessage != null && !farewellMessage.equals(TextComponent.empty()) && !toClaim.isParent(fromClaim)) {
                     ChatType chatType = gpEvent.getExitMessageChatType();
+                    final Component exitPrefix = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.CLAIM_PREFIX_EXIT, ImmutableMap.of(
+                            "owner", fromClaim.getOwnerDisplayName()));
                     if (chatType == ChatTypes.ACTION_BAR) {
                         TextAdapter.sendActionBar(player, TextComponent.builder("")
-                                .append(showGpPrefix ? GriefDefenderPlugin.GD_TEXT : TextComponent.empty())
+                                .append(showGpPrefix ? exitPrefix : TextComponent.empty())
                                 .append(farewellMessage)
                                 .build());
                     } else {
                         TextAdapter.sendComponent(player, TextComponent.builder("")
-                                .append(showGpPrefix ? GriefDefenderPlugin.GD_TEXT : TextComponent.empty())
+                                .append(showGpPrefix ? exitPrefix : TextComponent.empty())
                                 .append(farewellMessage)
                                 .build());
                     }
@@ -293,14 +297,16 @@ public class CommonEntityEventHandler {
                 Component welcomeMessage = gpEvent.getEnterMessage().orElse(null);
                 if (welcomeMessage != null && !welcomeMessage.equals(TextComponent.empty()) && !fromClaim.isParent(toClaim)) {
                     ChatType chatType = gpEvent.getEnterMessageChatType();
+                    final Component enterPrefix = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.CLAIM_PREFIX_ENTER, ImmutableMap.of(
+                            "owner", toClaim.getOwnerDisplayName()));
                     if (chatType == ChatTypes.ACTION_BAR) {
                         TextAdapter.sendActionBar(player, TextComponent.builder("")
-                                .append(showGpPrefix ? GriefDefenderPlugin.GD_TEXT : TextComponent.empty())
+                                .append(showGpPrefix ? enterPrefix : TextComponent.empty())
                                 .append(welcomeMessage)
                                 .build());
                     } else {
                         TextAdapter.sendComponent(player, TextComponent.builder("")
-                                .append(showGpPrefix ? GriefDefenderPlugin.GD_TEXT : TextComponent.empty())
+                                .append(showGpPrefix ? enterPrefix : TextComponent.empty())
                                 .append(welcomeMessage)
                                 .build());
                     }
@@ -309,14 +315,16 @@ public class CommonEntityEventHandler {
                 Component farewellMessage = gpEvent.getExitMessage().orElse(null);
                 if (farewellMessage != null && !farewellMessage.equals(TextComponent.empty()) && !toClaim.isParent(fromClaim)) {
                     ChatType chatType = gpEvent.getExitMessageChatType();
+                    final Component exitPrefix = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.CLAIM_PREFIX_EXIT, ImmutableMap.of(
+                            "owner", fromClaim.getOwnerDisplayName()));
                     if (chatType == ChatTypes.ACTION_BAR) {
                         TextAdapter.sendActionBar(player, TextComponent.builder("")
-                                .append(showGpPrefix ? GriefDefenderPlugin.GD_TEXT : TextComponent.empty())
+                                .append(showGpPrefix ? exitPrefix : TextComponent.empty())
                                 .append(farewellMessage)
                                 .build());
                     } else {
                         TextAdapter.sendComponent(player, TextComponent.builder("")
-                                .append(showGpPrefix ? GriefDefenderPlugin.GD_TEXT : TextComponent.empty())
+                                .append(showGpPrefix ? exitPrefix : TextComponent.empty())
                                 .append(farewellMessage)
                                 .build());
                     }

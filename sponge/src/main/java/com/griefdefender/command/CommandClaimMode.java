@@ -46,7 +46,7 @@ import com.griefdefender.permission.GDPermissions;
 public class CommandClaimMode extends BaseCommand {
 
     @CommandAlias("claim|claimmode")
-    @Description("Toggles claim mode creation. Note: This will default to basic claim mode.")
+    @Description("%mode-claim")
     @Subcommand("mode claim")
     public void execute(Player player) {
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());

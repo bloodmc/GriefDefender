@@ -57,7 +57,7 @@ public class CommandSetAccruedClaimBlocks extends BaseCommand {
 
     @CommandCompletion("@gdplayers @gddummy")
     @CommandAlias("scb|setaccruedblocks")
-    @Description("Updates a player's accrued claim block total.")
+    @Description("%player-set-accrued-blocks")
     @Syntax("<player> <amount> [world]")
     @Subcommand("player setaccruedblocks")
     public void execute(CommandSource src, String player, int amount, @Optional String worldName) throws InvalidCommandArgument {

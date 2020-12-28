@@ -31,7 +31,6 @@ import java.util.Set;
 
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
-import org.bukkit.event.block.Action;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.reflect.TypeToken;
@@ -58,15 +57,13 @@ import co.aikar.commands.annotation.Optional;
 import co.aikar.commands.annotation.Subcommand;
 import co.aikar.commands.annotation.Syntax;
 import net.kyori.text.Component;
-import net.kyori.text.TextComponent;
-import net.kyori.text.format.TextColor;
 
 @CommandAlias("%griefdefender")
 @CommandPermission(GDPermissions.COMMAND_CLAIM_INVESTIGATE)
 public class CommandClaimInvestigate extends BaseCommand {
 
     @CommandAlias("claiminvestigate")
-    @Description("Investigates the target or nearby claims.")
+    @Description("%claim-investigate")
     @Syntax("[area|hide|hideall]")
     @Subcommand("claim investigate")
     public void execute(Player player, @Optional String cmd) {

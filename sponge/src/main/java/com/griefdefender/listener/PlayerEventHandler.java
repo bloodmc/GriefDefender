@@ -66,7 +66,6 @@ import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.permission.GDPermissions;
 import com.griefdefender.permission.flag.GDFlags;
 import com.griefdefender.permission.option.GDOptions;
-import com.griefdefender.provider.NucleusProvider;
 import com.griefdefender.storage.BaseStorage;
 import com.griefdefender.task.ClaimVisualRevertTask;
 import com.griefdefender.text.action.GDCallbackHolder;
@@ -263,7 +262,7 @@ public class PlayerEventHandler {
                 if (receiver instanceof Player) {
                     Player recipient = (Player) receiver;
                     if (GriefDefenderPlugin.getInstance().nucleusApiProvider != null) {
-                        if (NucleusProvider.getPrivateMessagingService().isPresent() && NucleusProvider.getPrivateMessagingService().get().isSocialSpy(recipient)) {
+                        if (GriefDefenderPlugin.getInstance().nucleusApiProvider.isSocialSpy(recipient)) {
                             // always allow social spy users
                             continue;
                         }
@@ -1135,7 +1134,7 @@ public class PlayerEventHandler {
         final BlockSnapshot clickedBlock = event.getTargetBlock();
         final String id = GDPermissionManager.getInstance().getPermissionIdentifier(clickedBlock);
         final GDBlockType gdBlock = BlockTypeRegistryModule.getInstance().getById(id).orElse(null);
-        if (gdBlock != null && !gdBlock.isInteractable()) {
+        if (gdBlock != null && !gdBlock.isInteractable() && (itemInHand.isEmpty() || !NMSUtil.getInstance().isItemBlock(itemInHand))) {
             return;
         }
 

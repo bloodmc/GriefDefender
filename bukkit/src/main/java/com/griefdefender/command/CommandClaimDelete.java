@@ -59,7 +59,7 @@ public class CommandClaimDelete extends BaseCommand {
     protected boolean deleteTopLevelClaim = false;
 
     @CommandAlias("deleteclaim")
-    @Description("Deletes the claim you're standing in, even if it's not your claim.")
+    @Description("%delete-claim")
     @Subcommand("delete claim")
     public void execute(Player player) {
         final GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAt(player.getLocation());

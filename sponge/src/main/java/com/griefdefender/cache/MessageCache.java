@@ -324,7 +324,6 @@ public class MessageCache {
     public Component LABEL_DEFAULT;
     public Component LABEL_DISPLAYING;
     public Component LABEL_EXPIRED;
-    public Component LABEL_FALSE;
     public Component LABEL_FAREWELL;
     public Component LABEL_FILTER;
     public Component LABEL_FLAG;
@@ -360,12 +359,11 @@ public class MessageCache {
     public Component LABEL_SPAWN;
     public Component LABEL_STATUS;
     public Component LABEL_TARGET;
-    public Component LABEL_TRUE;
     public Component LABEL_TRUST;
     public Component LABEL_TYPE;
-    public Component LABEL_WORLD;
     public Component LABEL_UNKNOWN;
     public Component LABEL_USER;
+    public Component LABEL_WORLD;
     public Component LABEL_YES;
     public Component MODE_ADMIN;
     public Component MODE_BASIC;
@@ -424,6 +422,7 @@ public class MessageCache {
     public Component PERMISSION_COMMAND_TRUST;
     public Component PERMISSION_CUBOID;
     public Component PERMISSION_EDIT_CLAIM;
+    public Component PERMISSION_FALSE;
     public Component PERMISSION_FIRE_SPREAD;
     public Component PERMISSION_FLAG_DEFAULTS;
     public Component PERMISSION_FLAG_OVERRIDES;
@@ -442,6 +441,8 @@ public class MessageCache {
     public Component PERMISSION_PLAYER_OPTION;
     public Component PERMISSION_PLAYER_VIEW_OTHERS;
     public Component PERMISSION_TAX;
+    public Component PERMISSION_TRUE;
+    public Component PERMISSION_UNDEFINED;
     public Component PERMISSION_VISUAL_CLAIMS_NEARBY;
     public Component PLAYER_ITEM_DROPS_LOCK;
     public Component PLUGIN_EVENT_CANCEL;
@@ -796,7 +797,6 @@ public class MessageCache {
         LABEL_DEFAULT = MessageStorage.MESSAGE_DATA.getMessage("label-default");
         LABEL_DISPLAYING = MessageStorage.MESSAGE_DATA.getMessage("label-displaying");
         LABEL_EXPIRED = MessageStorage.MESSAGE_DATA.getMessage("label-expired");
-        LABEL_FALSE = MessageStorage.MESSAGE_DATA.getMessage("label-false");
         LABEL_FAREWELL = MessageStorage.MESSAGE_DATA.getMessage("label-farewell");
         LABEL_FILTER = MessageStorage.MESSAGE_DATA.getMessage("label-filter");
         LABEL_FLAG = MessageStorage.MESSAGE_DATA.getMessage("label-flag");
@@ -832,7 +832,6 @@ public class MessageCache {
         LABEL_SPAWN = MessageStorage.MESSAGE_DATA.getMessage("label-spawn");
         LABEL_STATUS = MessageStorage.MESSAGE_DATA.getMessage("label-status");
         LABEL_TARGET = MessageStorage.MESSAGE_DATA.getMessage("label-target");
-        LABEL_TRUE = MessageStorage.MESSAGE_DATA.getMessage("label-true");
         LABEL_TRUST = MessageStorage.MESSAGE_DATA.getMessage("label-trust");
         LABEL_TYPE = MessageStorage.MESSAGE_DATA.getMessage("label-type");
         LABEL_UNKNOWN = MessageStorage.MESSAGE_DATA.getMessage("label-unknown");
@@ -896,6 +895,7 @@ public class MessageCache {
         PERMISSION_COMMAND_TRUST = MessageStorage.MESSAGE_DATA.getMessage("permission-command-trust");
         PERMISSION_CUBOID = MessageStorage.MESSAGE_DATA.getMessage("permission-cuboid");
         PERMISSION_EDIT_CLAIM = MessageStorage.MESSAGE_DATA.getMessage("permission-edit-claim");
+        PERMISSION_FALSE = MessageStorage.MESSAGE_DATA.getMessage("permission-false");
         PERMISSION_FIRE_SPREAD = MessageStorage.MESSAGE_DATA.getMessage("permission-fire-spread");
         PERMISSION_FLAG_DEFAULTS = MessageStorage.MESSAGE_DATA.getMessage("permission-flag-defaults");
         PERMISSION_FLAG_OVERRIDES = MessageStorage.MESSAGE_DATA.getMessage("permission-flag-overrides");
@@ -914,6 +914,8 @@ public class MessageCache {
         PERMISSION_PLAYER_OPTION = MessageStorage.MESSAGE_DATA.getMessage("permission-player-option");
         PERMISSION_PLAYER_VIEW_OTHERS = MessageStorage.MESSAGE_DATA.getMessage("permission-player-view-others");
         PERMISSION_TAX = MessageStorage.MESSAGE_DATA.getMessage("permission-tax");
+        PERMISSION_TRUE = MessageStorage.MESSAGE_DATA.getMessage("permission-true");
+        PERMISSION_UNDEFINED = MessageStorage.MESSAGE_DATA.getMessage("permission-undefined");
         PERMISSION_VISUAL_CLAIMS_NEARBY = MessageStorage.MESSAGE_DATA.getMessage("permission-visual-claims-nearby");
         PLAYER_ITEM_DROPS_LOCK = MessageStorage.MESSAGE_DATA.getMessage("player-item-drops-lock");
         PLUGIN_EVENT_CANCEL = MessageStorage.MESSAGE_DATA.getMessage("plugin-event-cancel");

@@ -64,6 +64,10 @@ public final class GDCauseStackManager {
 
     public GDCauseStackManager pushCause(Object obj) {
         checkNotNull(obj, "obj");
+        if (NMSUtil.getInstance().getRunningServerTicks() != tick_stored) {
+            this.cached_cause = null;
+            this.cause.clear();
+        }
         if (obj instanceof OfflinePlayer) {
             obj = PermissionHolderCache.getInstance().getOrCreateUser((OfflinePlayer) obj);
         }

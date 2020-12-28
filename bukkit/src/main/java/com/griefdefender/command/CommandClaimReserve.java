@@ -26,7 +26,6 @@ package com.griefdefender.command;
 
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.CommandAlias;
-import co.aikar.commands.annotation.CommandCompletion;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Optional;
@@ -62,7 +61,7 @@ public class CommandClaimReserve extends BaseCommand {
 
     @CommandAlias("claimreserve")
     @Syntax("[<name>]")
-    @Description("Reserves a claim name for administrator use.")
+    @Description("%claim-reserve")
     @Subcommand("claim reserve")
     public void execute(CommandSender src, @Optional String name) {
         GriefDefenderConfig<?> activeConfig = null;

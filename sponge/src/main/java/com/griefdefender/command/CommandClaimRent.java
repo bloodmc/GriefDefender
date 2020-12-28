@@ -78,7 +78,7 @@ public class CommandClaimRent extends BaseCommand {
 
     @CommandCompletion("@gdrentcommands @gddummy")
     @CommandAlias("claimrent")
-    @Description("Used to rent/list claims. \nNote: Requires economy plugin.")
+    @Description("%claim-rent")
     @Syntax("create <rate> [<max_days>]|info|list|cancel]")
     @Subcommand("claim rent")
     public void execute(Player player, @Optional String[] args) {

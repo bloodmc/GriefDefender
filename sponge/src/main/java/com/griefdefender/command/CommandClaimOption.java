@@ -47,7 +47,7 @@ public class CommandClaimOption extends ClaimOptionBase {
 
     @CommandCompletion("@gdoptions @gdcontexts @gddummy")
     @CommandAlias("co|cod|claimoption")
-    @Description("Gets/Sets claim options in the claim you are standing in.")
+    @Description("%option-claim")
     @Syntax("[<option> <value> [context[key=value]]")
     @Subcommand("option claim")
     public void execute(Player player, @Optional String[] args) throws InvalidCommandArgument {

@@ -46,6 +46,8 @@ import org.bukkit.scheduler.BukkitTask;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.reflect.TypeToken;
+import com.griefdefender.api.Tristate;
+import com.griefdefender.api.User;
 import com.griefdefender.api.claim.Claim;
 import com.griefdefender.api.claim.ClaimType;
 import com.griefdefender.api.claim.ShovelType;
@@ -247,6 +249,11 @@ public class GDPlayerData implements PlayerData {
     }
 
     @Override
+    public User getUser() {
+        return this.getSubject();
+    }
+
+    @Override
     public String getName() {
         if (this.playerName == null) {
             GDPermissionUser user = null;
@@ -359,7 +366,7 @@ public class GDPlayerData implements PlayerData {
         for (int i = 0; i < visualTransactions.size(); i++) {
             BlockSnapshot snapshot = visualTransactions.get(i).getOriginal();
             // If original block does not exist or chunk is not loaded, do not send to player
-            if (!snapshot.getLocation().getChunk().isLoaded() || !snapshot.matchesWorldState()) {
+            if (!snapshot.matchesWorldState()) {
                 if (claim != null) {
                     claim.markVisualDirty = true;
                 }
@@ -764,6 +771,25 @@ public class GDPlayerData implements PlayerData {
         return totalTax;
     }
 
+    @Override
+    public boolean canPvp(Claim claim) {
+        if (!((GDClaim) claim).getWorld().getPVP()) {
+            return false;
+        }
+        if (!claim.isPvpAllowed()) {
+            return false;
+        }
+
+        if (GDOptions.PVP) {
+            final Tristate result = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Tristate.class), this.getSubject(), Options.PVP, claim);
+            if (result != Tristate.UNDEFINED) {
+                return result.asBoolean();
+            }
+        }
+        return true;
+    }
+
+    @Override
     public boolean inPvpCombat() {
         final Player player = this.getSubject().getOnlinePlayer();
         if (this.lastPvpTimestamp == null || player == null) {
@@ -784,8 +810,9 @@ public class GDPlayerData implements PlayerData {
         return true;
     }
 
-    public int getPvpCombatTimeRemaining() {
-        return this.getPvpCombatTimeRemaining(null);
+    @Override
+    public int getRemainingPvpCombatTime(Claim claim) {
+        return this.getPvpCombatTimeRemaining((GDClaim) claim);
     }
 
     public int getPvpCombatTimeRemaining(GDClaim claim) {

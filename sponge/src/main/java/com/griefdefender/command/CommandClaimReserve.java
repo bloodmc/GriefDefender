@@ -61,7 +61,7 @@ public class CommandClaimReserve extends BaseCommand {
 
     @CommandAlias("claimreserve")
     @Syntax("[<name>]")
-    @Description("Reserves a claim name for administrator use.")
+    @Description("%claim-reserve")
     @Subcommand("claim reserve")
     public void execute(CommandSource src, @Optional String name) {
         GriefDefenderConfig<?> activeConfig = null;

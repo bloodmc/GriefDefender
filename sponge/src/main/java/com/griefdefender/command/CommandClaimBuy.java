@@ -56,7 +56,7 @@ import java.util.Set;
 public class CommandClaimBuy extends BaseCommand {
 
     @CommandAlias("claimbuy")
-    @Description("List all claims available for purchase.\nNote: Requires economy plugin.")
+    @Description("%buy-claim")
     @Subcommand("buy claim")
     public void execute(Player player) {
         if (!GriefDefenderPlugin.getInstance().economyService.isPresent()) {

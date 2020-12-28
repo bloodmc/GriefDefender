@@ -48,6 +48,7 @@ import com.griefdefender.cache.MessageCache;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.configuration.MessageStorage;
+import com.griefdefender.event.GDCauseStackManager;
 import com.griefdefender.internal.visual.GDClaimVisual;
 import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.permission.GDPermissions;
@@ -70,7 +71,7 @@ public class CommandClaimExpand extends BaseCommand {
 
     @CommandCompletion("@gddummy @gdDirections @gddummy")
     @CommandAlias("claimexpand|expandclaim")
-    @Description("Expands the claim in the direction you are facing.")
+    @Description("%claim-expand")
     @Syntax("<amount> [direction]")
     @Subcommand("claim expand")
     public void execute(Player player, int amount, @Optional String direction) {
@@ -132,7 +133,9 @@ public class CommandClaimExpand extends BaseCommand {
                 greater.getZ() + amount);
         }
 
+        GDCauseStackManager.getInstance().pushCause(player);
         final ClaimResult result = claim.resize(point1, point2);
+        GDCauseStackManager.getInstance().popCause();
         if (!result.successful()) {
             if (result.getResultType() == ClaimResultType.OVERLAPPING_CLAIM) {
                 GDClaim overlapClaim = (GDClaim) result.getClaim().get();

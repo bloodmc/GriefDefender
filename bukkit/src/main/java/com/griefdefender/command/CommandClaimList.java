@@ -61,7 +61,6 @@ import net.kyori.text.event.HoverEvent;
 import net.kyori.text.format.TextColor;
 import net.kyori.text.format.TextDecoration;
 import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -93,7 +92,7 @@ public class CommandClaimList extends BaseCommand {
     @CommandCompletion("@gdplayers @gdworlds @gddummy")
     @CommandAlias("claimlist|claimslist")
     @Syntax("[<player>|<player> <world>]")
-    @Description("List information about a player's claim blocks and claims.")
+    @Description("%claim-list")
     @Subcommand("claim list")
     public void execute(Player src, @Optional String targetPlayer, @Optional World world) {
         GDPermissionUser user = null;

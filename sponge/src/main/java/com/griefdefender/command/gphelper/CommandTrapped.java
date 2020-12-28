@@ -63,7 +63,7 @@ import org.spongepowered.api.world.World;
 public class CommandTrapped extends BaseCommand {
 
     @CommandAlias("trapped")
-    @Description("Teleports the player to a safe location if stuck and unable to build.")
+    @Description("%trapped")
     @Subcommand("player trapped")
     public void execute(Player player) {
         final GameMode gameMode = player.get(Keys.GAME_MODE).orElse(null);

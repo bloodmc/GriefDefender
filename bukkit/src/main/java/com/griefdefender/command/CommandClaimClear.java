@@ -60,7 +60,7 @@ public class CommandClaimClear extends BaseCommand {
 
     @CommandCompletion("@gdentityids @gddummy")
     @CommandAlias("claimclear")
-    @Description("Allows clearing of entities within one or more claims.")
+    @Description("%claim-clear")
     @Syntax("<entity_id> [claim_uuid]")
     @Subcommand("claim clear")
     public void execute(Player player, String target, @Optional String claimId) {

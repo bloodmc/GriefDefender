@@ -27,6 +27,8 @@ package com.griefdefender;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.reflect.TypeToken;
+import com.griefdefender.api.Tristate;
+import com.griefdefender.api.User;
 import com.griefdefender.api.claim.Claim;
 import com.griefdefender.api.claim.ClaimType;
 import com.griefdefender.api.claim.ShovelType;
@@ -246,6 +248,11 @@ public class GDPlayerData implements PlayerData {
             this.playerID = subject.getUniqueId();
             this.dataInitialized = true;
         });
+    }
+
+    @Override
+    public User getUser() {
+        return this.getSubject();
     }
 
     @Override
@@ -769,6 +776,25 @@ public class GDPlayerData implements PlayerData {
         return totalTax;
     }
 
+    @Override
+    public boolean canPvp(Claim claim) {
+        if (!((GDClaim) claim).getWorld().getProperties().isPVPEnabled()) {
+            return false;
+        }
+        if (!claim.isPvpAllowed()) {
+            return false;
+        }
+
+        if (GDOptions.PVP) {
+            final Tristate result = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Tristate.class), this.getSubject(), Options.PVP, claim);
+            if (result != Tristate.UNDEFINED) {
+                return result.asBoolean();
+            }
+        }
+        return true;
+    }
+
+    @Override
     public boolean inPvpCombat() {
         final Player player = this.getSubject().getOnlinePlayer();
         if (this.lastPvpTimestamp == null || player == null) {
@@ -789,8 +815,9 @@ public class GDPlayerData implements PlayerData {
         return true;
     }
 
-    public int getPvpCombatTimeRemaining() {
-        return this.getPvpCombatTimeRemaining(null);
+    @Override
+    public int getRemainingPvpCombatTime(Claim claim) {
+        return this.getPvpCombatTimeRemaining((GDClaim) claim);
     }
 
     public int getPvpCombatTimeRemaining(GDClaim claim) {

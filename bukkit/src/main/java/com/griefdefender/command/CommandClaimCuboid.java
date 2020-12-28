@@ -41,7 +41,7 @@ import org.bukkit.entity.Player;
 public class CommandClaimCuboid extends BaseCommand {
 
     @CommandAlias("cuboid")
-    @Description("Toggles cuboid claims mode.")
+    @Description("%cuboid")
     @Subcommand("cuboid")
     public void execute(Player player) {
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());

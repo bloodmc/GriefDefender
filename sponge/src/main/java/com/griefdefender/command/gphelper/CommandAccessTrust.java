@@ -51,7 +51,7 @@ public class CommandAccessTrust extends BaseCommand {
 
     @CommandCompletion("@gdplayers")
     @CommandAlias("at|accesstrust")
-    @Description("Grants a player access to interact with all blocks except inventory.")
+    @Description("%trust-access")
     @Syntax("<player>")
     public void execute(Player src, String target) {
 

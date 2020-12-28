@@ -49,7 +49,7 @@ public class CommandClaimFlagPlayer extends ClaimFlagBase  {
 
     @CommandCompletion("@gdplayers @gdflags @gdmcids @gdtristates @gdcontexts @gddummy")
     @CommandAlias("cfp")
-    @Description("Gets/Sets flag permission for a player in claim you are standing in.")
+    @Description("%flag-player")
     @Syntax("<player> <flag> <target> <value> [context[key=value]]")
     @Subcommand("flag player")
     public void execute(Player player, User user, @Optional String[] args) throws InvalidCommandArgument {

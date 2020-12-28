@@ -65,7 +65,7 @@ import org.bukkit.command.CommandSender;
 public class CommandGDBlockTransfer extends BaseCommand {
 
     @CommandAlias("gdblocktransfer")
-    @Description("Transfers ALL player remaining accrued/bonus claim blocks into currency then sets their accrued and bonus amounts to 0.\nNote: This MUST be used if you are switching from claim blocks system to economy mode.")
+    @Description("%economy-block-transfer")
     @Subcommand("economy blocktransfer")
     public void execute(CommandSender source, @Optional Integer blockCount) {
         // if economy is disabled, don't do anything

@@ -63,7 +63,7 @@ import org.spongepowered.api.world.World;
 public class CommandClaimInvestigate extends BaseCommand {
 
     @CommandAlias("claiminvestigate")
-    @Description("Investigates the target or nearby claims.")
+    @Description("%claim-investigate")
     @Syntax("[area|hide|hideall]")
     @Subcommand("claim investigate")
     public void execute(Player player, @Optional String cmd) {

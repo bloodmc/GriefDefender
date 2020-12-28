@@ -762,9 +762,18 @@ public class LuckPermsProvider implements PermissionProvider {
             return null;
         }
 
-        final QueryOptions query = QueryOptions.builder(QueryMode.CONTEXTUAL).option(DataQueryOrderFunction.KEY, DEFAULT_DATA_QUERY_ORDER).context(set).build();
+        // First check user persistent data
+        QueryOptions query = QueryOptions.builder(QueryMode.CONTEXTUAL).option(DataQueryOrderFunction.KEY, DEFAULT_DATA_QUERY_ORDER).option(DataTypeFilterFunction.KEY, USER_PERSISTENT_ONLY).context(set).build();
         CachedMetaData metaData = permissionHolder.getCachedData().getMetaData(query);
         List<String> list = metaData.getMeta().get(option.getPermission());
+        if (list != null) {
+            return list;
+        }
+
+        // Now check default persistent data
+        query = QueryOptions.builder(QueryMode.CONTEXTUAL).option(DataQueryOrderFunction.KEY, DEFAULT_DATA_QUERY_ORDER).option(DataTypeFilterFunction.KEY, DEFAULT_PERSISTENT_ONLY).context(set).build();
+        metaData = permissionHolder.getCachedData().getMetaData(query);
+        list = metaData.getMeta().get(option.getPermission());
         if (list == null) {
             return new ArrayList<>();
         }

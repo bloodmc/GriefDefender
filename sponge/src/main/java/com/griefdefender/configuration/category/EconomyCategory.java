@@ -70,8 +70,8 @@ public class EconomyCategory extends ConfigCategory {
     public int rentDelinquentApplyHour = 0;
     @Setting(value = "rent-transaction-log-limit", comment = "The amount of transactions to keep for history. Default: 60")
     public int rentTransactionLogLimit = 60;
-    @Setting(value = "sign-update-interval", comment = "The interval in minutes for updating sign data. Default: 5. Set to 0 to disable.")
-    public int signUpdateInterval = 5;
+    @Setting(value = "sign-update-interval", comment = "The interval in minutes for updating sign data. Default: 1. Set to 0 to disable.")
+    public int signUpdateInterval = 1;
     @Setting(value = "tax-transaction-log-limit", comment = "The amount of transactions to keep for history. Default: 60")
     public int taxTransactionLogLimit = 60;
     @Setting(value = "tax-apply-hour", comment = "The specific hour in day to apply tax to all claims. Note: This uses military time and accepts values between 0-23. Default: 0")

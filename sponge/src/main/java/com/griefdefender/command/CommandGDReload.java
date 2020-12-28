@@ -39,7 +39,7 @@ import org.spongepowered.api.command.CommandSource;
 public class CommandGDReload extends BaseCommand {
 
     @CommandAlias("gdreload")
-    @Description("Reloads GriefDefender's configuration settings.")
+    @Description("%reload")
     @Subcommand("reload")
     public void execute(CommandSource src) {
         GriefDefenderPlugin.getInstance().loadConfig();
