@@ -308,6 +308,7 @@ public class EntityEventHandler implements Listener {
         GDTimings.ENTITY_DAMAGE_EVENT.startTiming();
         final ThrownPotion thrownPotion = event.getEntity();
         if (event.getAffectedEntities().isEmpty()) {
+            GDTimings.ENTITY_DAMAGE_EVENT.stopTiming();
             return;
         }
 
