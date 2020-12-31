@@ -298,6 +298,11 @@ public class MessageCache {
     public Component FLAG_UI_CLICK_ALLOW;
     public Component FLAG_UI_CLICK_DENY;
     public Component FLAG_UI_CLICK_REMOVE;
+    public Component FLAG_UI_EVENT_CANCEL;
+    public Component FLAG_UI_HOVER_ACTIVE_RESULT;
+    public Component FLAG_UI_HOVER_DEFAULT_VALUE;
+    public Component FLAG_UI_HOVER_DEFINITION_CONTEXTS;
+    public Component FLAG_UI_HOVER_PARTIAL;
     public Component FLAG_UI_INFO_CLAIM;
     public Component FLAG_UI_INFO_DEFAULT;
     public Component FLAG_UI_INFO_INHERIT;
@@ -407,6 +412,7 @@ public class MessageCache {
     public Component OPTION_DESCRIPTION_TAX_EXPIRATION_DAYS_KEEP;
     public Component OPTION_DESCRIPTION_TAX_RATE;
     public Component OPTION_UI_CLICK_REMOVE;
+    public Component OPTION_UI_NOT_DEFINED;
     public Component OWNER_ADMIN;
     public Component PERMISSION_ASSIGN_WITHOUT_HAVING;
     public Component PERMISSION_CLAIM_CREATE;
@@ -514,9 +520,12 @@ public class MessageCache {
     public Component UI_CLICK_ADD_GROUP;
     public Component UI_CLICK_ADD_PLAYER;
     public Component UI_CLICK_CONFIRM;
+    public Component UI_CLICK_RECORD_CHAT;
     public Component UI_CLICK_REMOVE;
     public Component UI_CLICK_VIEW_TRANSACTIONS;
+    public Component UI_CONFLICT_DATA;
     public Component UI_PAY_NEXT_DUE_DATE;
+    public Component UI_RECORD_CHAT;
     public Component UNTRUST_NO_CLAIMS;
     public Component UNTRUST_SELF;
 
@@ -771,6 +780,11 @@ public class MessageCache {
         FLAG_UI_CLICK_ALLOW = MessageStorage.MESSAGE_DATA.getMessage("flag-ui-click-allow");
         FLAG_UI_CLICK_DENY = MessageStorage.MESSAGE_DATA.getMessage("flag-ui-click-deny");
         FLAG_UI_CLICK_REMOVE = MessageStorage.MESSAGE_DATA.getMessage("flag-ui-click-remove");
+        FLAG_UI_EVENT_CANCEL = MessageStorage.MESSAGE_DATA.getMessage("flag-ui-event-cancel");
+        FLAG_UI_HOVER_ACTIVE_RESULT = MessageStorage.MESSAGE_DATA.getMessage("flag-ui-hover-active-result");
+        FLAG_UI_HOVER_DEFAULT_VALUE = MessageStorage.MESSAGE_DATA.getMessage("flag-ui-hover-default-value");
+        FLAG_UI_HOVER_DEFINITION_CONTEXTS = MessageStorage.MESSAGE_DATA.getMessage("flag-ui-hover-definition-contexts");
+        FLAG_UI_HOVER_PARTIAL = MessageStorage.MESSAGE_DATA.getMessage("flag-ui-hover-partial");
         FLAG_UI_INFO_CLAIM = MessageStorage.MESSAGE_DATA.getMessage("flag-ui-info-claim");
         FLAG_UI_INFO_DEFAULT = MessageStorage.MESSAGE_DATA.getMessage("flag-ui-info-default");
         FLAG_UI_INFO_INHERIT = MessageStorage.MESSAGE_DATA.getMessage("flag-ui-info-inherit");
@@ -880,6 +894,7 @@ public class MessageCache {
         OPTION_DESCRIPTION_TAX_EXPIRATION_DAYS_KEEP = MessageStorage.MESSAGE_DATA.getMessage("option-description-tax-expiration-days-keep");
         OPTION_DESCRIPTION_TAX_RATE = MessageStorage.MESSAGE_DATA.getMessage("option-description-tax-rate");
         OPTION_UI_CLICK_REMOVE = MessageStorage.MESSAGE_DATA.getMessage("option-ui-click-remove");
+        OPTION_UI_NOT_DEFINED = MessageStorage.MESSAGE_DATA.getMessage("option-ui-not-defined");
         OWNER_ADMIN = MessageStorage.MESSAGE_DATA.getMessage("owner-admin");
         PERMISSION_ASSIGN_WITHOUT_HAVING = MessageStorage.MESSAGE_DATA.getMessage("permission-assign-without-having");
         PERMISSION_CLAIM_CREATE = MessageStorage.MESSAGE_DATA.getMessage("permission-claim-create");
@@ -987,9 +1002,12 @@ public class MessageCache {
         UI_CLICK_ADD_GROUP = MessageStorage.MESSAGE_DATA.getMessage("ui-click-add-group");
         UI_CLICK_ADD_PLAYER = MessageStorage.MESSAGE_DATA.getMessage("ui-click-add-player");
         UI_CLICK_CONFIRM = MessageStorage.MESSAGE_DATA.getMessage("ui-click-confirm");
+        UI_CLICK_RECORD_CHAT = MessageStorage.MESSAGE_DATA.getMessage("ui-click-record-chat");
         UI_CLICK_REMOVE = MessageStorage.MESSAGE_DATA.getMessage("ui-click-remove");
         UI_CLICK_VIEW_TRANSACTIONS = MessageStorage.MESSAGE_DATA.getMessage("ui-click-view-transactions");
+        UI_CONFLICT_DATA = MessageStorage.MESSAGE_DATA.getMessage("ui-conflict-data");
         UI_PAY_NEXT_DUE_DATE = MessageStorage.MESSAGE_DATA.getMessage("ui-pay-next-due-date");
+        UI_RECORD_CHAT = MessageStorage.MESSAGE_DATA.getMessage("ui-record-chat");
         UNTRUST_NO_CLAIMS = MessageStorage.MESSAGE_DATA.getMessage("untrust-no-claims");
         UNTRUST_SELF = MessageStorage.MESSAGE_DATA.getMessage("untrust-self");
 

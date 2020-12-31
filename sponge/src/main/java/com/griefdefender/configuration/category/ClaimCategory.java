@@ -43,6 +43,9 @@ public class ClaimCategory extends ConfigCategory {
     public List<String> explosionEntitySurfaceBlacklist = new ArrayList<>();
     @Setting(value = "explosion-surface-block-level", comment = "The 'Y' block level that is considered the surface for explosions. (Default: 63)")
     public int explosionSurfaceBlockLevel = 63;
+    @Setting(value = "claim-block-task-move-threshold", comment = "The minimum threshold of movement (in blocks) required to receive accrued claim blocks. (Default: 0)"
+            + "\nNote: The claim block task runs every 5 minutes which is the time each player will get to move the required amount of blocks.")
+    public int claimBlockTaskMoveThreshold = 0;
     @Setting(value = "worldedit-schematics", comment = "Whether to use WorldEdit for schematics. Default: false"
             + "\nNote: If you were using schematics in older GD/GP versions and want old schematics to work then you should keep this setting disabled.")
     public boolean useWorldEditSchematics = false;

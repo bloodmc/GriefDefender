@@ -281,10 +281,10 @@ public abstract class ClaimFlagBase extends BaseCommand {
         Component footer = null;
         if (player.hasPermission(GDPermissions.ADVANCED_FLAGS)) {
             footer = TextComponent.builder().append(whiteOpenBracket)
-                .append(TextComponent.of("PRESET").color(TextColor.GOLD)).append(whiteCloseBracket)
+                .append(MessageCache.getInstance().TITLE_PRESET.color(TextColor.GOLD)).append(whiteCloseBracket)
                 .append(" ")
                 .append(TextComponent.builder()
-                        .append(TextComponent.of("ADVANCED").color(TextColor.GRAY)
+                        .append(MessageCache.getInstance().TITLE_ADVANCED.color(TextColor.GRAY)
                         .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(createClaimFlagConsumer(src, claim, lastActiveMenu)))))
                         .build())
                 .build();
@@ -680,14 +680,14 @@ public abstract class ClaimFlagBase extends BaseCommand {
         TextComponent.Builder valueBuilder = TextComponent.builder();
         if (!properResult) {
             if (hasEditPermission) {
-                hoverBuilder.append("Conflict Data : \n");
+                hoverBuilder.append(MessageCache.getInstance().UI_CONFLICT_DATA).append(" : ").append("\n");
                 for (GDActiveFlagData definitionFlagData : definitionResults) {
                     hoverBuilder.append(definitionFlagData.getComponent(flagGroup))
                                 .append("\n");
                 }
                 hasHover = true;
             }
-            valueBuilder.append("partial");
+            valueBuilder.append(MessageCache.getInstance().FLAG_UI_HOVER_PARTIAL);
             defaultResult = null;
         } else {
             TextColor valueColor = TextColor.GRAY;
@@ -714,7 +714,7 @@ public abstract class ClaimFlagBase extends BaseCommand {
             hasHover = true;
 
             if (properResult) {
-                hoverBuilder.append("\nDefault Value: ", TextColor.AQUA);
+                hoverBuilder.append("\n").append(MessageCache.getInstance().FLAG_UI_HOVER_DEFAULT_VALUE.color(TextColor.AQUA)).append(": ");
                 final Tristate defaultValue = customFlag.getDefaultValue();
                 if (defaultValue == Tristate.UNDEFINED) {
                     hoverBuilder.append(customFlag.getDefaultValue().toString().toLowerCase(), TextColor.GRAY);
@@ -726,7 +726,7 @@ public abstract class ClaimFlagBase extends BaseCommand {
 
                 if (src.getInternalPlayerData().canManageAdminClaims) {
                     if (!customFlag.getContexts().isEmpty()) {
-                        hoverBuilder.append("\nDefinition Contexts: ");
+                        hoverBuilder.append("\n").append(MessageCache.getInstance().FLAG_UI_HOVER_DEFINITION_CONTEXTS).append(": ");
                         hoverBuilder.append("\ngd_claim", TextColor.AQUA)
                             .append("=", TextColor.WHITE)
                             .append(claim.getUniqueId().toString(), TextColor.GRAY);
@@ -760,11 +760,11 @@ public abstract class ClaimFlagBase extends BaseCommand {
 
                 if (src.getInternalPlayerData().canManageAdminClaims) {
                     for (FlagData flagData : customFlag.getFlagData()) {
-                        hoverBuilder.append("\nFlag: ")
+                        hoverBuilder.append("\n").append(MessageCache.getInstance().LABEL_FLAG).append(": ")
                                     .append(flagData.getFlag().getName(), TextColor.GREEN);
     
                         if (!flagData.getContexts().isEmpty()) {
-                            hoverBuilder.append("\nContexts: ");
+                            hoverBuilder.append("\n").append(MessageCache.getInstance().LABEL_CONTEXT).append(": ");
                         }
                         for (Context context : flagData.getContexts()) {
                             hoverBuilder.append("\n");
@@ -778,7 +778,7 @@ public abstract class ClaimFlagBase extends BaseCommand {
     
                         // show active value
                         final GDActiveFlagData activeData = this.getActiveDefinitionResult(claim, customFlag, flagData);
-                        hoverBuilder.append("\nActive Result: ")
+                        hoverBuilder.append("\n").append(MessageCache.getInstance().FLAG_UI_HOVER_ACTIVE_RESULT).append(": ")
                                     .append("\nvalue", TextColor.DARK_AQUA)
                                     .append("=", TextColor.WHITE)
                                     .append(activeData.getValue().name().toLowerCase(), TextColor.GOLD)
@@ -938,6 +938,7 @@ public abstract class ClaimFlagBase extends BaseCommand {
 
         permissionContexts.remove(ClaimContexts.GLOBAL_DEFAULT_CONTEXT);
         permissionContexts.add(claim.getDefaultTypeContext());
+        permissionContexts.add(ClaimContexts.USER_DEFAULT_CONTEXT);
         result = PermissionUtil.getInstance().getPermissionValue(claim, (GDPermissionHolder) flagDefinition.getSubject(), flagData.getFlag().getPermission(), permissionContexts, PermissionDataType.TRANSIENT);
         if (result != Tristate.UNDEFINED) {
             return new GDActiveFlagData(flagDefinition, flagData, result, permissionContexts, GDActiveFlagData.Type.DEFAULT);

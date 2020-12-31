@@ -678,7 +678,7 @@ public abstract class ClaimOptionBase extends BaseCommand {
         }
 
         TextComponent.Builder builder = TextComponent.builder()
-                    .append("\n\nContexts: \n");
+                    .append("\n\n").append(MessageCache.getInstance().LABEL_CONTEXT).append(": \n");
 
         for (Context context : contexts) {
             final String key = context.getKey();
@@ -794,7 +794,7 @@ public abstract class ClaimOptionBase extends BaseCommand {
                 Integer value = getMenuTypeValue(TypeToken.of(Integer.class), currentValue);
                 if (leftArrow) {
                     if (value == null || value < 1) {
-                        TextAdapter.sendComponent(src.getOnlinePlayer(), TextComponent.of("This value is NOT defined and cannot go any lower."));
+                        TextAdapter.sendComponent(src.getOnlinePlayer(), MessageCache.getInstance().OPTION_UI_NOT_DEFINED.color(TextColor.RED));
                     } else {
                         if ((option == Options.MIN_LEVEL || option == Options.MAX_LEVEL || option == Options.MIN_SIZE_Y || option == Options.MAX_SIZE_Y) && value == 1) {
                             value = null;
@@ -826,7 +826,7 @@ public abstract class ClaimOptionBase extends BaseCommand {
                 Double value = getMenuTypeValue(TypeToken.of(Double.class), currentValue);
                 if (leftArrow) {
                     if (value == null || value < 0) {
-                        TextAdapter.sendComponent(src.getOnlinePlayer(), TextComponent.of("This value is NOT defined and cannot go any lower."));
+                        TextAdapter.sendComponent(src.getOnlinePlayer(), MessageCache.getInstance().OPTION_UI_NOT_DEFINED.color(TextColor.RED));
                     } else {
                         value -= 0.1;
                         if (option == Options.ABANDON_RETURN_RATIO && value <= 0) {

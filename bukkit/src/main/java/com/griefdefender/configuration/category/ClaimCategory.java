@@ -43,6 +43,9 @@ public class ClaimCategory extends ConfigCategory {
     public List<String> explosionEntitySurfaceBlacklist = new ArrayList<>();
     @Setting(value = "explosion-surface-block-level", comment = "The 'Y' block level that is considered the surface for explosions. (Default: 63)")
     public int explosionSurfaceBlockLevel = 63;
+    @Setting(value = "claim-block-task-move-threshold", comment = "The minimum threshold of movement (in blocks) required to receive accrued claim blocks. (Default: 0)"
+            + "\nNote: The claim block task runs every 5 minutes which is the time each player will get to move the required amount of blocks.")
+    public int claimBlockTaskMoveThreshold = 0;
     @Setting(value = "piston-protection-in-claims", comment = "Whether piston protection should be enabled within claims. Note: This does not affect pistons crossing into another claim, that is always protected. This only determines whether or not GD should process pistons if it doesn't cross into another claim.")
     public boolean pistonProtectionInClaims = false;
     @Setting(value = "auto-chest-claim-block-radius", comment = "Radius used (in blocks) for auto-created claim when a chest is placed. Set to -1 to disable chest claim creation.")

@@ -32,7 +32,6 @@ import com.griefdefender.claim.GDClaim;
 import com.griefdefender.permission.GDPermissionManager;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.data.manipulator.mutable.entity.VehicleData;
-import org.spongepowered.api.data.property.block.MatterProperty;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.service.economy.Currency;
 import org.spongepowered.api.service.economy.account.Account;
@@ -50,16 +49,15 @@ public class ClaimBlockTask implements Runnable {
     @Override
     public void run() {
         for (World world : Sponge.getServer().getWorlds()) {
+            final int blockMoveThreshold = GriefDefenderPlugin.getActiveConfig(world.getProperties()).getConfig().claim.claimBlockTaskMoveThreshold;
             for (Player player : world.getPlayers()) {
                 final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
                 final GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAtPlayer(playerData, player.getLocation());
                 final int accrualPerHour = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), player, Options.BLOCKS_ACCRUED_PER_HOUR, claim);
                 if (accrualPerHour > 0) {
                     final Location<World> lastLocation = playerData.lastAfkCheckLocation;
-                    final Optional<MatterProperty> matterProperty = player.getLocation().getBlock().getProperty(MatterProperty.class);
                     if (!player.get(VehicleData.class).isPresent() &&
-                            (lastLocation == null || lastLocation.getPosition().distanceSquared(player.getLocation().getPosition()) >= 0) &&
-                            matterProperty.isPresent() && matterProperty.get().getValue() != MatterProperty.Matter.LIQUID) {
+                            (lastLocation == null || lastLocation.getPosition().distanceSquared(player.getLocation().getPosition()) > (blockMoveThreshold * blockMoveThreshold))) {
                         int accruedBlocks = playerData.getBlocksAccruedPerHour() / 12;
                         if (accruedBlocks < 0) {
                             accruedBlocks = 1;
