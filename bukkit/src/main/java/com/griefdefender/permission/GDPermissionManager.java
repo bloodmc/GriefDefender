@@ -101,6 +101,7 @@ import org.bukkit.entity.Vehicle;
 import org.bukkit.event.Event;
 import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
+import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerBucketEvent;
@@ -209,6 +210,10 @@ public class GDPermissionManager implements PermissionManager {
             // add source player context
             // this allows users to block all pvp actions when direct source isn't a player
             contexts.add(new Context(ContextKeys.SOURCE, this.getPermissionIdentifier(user.getOnlinePlayer())));
+        }
+        if (source instanceof Block && event instanceof EntityChangeBlockEvent && flag == Flags.BLOCK_MODIFY) {
+            final EntityChangeBlockEvent entityChangeBlockEvent = (EntityChangeBlockEvent) event;
+            contexts.add(new Context(ContextKeys.SOURCE, this.getPermissionIdentifier(entityChangeBlockEvent.getEntity())));
         }
 
         final Set<Context> sourceContexts = this.getPermissionContexts((GDClaim) claim, source, true);
@@ -759,7 +764,7 @@ public class GDPermissionManager implements PermissionManager {
 
             return populateEventSourceTargetContext(contexts, id, isSource);
         } else if (obj instanceof Material) {
-            final String id = ((Material) obj).name().toLowerCase();
+            final String id = BlockTypeRegistryModule.getInstance().getNMSKey((Material) obj);
             return populateEventSourceTargetContext(contexts, id, isSource);
         } else if (obj instanceof Inventory) {
             final String id = ((Inventory) obj).getType().name().toLowerCase();
@@ -1202,6 +1207,12 @@ public class GDPermissionManager implements PermissionManager {
             } else {
                 contexts.add(ContextGroups.TARGET_CROPS);
             }
+        } else if (NMSUtil.getInstance().isBlockPlant(block)){
+            if (isSource) {
+                contexts.add(ContextGroups.SOURCE_PLANTS);
+            } else {
+                contexts.add(ContextGroups.TARGET_PLANTS);
+            }
         }
         return contexts;
     }
@@ -1475,8 +1486,10 @@ public class GDPermissionManager implements PermissionManager {
         if (holder != GriefDefenderPlugin.DEFAULT_HOLDER && holder instanceof GDPermissionUser) {
             final GDPermissionUser user = (GDPermissionUser) holder;
             final GDPlayerData playerData = (GDPlayerData) user.getPlayerData();
-            //contexts.addAll(PermissionUtil.getInstance().getActiveContexts(holder));
-            PermissionUtil.getInstance().addActiveContexts(contexts, holder, playerData, claim);
+            // Prevent world contexts being added when checking for accrued blocks in global mode
+            if (option != Options.ACCRUED_BLOCKS  || GriefDefenderPlugin.getGlobalConfig().getConfig().playerdata.useWorldPlayerData()) {
+                PermissionUtil.getInstance().addActiveContexts(contexts, holder, playerData, claim);
+            }
         }
 
         Set<Context> optionContexts = new HashSet<>(contexts);

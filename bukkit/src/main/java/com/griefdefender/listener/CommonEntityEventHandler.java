@@ -115,6 +115,10 @@ public class CommonEntityEventHandler {
             return true;
         }
         if (user != null) {
+            if (user.getOnlinePlayer() == null) {
+                // Most likely NPC, ignore
+                return true;
+            }
             if (user.getInternalPlayerData().trappedRequest) {
                 GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().COMMAND_TRAPPED_CANCEL_MOVE);
                 user.getInternalPlayerData().trappedRequest = false;
@@ -190,7 +194,7 @@ public class CommonEntityEventHandler {
                 TextComponent welcomeMessage = (TextComponent) gpEvent.getEnterMessage().orElse(null);
                 if (welcomeMessage != null && !welcomeMessage.equals(TextComponent.empty()) && !fromClaim.isParent(toClaim)) {
                     ChatType chatType = gpEvent.getEnterMessageChatType();
-                    final Component enterPrefix = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.CLAIM_PREFIX_ENTER, ImmutableMap.of(
+                    final Component enterPrefix = toClaim.isWilderness() || toClaim.isAdminClaim() ? GriefDefenderPlugin.GD_TEXT : MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.CLAIM_PREFIX_ENTER, ImmutableMap.of(
                             "owner", toClaim.getOwnerDisplayName()));
                     if (chatType == ChatTypes.ACTION_BAR) {
                         TextAdapter.sendActionBar(player, TextComponent.builder("")
@@ -208,7 +212,7 @@ public class CommonEntityEventHandler {
                 Component farewellMessage = gpEvent.getExitMessage().orElse(null);
                 if (farewellMessage != null && !farewellMessage.equals(TextComponent.empty()) && !toClaim.isParent(fromClaim)) {
                     ChatType chatType = gpEvent.getExitMessageChatType();
-                    final Component exitPrefix = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.CLAIM_PREFIX_EXIT, ImmutableMap.of(
+                    final Component exitPrefix = fromClaim.isWilderness() || fromClaim.isAdminClaim() ? GriefDefenderPlugin.GD_TEXT : MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.CLAIM_PREFIX_EXIT, ImmutableMap.of(
                             "owner", fromClaim.getOwnerDisplayName()));
                     if (chatType == ChatTypes.ACTION_BAR) {
                         TextAdapter.sendActionBar(player, TextComponent.builder("")

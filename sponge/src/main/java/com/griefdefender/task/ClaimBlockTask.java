@@ -57,7 +57,7 @@ public class ClaimBlockTask implements Runnable {
                 if (accrualPerHour > 0) {
                     final Location<World> lastLocation = playerData.lastAfkCheckLocation;
                     if (!player.get(VehicleData.class).isPresent() &&
-                            (lastLocation == null || lastLocation.getPosition().distanceSquared(player.getLocation().getPosition()) > (blockMoveThreshold * blockMoveThreshold))) {
+                            (lastLocation == null || lastLocation.getPosition().distanceSquared(player.getLocation().getPosition()) >= (blockMoveThreshold * blockMoveThreshold))) {
                         int accruedBlocks = playerData.getBlocksAccruedPerHour() / 12;
                         if (accruedBlocks < 0) {
                             accruedBlocks = 1;

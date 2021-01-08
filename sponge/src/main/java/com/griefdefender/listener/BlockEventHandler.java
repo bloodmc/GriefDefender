@@ -253,15 +253,21 @@ public class BlockEventHandler {
                 // If a player successfully interacted with a block recently such as a pressure plate, ignore check
                 // This fixes issues such as pistons not being able to extend
                 if (user != null && !isForgePlayerBreak && playerData != null && playerData.eventResultCache != null && playerData.eventResultCache.checkEventResultCache(targetClaim, "block-pre") == Tristate.TRUE) {
-                    GDPermissionManager.getInstance().processEventLog(event, location, targetClaim, Flags.BLOCK_BREAK.getPermission(), source, blockState, user, playerData.eventResultCache.lastTrust, Tristate.TRUE);
+                    if (!isLiquidSource && !isFireSource && !isLeafDecay) {
+                        GDPermissionManager.getInstance().processEventLog(event, location, targetClaim, Flags.BLOCK_BREAK.getPermission(), source, blockState, user, playerData.eventResultCache.lastTrust, Tristate.TRUE);
+                    }
                     continue;
                 }
                 if (user != null && targetClaim.isUserTrusted(user, TrustTypes.BUILDER)) {
-                    GDPermissionManager.getInstance().processEventLog(event, location, targetClaim, Flags.BLOCK_BREAK.getPermission(), source, blockState, user, TrustTypes.BUILDER.getName().toLowerCase(), Tristate.TRUE);
+                    if (!isLiquidSource && !isFireSource && !isLeafDecay) {
+                        GDPermissionManager.getInstance().processEventLog(event, location, targetClaim, Flags.BLOCK_BREAK.getPermission(), source, blockState, user, TrustTypes.BUILDER.getName().toLowerCase(), Tristate.TRUE);
+                    }
                     continue;
                 }
                 if (sourceClaim.getOwnerUniqueId().equals(targetClaim.getOwnerUniqueId()) && user == null && sourceEntity == null && !isFireSource && !isLeafDecay) {
-                    GDPermissionManager.getInstance().processEventLog(event, location, targetClaim, Flags.BLOCK_BREAK.getPermission(), source, blockState, user, "owner", Tristate.TRUE);
+                    if (!isLiquidSource) {
+                        GDPermissionManager.getInstance().processEventLog(event, location, targetClaim, Flags.BLOCK_BREAK.getPermission(), source, blockState, user, "owner", Tristate.TRUE);
+                    }
                     continue;
                 }
                 if (user != null && pistonExtend) {
@@ -784,6 +790,29 @@ public class BlockEventHandler {
             return;
         }
 
+        // handle ice form/melt
+        if (event.getTransactions().size() == 1) {
+            final BlockSnapshot sourceBlock = event.getTransactions().get(0).getOriginal();
+            final BlockSnapshot targetBlock = event.getTransactions().get(0).getFinal();
+            if (NMSUtil.getInstance().isBlockWater(sourceBlock.getState().getType()) && NMSUtil.getInstance().isBlockIce(targetBlock.getState().getType())) {
+                final Location<World> loc = targetBlock.getLocation().get();
+                final GDClaim claim = this.dataStore.getClaimAt(loc);
+                final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, loc, claim, Flags.BLOCK_MODIFY, sourceBlock, targetBlock, (Player) null, true);
+                if (result == Tristate.FALSE) {
+                    event.setCancelled(true);
+                }
+                return;
+            } else if (NMSUtil.getInstance().isBlockIce(sourceBlock.getState().getType()) && NMSUtil.getInstance().isBlockWater(targetBlock.getState().getType())) {
+                final Location<World> loc = targetBlock.getLocation().get();
+                final GDClaim claim = this.dataStore.getClaimAt(loc);
+                final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, loc, claim, Flags.BLOCK_MODIFY, sourceBlock, targetBlock, (Player) null, true);
+                if (result == Tristate.FALSE) {
+                    event.setCancelled(true);
+                }
+                return;
+            }
+        }
+
         ItemStackSnapshot itemSnapshot = event.getContext().get(EventContextKeys.USED_ITEM).orElse(null);
         if (itemSnapshot != null) {
             if (itemSnapshot.getType().equals(ItemTypes.BUCKET)) {
@@ -806,7 +835,7 @@ public class BlockEventHandler {
         } else {
             sourceClaim = this.getSourceClaim(event.getCause());
         }
-        if (sourceClaim == null) {
+        if (sourceClaim == null && user == null) {
             GDTimings.BLOCK_PLACE_EVENT.stopTimingIfSync();
             return;
         }

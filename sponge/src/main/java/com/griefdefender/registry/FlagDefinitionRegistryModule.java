@@ -104,6 +104,24 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .build());
 
         flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.SOURCE_TYPE_ANIMAL);
+        this.registerCustomType(
+                definitionBuilder
+                    .reset()
+                    .name("animal-block-modify")
+                    .admin(true)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
+                    .defaultValue(Tristate.TRUE)
+                    .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_ANIMAL_BLOCK_MODIFY)
+                    .group("admin")
+                    .flagData(flagDataBuilder
+                        .reset()
+                        .flag(Flags.BLOCK_MODIFY)
+                        .contexts(flagContexts)
+                        .build())
+                    .build());
+
+        flagContexts = new HashSet<>();
         flagContexts.add(FlagContexts.TARGET_TYPE_ANIMAL);
         this.registerCustomType(
                 definitionBuilder
@@ -975,6 +993,24 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .build());
 
         flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.SOURCE_SILVERFISH);
+        this.registerCustomType(
+                definitionBuilder
+                    .reset()
+                    .name("silverfish-block-infest")
+                    .admin(true)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
+                    .defaultValue(Tristate.FALSE)
+                    .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_SILVERFISH_BLOCK_INFEST)
+                    .group("admin")
+                    .flagData(flagDataBuilder
+                        .reset()
+                        .flag(Flags.BLOCK_MODIFY)
+                        .contexts(flagContexts)
+                        .build())
+                    .build());
+
+        flagContexts = new HashSet<>();
         flagContexts.add(FlagContexts.SOURCE_TNT);
         this.registerCustomType(
                 definitionBuilder
@@ -1032,27 +1068,6 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .build());
 
         flagContexts = new HashSet<>();
-        flagContexts.add(FlagContexts.SOURCE_PLAYER);
-        flagContexts.add(FlagContexts.TARGET_VILLAGER);
-        flagData = new ArrayList<>();
-        flagData.add(flagDataBuilder
-                .reset()
-                .flag(Flags.INTERACT_ENTITY_SECONDARY)
-                .contexts(flagContexts)
-                .build());
-        this.registerCustomType(
-                definitionBuilder
-                    .reset()
-                    .name("villager-farm")
-                    .admin(true)
-                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
-                    .defaultValue(Tristate.TRUE)
-                    .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_VILLAGER_FARM)
-                    .group("admin")
-                    .flagData(flagData)
-                    .build());
-
-        flagContexts = new HashSet<>();
         flagContexts.add(FlagContexts.SOURCE_WITHER);
         this.registerCustomType(
                 definitionBuilder
@@ -1100,6 +1115,11 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                 .flag(Flags.BLOCK_BREAK)
                 .contexts(flagContexts)
                 .build());
+        flagData.add(flagDataBuilder
+                .reset()
+                .flag(Flags.BLOCK_PLACE)
+                .contexts(flagContexts)
+                .build());
         this.registerCustomType(
                 definitionBuilder
                     .reset()
@@ -1108,6 +1128,27 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .contexts(definitionContexts)
                     .defaultValue(Tristate.TRUE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_VILLAGER_FARM)
+                    .group("admin")
+                    .flagData(flagData)
+                    .build());
+
+        flagContexts = new HashSet<>();
+        flagContexts.add(FlagContexts.SOURCE_PLAYER);
+        flagContexts.add(FlagContexts.TARGET_VILLAGER);
+        flagData = new ArrayList<>();
+        flagData.add(flagDataBuilder
+                .reset()
+                .flag(Flags.INTERACT_ENTITY_SECONDARY)
+                .contexts(flagContexts)
+                .build());
+        this.registerCustomType(
+                definitionBuilder
+                    .reset()
+                    .name("villager-trade")
+                    .admin(true)
+                    .context(ClaimContexts.USER_DEFAULT_CONTEXT)
+                    .defaultValue(Tristate.TRUE)
+                    .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_VILLAGER_TRADE)
                     .group("admin")
                     .flagData(flagData)
                     .build());
@@ -1203,6 +1244,17 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
 
         flagContexts = new HashSet<>();
         flagContexts.add(FlagContexts.SOURCE_ENDERMAN);
+        flagData = new ArrayList<>();
+        flagData.add(flagDataBuilder
+                .reset()
+                .flag(Flags.BLOCK_BREAK)
+                .contexts(flagContexts)
+                .build());
+        flagData.add(flagDataBuilder
+                .reset()
+                .flag(Flags.BLOCK_PLACE)
+                .contexts(flagContexts)
+                .build());
         this.registerCustomType(
                 definitionBuilder
                     .reset()
@@ -1212,11 +1264,7 @@ public class FlagDefinitionRegistryModule implements CatalogRegistryModule<FlagD
                     .defaultValue(Tristate.FALSE)
                     .description(MessageCache.getInstance().FLAG_DESCRIPTION_CUSTOM_ENDERMAN_GRIEF)
                     .group("user")
-                    .flagData(flagDataBuilder
-                        .reset()
-                        .flag(Flags.BLOCK_BREAK)
-                        .contexts(flagContexts)
-                        .build())
+                    .flagData(flagData)
                     .build());
 
         flagContexts = new HashSet<>();

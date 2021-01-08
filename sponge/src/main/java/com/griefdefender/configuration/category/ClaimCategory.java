@@ -46,6 +46,10 @@ public class ClaimCategory extends ConfigCategory {
     @Setting(value = "claim-block-task-move-threshold", comment = "The minimum threshold of movement (in blocks) required to receive accrued claim blocks. (Default: 0)"
             + "\nNote: The claim block task runs every 5 minutes which is the time each player will get to move the required amount of blocks.")
     public int claimBlockTaskMoveThreshold = 0;
+    @Setting(value = "claim-block-task", comment = "Whether claim block task should run to accrue blocks for players. (Default: True)"
+            + "\nNote: If in economy-mode, use setting 'use-claim-block-task' under economy category."
+            + "\nNote: To configure amount accrued, see 'blocks-accrued-per-hour' option at https://github.com/bloodmc/GriefDefender/wiki/Options-(Meta)#global-options")
+    public boolean claimBlockTask = true;
     @Setting(value = "worldedit-schematics", comment = "Whether to use WorldEdit for schematics. Default: false"
             + "\nNote: If you were using schematics in older GD/GP versions and want old schematics to work then you should keep this setting disabled.")
     public boolean useWorldEditSchematics = false;

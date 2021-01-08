@@ -184,6 +184,7 @@ public class MessageCache {
     public Component ECONOMY_SIGN_SOLD_LINE4;
     public Component ECONOMY_VIRTUAL_NOT_SUPPORTED;
     public Component FEATURE_NOT_AVAILABLE;
+    public Component FLAG_DESCRIPTION_CUSTOM_ANIMAL_BLOCK_MODIFY;
     public Component FLAG_DESCRIPTION_CUSTOM_ARMOR_STAND_USE;
     public Component FLAG_DESCRIPTION_CUSTOM_BLOCK_TRAMPLING;
     public Component FLAG_DESCRIPTION_CUSTOM_CHEST_ACCESS;
@@ -236,8 +237,10 @@ public class MessageCache {
     public Component FLAG_DESCRIPTION_CUSTOM_PISTON_ITEM_SPAWN;
     public Component FLAG_DESCRIPTION_CUSTOM_PISTON_USE;
     public Component FLAG_DESCRIPTION_CUSTOM_PVP;
+    public Component FLAG_DESCRIPTION_CUSTOM_RAVAGER_BLOCK_BREAK;
     public Component FLAG_DESCRIPTION_CUSTOM_RIDE;
     public Component FLAG_DESCRIPTION_CUSTOM_SLEEP;
+    public Component FLAG_DESCRIPTION_CUSTOM_SILVERFISH_BLOCK_INFEST;
     public Component FLAG_DESCRIPTION_CUSTOM_SNOW_FALL;
     public Component FLAG_DESCRIPTION_CUSTOM_SNOW_MELT;
     public Component FLAG_DESCRIPTION_CUSTOM_SNOWMAN_TRAIL;
@@ -667,6 +670,7 @@ public class MessageCache {
         ECONOMY_SIGN_SOLD_LINE4 = MessageStorage.MESSAGE_DATA.getMessage("economy-sign-sold-line4");
         ECONOMY_VIRTUAL_NOT_SUPPORTED = MessageStorage.MESSAGE_DATA.getMessage("economy-virtual-not-supported");
         FEATURE_NOT_AVAILABLE = MessageStorage.MESSAGE_DATA.getMessage("feature-not-available");
+        FLAG_DESCRIPTION_CUSTOM_ANIMAL_BLOCK_MODIFY = MessageStorage.MESSAGE_DATA.getMessage("flag-description-custom-animal-block-modify");
         FLAG_DESCRIPTION_CUSTOM_ARMOR_STAND_USE = MessageStorage.MESSAGE_DATA.getMessage("flag-description-custom-armorstand-use");
         FLAG_DESCRIPTION_CUSTOM_BLOCK_TRAMPLING = MessageStorage.MESSAGE_DATA.getMessage("flag-description-custom-block-trampling");
         FLAG_DESCRIPTION_CUSTOM_CHEST_ACCESS = MessageStorage.MESSAGE_DATA.getMessage("flag-description-custom-chest-access");
@@ -719,7 +723,9 @@ public class MessageCache {
         FLAG_DESCRIPTION_CUSTOM_PLAYER_TELEPORT_TO = MessageStorage.MESSAGE_DATA.getMessage("flag-description-custom-player-teleport-to");
         FLAG_DESCRIPTION_CUSTOM_PLAYER_VILLAGER_DAMAGE = MessageStorage.MESSAGE_DATA.getMessage("flag-description-custom-player-villager-damage");
         FLAG_DESCRIPTION_CUSTOM_PVP = MessageStorage.MESSAGE_DATA.getMessage("flag-description-custom-pvp");
+        FLAG_DESCRIPTION_CUSTOM_RAVAGER_BLOCK_BREAK = MessageStorage.MESSAGE_DATA.getMessage("flag-description-custom-ravager-block-break");
         FLAG_DESCRIPTION_CUSTOM_RIDE = MessageStorage.MESSAGE_DATA.getMessage("flag-description-custom-ride");
+        FLAG_DESCRIPTION_CUSTOM_SILVERFISH_BLOCK_INFEST = MessageStorage.MESSAGE_DATA.getMessage("flag-description-custom-silverfish-block-infest");
         FLAG_DESCRIPTION_CUSTOM_SLEEP = MessageStorage.MESSAGE_DATA.getMessage("flag-description-custom-sleep");
         FLAG_DESCRIPTION_CUSTOM_SNOW_FALL = MessageStorage.MESSAGE_DATA.getMessage("flag-description-custom-snow-fall");
         FLAG_DESCRIPTION_CUSTOM_SNOW_MELT = MessageStorage.MESSAGE_DATA.getMessage("flag-description-custom-snow-melt");

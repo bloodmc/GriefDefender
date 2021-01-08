@@ -686,7 +686,7 @@ public class GriefDefenderPlugin {
             GriefDefenderPlugin.getGlobalConfig().save();
         }
 
-        if (!isEconomyModeEnabled() || GriefDefenderPlugin.getGlobalConfig().getConfig().economy.useClaimBlockTask) {
+        if ((!isEconomyModeEnabled() && GriefDefenderPlugin.getGlobalConfig().getConfig().claim.claimBlockTask) || GriefDefenderPlugin.getGlobalConfig().getConfig().economy.useClaimBlockTask) {
             this.runningTasks.add(new ClaimBlockTask());
         }
         new PlayerTickTask();

@@ -51,12 +51,15 @@ public class FlagContexts {
     public static final Context SOURCE_PISTON = new Context(ContextKeys.SOURCE, "minecraft:piston");
     public static final Context SOURCE_PISTON_STICKY = new Context(ContextKeys.SOURCE, "minecraft:sticky_piston");
     public static final Context SOURCE_PLAYER = new Context(ContextKeys.SOURCE, "minecraft:player");
+    public static final Context SOURCE_RAVAGER = new Context(ContextKeys.SOURCE, "minecraft:ravager");
+    public static final Context SOURCE_SILVERFISH = new Context(ContextKeys.SOURCE, "minecraft:silverfish");
     public static final Context SOURCE_SNOW = new Context(ContextKeys.SOURCE, "minecraft:snow");
     public static final Context SOURCE_SNOW_1_12 = new Context(ContextKeys.SOURCE, "minecraft:snow_layer");
     public static final Context SOURCE_SNOWMAN = new Context(ContextKeys.SOURCE, "minecraft:snow_golem");
     public static final Context SOURCE_SNOWMAN_1_12 = new Context(ContextKeys.SOURCE, "minecraft:snowman");
     public static final Context SOURCE_TNT = new Context(ContextKeys.SOURCE, "minecraft:tnt");
     public static final Context SOURCE_TURTLE_EGG = new Context(ContextKeys.SOURCE, "minecraft:turtle_egg");
+    public static final Context SOURCE_TYPE_ANIMAL = new Context(ContextKeys.SOURCE, "#animal");
     public static final Context SOURCE_TYPE_MONSTER = new Context(ContextKeys.SOURCE, "#monster");
     public static final Context SOURCE_WATER = new Context(ContextKeys.SOURCE, "minecraft:water");
     public static final Context SOURCE_WATER_1_12 = new Context(ContextKeys.SOURCE, "minecraft:flowing_water");

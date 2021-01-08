@@ -60,11 +60,13 @@ import net.kyori.text.Component;
 
 import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.World.Environment;
 import org.bukkit.block.Block;
 import org.bukkit.block.CreatureSpawner;
+import org.bukkit.entity.Animals;
 import org.bukkit.entity.Creeper;
 import org.bukkit.entity.EnderCrystal;
 import org.bukkit.entity.Entity;
@@ -141,6 +143,21 @@ public class EntityEventHandler implements Listener {
         }
 
         final Block block = event.getBlock();
+        final boolean sourceAir = NMSUtil.getInstance().isMaterialAir(block.getType());
+        final boolean targetAir = NMSUtil.getInstance().isMaterialAir(event.getTo());
+        if (sourceAir && targetAir) {
+            return;
+        }
+
+        Flag flag = null;
+        if (sourceAir && !targetAir) {
+            flag = Flags.BLOCK_PLACE;
+        } else if (!sourceAir && targetAir) {
+            flag = Flags.BLOCK_BREAK;
+        } else {
+            flag = Flags.BLOCK_MODIFY;
+        }
+
         final World world = event.getBlock().getWorld();
         if (!GriefDefenderPlugin.getInstance().claimsEnabledForWorld(world.getUID())) {
             return;
@@ -167,7 +184,21 @@ public class EntityEventHandler implements Listener {
                 return;
             }
         }
-        final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, Flags.BLOCK_BREAK, event.getEntity(), event.getBlock(), user, TrustTypes.BUILDER, true);
+
+        Tristate result = Tristate.TRUE;
+        if (flag == Flags.BLOCK_BREAK) {
+            result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, flag, event.getEntity(), event.getBlock(), user, TrustTypes.BUILDER, true);
+        } else if (flag == Flags.BLOCK_PLACE) {
+            result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, flag, event.getEntity(), event.getTo(), user, TrustTypes.BUILDER, true);
+        } else {
+            // Check if entity can modify block
+            result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, flag, event.getEntity(), event.getBlock(), user, TrustTypes.BUILDER, true);
+            if (result == Tristate.TRUE) {
+                // Check if source block can be modified to new block
+                result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, flag, event.getBlock(), event.getTo(), user, TrustTypes.BUILDER, true);
+            }
+        }
+
         if (result == Tristate.FALSE) {
             event.setCancelled(true);
             return;
@@ -431,6 +462,10 @@ public class EntityEventHandler implements Listener {
             }
         }
 
+        // allow source/target animals to attack eachother
+        if (event.getDamager() instanceof Animals && event.getEntity() instanceof Animals) {
+            return;
+        }
         GDTimings.ENTITY_DAMAGE_EVENT.startTiming();
         if (protectEntity(event, event.getDamager(), event.getEntity())) {
             event.setCancelled(true);
@@ -495,7 +530,7 @@ public class EntityEventHandler implements Listener {
                 user = PermissionHolderCache.getInstance().getOrCreateUser(gdEntity.getOwnerUUID());
             }
         }
-        if (user != null && user.getOnlinePlayer() != null && targetUser.getOnlinePlayer() != null) {
+        if (user != null && user.getOnlinePlayer() != null && targetUser != null && targetUser.getOnlinePlayer() != null) {
             return this.getPvpProtectResult(event, claim, source, user, targetUser);
         }
 

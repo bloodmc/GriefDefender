@@ -325,8 +325,8 @@ public class GriefDefenderPlugin {
     public boolean permPluginInstalled = false;
 
     public GDBlockType createVisualBlock;
-    public GDItemType modificationTool;
-    public GDItemType investigationTool;
+    public String modificationTool;
+    public String investigationTool;
 
     public static boolean debugLogging = false;
     public static boolean debugActive = false;
@@ -664,18 +664,6 @@ public class GriefDefenderPlugin {
             new PlaceholderProvider();
             this.getLogger().info("GriefDefender PlaceholderAPI expansion enabled!");
         }
-        try {
-            if (Sponge.getPluginManager().getPlugin("nucleus").isPresent()) {
-                try {
-                    Class.forName("io.github.nucleuspowered.nucleus.api.events.NucleusHomeEvent");
-                    this.nucleusApiProvider = new NucleusProviderLegacy();
-                } catch (ClassNotFoundException e) {
-                    this.nucleusApiProvider = new NucleusProviderV2();
-                }
-            }
-        } catch (Throwable t) {
-            // ignore
-        }
         if (Sponge.getPluginManager().getPlugin("worldedit").isPresent() || Sponge.getPluginManager().getPlugin("fastasyncworldedit").isPresent()) {
             this.worldEditProvider = new GDWorldEditProvider();
         }
@@ -696,6 +684,19 @@ public class GriefDefenderPlugin {
                 e.printStackTrace();
                 return;
             }
+        }
+
+        try {
+            if (Sponge.getPluginManager().getPlugin("nucleus").isPresent()) {
+                try {
+                    Class.forName("io.github.nucleuspowered.nucleus.api.events.NucleusHomeEvent");
+                    this.nucleusApiProvider = new NucleusProviderLegacy();
+                } catch (ClassNotFoundException e) {
+                    this.nucleusApiProvider = new NucleusProviderV2();
+                }
+            }
+        } catch (Throwable t) {
+            // ignore
         }
 
         Sponge.getEventManager().registerListeners(GDBootstrap.getInstance(), new BlockEventHandler(dataStore));
@@ -775,14 +776,14 @@ public class GriefDefenderPlugin {
 
         Sponge.getScheduler().createTaskBuilder().delayTicks(1).intervalTicks(1).execute(new PlayerTickTask())
                 .submit(GDBootstrap.getInstance());
-        if (!isEconomyModeEnabled() || GriefDefenderPlugin.getGlobalConfig().getConfig().economy.useClaimBlockTask) {
+        if ((!isEconomyModeEnabled() && GriefDefenderPlugin.getGlobalConfig().getConfig().claim.claimBlockTask) || GriefDefenderPlugin.getGlobalConfig().getConfig().economy.useClaimBlockTask) {
             Sponge.getScheduler().createTaskBuilder().interval(5, TimeUnit.MINUTES).execute(new ClaimBlockTask())
                     .submit(GDBootstrap.getInstance());
         }
 
         if (GriefDefenderPlugin.getInstance().getEconomyService() != null) {
             if (GriefDefenderPlugin.getGlobalConfig().getConfig().economy.isRentSignEnabled()) {
-                Sponge.getScheduler().createTaskBuilder().intervalTicks(GriefDefenderPlugin.getGlobalConfig().getConfig().economy.signUpdateInterval).execute(new SignUpdateTask())
+                Sponge.getScheduler().createTaskBuilder().interval(GriefDefenderPlugin.getGlobalConfig().getConfig().economy.signUpdateInterval, TimeUnit.MINUTES).execute(new SignUpdateTask())
                     .submit(GDBootstrap.getInstance());
             }
             if (GriefDefenderPlugin.getGlobalConfig().getConfig().economy.rentSystem) {
@@ -1230,8 +1231,8 @@ public class GriefDefenderPlugin {
             final GDItemType defaultModTool = ItemTypeRegistryModule.getInstance().getById("minecraft:golden_shovel").orElse(null);
             final GDBlockType defaultCreateVisualBlock = BlockTypeRegistryModule.getInstance().getById("minecraft:diamond_block").orElse(null);
             this.createVisualBlock = BlockTypeRegistryModule.getInstance().getById(BaseStorage.globalConfig.getConfig().visual.claimCreateStartBlock).orElse(defaultCreateVisualBlock);
-            this.modificationTool  = ItemTypeRegistryModule.getInstance().getById(BaseStorage.globalConfig.getConfig().claim.modificationTool).orElse(defaultModTool);
-            this.investigationTool = ItemTypeRegistryModule.getInstance().getById(BaseStorage.globalConfig.getConfig().claim.investigationTool).orElse(ItemTypeRegistryModule.getInstance().getById("minecraft:stick").get());
+            this.modificationTool  = BaseStorage.globalConfig.getConfig().claim.modificationTool;
+            this.investigationTool = BaseStorage.globalConfig.getConfig().claim.investigationTool;
             if (this.dataStore != null) {
                 for (World world : Sponge.getGame().getServer().getWorlds()) {
                     DimensionType dimType = world.getProperties().getDimensionType();

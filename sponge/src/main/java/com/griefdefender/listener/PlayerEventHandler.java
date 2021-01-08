@@ -939,7 +939,7 @@ public class PlayerEventHandler {
         // if he's switching to the golden shovel
         for (SlotTransaction transaction : event.getTransactions()) {
             ItemStackSnapshot newItemStack = transaction.getFinal();
-            if (count == 1 && newItemStack != null && newItemStack.getType().equals(GriefDefenderPlugin.getInstance().modificationTool.getType())) {
+            if (count == 1 && newItemStack != null && newItemStack.getType().getId().equalsIgnoreCase(GriefDefenderPlugin.getInstance().modificationTool)) {
                 if (!playerData.claimTool) {
                     GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().CLAIMTOOL_NOT_ENABLED);
                     GDTimings.PLAYER_CHANGE_HELD_ITEM_EVENT.stopTiming();
@@ -1095,7 +1095,7 @@ public class PlayerEventHandler {
 
             // Don't send a deny message if the player is holding an investigation tool
             if (Sponge.getServer().getRunningTimeTicks() != lastInteractItemPrimaryTick || lastInteractItemCancelled != true) {
-                if (!PlayerUtil.getInstance().hasItemInOneHand(player, GriefDefenderPlugin.getInstance().investigationTool.getType())) {
+                if (!playerData.claimMode && (itemInHand == null || !itemInHand.getType().getId().equalsIgnoreCase(GriefDefenderPlugin.getInstance().investigationTool))) {
                     this.sendInteractBlockDenyMessage(itemInHand, clickedBlock, claim, player, playerData, handType);
                 }
             }
@@ -1183,7 +1183,7 @@ public class PlayerEventHandler {
                 }
                 // Don't send a deny message if the player is holding an investigation tool
                 if (Sponge.getServer().getRunningTimeTicks() != lastInteractItemSecondaryTick || lastInteractItemCancelled != true) {
-                    if (!PlayerUtil.getInstance().hasItemInOneHand(player, GriefDefenderPlugin.getInstance().investigationTool.getType())) {
+                    if (!playerData.claimMode && (itemInHand == null || !itemInHand.getType().getId().equalsIgnoreCase(GriefDefenderPlugin.getInstance().investigationTool))) {
                         this.sendInteractBlockDenyMessage(itemInHand, clickedBlock, claim, player, playerData, handType);
                     }
                 }
@@ -1254,13 +1254,13 @@ public class PlayerEventHandler {
 
         final Flag flag = primaryEvent ? Flags.INTERACT_ITEM_PRIMARY : Flags.INTERACT_ITEM_SECONDARY;
 
-        if ((playerData.claimMode && event.getHandType() == HandTypes.MAIN_HAND && primaryEvent) || (!playerData.claimMode && playerData.claimTool && GriefDefenderPlugin.getInstance().investigationTool != null && !itemInHand.isEmpty() && itemInHand.getType().equals(GriefDefenderPlugin.getInstance().investigationTool.getType()))) {
+        if ((playerData.claimMode && event.getHandType() == HandTypes.MAIN_HAND && primaryEvent) || (!playerData.claimMode && playerData.claimTool && GriefDefenderPlugin.getInstance().investigationTool != null && !itemInHand.isEmpty() && itemInHand.getType().getId().equalsIgnoreCase(GriefDefenderPlugin.getInstance().investigationTool))) {
             investigateClaim(event, player, blockSnapshot, itemInHand);
             event.setCancelled(true);
             return event;
         }
 
-        if ((playerData.claimMode && event.getHandType() == HandTypes.MAIN_HAND && !primaryEvent) || (!playerData.claimMode && playerData.claimTool && GriefDefenderPlugin.getInstance().modificationTool != null && !itemInHand.isEmpty() && itemInHand.getType().equals(GriefDefenderPlugin.getInstance().modificationTool.getType()))) {
+        if ((playerData.claimMode && event.getHandType() == HandTypes.MAIN_HAND && !primaryEvent) || (!playerData.claimMode && playerData.claimTool && GriefDefenderPlugin.getInstance().modificationTool != null && !itemInHand.isEmpty() && itemInHand.getType().getId().equals(GriefDefenderPlugin.getInstance().modificationTool))) {
             onPlayerHandleClaimCreateAction(event, blockSnapshot, player, itemInHand, playerData);
             // avoid changing blocks after using a shovel
             event.setCancelled(true);
@@ -1884,7 +1884,7 @@ public class PlayerEventHandler {
             return false;
         }
 
-        if (!playerData.claimMode && (itemInHand.isEmpty() || itemInHand.getType() != GriefDefenderPlugin.getInstance().investigationTool.getType())) {
+        if (!playerData.claimMode && (itemInHand.isEmpty() || !itemInHand.getType().getId().equalsIgnoreCase(GriefDefenderPlugin.getInstance().investigationTool))) {
             return false;
         }
 
