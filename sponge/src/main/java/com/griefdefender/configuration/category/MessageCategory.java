@@ -31,7 +31,7 @@ import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
 public class MessageCategory extends ConfigCategory {
 
     @Setting(value = "locale", comment = "Set the locale to use for GD messages. (Default: en_US)\n" +
-            "Available languages: de_DE, en_US, es_ES, fr_FR, pl_PL, ru_RU. The data is stored under assets in jar.\n" +
+            "Available languages: de_DE, en_US, es_ES, fr_FR, pl_PL, ru_RU, zh_CN, zh_HK. The data is stored under assets in jar.\n" +
             "Note: The language code must be lowercase and the country code must be uppercase.")
     public String locale = "en_US";
 
