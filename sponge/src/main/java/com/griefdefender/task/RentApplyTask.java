@@ -105,9 +105,11 @@ public class RentApplyTask implements Runnable {
                 }
                 final Set<Claim> children = claim.getChildren(true);
                 for (Claim child : children) {
-                    for (UUID uuid : child.getEconomyData().getRenters()) {
-                        final GDPermissionUser user = PermissionHolderCache.getInstance().getOrCreateUser(uuid);
-                        handleClaimRent((GDClaim) child, user);
+                    if (child.getEconomyData().isRented()) {
+                        for (UUID uuid : child.getEconomyData().getRenters()) {
+                            final GDPermissionUser user = PermissionHolderCache.getInstance().getOrCreateUser(uuid);
+                            handleClaimRent((GDClaim) child, user);
+                        }
                     }
                 }
             }

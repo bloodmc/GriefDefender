@@ -100,6 +100,7 @@ import org.spongepowered.api.event.Event;
 import org.spongepowered.api.event.block.NotifyNeighborBlockEvent;
 import org.spongepowered.api.event.cause.EventContextKey;
 import org.spongepowered.api.event.cause.EventContextKeys;
+import org.spongepowered.api.event.cause.entity.damage.DamageTypes;
 import org.spongepowered.api.event.cause.entity.damage.source.DamageSource;
 import org.spongepowered.api.event.cause.entity.damage.source.EntityDamageSource;
 import org.spongepowered.api.item.ItemType;
@@ -265,10 +266,18 @@ public class GDPermissionManager implements PermissionManager {
         if (source instanceof Player && !isFakePlayer && flag != Flags.COLLIDE_BLOCK && flag != Flags.COLLIDE_ENTITY) {
             this.addPlayerContexts((Player) source, contexts);
         }
-        if (!(source instanceof Player) && target instanceof Player && user != null && user.getOnlinePlayer() != null && !user.getUniqueId().equals(((Player) target).getUniqueId())) {
-            // add source player context
-            // this allows users to block all pvp actions when direct source isn't a player
-            contexts.add(new Context(ContextKeys.SOURCE, this.getPermissionIdentifier(user.getOnlinePlayer())));
+        if (!(source instanceof Player) && user != null && user.getOnlinePlayer() != null) {
+            boolean addPlayerContext = false;
+            if (!(target instanceof Player)) {
+                addPlayerContext = true;
+            } else if (!user.getUniqueId().equals(((Player) target).getUniqueId())) {
+                addPlayerContext = true;
+            }
+            if (addPlayerContext) {
+                // add source player context
+                // this allows users to block all pvp actions when direct source isn't a player
+                contexts.add(new Context(ContextKeys.SOURCE, this.getPermissionIdentifier(user.getOnlinePlayer())));
+            }
         }
 
         final Set<Context> sourceContexts = this.getPermissionContexts((GDClaim) claim, source, true);
@@ -709,7 +718,17 @@ public class GDPermissionManager implements PermissionManager {
 
         if (obj != null) {
             if (obj instanceof Item) {
-                final String id = ((Item) obj).getItemType().getId();
+                final Item item = ((Item) obj);
+                String id = item.getItemType().getId();
+                if (GriefDefenderPlugin.getGlobalConfig().getConfig().mod.convertBlockId(id)) {
+                    final int index = id.indexOf(":");
+                    final String modId = id.substring(0, index);
+                    id = modId + ":" + NMSUtil.getInstance().getItemName(item);
+                }
+                final String itemMeta = NMSUtil.getInstance().getItemStackMeta((Item) obj);
+                if (itemMeta != null) {
+                    contexts.add(new Context("meta", itemMeta));
+                }
                 return populateEventSourceTargetContext(contexts, id, isSource);
             } else if (obj instanceof Entity) {
                 final Entity targetEntity = (Entity) obj;
@@ -751,29 +770,34 @@ public class GDPermissionManager implements PermissionManager {
             } else if (obj instanceof BlockSnapshot) {
                 final BlockSnapshot blockSnapshot = (BlockSnapshot) obj;
                 final BlockState blockstate = blockSnapshot.getState();
+                final Location<World> location = blockSnapshot.getLocation().orElse(null);
                 String id = blockstate.getType().getId();
                 if (GriefDefenderPlugin.getGlobalConfig().getConfig().mod.convertBlockId(id)) {
-                    final GDTileType tileType = TileEntityTypeRegistryModule.getInstance().getByBlock(blockSnapshot);
+                    final GDTileType tileType = TileEntityTypeRegistryModule.getInstance().getByBlock(location);
                     if (tileType != null) {
                         id = tileType.getId();
-                        if (this.isObjectIdBanned(claim, id, BanType.BLOCK)) {
-                            return null;
-                        }
-                        return this.populateEventSourceTargetContext(contexts, id, isSource);
                     }
                 }
-                return this.getPermissionContexts(claim, blockstate, isSource);
-            } else if (obj instanceof BlockState) {
-                final BlockState blockstate = (BlockState) obj;
-                if (this.isObjectIdBanned(claim, blockstate.getType().getId(), BanType.BLOCK)) {
-                    return null;
-                }
-                final String id = blockstate.getType().getId();
-                this.addBlockContexts(contexts, blockstate.getType(), isSource);
-                this.addBlockPropertyContexts(contexts, blockstate);
                 if (this.isObjectIdBanned(claim, id, BanType.BLOCK)) {
                     return null;
                 }
+                this.addBlockContexts(contexts, blockstate.getType(), isSource);
+                this.addBlockPropertyContexts(contexts, blockstate);
+                return populateEventSourceTargetContext(contexts, id, isSource);
+            } else if (obj instanceof BlockState) {
+                final BlockState blockstate = (BlockState) obj;
+                String id = blockstate.getType().getId();
+                if (GriefDefenderPlugin.getGlobalConfig().getConfig().mod.convertBlockId(id)) {
+                    final GDTileType tileType = TileEntityTypeRegistryModule.getInstance().getByBlock(this.eventLocation);
+                    if (tileType != null) {
+                        id = tileType.getId();
+                    }
+                }
+                if (this.isObjectIdBanned(claim, id, BanType.BLOCK)) {
+                    return null;
+                }
+                this.addBlockContexts(contexts, blockstate.getType(), isSource);
+                this.addBlockPropertyContexts(contexts, blockstate);
                 return populateEventSourceTargetContext(contexts, id, isSource);
             } else if (obj instanceof LocatableBlock) {
                 final LocatableBlock locatableBlock = (LocatableBlock) obj;
@@ -850,7 +874,9 @@ public class GDPermissionManager implements PermissionManager {
 
                 String id = itemstack.getType().getId();
                 if (GriefDefenderPlugin.getGlobalConfig().getConfig().mod.convertBlockId(id)) {
-                    id = NMSUtil.getInstance().getItemName(itemstack);
+                    final int index = id.indexOf(":");
+                    final String modId = id.substring(0, index);
+                    id = modId + ":" + NMSUtil.getInstance().getItemName(itemstack);
                 }
                 if (this.isObjectIdBanned(claim, id, BanType.ITEM)) {
                     return null;
@@ -900,6 +926,9 @@ public class GDPermissionManager implements PermissionManager {
             } else if (obj instanceof DamageSource) {
                 final DamageSource damageSource = (DamageSource) obj;
                 String id = damageSource.getType().getId();
+                if (damageSource.getType() == DamageTypes.CUSTOM) {
+                    id = NMSUtil.getInstance().getDamageSourceId(damageSource);
+                }
                 if (!id.contains(":")) {
                     id = "minecraft:" + id;
                 }

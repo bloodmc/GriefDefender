@@ -50,6 +50,8 @@ public class ClaimCategory extends ConfigCategory {
             + "\nNote: If in economy-mode, use setting 'use-claim-block-task' under economy category."
             + "\nNote: To configure amount accrued, see 'blocks-accrued-per-hour' option at https://github.com/bloodmc/GriefDefender/wiki/Options-(Meta)#global-options")
     public boolean claimBlockTask = true;
+    @Setting(value = "claim-create-radius-limit", comment = "The radius limit for the /claimcreate command. (Default: 256)")
+    public int claimCreateRadiusLimit = 256;
     @Setting(value = "piston-protection-in-claims", comment = "Whether piston protection should be enabled within claims. Note: This does not affect pistons crossing into another claim, that is always protected. This only determines whether or not GD should process pistons if it doesn't cross into another claim.")
     public boolean pistonProtectionInClaims = false;
     @Setting(value = "auto-chest-claim-block-radius", comment = "Radius used (in blocks) for auto-created claim when a chest is placed. Set to -1 to disable chest claim creation.")

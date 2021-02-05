@@ -66,7 +66,7 @@ public class ClaimBlockTask implements Runnable {
                         if (GriefDefenderPlugin.getInstance().isEconomyModeEnabled()) {
                             final Account playerAccount = GriefDefenderPlugin.getInstance().economyService.get().getOrCreateAccount(player.getUniqueId()).orElse(null);
                             if (playerAccount == null) {
-                                return;
+                                continue;
                             }
 
                             final Currency defaultCurrency = GriefDefenderPlugin.getInstance().economyService.get().getDefaultCurrency();
@@ -76,7 +76,7 @@ public class ClaimBlockTask implements Runnable {
                             if ((currentTotal + accruedBlocks) > playerData.getMaxAccruedClaimBlocks()) {
                                 playerData.setAccruedClaimBlocks(playerData.getMaxAccruedClaimBlocks());
                                 playerData.lastAfkCheckLocation = player.getLocation();
-                                return;
+                                continue;
                             }
 
                             playerData.setAccruedClaimBlocks(playerData.getAccruedClaimBlocks() + accruedBlocks);

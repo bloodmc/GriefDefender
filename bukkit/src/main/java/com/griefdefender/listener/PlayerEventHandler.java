@@ -217,6 +217,9 @@ public class PlayerEventHandler implements Listener {
         if (claim.isInTown()) {
             playerData.inTown = true;
         }
+        if (GDFlags.ENTER_CLAIM && GDPermissionManager.getInstance().getFinalPermission(event, player.getLocation(), claim, Flags.ENTER_CLAIM, player, player, player, true) == Tristate.FALSE) {
+            player.teleport(PlayerUtil.getInstance().getSafeClaimLocation(claim));
+        }
 
         GDTimings.PLAYER_JOIN_EVENT.stopTiming();
     }
@@ -258,6 +261,14 @@ public class PlayerEventHandler implements Listener {
 
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
         playerData.lastPvpTimestamp = null;
+        if (playerData.ignoreClaims || player.hasPermission(GDPermissions.COMMAND_DELETE_ADMIN_CLAIMS)) {
+            return;
+        }
+
+        final Location sourceLocation = player.getLocation();
+        final Location destination = event.getRespawnLocation();
+        // Handle BorderClaimEvent
+        CommonEntityEventHandler.getInstance().onEntityMove(event, sourceLocation, destination, player);
     }
 
     @EventHandler(priority = EventPriority.LOWEST)

@@ -160,6 +160,7 @@ public class GDPermissions {
     public static final String COMMAND_CLAIM_PERMISSION_PLAYER = "griefdefender.admin.claim.command.permission-player";
     public static final String COMMAND_CLAIM_RESERVE = "griefdefender.admin.claim.command.reserve-name";
     public static final String COMMAND_CLAIM_SCHEMATIC = "griefdefender.admin.claim.command.schematic";
+    public static final String COMMAND_CLAIM_TAX_FORCE = "griefdefender.admin.claim.command.claim.tax.force";
     public static final String COMMAND_IGNORE_CLAIMS = "griefdefender.admin.claim.command.ignore.base";
     public static final String COMMAND_DELETE_CLAIM_BASE = "griefdefender.admin.claim.command.delete.base";
     public static final String COMMAND_DELETE_CLAIMS = "griefdefender.admin.claim.command.delete-claims";

@@ -50,6 +50,8 @@ public class ClaimCategory extends ConfigCategory {
             + "\nNote: If in economy-mode, use setting 'use-claim-block-task' under economy category."
             + "\nNote: To configure amount accrued, see 'blocks-accrued-per-hour' option at https://github.com/bloodmc/GriefDefender/wiki/Options-(Meta)#global-options")
     public boolean claimBlockTask = true;
+    @Setting(value = "claim-create-radius-limit", comment = "The radius limit for the /claimcreate command. (Default: 256)")
+    public int claimCreateRadiusLimit = 256;
     @Setting(value = "worldedit-schematics", comment = "Whether to use WorldEdit for schematics. Default: false"
             + "\nNote: If you were using schematics in older GD/GP versions and want old schematics to work then you should keep this setting disabled.")
     public boolean useWorldEditSchematics = false;

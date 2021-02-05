@@ -58,6 +58,8 @@ import com.griefdefender.event.GDCauseStackManager;
 import com.griefdefender.internal.provider.GDWorldEditProvider;
 import com.griefdefender.internal.registry.BlockTypeRegistryModule;
 import com.griefdefender.internal.registry.GDBlockType;
+import com.griefdefender.internal.registry.GDTileType;
+import com.griefdefender.internal.registry.TileEntityTypeRegistryModule;
 import com.griefdefender.internal.util.BlockUtil;
 import com.griefdefender.internal.util.NMSUtil;
 import com.griefdefender.internal.visual.GDClaimVisual;
@@ -81,12 +83,14 @@ import net.kyori.text.event.HoverEvent;
 import net.kyori.text.serializer.gson.GsonComponentSerializer;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.BlockSnapshot;
+import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.block.tileentity.Sign;
 import org.spongepowered.api.block.tileentity.TileEntity;
 import org.spongepowered.api.command.CommandMapping;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.data.key.Keys;
+import org.spongepowered.api.data.property.block.MatterProperty;
 import org.spongepowered.api.data.type.HandType;
 import org.spongepowered.api.data.type.HandTypes;
 import org.spongepowered.api.entity.Entity;
@@ -135,8 +139,6 @@ import org.spongepowered.api.text.channel.MutableMessageChannel;
 import org.spongepowered.api.text.channel.type.FixedMessageChannel;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.text.serializer.TextSerializers;
-import org.spongepowered.api.util.blockray.BlockRay;
-import org.spongepowered.api.util.blockray.BlockRayHit;
 import org.spongepowered.api.world.Chunk;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
@@ -481,6 +483,9 @@ public class PlayerEventHandler {
         if (claim.isInTown()) {
             playerData.inTown = true;
         }
+        if (GDFlags.ENTER_CLAIM && GDPermissionManager.getInstance().getFinalPermission(event, player.getLocation(), claim, Flags.ENTER_CLAIM, player, player, player, true) == Tristate.FALSE) {
+            player.setLocation(PlayerUtil.getInstance().getSafeClaimLocation(claim));
+        }
 
         GDTimings.PLAYER_JOIN_EVENT.stopTimingIfSync();
     }
@@ -573,6 +578,14 @@ public class PlayerEventHandler {
 
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(event.getTargetEntity().getWorld(), event.getTargetEntity().getUniqueId());
         playerData.lastPvpTimestamp = null;
+        if (playerData.ignoreClaims || event.getTargetEntity().hasPermission(GDPermissions.COMMAND_DELETE_ADMIN_CLAIMS)) {
+            return;
+        }
+
+        final Location<World> sourceLocation = event.getFromTransform().getLocation();
+        final Location<World> destination = event.getToTransform().getLocation();
+        // Handle BorderClaimEvent
+        CommonEntityEventHandler.getInstance().onEntityMove(event, sourceLocation, destination, event.getTargetEntity());
     }
 
     @Listener(order = Order.FIRST, beforeModifications = true)
@@ -910,7 +923,7 @@ public class PlayerEventHandler {
         GDPlayerData playerData = this.dataStore.getOrCreatePlayerData(world, player.getUniqueId());
         Location<World> location = player.getLocation();
         GDClaim claim = this.dataStore.getClaimAtPlayer(playerData, location);
-        if (GDPermissionManager.getInstance().getFinalPermission(event, location, claim, Flags.ITEM_PICKUP, player, event.getTargetEntity(), player, true) == Tristate.FALSE) {
+        if (GDPermissionManager.getInstance().getFinalPermission(event, location, claim, Flags.ITEM_PICKUP, player, event.getTargetEntity(), player, TrustTypes.ACCESSOR, true) == Tristate.FALSE) {
             event.setCancelled(true);
         }
 
@@ -1032,7 +1045,7 @@ public class PlayerEventHandler {
 
         final HandType handType = event.getHandType();
         final ItemStack itemInHand = player.getItemInHand(handType).orElse(ItemStack.empty());
-        if (handleItemInteract(event, player, player.getWorld(), itemInHand).isCancelled()) {
+        if (PlayerUtil.getInstance().forceItemInteract(itemInHand.getType(), player) && handleItemInteract(event, player, player.getWorld(), itemInHand).isCancelled()) {
             event.setCancelled(true);
             return;
         }
@@ -1126,7 +1139,7 @@ public class PlayerEventHandler {
 
         final HandType handType = event.getHandType();
         final ItemStack itemInHand = player.getItemInHand(handType).orElse(ItemStack.empty());
-        if (handleItemInteract(event, player, player.getWorld(), itemInHand).isCancelled()) {
+        if (PlayerUtil.getInstance().forceItemInteract(itemInHand.getType(), player) && handleItemInteract(event, player, player.getWorld(), itemInHand).isCancelled()) {
             event.setCancelled(true);
             return;
         }
@@ -1246,11 +1259,10 @@ public class PlayerEventHandler {
         final BlockSnapshot blockSnapshot = context.get(EventContextKeys.BLOCK_HIT).orElse(BlockSnapshot.NONE);
         final Vector3d interactPoint = event.getInteractionPoint().orElse(null);
         final Entity entity = context.get(EventContextKeys.ENTITY_HIT).orElse(null);
-        final Location<World> location = entity != null ? entity.getLocation() 
+        Location<World> location = entity != null ? entity.getLocation() 
                 : blockSnapshot != BlockSnapshot.NONE ? blockSnapshot.getLocation().get() 
                         : interactPoint != null ? new Location<World>(world, interactPoint) 
-                                : player.getLocation();
-        final GDClaim claim = this.dataStore.getClaimAt(location);
+                                : null;
 
         final Flag flag = primaryEvent ? Flags.INTERACT_ITEM_PRIMARY : Flags.INTERACT_ITEM_SECONDARY;
 
@@ -1267,6 +1279,23 @@ public class PlayerEventHandler {
             return event;
         }
 
+        final boolean isItemBucket = !itemInHand.isEmpty() && itemInHand.getType().equals(ItemTypes.BUCKET);
+        BlockState blockHit = blockSnapshot != BlockSnapshot.NONE ? blockSnapshot.getState() : null;
+        if (location == null) {
+            if (isItemBucket) {
+                final int distance = NMSUtil.getInstance().getPlayerBlockReachDistance(player);
+                location = BlockUtil.getInstance().getTargetBlock(player, playerData, distance, true).orElse(null);
+                if (location != null) {
+                    blockHit = location.getBlock();
+                } else {
+                    location = player.getLocation();
+                }
+            } else {
+                location = player.getLocation();
+            }
+        }
+
+        final GDClaim claim = this.dataStore.getClaimAt(location);
         if (GDPermissionManager.getInstance().getFinalPermission(event, location, claim, flag, player, itemInHand, player, TrustTypes.ACCESSOR, true) == Tristate.FALSE) {
             Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_INTERACT_ITEM,
                     ImmutableMap.of(
@@ -1282,12 +1311,19 @@ public class PlayerEventHandler {
             return event;
         }
 
-        if (blockSnapshot != null && blockSnapshot.getState().getType() != BlockTypes.AIR) {
-            if (GDPermissionManager.getInstance().getFinalPermission(event, location, claim, flag, itemInHand, blockSnapshot, player, TrustTypes.ACCESSOR, true) == Tristate.FALSE) {
+        if (blockHit != null && blockHit.getType() != BlockTypes.AIR) {
+            TrustType trustType = TrustTypes.ACCESSOR;
+            if (isItemBucket) {
+                final MatterProperty matterProperty = blockHit.getProperty(MatterProperty.class).orElse(null);
+                if (matterProperty != null && matterProperty.getValue() == MatterProperty.Matter.LIQUID) {
+                    trustType = TrustTypes.BUILDER;
+                }
+            }
+            if (GDPermissionManager.getInstance().getFinalPermission(event, location, claim, flag, itemInHand, blockHit, player, trustType, true) == Tristate.FALSE) {
                 final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_INTERACT_ITEM_BLOCK,
                         ImmutableMap.of(
                         "item", itemInHand.getType().getId(),
-                        "block", blockSnapshot.getState().getType().getId()));
+                        "block", blockHit.getType().getId()));
                 GriefDefenderPlugin.sendClaimDenyMessage(claim, player, message);
                 if (event instanceof InteractBlockEvent.Secondary) {
                     ((InteractBlockEvent.Secondary) event).setUseItemResult(SpongeUtil.getSpongeTristate(Tristate.FALSE));
@@ -1298,11 +1334,11 @@ public class PlayerEventHandler {
                 return event;
             }
             if (!itemInHand.isEmpty() && itemInHand.getType().equals(ItemTypes.BUCKET)) {
-                if (GDPermissionManager.getInstance().getFinalPermission(event, location, claim,Flags.INTERACT_BLOCK_SECONDARY, itemInHand, blockSnapshot, player, TrustTypes.ACCESSOR, true) == Tristate.FALSE) {
+                if (GDPermissionManager.getInstance().getFinalPermission(event, location, claim,Flags.INTERACT_BLOCK_SECONDARY, itemInHand, blockHit, player, trustType, true) == Tristate.FALSE) {
                     final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_INTERACT_ITEM_BLOCK,
                             ImmutableMap.of(
                             "item", itemInHand.getType().getId(),
-                            "block", blockSnapshot.getState().getType().getId()));
+                            "block", blockHit.getType().getId()));
                     GriefDefenderPlugin.sendClaimDenyMessage(claim, player, message);
                     event.setCancelled(true);
                     lastInteractItemCancelled = true;
@@ -2036,16 +2072,30 @@ public class PlayerEventHandler {
         if (playerData != null && claim.getData() != null && claim.getData().isExpired() /*&& GriefDefenderPlugin.getActiveConfig(player.getWorld().getProperties()).getConfig().claim.bankTaxSystem*/) {
             playerData.sendTaxExpireMessage(player, claim);
         } else if (playerItem == null || playerItem == ItemTypes.NONE || playerItem.isEmpty()) {
+            String blockId = blockSnapshot.getState().getType().getId();
+            if (GriefDefenderPlugin.getGlobalConfig().getConfig().mod.convertBlockId(blockId)) {
+                final GDTileType tileType = TileEntityTypeRegistryModule.getInstance().getByBlock(blockSnapshot.getLocation().orElse(null));
+                if (tileType != null) {
+                    blockId = tileType.getId();
+                }
+            }
             final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_INTERACT_BLOCK,
                     ImmutableMap.of(
                     "player", claim.getOwnerName(),
-                    "block", blockSnapshot.getState().getType().getId()));
+                    "block", blockId));
             GriefDefenderPlugin.sendClaimDenyMessage(claim, player, message);
         } else {
+            String blockId = blockSnapshot.getState().getType().getId();
+            if (GriefDefenderPlugin.getGlobalConfig().getConfig().mod.convertBlockId(blockId)) {
+                final GDTileType tileType = TileEntityTypeRegistryModule.getInstance().getByBlock(blockSnapshot.getLocation().orElse(null));
+                if (tileType != null) {
+                    blockId = tileType.getId();
+                }
+            }
             final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PERMISSION_INTERACT_ITEM_BLOCK,
                     ImmutableMap.of(
                     "item", playerItem.getType().getId(),
-                    "block", blockSnapshot.getState().getType().getId()));
+                    "block", blockId));
             GriefDefenderPlugin.sendClaimDenyMessage(claim, player, message);
         }
         if (handType == HandTypes.MAIN_HAND) {
