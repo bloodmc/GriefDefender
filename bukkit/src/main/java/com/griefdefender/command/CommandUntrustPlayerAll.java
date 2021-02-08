@@ -131,7 +131,7 @@ public class CommandUntrustPlayerAll extends BaseCommand {
 
         final Component message = MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.UNTRUST_INDIVIDUAL_ALL_CLAIMS,
                ImmutableMap.of(
-                "player", user.getName()));
+                "target", user.getName()));
         GriefDefenderPlugin.sendMessage(player, message);
     }
 
