@@ -1438,7 +1438,8 @@ public class PlayerEventHandler {
                 visualization.apply(player);
                 Set<Claim> claims = new HashSet<>();
                 claims.add(claim);
-                CommandHelper.showClaims(player, claims, location.getBlockY(), true);
+                if (!claims.isEmpty())
+                    CommandHelper.showClaims(player, claims, location.getBlockY(), true);
             } else if (playerData.lastShovelLocation == null && BlockUtil.getInstance().clickedClaimCorner(claim, location.getBlockPosition())) {
                 handleResizeStart(event, player, location, playerData, claim);
             } else if ((playerData.shovelMode == ShovelTypes.SUBDIVISION 
