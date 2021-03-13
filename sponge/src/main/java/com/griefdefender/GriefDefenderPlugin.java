@@ -809,11 +809,6 @@ public class GriefDefenderPlugin {
         this.logger.info("Loaded successfully.");
     }
 
-    @Listener
-    public void onGameReloadEvent(GameReloadEvent event) {
-        this.loadConfig();
-    }
-
     public void registerBaseCommands() {
         SpongeCommandManager manager = new SpongeCommandManager(this.pluginContainer);
         this.commandManager = manager;
