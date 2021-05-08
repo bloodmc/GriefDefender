@@ -127,6 +127,10 @@ public class BlockEventHandler implements Listener {
         final Inventory targetInventory = event.getDestination();
         final Location sourceLocation = sourceInventory.getLocation();
         final Location targetLocation = targetInventory.getLocation();
+        if (sourceLocation == null || targetLocation == null) {
+            return;
+        }
+
         final GDClaim sourceClaim = GriefDefenderPlugin.getInstance().dataStore.getClaimAt(sourceLocation);
         final GDClaim targetClaim = GriefDefenderPlugin.getInstance().dataStore.getClaimAt(targetLocation);
         if (sourceClaim.isWilderness() && targetClaim.isWilderness() || (GriefDefenderPlugin.getInstance().getVaultProvider() == null)) {
@@ -495,29 +499,24 @@ public class BlockEventHandler implements Listener {
         GDClaim targetClaim = null;
         final List<Block> filteredLocations = new ArrayList<>();
         final String sourceId = GDPermissionManager.getInstance().getPermissionIdentifier(source);
-        final int cancelBlockLimit = GriefDefenderPlugin.getGlobalConfig().getConfig().claim.explosionCancelBlockLimit;
         boolean denySurfaceExplosion = GriefDefenderPlugin.getActiveConfig(world.getUID()).getConfig().claim.explosionBlockSurfaceBlacklist.contains(sourceId);
         if (!denySurfaceExplosion) {
             denySurfaceExplosion = GriefDefenderPlugin.getActiveConfig(world.getUID()).getConfig().claim.explosionBlockSurfaceBlacklist.contains("any");
         }
+        final int surfaceBlockLevel = GriefDefenderPlugin.getActiveConfig(world.getUID()).getConfig().claim.explosionSurfaceBlockLevel;
         for (Block block : event.blockList()) {
             final Location location = block.getLocation();
             if (location.getBlock().isEmpty()) {
                 continue;
             }
             targetClaim =  GriefDefenderPlugin.getInstance().dataStore.getClaimAt(location);
-            if (denySurfaceExplosion && block.getWorld().getEnvironment() != Environment.NETHER && location.getBlockY() >= location.getWorld().getSeaLevel()) {
+            if (denySurfaceExplosion && block.getWorld().getEnvironment() != Environment.NETHER && location.getBlockY() >= surfaceBlockLevel) {
                 filteredLocations.add(block);
                 GDPermissionManager.getInstance().processEventLog(event, location, targetClaim, Flags.EXPLOSION_BLOCK.getPermission(), source, block, user, "explosion-surface", Tristate.FALSE);
                 continue;
             }
             Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, location, targetClaim, Flags.EXPLOSION_BLOCK, source, block, user, true);
             if (result == Tristate.FALSE) {
-                // Avoid lagging server from large explosions.
-                if (event.blockList().size() > cancelBlockLimit) {
-                    event.setCancelled(true);
-                    break;
-                }
                 filteredLocations.add(block);
             }
         }

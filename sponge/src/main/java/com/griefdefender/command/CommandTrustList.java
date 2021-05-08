@@ -66,7 +66,7 @@ import java.util.function.Consumer;
 public class CommandTrustList extends BaseCommand {
 
     @CommandAlias("trustlist")
-    @Description("Manages trust for the claim you're standing in.")
+    @Description("%trust-list")
     @Subcommand("trust list")
     public void execute(Player player) {
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());

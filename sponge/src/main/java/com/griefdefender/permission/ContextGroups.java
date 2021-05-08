@@ -39,6 +39,8 @@ public class ContextGroups {
     public static final Context SOURCE_MISC = new Context(ContextKeys.SOURCE, ContextGroupKeys.MISC);
     public static final Context SOURCE_MONSTER = new Context(ContextKeys.SOURCE, ContextGroupKeys.MONSTER);
     public static final Context SOURCE_PET = new Context(ContextKeys.SOURCE, ContextGroupKeys.PET);
+    public static final Context SOURCE_PLANTS = new Context(ContextKeys.SOURCE, ContextGroupKeys.PLANTS);
+    public static final Context SOURCE_POTION = new Context(ContextKeys.SOURCE, ContextGroupKeys.POTION);
     public static final Context SOURCE_VEHICLE = new Context(ContextKeys.SOURCE, ContextGroupKeys.VEHICLE);
     public static final Context TARGET_ANY = new Context(ContextKeys.TARGET, ContextGroupKeys.ANY);
     public static final Context TARGET_AMBIENT = new Context(ContextKeys.TARGET, ContextGroupKeys.AMBIENT);
@@ -49,6 +51,8 @@ public class ContextGroups {
     public static final Context TARGET_MISC = new Context(ContextKeys.TARGET, ContextGroupKeys.MISC);
     public static final Context TARGET_MONSTER = new Context(ContextKeys.TARGET, ContextGroupKeys.MONSTER);
     public static final Context TARGET_PET = new Context(ContextKeys.TARGET, ContextGroupKeys.PET);
+    public static final Context TARGET_PLANTS = new Context(ContextKeys.TARGET, ContextGroupKeys.PLANTS);
+    public static final Context TARGET_POTION = new Context(ContextKeys.TARGET, ContextGroupKeys.POTION);
     public static final Context TARGET_VEHICLE = new Context(ContextKeys.TARGET, ContextGroupKeys.VEHICLE);
 
     // Item groups

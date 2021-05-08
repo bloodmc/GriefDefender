@@ -53,6 +53,8 @@ import com.griefdefender.api.claim.TrustType;
 import com.griefdefender.api.claim.TrustTypes;
 import com.griefdefender.api.data.ClaimData;
 import com.griefdefender.api.permission.Context;
+import com.griefdefender.api.permission.ContextKeys;
+import com.griefdefender.api.permission.flag.Flags;
 import com.griefdefender.api.permission.option.Options;
 import com.griefdefender.cache.MessageCache;
 import com.griefdefender.cache.PermissionHolderCache;
@@ -1305,7 +1307,7 @@ public class GDClaim implements Claim {
         final Player player = user != null ? user.getOnlinePlayer() : null;
         if (this.cuboid) {
             // make sure resize doesn't cross paths
-            if (minx >= maxx || miny >= maxy || minz >= maxz) {
+            if (minx >= maxx || miny > maxy || minz >= maxz) {
                 return new GDClaimResult(this, ClaimResultType.OVERLAPPING_CLAIM);
             }
         }
@@ -2690,6 +2692,15 @@ public class GDClaim implements Claim {
         return null;
     }
 
+    @Override
+    public boolean isPvpAllowed() {
+        final Set<Context> contexts = new HashSet<>();
+        contexts.add(new Context(ContextKeys.SOURCE, "minecraft:player"));
+        contexts.add(new Context(ContextKeys.TARGET, "minecraft:player"));
+        final Tristate result = GDPermissionManager.getInstance().getActiveFlagPermissionValue(this, GriefDefenderPlugin.DEFAULT_HOLDER, Flags.ENTITY_DAMAGE, contexts);
+        return result == Tristate.TRUE;
+    }
+
     public static class ClaimBuilder implements Builder {
 
         private UUID ownerUniqueId;
@@ -2962,7 +2973,7 @@ public class GDClaim implements Claim {
                     }
                 }
 
-                if (!GriefDefenderPlugin.getInstance().isEconomyModeEnabled() && claim.isTown() && player != null) {
+                if (claim.isTown() && player != null) {
                     final double townCost = GriefDefenderPlugin.getGlobalConfig().getConfig().town.cost;
                     if (townCost > 0) {
                         Account playerAccount = GriefDefenderPlugin.getInstance().economyService.get().getOrCreateAccount(player.getUniqueId()).orElse(null);

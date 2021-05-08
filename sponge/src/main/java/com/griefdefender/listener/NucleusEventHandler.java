@@ -29,7 +29,8 @@ import com.griefdefender.api.claim.TrustTypes;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.storage.BaseStorage;
 import com.griefdefender.util.SpongeUtil;
-import io.github.nucleuspowered.nucleus.api.events.NucleusHomeEvent;
+
+//import io.github.nucleuspowered.nucleus.api.module.home.event.NucleusHomeEvent;
 import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextColor;
 import org.spongepowered.api.event.Listener;
@@ -40,7 +41,7 @@ public class NucleusEventHandler {
 
     private static final BaseStorage DATASTORE = GriefDefenderPlugin.getInstance().dataStore;
 
-    @Listener
+    /*@Listener
     public void onSetHome(NucleusHomeEvent.Create event) {
         Location<World> location = event.getLocation().orElse(null);
         if (location == null) {
@@ -54,6 +55,6 @@ public class NucleusEventHandler {
                 event.setCancelMessage(SpongeUtil.getSpongeText(TextComponent.of("You must be trusted in order to use /sethome here.").color(TextColor.RED)));
             }
         }
-    }
+    }*/
 
 }

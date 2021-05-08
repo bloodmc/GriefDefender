@@ -46,7 +46,7 @@ import org.bukkit.entity.Player;
 public class CommandClaimSetSpawn extends BaseCommand {
 
     @CommandAlias("claimsetspawn")
-    @Description("Sets the spawn of claim.")
+    @Description("%claim-setspawn")
     @Subcommand("claim setspawn")
     public void execute(Player player) {
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());

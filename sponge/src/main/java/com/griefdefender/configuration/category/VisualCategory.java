@@ -38,6 +38,10 @@ public class VisualCategory extends ConfigCategory {
     public boolean hideFillers = false;
     @Setting(value = "hide-wecui-drag-visuals-2d", comment = "Whether drag visuals should be shown while creating a claim in 2D mode.")
     public boolean hideDrag2d = true;
+    @Setting(value = "cuboid-level-visuals-2d", comment = "Whether to use cuboid visuals, in 2D claims, during inspection with owner min/max claim levels between 0 and 255."
+            + "\nNote: WECUI visuals are not associated to this option."
+            + "\nNote: If enabled, this will send many block updates to players causing more client strain depending on size of claim. Use with caution.")
+    public boolean cuboidLevelVisuals = false;
     @Setting(value = "client-visuals-per-tick", comment = "The amount of block visuals a client can receive per tick when showing/hiding claims. Default: 12")
     public int clientVisualsPerTick = 12;
     @Setting(value = "claim-create-block", comment = "The visual block used during claim creation. (Default: minecraft:diamond_block)")

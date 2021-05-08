@@ -115,11 +115,12 @@ sourceSets {
 
 dependencies {
     compileOnly(project(path: ":GriefDefenderAPI"))
+    compileOnly fileTree(dir: 'libs', include: ['*.jar'])
     compile project (':common')
     compileOnly "com.griefdefender:adapter-sponge:$adapterSpongeVersion"
     compileOnly "com.griefdefender:reflect-helper:1.0"
     // Sponge
-    apiCompile "org.spongepowered:spongeapi:$apiVersion"
+    //apiCompile "org.spongepowered:spongeapi:$apiVersion"
 
     compileOnly ("org.spongepowered:spongecommon:$commonVersion:dev") {
         exclude module: 'testplugins'
@@ -128,9 +129,10 @@ dependencies {
     compileOnly ("io.github.nucleuspowered:nucleus-api:1.14.1-S7.1"){
         exclude module: 'spongeapi'
     }
-    compile "com.github.bloodmc:mcclans-api:develop-SNAPSHOT"
+    //compile "com.github.randombyte-developer:PlaceholderAPI:4.5.1"
+    //compile "com.github.bloodmc:mcclans-api:develop-SNAPSHOT"
     compileOnly "com.sk89q.worldedit:worldedit-core:6.1.4-SNAPSHOT"
-    compileOnly "com.github.lucko:luckperms:master-SNAPSHOT"
+    compileOnly "com.github.lucko:luckperms:v5.2"
     compileOnly "us.dynmap:dynmap-api:3.0-SNAPSHOT"
 
     // required for bootstrap
@@ -155,10 +157,10 @@ dependencies {
     compileOnly "org.jetbrains:annotations:17.0.0"
     compileOnly "org.jetbrains.kotlin:kotlin-stdlib:1.3.72"
     compileOnly "org.ow2.asm:asm-debug-all:5.2"
-    compileOnly "org.spongepowered:configurate-core:3.7-SNAPSHOT"
-    compileOnly "org.spongepowered:configurate-gson:3.7-SNAPSHOT"
-    compileOnly "org.spongepowered:configurate-hocon:3.7-SNAPSHOT"
-    compileOnly "org.spongepowered:configurate-yaml:3.7-SNAPSHOT"
+    compileOnly "org.spongepowered:configurate-core:3.7.2"
+    compileOnly "org.spongepowered:configurate-gson:3.7.2"
+    compileOnly "org.spongepowered:configurate-hocon:3.7.2"
+    compileOnly "org.spongepowered:configurate-yaml:3.7.2"
     compileOnly "net.kyori:event-api:3.0.0"
     compileOnly "net.kyori:event-method:3.0.0"
     compileOnly "net.kyori:event-method-asm:3.0.0"

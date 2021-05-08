@@ -67,6 +67,7 @@ public class DynmapCategory {
     public String infoWindowBasic = "<div class=\"infowindow\">"
             + "Name: <span style=\"font-weight:bold;\">%claimname%</span><br/>"
             + "Owner: <span style=\"font-weight:bold;\">%owner%</span><br/>"
+            + "OwnerUUID: <span style=\"font-weight:bold;\">%owneruuid%</span><br/>"
             + "Type: <span style=\"font-weight:bold;\">%gdtype%</span><br/>"
             + "Last Seen: <span style=\"font-weight:bold;\">%lastseen%</span><br/>"
             + "Permission Trust: <span style=\"font-weight:bold;\">%managers%</span><br/>"

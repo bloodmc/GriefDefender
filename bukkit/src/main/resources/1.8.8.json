@@ -3,15 +3,15 @@
     "libraries": [
         {
             "name": "com.griefdefender:adapter:1.8.8",
-            "sha1": "afbe175884a0703974df792de5452287e9f48cb8",
-            "path": "com/griefdefender/adapter/1.8.8-SNAPSHOT/adapter-1.8.8-20200815.181931-46.jar",
-            "url": "https://repo.glaremasters.me/repository/bloodshot/com/griefdefender/adapter/1.8.8-SNAPSHOT/adapter-1.8.8-20200815.181931-46.jar"
+            "sha1": "027d23621f322901c6a2e0ed9876f5e03f22505f",
+            "path": "com/griefdefender/adapter/1.8.8-SNAPSHOT/adapter-1.8.8-20210111.053523-62.jar",
+            "url": "https://repo.glaremasters.me/repository/bloodshot/com/griefdefender/adapter/1.8.8-SNAPSHOT/adapter-1.8.8-20210111.053523-62.jar"
         },
         {
             "name": "com.griefdefender:api:1.0.0",
-            "sha1": "2a3f820d12a3bd4c03932018567ab3732517aee5",
-            "path": "com/griefdefender/api/1.0.0-SNAPSHOT/api-1.0.0-20200528.202302-24.jar",
-            "url": "https://repo.glaremasters.me/repository/bloodshot/com/griefdefender/api/1.0.0-SNAPSHOT/api-1.0.0-20200528.202302-24.jar"
+            "sha1": "bceb911861b8df467d6b29b6be56d02b58ac5467",
+            "path": "com/griefdefender/api/1.0.0-SNAPSHOT/api-1.0.0-20201116.204822-26.jar",
+            "url": "https://repo.glaremasters.me/repository/bloodshot/com/griefdefender/api/1.0.0-SNAPSHOT/api-1.0.0-20201116.204822-26.jar"
         },
         {
             "name": "com.griefdefender:reflect-helper:1.0",
@@ -42,21 +42,21 @@
         },
         {
             "name": "co.aikar:acf-core:0.5.0-SNAPSHOT",
-            "sha1": "d640d058f08da1be6b4483ac7a665d0b4bb22044",
-            "path": "co/aikar/acf-core/0.5.0-SNAPSHOT/acf-core-0.5.0-20190617.211117-148.jar",
-            "url": "https://repo.glaremasters.me/repository/public/co/aikar/acf-core/0.5.0-SNAPSHOT/acf-core-0.5.0-20190617.211117-148.jar"
+            "sha1": "5f81a496db139cd72d00d31789b57b4788c505f8",
+            "path": "co/aikar/acf-core/0.5.0-SNAPSHOT/acf-core-0.5.0-20200925.132010-170.jar",
+            "url": "https://repo.glaremasters.me/repository/public/co/aikar/acf-core/0.5.0-SNAPSHOT/acf-core-0.5.0-20200925.132010-170.jar"
         },
         {
             "name": "co.aikar:acf-bukkit:0.5.0-SNAPSHOT",
-            "sha1": "0af5d53de31ebf4e19100cc0654b88cc9c9c07fb",
-            "path": "co/aikar/acf-bukkit/0.5.0-SNAPSHOT/acf-bukkit-0.5.0-20190607.112608-152.jar",
-            "url": "https://repo.glaremasters.me/repository/public/co/aikar/acf-bukkit/0.5.0-SNAPSHOT/acf-bukkit-0.5.0-20190607.112608-152.jar"
+            "sha1": "c6af96c6bddccfcbb9f71a54c21499d21c0b0c95",
+            "path": "co/aikar/acf-bukkit/0.5.0-SNAPSHOT/acf-bukkit-0.5.0-20200925.132015-173.jar",
+            "url": "https://repo.glaremasters.me/repository/public/co/aikar/acf-bukkit/0.5.0-SNAPSHOT/acf-bukkit-0.5.0-20200925.132015-173.jar"
         },
         {
             "name": "co.aikar:acf-paper:0.5.0-SNAPSHOT",
-            "sha1": "5df2f2f0c7190f4b867af20ff57f9fde012a4e2c",
-            "path": "co/aikar/acf-paper/0.5.0-SNAPSHOT/acf-paper-0.5.0-20190607.112622-147.jar",
-            "url": "https://repo.glaremasters.me/repository/public/co/aikar/acf-paper/0.5.0-SNAPSHOT/acf-paper-0.5.0-20190607.112622-147.jar"
+            "sha1": "f9ceedfcec233886f7d658adfa0a0c708825aa60",
+            "path": "co/aikar/acf-paper/0.5.0-SNAPSHOT/acf-paper-0.5.0-20200925.132021-168.jar",
+            "url": "https://repo.glaremasters.me/repository/public/co/aikar/acf-paper/0.5.0-SNAPSHOT/acf-paper-0.5.0-20200925.132021-168.jar"
         },
         {
             "name": "co.aikar:locales:1.0-SNAPSHOT",
@@ -146,32 +146,32 @@
             "url": "https://repo1.maven.org/maven2/org/apache/commons/commons-lang3/3.9/commons-lang3-3.9.jar"
         },
         {
-            "name": "org.spongepowered:configurate-core:3.7-SNAPSHOT",
-            "sha1": "e596c439ac71fa2ea5c48f8ba97a7dc6f4c77b16",
-            "path": "org/spongepowered/configurate-core/3.7-SNAPSHOT/configurate-core-3.7-20190531.182437-11.jar",
+            "name": "org.spongepowered:configurate-core:3.7.2",
+            "sha1": "985223b13c7da64116a7e20203b2904023eeb1db",
+            "path": "org/spongepowered/configurate-core/3.7.2/configurate-core-3.7.2.jar",
             "relocate": "ninja.leaping.configurate:configurate",
-            "url": "https://repo.spongepowered.org/maven/org/spongepowered/configurate-core/3.7-SNAPSHOT/configurate-core-3.7-20190531.182437-11.jar"
+            "url": "https://repo1.maven.org/maven2/org/spongepowered/configurate-core/3.7.2/configurate-core-3.7.2.jar"
         },
         {
-            "name": "org.spongepowered:configurate-gson:3.7-SNAPSHOT",
-            "sha1": "265a94f16583621f497eeecc356f35f983484dde",
-            "path": "org/spongepowered/configurate-gson/3.7-SNAPSHOT/configurate-gson-3.7-20190531.182438-11.jar",
+            "name": "org.spongepowered:configurate-gson:3.7.2",
+            "sha1": "0431733e80d7dfc62b37962c2723bba5c996548f",
+            "path": "org/spongepowered/configurate-gson/3.7.2/configurate-gson-3.7.2.jar",
             "relocate": "ninja.leaping.configurate:configurate",
-            "url": "https://repo.spongepowered.org/maven/org/spongepowered/configurate-gson/3.7-SNAPSHOT/configurate-gson-3.7-20190531.182438-11.jar"
+            "url": "https://repo1.maven.org/maven2/org/spongepowered/configurate-gson/3.7.2/configurate-gson-3.7.2.jar"
         },
         {
-            "name": "org.spongepowered:configurate-hocon:3.7-SNAPSHOT",
-            "sha1": "af48dcb9e7456f2f81a633f62ae5c55e5215c4af",
-            "path": "org/spongepowered/configurate-hocon/3.7-SNAPSHOT/configurate-hocon-3.7-20190531.182439-11.jar",
+            "name": "org.spongepowered:configurate-hocon:3.7.2",
+            "sha1": "a5e49f57ae8f5e61dbae48a158a28343e7d6f707",
+            "path": "org/spongepowered/configurate-hocon/3.7.2/configurate-hocon-3.7.2.jar",
             "relocate": "ninja.leaping.configurate:configurate",
-            "url": "https://repo.spongepowered.org/maven/org/spongepowered/configurate-hocon/3.7-SNAPSHOT/configurate-hocon-3.7-20190531.182439-11.jar"
+            "url": "https://repo1.maven.org/maven2/org/spongepowered/configurate-hocon/3.7.2/configurate-hocon-3.7.2.jar"
         },
         {
-            "name": "org.spongepowered:configurate-yaml:3.7-SNAPSHOT",
-            "sha1": "c66110f5ae0098c450e048f78b322590d2e24d06",
-            "path": "org/spongepowered/configurate-yaml/3.7-SNAPSHOT/configurate-yaml-3.7-20190531.182442-11.jar",
+            "name": "org.spongepowered:configurate-yaml:3.7.2",
+            "sha1": "a0c3eec370aa9bdec3f450f842edcb03f6d42be2",
+            "path": "org/spongepowered/configurate-yaml/3.7.2/configurate-yaml-3.7.2.jar",
             "relocate": "ninja.leaping.configurate:configurate",
-            "url": "https://repo.spongepowered.org/maven/org/spongepowered/configurate-yaml/3.7-SNAPSHOT/configurate-yaml-3.7-20190531.182442-11.jar"
+            "url": "https://repo1.maven.org/maven2/org/spongepowered/configurate-yaml/3.7.2/configurate-yaml-3.7.2.jar"
         },
         {
             "name": "com.typesafe:config:1.3.1",

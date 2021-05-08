@@ -45,7 +45,7 @@ import org.bukkit.entity.Player;
 public class CommandGDConfirm extends BaseCommand {
 
     @CommandAlias("gdconfirm")
-    @Description("Alternate way to confirm chat confirmations.")
+    @Description("%confirm")
     @Subcommand("confirm")
     public void execute(Player player) {
 

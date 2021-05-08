@@ -42,7 +42,7 @@ import org.spongepowered.api.command.CommandSource;
 public class CommandHelp extends BaseCommand {
 
     @HelpCommand
-    @Description("Displays GriefDefender command help.")
+    @Description("%help")
     public void execute(CommandSource src) {
         PaginationList.Builder paginationBuilder =
                 PaginationList.builder().title(TextComponent.of("Showing GriefDefender Help", TextColor.AQUA)).padding(TextComponent.of(" ").decoration(TextDecoration.STRIKETHROUGH, true)).contents(GriefDefenderPlugin.helpComponents);

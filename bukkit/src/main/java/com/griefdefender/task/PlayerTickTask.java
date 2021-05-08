@@ -45,6 +45,7 @@ import net.kyori.text.event.ClickEvent;
 import net.kyori.text.event.HoverEvent;
 import net.kyori.text.format.TextColor;
 
+import java.time.Instant;
 import java.util.Iterator;
 import java.util.function.Consumer;
 
@@ -89,7 +90,7 @@ public class PlayerTickTask extends BukkitRunnable {
                 if (world.getFullTime() % 100 == 0L) {
                     final GameMode gameMode = player.getGameMode();
                     // Handle player health regen
-                    if (gameMode != GameMode.CREATIVE && gameMode != GameMode.SPECTATOR && GDOptions.isOptionEnabled(Options.PLAYER_HEALTH_REGEN)) {
+                    if (gameMode != GameMode.CREATIVE && gameMode != GameMode.SPECTATOR && GDOptions.PLAYER_HEALTH_REGEN) {
                         final double maxHealth = player.getMaxHealth();
                         if (player.getHealth() < maxHealth) {
                             final double regenAmount = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Double.class), playerData.getSubject(), Options.PLAYER_HEALTH_REGEN, claim);
@@ -110,6 +111,12 @@ public class PlayerTickTask extends BukkitRunnable {
                         final int delay = playerData.teleportDelay - 1;
                         if (delay == 0) {
                             playerData.teleportDelay = 0;
+                            if (playerData.trappedRequest) {
+                                playerData.lastTrappedTimestamp = Instant.now();
+                                GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().COMMAND_TRAPPED_SUCCESS);
+                            }
+                            // This must be set BEFORE teleport
+                            playerData.trappedRequest = false;
                             player.teleport(playerData.teleportLocation);
                             playerData.teleportLocation = null;
                             playerData.teleportSourceLocation = null;

@@ -56,7 +56,7 @@ import org.bukkit.command.CommandSender;
 public class CommandDebug extends BaseCommand {
 
     @CommandAlias("gddebug")
-    @Description("Captures all GD actions for debugging purposes.")
+    @Description("%debug")
     @Syntax("<record|paste|on|off> [filter]")
     @Subcommand("debug")
     public void execute(CommandSender src, String command, @Optional String filter) {

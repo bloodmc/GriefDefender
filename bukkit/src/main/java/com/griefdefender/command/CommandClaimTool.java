@@ -42,7 +42,7 @@ import org.bukkit.entity.Player;
 public class CommandClaimTool extends BaseCommand {
 
     @CommandAlias("claimtool")
-    @Description("Toggles claim tool on/off.")
+    @Description("%claim-tool")
     @Subcommand("mode tool")
     public void execute(Player player) {
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());

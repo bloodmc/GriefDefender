@@ -48,7 +48,7 @@ import org.spongepowered.api.entity.living.player.Player;
 public class CommandClaimFarewell extends BaseCommand {
 
     @CommandAlias("claimfarewell")
-    @Description("Sets the farewell message of your claim.")
+    @Description("%claim-farewell")
     @Syntax("<message>|clear")
     @Subcommand("claim farewell")
     public void execute(Player player, String message) {

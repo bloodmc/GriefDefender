@@ -53,7 +53,7 @@ import java.util.function.Consumer;
 public class CommandRestoreClaim extends BaseCommand {
 
     @CommandAlias("restoreclaim|claimrestore")
-    @Description("Restores claim to its natural state. Use with caution.")
+    @Description("%claim-restore")
     @Subcommand("claim restore")
     public void execute(Player player) {
         final GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAt(player.getLocation());

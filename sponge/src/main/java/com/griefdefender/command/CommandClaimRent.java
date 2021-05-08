@@ -33,6 +33,8 @@ import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Optional;
 import co.aikar.commands.annotation.Subcommand;
 import co.aikar.commands.annotation.Syntax;
+
+import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.ImmutableMap;
 import com.griefdefender.GDPlayerData;
 import com.griefdefender.GriefDefenderPlugin;
@@ -45,6 +47,7 @@ import com.griefdefender.claim.GDClaim;
 import com.griefdefender.claim.GDClaimManager;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.internal.pagination.PaginationList;
+import com.griefdefender.internal.util.VecHelper;
 import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.permission.GDPermissions;
 import com.griefdefender.text.action.GDCallbackHolder;
@@ -61,6 +64,8 @@ import net.kyori.text.event.HoverEvent;
 import net.kyori.text.format.TextColor;
 import net.kyori.text.format.TextDecoration;
 import net.kyori.text.serializer.plain.PlainComponentSerializer;
+
+import org.spongepowered.api.block.tileentity.Sign;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.service.economy.account.Account;
 
@@ -78,7 +83,7 @@ public class CommandClaimRent extends BaseCommand {
 
     @CommandCompletion("@gdrentcommands @gddummy")
     @CommandAlias("claimrent")
-    @Description("Used to rent/list claims. \nNote: Requires economy plugin.")
+    @Description("%claim-rent")
     @Syntax("create <rate> [<max_days>]|info|list|cancel]")
     @Subcommand("claim rent")
     public void execute(Player player, @Optional String[] args) {
@@ -127,8 +132,13 @@ public class CommandClaimRent extends BaseCommand {
                     }
                     return;
                 }
-    
-                EconomyUtil.getInstance().rentCancelConfirmation(player, claim, null);
+
+                Sign sign = null;
+                final Vector3i signPos = claim.getEconomyData().getRentSignPosition();
+                if (signPos != null) {
+                    sign = SignUtil.getSign(VecHelper.toLocation(player.getWorld(), signPos));
+                }
+                EconomyUtil.getInstance().rentCancelConfirmation(player, claim, sign);
                 return;
             } else if (subCommand.equalsIgnoreCase("clearbalance")) {
                 if (args.length != 2) {
@@ -292,7 +302,7 @@ public class CommandClaimRent extends BaseCommand {
                 final int max = claim.getEconomyData().getRentMaxTime();
                 Component maxTime = null;
                 Component minTime = null;
-                if (max > 0) {
+                if (max > 0 && claim.getEconomyData().getRentEndDate() != null) {
                     maxTime = EconomyUtil.getInstance().getUserTimeRemaining(claim.getEconomyData().getRentEndDate(), MessageCache.getInstance().RENT_UI_END_DATE);
                 }
                 if (min > 0) {

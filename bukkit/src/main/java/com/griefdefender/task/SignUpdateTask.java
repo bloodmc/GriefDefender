@@ -52,7 +52,7 @@ import com.griefdefender.util.SignUtil;
 public class SignUpdateTask extends BukkitRunnable {
 
     public SignUpdateTask(int interval) {
-        this.runTaskTimer(GDBootstrap.getInstance(), 100, 100);
+        this.runTaskTimer(GDBootstrap.getInstance(), 100, 20L * 60 * interval);
     }
 
     @Override
@@ -67,43 +67,48 @@ public class SignUpdateTask extends BukkitRunnable {
             final Iterator<Claim> iterator = new HashSet<>(claimList).iterator();
             while (iterator.hasNext()) {
                 final GDClaim claim = (GDClaim) iterator.next();
-                final Vector3i pos = claim.getEconomyData() == null ? null : claim.getEconomyData().getRentSignPosition();
-                if (pos == null || claim.getEconomyData() == null || claim.getEconomyData().getRentEndDate() == null) {
-                    continue;
-                }
-
-                final Sign sign = SignUtil.getSign(world, pos);
-                if (SignUtil.isRentSign(claim, sign)) {
-                    final String[] lines = sign.getLines();
-                    final String header = lines[0];
-                    if (header == null) {
-                        // Should not happen but just in case
-                        continue;
-                    }
-
-                    final String timeRemaining = sign.getLine(3);
-                    final Duration duration = Duration.between(Instant.now(), claim.getEconomyData().getRentEndDate());
-                    final long seconds = duration.getSeconds();
-                    if (seconds <= 0) {
-                        if (claim.getEconomyData().isRented()) {
-                            final UUID renterUniqueId = claim.getEconomyData().getRenters().get(0);
-                            final GDPermissionUser renter = PermissionHolderCache.getInstance().getOrCreateUser(renterUniqueId);
-                            if (renter != null && renter.getOnlinePlayer() != null) {
-                                GriefDefenderPlugin.sendMessage(renter.getOnlinePlayer(), MessageCache.getInstance().ECONOMY_CLAIM_RENT_CANCELLED);
-                            }
-                        }
-                        sign.getBlock().setType(Material.AIR);
-                        SignUtil.resetRentData(claim);
-                        claim.getData().save();
-                        continue;
-                    }
-
-                    final String remainingTime = String.format("%02d:%02d:%02d", duration.toDays(), (seconds % 86400 ) / 3600, (seconds % 3600) / 60);
-                    sign.setLine(3, ChatColor.translateAlternateColorCodes('&', "&6" + remainingTime));
-                    sign.update();
+                this.checkSign(claim, world);
+                for (Claim child : claim.getChildren(true)) {
+                    this.checkSign((GDClaim) child, world);
                 }
             }
         }
     }
 
+    private void checkSign(GDClaim claim, World world) {
+        final Vector3i pos = claim.getEconomyData() == null ? null : claim.getEconomyData().getRentSignPosition();
+        if (pos == null || claim.getEconomyData() == null || claim.getEconomyData().getRentEndDate() == null) {
+            return;
+        }
+
+        final Sign sign = SignUtil.getSign(world, pos);
+        if (SignUtil.isRentSign(claim, sign)) {
+            final String[] lines = sign.getLines();
+            final String header = lines[0];
+            if (header == null) {
+                // Should not happen but just in case
+                return;
+            }
+
+            final Duration duration = Duration.between(Instant.now(), claim.getEconomyData().getRentEndDate());
+            final long seconds = duration.getSeconds();
+            if (seconds <= 0) {
+                if (claim.getEconomyData().isRented()) {
+                    final UUID renterUniqueId = claim.getEconomyData().getRenters().get(0);
+                    final GDPermissionUser renter = PermissionHolderCache.getInstance().getOrCreateUser(renterUniqueId);
+                    if (renter != null && renter.getOnlinePlayer() != null) {
+                        GriefDefenderPlugin.sendMessage(renter.getOnlinePlayer(), MessageCache.getInstance().ECONOMY_CLAIM_RENT_CANCELLED);
+                    }
+                }
+                sign.getBlock().setType(Material.AIR);
+                SignUtil.resetRentData(claim);
+                claim.getData().save();
+                return;
+            }
+
+            final String remainingTime = String.format("%02d:%02d:%02d", duration.toDays(), (seconds % 86400 ) / 3600, (seconds % 3600) / 60);
+            sign.setLine(3, ChatColor.translateAlternateColorCodes('&', "&6" + remainingTime));
+            sign.update();
+        }
+    }
 }

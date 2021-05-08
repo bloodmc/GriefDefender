@@ -49,7 +49,7 @@ import org.bukkit.entity.Player;
 public class CommandTownTag extends BaseCommand {
 
     @CommandAlias("towntag")
-    @Description("Sets the tag of your town.")
+    @Description("%town-tag")
     @Syntax("<tag>")
     @Subcommand("town tag")
     public void execute(Player player, String tag) {

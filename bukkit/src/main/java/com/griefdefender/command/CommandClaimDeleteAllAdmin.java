@@ -61,7 +61,7 @@ import org.bukkit.entity.Player;
 public class CommandClaimDeleteAllAdmin extends BaseCommand {
 
     @CommandAlias("deletealladmin")
-    @Description("Deletes all administrative claims.")
+    @Description("%delete-all-admin")
     @Subcommand("delete alladmin")
     public void execute(Player player, @Optional String worldName) {
         World world = null;
@@ -95,23 +95,29 @@ public class CommandClaimDeleteAllAdmin extends BaseCommand {
         TextAdapter.sendComponent(player, confirmationText);
     }
 
-    private static Consumer<CommandSender> createConfirmationConsumer(Player player, World world) {
+    private static Consumer<CommandSender> createConfirmationConsumer(Player player, World targetWorld) {
         return confirm -> {
-            final UUID worldUniqueId = world != null ? world.getUID() : null;
-            ClaimResult claimResult = GriefDefenderPlugin.getInstance().dataStore.deleteAllAdminClaims(player, worldUniqueId);
-            if (!claimResult.successful()) {
-                final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_TYPE_NOT_FOUND,
-                        ImmutableMap.of(
-                        "type", ClaimTypes.ADMIN.getName().toLowerCase()));
-                GriefDefenderPlugin.sendMessage(player, claimResult.getMessage().orElse(message));
-                return;
+            final UUID worldUniqueId = targetWorld != null ? targetWorld.getUID() : null;
+            if (worldUniqueId == null) {
+                for (World world : Bukkit.getWorlds()) {
+                    GriefDefenderPlugin.getInstance().dataStore.deleteAllAdminClaims(player, world.getUID());
+                }
+            } else {
+                ClaimResult claimResult = GriefDefenderPlugin.getInstance().dataStore.deleteAllAdminClaims(player, worldUniqueId);
+                if (!claimResult.successful()) {
+                    final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_TYPE_NOT_FOUND,
+                            ImmutableMap.of(
+                            "type", ClaimTypes.ADMIN.getName().toLowerCase()));
+                    GriefDefenderPlugin.sendMessage(player, claimResult.getMessage().orElse(message));
+                    return;
+                }
             }
 
             Component message = null;
-            if (world != null) {
+            if (targetWorld != null) {
                 message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.DELETE_ALL_TYPE_SUCCESS_WORLD, ImmutableMap.of(
                         "type", TextComponent.of("ADMIN").color(TextColor.RED),
-                        "world", world.getName()));
+                        "world", targetWorld.getName()));
             } else {
                 message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.DELETE_ALL_TYPE_SUCCESS, ImmutableMap.of(
                         "type", TextComponent.of("ADMIN").color(TextColor.RED)));

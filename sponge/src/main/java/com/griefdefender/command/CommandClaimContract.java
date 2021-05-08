@@ -48,6 +48,7 @@ import com.griefdefender.cache.MessageCache;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.configuration.MessageStorage;
+import com.griefdefender.event.GDCauseStackManager;
 import com.griefdefender.internal.visual.GDClaimVisual;
 import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.permission.GDPermissions;
@@ -65,12 +66,12 @@ import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextColor;
 
 @CommandAlias("%griefdefender")
-@CommandPermission(GDPermissions.COMMAND_CLAIM_EXPAND)
+@CommandPermission(GDPermissions.COMMAND_CLAIM_CONTRACT)
 public class CommandClaimContract extends BaseCommand {
 
     @CommandCompletion("@gddummy @gdblockfaces @gddummy")
     @CommandAlias("claimcontract|contractclaim")
-    @Description("Contracts/Shrinks the claim from the direction you are facing.")
+    @Description("%claim-contract")
     @Syntax("<amount> [direction]")
     @Subcommand("claim contract")
     public void execute(Player player, int amount, @Optional String direction) {
@@ -132,7 +133,9 @@ public class CommandClaimContract extends BaseCommand {
                 greater.getZ() - amount);
         }
 
+        GDCauseStackManager.getInstance().pushCause(user);
         final ClaimResult result = claim.resize(point1, point2);
+        GDCauseStackManager.getInstance().popCause();
         if (!result.successful()) {
             if (result.getResultType() == ClaimResultType.OVERLAPPING_CLAIM) {
                 GDClaim overlapClaim = (GDClaim) result.getClaim().get();
@@ -202,9 +205,6 @@ public class CommandClaimContract extends BaseCommand {
                 visual.createClaimBlockVisuals(PlayerUtil.getInstance().getEyeHeight(player), player.getLocation(), playerData);
             }
             visual.apply(player);
-            if (GriefDefenderPlugin.getInstance().getWorldEditProvider() != null) {
-                GriefDefenderPlugin.getInstance().getWorldEditProvider().displayClaimCUIVisual(claim, player, playerData, false);
-            }
         }
     }
 }

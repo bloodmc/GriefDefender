@@ -98,7 +98,7 @@ public class PermissionUtil {
     }
 
     public void addActiveContexts(Set<Context> contexts, GDPermissionHolder permissionHolder, GDPlayerData playerData, Claim claim) {
-        PERMISSION_PROVIDER.addActiveContexts(contexts, permissionHolder, null, null);
+        PERMISSION_PROVIDER.addActiveContexts(contexts, permissionHolder, playerData, claim);
     }
 
     public boolean containsDefaultContext(Set<Context> contexts) {
@@ -145,7 +145,7 @@ public class PermissionUtil {
         return PERMISSION_PROVIDER.getPermissions(holder, contexts);
     }
 
-    public Map<String, String> getOptions(GDPermissionHolder holder, Set<Context> contexts) {
+    public Map<String, List<String>> getOptions(GDPermissionHolder holder, Set<Context> contexts) {
         return PERMISSION_PROVIDER.getOptions(holder, contexts);
     }
 
@@ -161,20 +161,12 @@ public class PermissionUtil {
         return PERMISSION_PROVIDER.getTransientPermissions(holder);
     }
 
-    public Map<Set<Context>, Map<String, String>> getPermanentOptions(GDPermissionHolder holder) {
+    public Map<Set<Context>, Map<String, List<String>>> getPermanentOptions(GDPermissionHolder holder) {
         return PERMISSION_PROVIDER.getPermanentOptions(holder);
     }
 
-    public Map<Set<Context>, Map<String, String>> getTransientOptions(GDPermissionHolder holder) {
+    public Map<Set<Context>, Map<String, List<String>>> getTransientOptions(GDPermissionHolder holder) {
         return PERMISSION_PROVIDER.getTransientOptions(holder);
-    }
-
-    public Map<String, String> getPermanentOptions(GDPermissionHolder holder, Set<Context> contexts) {
-        return PERMISSION_PROVIDER.getPermanentOptions(holder, contexts);
-    }
-
-    public Map<String, String> getTransientOptions(GDPermissionHolder holder, Set<Context> contexts) {
-        return PERMISSION_PROVIDER.getTransientOptions(holder, contexts);
     }
 
     public Map<Set<Context>, Map<String, Boolean>> getAllPermissions(GDPermissionHolder holder) {

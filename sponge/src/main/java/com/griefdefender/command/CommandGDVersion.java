@@ -44,7 +44,7 @@ import org.spongepowered.api.service.permission.PermissionService;
 public class CommandGDVersion extends BaseCommand {
 
     @CommandAlias("gdversion")
-    @Description("Displays GriefDefender's version information.")
+    @Description("%version")
     @Subcommand("version")
     public void execute(CommandSource src) {
 

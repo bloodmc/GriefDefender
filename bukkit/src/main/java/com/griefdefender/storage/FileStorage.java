@@ -109,6 +109,10 @@ public class FileStorage extends BaseStorage {
     }
 
     public void registerWorld(World world) {
+        if (this.claimWorldManagers.get(world.getUID()) != null) {
+            return;
+        }
+
         Environment dimType = world.getEnvironment();
         final String worldName = world.getName().toLowerCase();
         final String dimName = dimType.name().toLowerCase();

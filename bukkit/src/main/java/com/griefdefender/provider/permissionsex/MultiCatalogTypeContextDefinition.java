@@ -1,17 +1,40 @@
+/*
+ * This file is part of GriefDefender, licensed under the MIT License (MIT).
+ *
+ * Copyright (c) bloodmc
+ * Copyright (c) zml
+ * Copyright (c) contributors
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 package com.griefdefender.provider.permissionsex;
 
 import ca.stellardrift.permissionsex.context.ContextDefinition;
-import ca.stellardrift.permissionsex.context.ContextValue;
 import ca.stellardrift.permissionsex.subject.CalculatedSubject;
 import com.griefdefender.api.CatalogType;
 import com.griefdefender.api.registry.CatalogRegistryModule;
-import kotlin.Unit;
-import kotlin.jvm.functions.Function1;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public class MultiCatalogTypeContextDefinition extends ContextDefinition<CatalogType> {
@@ -24,7 +47,7 @@ public class MultiCatalogTypeContextDefinition extends ContextDefinition<Catalog
 
 
     @Override
-    public void accumulateCurrentValues(@NotNull CalculatedSubject calculatedSubject, @NotNull Function1<? super CatalogType, Unit> function1) {
+    public void accumulateCurrentValues(CalculatedSubject calculatedSubject, Consumer<CatalogType> consumer) {
     }
 
     @Override
@@ -36,11 +59,6 @@ public class MultiCatalogTypeContextDefinition extends ContextDefinition<Catalog
             }
         }
         throw new IllegalArgumentException("Provided value '" + s + "' was not a valid value in any of catalog types");
-    }
-
-    @Override
-    public boolean matches(@NotNull ContextValue<CatalogType> contextValue, CatalogType t) {
-        return contextValue.getParsedValue(this).equals(t);
     }
 
     @Override

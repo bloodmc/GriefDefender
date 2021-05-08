@@ -58,7 +58,7 @@ public class CommandClaimTax extends BaseCommand {
 
     @CommandCompletion("@gdtaxcommands @gddummy")
     @CommandAlias("claimtax")
-    @Description("Used for claim tax management.")
+    @Description("%claim-tax")
     @Syntax("balance|pay <amount>")
     @Subcommand("claim tax")
     public void execute(Player player, String[] args) throws CommandException {

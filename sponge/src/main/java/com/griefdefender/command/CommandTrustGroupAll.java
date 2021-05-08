@@ -61,11 +61,7 @@ public class CommandTrustGroupAll extends BaseCommand {
 
     @CommandCompletion("@gdgroups @gdtrusttypes @gddummy")
     @CommandAlias("trustallgroup")
-    @Description("Grants a group access to all your claims."
-            + "\nAccessor: access to interact with all blocks except inventory."
-            + "\nContainer: access to interact with all blocks including inventory."
-            + "\nBuilder: access to everything above including ability to place and break blocks."
-            + "\nManager: access to everything above including ability to manage claim settings.")
+    @Description("%trust-group-all")
     @Syntax("<group> <accessor|builder|container|manager>")
     @Subcommand("trustall group")
     public void execute(Player player, String target, String type) {

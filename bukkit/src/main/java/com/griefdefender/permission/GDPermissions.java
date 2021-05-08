@@ -78,6 +78,7 @@ public class GDPermissions {
     public static final String COMMAND_TOWN_TAX = "griefdefender.user.town.command.tax";
     public static final String COMMAND_TOWN_MODE = "griefdefender.user.claim.command.town-mode";
     public static final String COMMAND_TRANSFER_CLAIM = "griefdefender.user.claim.command.transfer";
+    public static final String COMMAND_TRAPPED = "griefdefender.user.claim.command.trapped";
     public static final String COMMAND_BUY_CLAIM_BLOCKS = "griefdefender.user.claim.command.buy-blocks";
     public static final String COMMAND_SELL_CLAIM_BLOCKS = "griefdefender.user.claim.command.sell-blocks";
     public static final String COMMAND_LIST_CLAIM_FLAGS = "griefdefender.user.claim.command.list-flags";
@@ -85,6 +86,7 @@ public class GDPermissions {
     public static final String COMMAND_BAN_ITEM = "griefdefender.user.claim.command.ban-item";
     public static final String COMMAND_UNBAN_ITEM = "griefdefender.user.claim.command.unban-item";
     public static final String COMMAND_CLAIM_INHERIT = "griefdefender.user.claim.command.inherit";
+    public static final String COMMAND_UNLOCK_DROPS = "griefdefender.user.claim.command.unlock-drops";
     public static final String CLAIM_CREATE = "griefdefender.user.claim.create.base";
     public static final String CLAIM_CREATE_BASIC = "griefdefender.user.claim.create.basic";
     public static final String CLAIM_CREATE_SUBDIVISION = "griefdefender.user.claim.create.subdivision";
@@ -158,6 +160,7 @@ public class GDPermissions {
     public static final String COMMAND_CLAIM_PERMISSION_PLAYER = "griefdefender.admin.claim.command.permission-player";
     public static final String COMMAND_CLAIM_RESERVE = "griefdefender.admin.claim.command.reserve-name";
     public static final String COMMAND_CLAIM_SCHEMATIC = "griefdefender.admin.claim.command.schematic";
+    public static final String COMMAND_CLAIM_TAX_FORCE = "griefdefender.admin.claim.command.claim.tax.force";
     public static final String COMMAND_IGNORE_CLAIMS = "griefdefender.admin.claim.command.ignore.base";
     public static final String COMMAND_DELETE_CLAIM_BASE = "griefdefender.admin.claim.command.delete.base";
     public static final String COMMAND_DELETE_CLAIMS = "griefdefender.admin.claim.command.delete-claims";

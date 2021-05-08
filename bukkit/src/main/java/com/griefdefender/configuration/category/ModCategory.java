@@ -52,8 +52,16 @@ public class ModCategory {
             + "\nThe wildcard '*' represents zero or more characters."
             + "\nFor more information on usage, see https://commons.apache.org/proper/commons-io/javadocs/api-2.5/org/apache/commons/io/FilenameUtils.html#wildcardMatch(java.lang.String,%20java.lang.String)")
     public Map<String, String> modIdMap = new HashMap<>();
+    @Setting(value = "block-id-convert-list", comment = "Used to override generic block id's to their actual id during TE and item usage if available. Add the target block id to list if you want to force a conversion when detected."
+            + "\nNote: This is useful for mods such as IC2 which uses the generic id 'ic2:te' for its multi-block.")
+    public List<String> blockIdConvertList = new ArrayList<>();
+    @Setting(value = "tile-id-nbt-map", comment = "Used to override generic tileentity id's to their actual id during TE usage. Add the target TE id as key and NBT key where ID is stored as value."
+            + "\nNote: This is useful for mods such as Gregtech which uses the generic id 'gregtech:machine' for its TE and NBT key 'MetaId' to store the actual ID.")
+    public Map<String, String> tileIdNbtMap = new HashMap<>();
 
     public ModCategory() {
+        this.blockIdConvertList.add("gregtech:machine");
+        this.blockIdConvertList.add("ic2:te");
         this.fakePlayerIdentifiers.add("41C82C87-7AfB-4024-BA57-13D2C99CAE77"); // Forge FakePlayer
         this.fakePlayerIdentifiers.add("BFC3377F-C3C9-3382-9DA6-79B50A9AFE57"); // OpenMods
         this.fakePlayerIdentifiers.add("0D0C4CA0-4FF1-11E4-916C-0800200C9A66"); // ComputerCraft
@@ -63,6 +71,7 @@ public class ModCategory {
         this.modIdMap.put("net.minecraftforge.*", "forge");
         this.modIdMap.put("openblocks.*", "openblocks");
         this.modIdMap.put("openmods.*", "openmods");
+        this.tileIdNbtMap.put("gregtech:machine", "MetaId");
     }
 
     public boolean isFakePlayer(Player player) {
@@ -77,6 +86,13 @@ public class ModCategory {
         return false;
     }
 
+    public boolean convertBlockId(String id) {
+        if (this.blockIdConvertList.contains(id)) {
+            return true;
+        }
+        return false;
+    }
+
     public String getModId(String clazz) {
         for (Entry<String, String> entry : this.modIdMap.entrySet()) {
             final String modPackage = entry.getKey();
@@ -86,5 +102,9 @@ public class ModCategory {
             }
         }
         return null;
+    }
+
+    public String getNbtKey(String tileId) {
+        return this.tileIdNbtMap.get(tileId);
     }
 }

@@ -39,7 +39,7 @@ import org.bukkit.command.CommandSender;
 public class CommandGDReload extends BaseCommand {
 
     @CommandAlias("gdreload")
-    @Description("Reloads GriefDefender's configuration settings.")
+    @Description("%reload")
     @Subcommand("reload")
     public void execute(CommandSender src) {
         GriefDefenderPlugin.getInstance().loadConfig();

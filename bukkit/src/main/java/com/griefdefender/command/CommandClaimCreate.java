@@ -55,7 +55,6 @@ import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.permission.GDPermissions;
 import com.griefdefender.registry.ClaimTypeRegistryModule;
 import com.griefdefender.util.EconomyUtil;
-import com.griefdefender.util.PlayerUtil;
 
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.CommandAlias;
@@ -73,8 +72,8 @@ public class CommandClaimCreate extends BaseCommand {
 
     @CommandCompletion("@gddummy @gdclaimtypes @gddummy")
     @CommandAlias("claimcreate")
-    @Description("Creates a claim around the player.")
-    @Syntax("<radius> [type] [player]")
+    @Description("%claim-create")
+    @Syntax("<radius> [type]")
     @Subcommand("claim create")
     public void execute(Player player, int radius, @Optional String type) {
         final Location location = player.getLocation();
@@ -87,6 +86,13 @@ public class CommandClaimCreate extends BaseCommand {
                     "min-level", minClaimLevel,
                     "max-level", maxClaimLevel));
             GriefDefenderPlugin.sendMessage(player, message);
+            return;
+        }
+
+        final int radiusLimit = GriefDefenderPlugin.getGlobalConfig().getConfig().claim.claimCreateRadiusLimit;
+        if (radius > radiusLimit) {
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CREATE_FAILED_RESULT,
+                    ImmutableMap.of("reason", "Radius exceeds limit of " + radiusLimit + ".")));
             return;
         }
 
@@ -104,12 +110,12 @@ public class CommandClaimCreate extends BaseCommand {
         final ClaimType claimType = ClaimTypeRegistryModule.getInstance().getById(type).orElse(ClaimTypes.BASIC);
         if (claimType == ClaimTypes.WILDERNESS) {
             GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CREATE_FAILED_RESULT,
-                    ImmutableMap.of("reason", ResultTypes.TARGET_NOT_VALID)));
+                    ImmutableMap.of("reason", ResultTypes.TARGET_NOT_VALID.getName())));
             return;
         }
         if (claimType == ClaimTypes.ADMIN && !playerData.ignoreAdminClaims && !playerData.canManageAdminClaims) {
             GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CREATE_FAILED_RESULT,
-                    ImmutableMap.of("reason", ResultTypes.TARGET_NOT_VALID)));
+                    ImmutableMap.of("reason", ResultTypes.TARGET_NOT_VALID.getName())));
             return;
         }
 
@@ -139,7 +145,7 @@ public class CommandClaimCreate extends BaseCommand {
                 GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().CREATE_CANCEL);
             } else {
                 GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CREATE_FAILED_RESULT,
-                        ImmutableMap.of("reason", result.getResultType())));
+                        ImmutableMap.of("reason", result.getResultType().name())));
             }
             return;
         } else {
@@ -148,10 +154,6 @@ public class CommandClaimCreate extends BaseCommand {
                     ImmutableMap.of(
                     "type", gdClaim.getFriendlyNameType(true)));
             GriefDefenderPlugin.sendMessage(player, message);
-            if (GriefDefenderPlugin.getInstance().getWorldEditProvider() != null) {
-                GriefDefenderPlugin.getInstance().getWorldEditProvider().stopDragVisual(player);
-                GriefDefenderPlugin.getInstance().getWorldEditProvider().displayClaimCUIVisual(gdClaim, player, playerData, false);
-            }
             final GDClaimVisual visual = gdClaim.getVisualizer();
             if (visual.getVisualTransactions().isEmpty()) {
                 visual.createClaimBlockVisuals(location.getBlockY(), player.getLocation(), playerData);

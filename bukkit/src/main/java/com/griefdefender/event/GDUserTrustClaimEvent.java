@@ -50,23 +50,41 @@ public class GDUserTrustClaimEvent extends GDTrustClaimEvent implements UserTrus
         return this.users;
     }
 
-    public static class Add extends GDUserTrustClaimEvent implements UserTrustClaimEvent.Add {
+    public static class Add extends GDTrustClaimEvent.Add implements UserTrustClaimEvent.Add {
+        private List<UUID> users;
+
         public Add(List<Claim> claims, List<UUID> users, TrustType trustType) {
-            super(claims, users, trustType);
+            super(claims, trustType);
+            this.users = users;
         }
 
         public Add(Claim claim, List<UUID> users, TrustType trustType) {
-            super(claim, users, trustType);
+            super(claim,  trustType);
+            this.users = users;
+        }
+
+        @Override
+        public List<UUID> getUsers() {
+            return this.users;
         }
     }
 
-    public static class Remove extends GDUserTrustClaimEvent implements UserTrustClaimEvent.Remove {
+    public static class Remove extends GDTrustClaimEvent.Remove implements UserTrustClaimEvent.Remove {
+        private List<UUID> users;
+
         public Remove(List<Claim> claims,List<UUID> users, TrustType trustType) {
-            super(claims, users, trustType);
+            super(claims, trustType);
+            this.users = users;
         }
 
         public Remove(Claim claim, List<UUID> users, TrustType trustType) {
-            super(claim, users, trustType);
+            super(claim, trustType);
+            this.users = users;
+        }
+
+        @Override
+        public List<UUID> getUsers() {
+            return this.users;
         }
     }
 }

@@ -41,7 +41,7 @@ import org.spongepowered.api.entity.living.player.Player;
 public class CommandClaimAdmin extends BaseCommand {
 
     @CommandAlias("modeadmin|adminclaims|ac")
-    @Description("Switches the shovel tool to administrative claims mode")
+    @Description("%mode-admin")
     @Subcommand("mode admin")
     public void execute(Player player) {
 

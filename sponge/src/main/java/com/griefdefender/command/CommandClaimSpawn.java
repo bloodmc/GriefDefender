@@ -59,7 +59,7 @@ import org.spongepowered.api.world.World;
 public class CommandClaimSpawn extends BaseCommand {
 
     @CommandAlias("claimspawn")
-    @Description("Teleports you to claim spawn if available.")
+    @Description("%claim-spawn")
     @Syntax("[name] [user]")
     @Subcommand("claim spawn")
     public void execute(Player player, @Optional String claimName, @Optional User targetPlayer) {
@@ -107,7 +107,7 @@ public class CommandClaimSpawn extends BaseCommand {
 
         final Location<World> spawnLocation = new Location<>(claim.getWorld(), spawnPos.getX(), spawnPos.getY(), spawnPos.getZ());
         int teleportDelay = 0;
-        if (GDOptions.isOptionEnabled(Options.PLAYER_TELEPORT_DELAY)) {
+        if (GDOptions.PLAYER_TELEPORT_DELAY) {
             teleportDelay = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), player, Options.PLAYER_TELEPORT_DELAY, claim);
         }
         if (teleportDelay > 0) {

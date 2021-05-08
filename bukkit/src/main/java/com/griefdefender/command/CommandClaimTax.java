@@ -46,6 +46,7 @@ import com.griefdefender.claim.GDClaim;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.economy.GDPaymentTransaction;
 import com.griefdefender.permission.GDPermissions;
+import com.griefdefender.task.TaxApplyTask;
 import com.griefdefender.util.EconomyUtil;
 
 import java.time.Instant;
@@ -59,7 +60,7 @@ public class CommandClaimTax extends BaseCommand {
 
     @CommandCompletion("@gdtaxcommands @gddummy")
     @CommandAlias("claimtax")
-    @Description("Used for claim tax management.")
+    @Description("%claim-tax")
     @Syntax("balance|pay <amount>")
     @Subcommand("claim tax")
     public void execute(Player player, String[] args) throws CommandException {
@@ -104,6 +105,10 @@ public class CommandClaimTax extends BaseCommand {
                 message = MessageCache.getInstance().TAX_NO_BALANCE;
             }
             GriefDefenderPlugin.sendMessage(player, message);
+        } else if (command.equalsIgnoreCase("force")) {
+            if (playerData.ignoreClaims || player.hasPermission(GDPermissions.COMMAND_CLAIM_TAX_FORCE)) {
+                TaxApplyTask.handleClaimTax(claim, playerData, claim.isInTown());
+            }
         } else if (command.equalsIgnoreCase("pay")) {
             final double taxBalance = claim.getEconomyData().getTaxBalance();
             if (taxBalance <= 0 || amount <= 0) {

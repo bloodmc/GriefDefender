@@ -76,21 +76,15 @@ public class CommandClaimAbandon extends BaseCommand {
     protected boolean abandonTopClaim = false;
 
     @CommandAlias("abandon|abandonclaim")
-    @Description("Abandons a claim")
+    @Description("%abandon-claim")
     @Subcommand("abandon claim")
     public void execute(Player player) {
         final GDClaim claim = GriefDefenderPlugin.getInstance().dataStore.getClaimAt(player.getLocation());
         final UUID ownerId = claim.getOwnerUniqueId();
-        GDPermissionUser user = null;
-        if (ownerId != null) {
-            user = PermissionHolderCache.getInstance().getOrCreateUser(ownerId);
-        } else {
-            user = PermissionHolderCache.getInstance().getOrCreateUser(player);
-        }
+        final GDPermissionUser user = PermissionHolderCache.getInstance().getOrCreateUser(player.getUniqueId());
         final GDPlayerData playerData = user.getInternalPlayerData();
 
         final boolean isAdmin = playerData.canIgnoreClaim(claim);
-        final boolean isTown = claim.isTown();
         if (claim.isWilderness()) {
             GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().ABANDON_CLAIM_MISSING);
             return;
@@ -109,7 +103,6 @@ public class CommandClaimAbandon extends BaseCommand {
                     Set<Claim> invalidClaims = new HashSet<>();
                     for (Claim child : claim.getChildren(true)) {
                         if (child.getOwnerUniqueId() == null || !child.getOwnerUniqueId().equals(ownerId)) {
-                            //return CommandResult.empty();
                             invalidClaims.add(child);
                         }
                     }
@@ -122,19 +115,38 @@ public class CommandClaimAbandon extends BaseCommand {
                 }
             }
         }
-
-        final int abandonDelay = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), user, Options.ABANDON_DELAY, claim);
-        if (abandonDelay > 0) {
-            final Instant localNow = Instant.now();
-            final Instant dateCreated = claim.getInternalClaimData().getDateCreated();
-            final Instant delayExpires = dateCreated.plus(Duration.ofDays(abandonDelay));
-            final boolean delayActive = !delayExpires.isBefore(localNow);
-            if (delayActive) {
-                TextAdapter.sendComponent(player, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.ABANDON_CLAIM_DELAY_WARNING, 
-                        ImmutableMap.of("date", Date.from(delayExpires))));
+        if (!isAdmin && (claim.isTown() && claim.children.size() > 0)) {
+            Set<Claim> childClaims = new HashSet<>();
+            for (Claim child : claim.getChildren(true)) {
+                if (!child.isBasicClaim()) {
+                    continue;
+                }
+                if (child.getOwnerUniqueId().equals(user.getUniqueId())) {
+                    childClaims.add(child);
+                }
+            }
+            if (!childClaims.isEmpty()) {
+                GriefDefenderPlugin.sendMessage(player, TextComponent.of("Abandon town failed! You must abandon all basic children claims owned by you first.", TextColor.RED));
+                CommandHelper.showClaims(player, childClaims, 0, true);
                 return;
             }
         }
+
+        if (!isAdmin) {
+            final int abandonDelay = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), user, Options.ABANDON_DELAY, claim);
+            if (abandonDelay > 0) {
+                final Instant localNow = Instant.now();
+                final Instant dateCreated = claim.getInternalClaimData().getDateCreated();
+                final Instant delayExpires = dateCreated.plus(Duration.ofDays(abandonDelay));
+                final boolean delayActive = !delayExpires.isBefore(localNow);
+                if (delayActive) {
+                    TextAdapter.sendComponent(player, MessageStorage.MESSAGE_DATA.getMessage(MessageStorage.ABANDON_CLAIM_DELAY_WARNING, 
+                            ImmutableMap.of("date", Date.from(delayExpires))));
+                    return;
+                }
+            }
+        }
+
         final boolean autoSchematicRestore = GriefDefenderPlugin.getActiveConfig(player.getWorld().getUID()).getConfig().claim.claimAutoSchematicRestore;
         final Component confirmationText = TextComponent.builder()
                 .append(autoSchematicRestore ? MessageCache.getInstance().SCHEMATIC_ABANDON_RESTORE_WARNING : MessageCache.getInstance().ABANDON_WARNING)
@@ -197,6 +209,17 @@ public class CommandClaimAbandon extends BaseCommand {
             }
 
             if (!claim.isAdminClaim()) {
+                // check parent
+                final Claim parentClaim = claim.getParent().orElse(null);
+                if (parentClaim != null && parentClaim.isTown()) {
+                    if (parentClaim.isUserTrusted(user.getUniqueId(), TrustTypes.MANAGER)) {
+                        int remainingBlocks = playerData.getRemainingClaimBlocks();
+                        final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ABANDON_SUCCESS, ImmutableMap.of(
+                                "amount", remainingBlocks));
+                        GriefDefenderPlugin.sendMessage(source, message);
+                        return;
+                    }
+                }
                 final double abandonReturnRatio = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Double.class), user, Options.ABANDON_RETURN_RATIO, claim);
                 if (GriefDefenderPlugin.getInstance().isEconomyModeEnabled()) {
                     final Economy economy = GriefDefenderPlugin.getInstance().getVaultProvider().getApi();

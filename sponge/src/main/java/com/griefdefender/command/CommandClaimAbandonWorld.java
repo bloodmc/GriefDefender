@@ -76,7 +76,7 @@ public class CommandClaimAbandonWorld extends BaseCommand {
 
     @CommandCompletion("@gdworlds @gddummy")
     @CommandAlias("abandonworld")
-    @Description("Special admin command used to abandon ALL user claims in world")
+    @Description("%abandon-world")
     @Subcommand("abandon world")
     @Syntax("[<world>]")
     public void execute(Player player, @Optional String worldName) {
@@ -172,7 +172,7 @@ public class CommandClaimAbandonWorld extends BaseCommand {
                     if (GriefDefenderPlugin.getInstance().isEconomyModeEnabled()) {
                         final Account playerAccount = GriefDefenderPlugin.getInstance().economyService.get().getOrCreateAccount(playerData.playerID).orElse(null);
                         if (playerAccount == null) {
-                            return;
+                            continue;
                         }
 
                         final Currency defaultCurrency = GriefDefenderPlugin.getInstance().economyService.get().getDefaultCurrency();

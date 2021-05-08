@@ -67,7 +67,7 @@ public class CommandClaimPermissionGroup extends BaseCommand {
 
     @CommandCompletion("@gdgroups @gddummy")
     @CommandAlias("cpg")
-    @Description("Sets a permission on a group with a claim context.")
+    @Description("%permission-group")
     @Syntax("<group> [<permission> <value>]")
     @Subcommand("permission group")
     public void execute(Player player, String group, @Optional String[] args) throws CommandException, InvalidCommandArgument {

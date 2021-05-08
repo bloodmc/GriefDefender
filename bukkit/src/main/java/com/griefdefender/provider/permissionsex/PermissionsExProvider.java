@@ -1,11 +1,35 @@
+/*
+ * This file is part of GriefDefender, licensed under the MIT License (MIT).
+ *
+ * Copyright (c) bloodmc
+ * Copyright (c) zml
+ * Copyright (c) contributors
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 package com.griefdefender.provider.permissionsex;
 
 import ca.stellardrift.permissionsex.bukkit.PermissionsExPlugin;
 import ca.stellardrift.permissionsex.context.ContextDefinition;
 import ca.stellardrift.permissionsex.context.ContextValue;
-import ca.stellardrift.permissionsex.data.Change;
-import ca.stellardrift.permissionsex.data.ImmutableSubjectData;
 import ca.stellardrift.permissionsex.subject.SubjectType;
+import ca.stellardrift.permissionsex.util.Change;
 import ca.stellardrift.permissionsex.util.Util;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -32,11 +56,11 @@ import com.griefdefender.permission.GDPermissionResult;
 import com.griefdefender.permission.GDPermissionUser;
 import ca.stellardrift.permissionsex.PermissionsEx;
 import ca.stellardrift.permissionsex.subject.CalculatedSubject;
+import ca.stellardrift.permissionsex.subject.ImmutableSubjectData;
+
 import com.griefdefender.provider.PermissionProvider;
 import com.griefdefender.registry.ClaimTypeRegistryModule;
 import com.griefdefender.registry.FlagRegistryModule;
-import kotlin.Unit;
-import kotlin.jvm.functions.Function1;
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.event.HoverEvent;
@@ -52,10 +76,12 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -88,13 +114,13 @@ public class PermissionsExProvider implements PermissionProvider {
         throw new RuntimeException("Provided plugin " + pexPlugin + " was not a proper instance of PermissionsExPlugin");
     }
 
-    private static <T> BiConsumer<CalculatedSubject, Function1<? super T, Unit>> claimAttributeValue(Function<GDClaim, T> claimFunc) {
+    private static <T> BiConsumer<CalculatedSubject, Consumer<? super T>> claimAttributeValue(Function<GDClaim, T> claimFunc) {
         return (subj, collector) -> {
             GDClaim claim = getClaimForSubject(subj);
             if (claim != null) {
                 T attr = claimFunc.apply(claim);
                 if (attr != null) {
-                    collector.invoke(attr);
+                    collector.accept(attr);
                 }
             }
         };
@@ -107,7 +133,7 @@ public class PermissionsExProvider implements PermissionProvider {
      * @return A claim if applicable, otherwise null
      */
     static GDClaim getClaimForSubject(CalculatedSubject subj) {
-        Player ply = Util.castOptional(subj.getAssociatedObject(), Player.class).orElse(null);
+        Player ply = Util.castOptional(Optional.ofNullable(subj.getAssociatedObject()), Player.class).orElse(null);
         if (ply == null) {// not an online player
             return null;
         }
@@ -138,7 +164,7 @@ public class PermissionsExProvider implements PermissionProvider {
     }
 
     private Context contextPEXToGD(ContextValue<?> pexCtx) {
-        return new Context(pexCtx.getKey(), pexCtx.getRawValue());
+        return new Context(pexCtx.key(), pexCtx.rawValue());
     }
 
     private Set<ContextValue<?>> contextsGDToPEX(Set<Context> gdCtxs) {
@@ -320,8 +346,9 @@ public class PermissionsExProvider implements PermissionProvider {
     }
 
     @Override
-    public Map<String, String> getOptions(GDPermissionHolder holder, Set<Context> contexts) {
-        return holderToPEXSubject(holder).getOptions(contextsGDToPEX(contexts));
+    public Map<String, List<String>> getOptions(GDPermissionHolder holder, Set<Context> contexts) {
+        //return holderToPEXSubject(holder).getOptions(contextsGDToPEX(contexts));
+        return new HashMap<>();
     }
 
     @Override
@@ -341,23 +368,15 @@ public class PermissionsExProvider implements PermissionProvider {
     }
 
     @Override
-    public Map<Set<Context>, Map<String, String>> getPermanentOptions(GDPermissionHolder holder) {
-        return tKeys(holderToPEXSubject(holder).data().get().getAllOptions());
+    public Map<Set<Context>, Map<String, List<String>>> getPermanentOptions(GDPermissionHolder holder) {
+        //return tKeys(holderToPEXSubject(holder).data().get().getAllOptions());
+        return new HashMap<>();
     }
 
     @Override
-    public Map<Set<Context>, Map<String, String>> getTransientOptions(GDPermissionHolder holder) {
-        return tKeys(holderToPEXSubject(holder).transientData().get().getAllOptions());
-    }
-
-    @Override
-    public Map<String, String> getPermanentOptions(GDPermissionHolder holder, Set<Context> contexts) {
-        return holderToPEXSubject(holder).data().get().getOptions(contextsGDToPEX(contexts));
-    }
-
-    @Override
-    public Map<String, String> getTransientOptions(GDPermissionHolder holder, Set<Context> contexts) {
-        return holderToPEXSubject(holder).transientData().get().getOptions(contextsGDToPEX(contexts));
+    public Map<Set<Context>, Map<String, List<String>>> getTransientOptions(GDPermissionHolder holder) {
+        //return tKeys(holderToPEXSubject(holder).transientData().get().getAllOptions());
+        return new HashMap<>();
     }
 
     @Override
@@ -427,8 +446,9 @@ public class PermissionsExProvider implements PermissionProvider {
 
     @Override
     public void refreshCachedData(GDPermissionHolder holder) {
-        holderToPEXSubject(holder).data().getCache().invalidate(holder.getIdentifier());
-        holderToPEXSubject(holder).transientData().getCache().invalidate(holder.getIdentifier());
+        // TODO
+        //holderToPEXSubject(holder).data().getCache().invalidate(holder.getIdentifier());
+        //holderToPEXSubject(holder).transientData().getCache().invalidate(holder.getIdentifier());
     }
 
     @Override

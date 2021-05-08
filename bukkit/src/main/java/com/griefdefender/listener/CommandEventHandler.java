@@ -36,6 +36,7 @@ import com.griefdefender.api.permission.option.Options;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.event.GDCauseStackManager;
+import com.griefdefender.internal.util.NMSUtil;
 import com.griefdefender.permission.GDPermissionManager;
 import com.griefdefender.permission.flag.GDFlags;
 import com.griefdefender.permission.option.GDOptions;
@@ -158,7 +159,13 @@ public class CommandEventHandler implements Listener {
                 pluginId = pluginCommand.getPlugin().getName().toLowerCase();
             }
             if (pluginId == null) {
-                pluginId = "minecraft";
+                // check modId for hybrid servers
+                final String modId = NMSUtil.getInstance().getCommandModId(command);
+                if (modId != null) {
+                    pluginId = modId;
+                } else {
+                    pluginId = "minecraft";
+                }
             }
         }
 
@@ -177,10 +184,10 @@ public class CommandEventHandler implements Listener {
             return;
         }
 
-        final int combatTimeRemaining = playerData.getPvpCombatTimeRemaining();
+        final int combatTimeRemaining = playerData.getPvpCombatTimeRemaining(claim);
         final boolean inPvpCombat = combatTimeRemaining > 0;
-        if (GDOptions.isOptionEnabled(Options.PVP_COMBAT_COMMAND)) {
-            final boolean pvpCombatCommand = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Boolean.class), player, Options.PVP_COMBAT_COMMAND);
+        if (GDOptions.PVP_COMBAT_COMMAND) {
+            final boolean pvpCombatCommand = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Boolean.class), player, Options.PVP_COMBAT_COMMAND, claim);
             if (!pvpCombatCommand && inPvpCombat) {
                 final Component denyMessage = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.PVP_IN_COMBAT_NOT_ALLOWED,
                         ImmutableMap.of(

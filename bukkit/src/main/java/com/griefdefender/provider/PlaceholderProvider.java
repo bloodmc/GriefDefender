@@ -154,6 +154,11 @@ public class PlaceholderProvider {
                         return "";
                     }
                     return String.valueOf(PlayerUtil.getInstance().canPlayerPvP((GDClaim) claim, user));
+                case "pvp_combat_active" :
+                    if (claim == null) {
+                        return "";
+                    }
+                    return String.valueOf(playerData.getPvpCombatTimeRemaining((GDClaim) claim) > 0);
                 case "blocks_total" :
                     final int initial = playerData.getInitialClaimBlocks();
                     final int accrued = playerData.getAccruedClaimBlocks();

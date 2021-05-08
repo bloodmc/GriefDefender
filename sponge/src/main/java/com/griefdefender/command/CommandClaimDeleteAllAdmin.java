@@ -51,6 +51,7 @@ import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.world.storage.WorldProperties;
+import org.spongepowered.api.world.World;
 
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -60,7 +61,7 @@ import java.util.function.Consumer;
 public class CommandClaimDeleteAllAdmin extends BaseCommand {
 
     @CommandAlias("deletealladmin")
-    @Description("Deletes all administrative claims.")
+    @Description("%delete-all-admin")
     @Subcommand("delete alladmin")
     public void execute(Player player, @Optional String worldName) {
         WorldProperties worldProperties = null;
@@ -97,13 +98,19 @@ public class CommandClaimDeleteAllAdmin extends BaseCommand {
     private static Consumer<CommandSource> createConfirmationConsumer(Player player, WorldProperties worldProperties) {
         return confirm -> {
             final UUID worldUniqueId = worldProperties != null ? worldProperties.getUniqueId() : null;
-            ClaimResult claimResult = GriefDefenderPlugin.getInstance().dataStore.deleteAllAdminClaims(player, worldUniqueId);
-            if (!claimResult.successful()) {
-                final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_TYPE_NOT_FOUND,
-                        ImmutableMap.of(
-                        "type", ClaimTypes.ADMIN.getName().toLowerCase()));
-                GriefDefenderPlugin.sendMessage(player, claimResult.getMessage().orElse(message));
-                return;
+            if (worldUniqueId == null) {
+                for (World world : Sponge.getServer().getWorlds()) {
+                    GriefDefenderPlugin.getInstance().dataStore.deleteAllAdminClaims(player, world.getUniqueId());
+                }
+            } else {
+                ClaimResult claimResult = GriefDefenderPlugin.getInstance().dataStore.deleteAllAdminClaims(player, worldUniqueId);
+                if (!claimResult.successful()) {
+                    final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CLAIM_TYPE_NOT_FOUND,
+                            ImmutableMap.of(
+                            "type", ClaimTypes.ADMIN.getName().toLowerCase()));
+                    GriefDefenderPlugin.sendMessage(player, claimResult.getMessage().orElse(message));
+                    return;
+                }
             }
 
             Component message = null;

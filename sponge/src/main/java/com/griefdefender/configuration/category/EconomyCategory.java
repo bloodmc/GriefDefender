@@ -38,7 +38,7 @@ public class EconomyCategory extends ConfigCategory {
             + "\nNote: Using this mode disables the '/buyblocks' command as claim creation will pull funds directly from a player's economy balance."
             + "\nNote: If players have existing claimblocks from past configurations, an admin must use the '/ecomigrateblocks' command to convert remainder to currency.")
     public boolean economyMode = false;
-    @Setting(value = "use-claim-block-task", comment = "Claim blocks earned will be converted to economy based on 'claim-block-cost'." 
+    @Setting(value = "use-claim-block-task", comment = "Claim blocks earned will be converted to economy based on 'economy-block-cost'." 
             + "\n(Default: false)\nNote: This setting can only be used if 'economy-mode' is true.")
     public boolean useClaimBlockTask = false;
     @Setting(value = "bank-system", comment = "Whether to enable the bank system for claims. Set to true to enable.")
@@ -70,8 +70,8 @@ public class EconomyCategory extends ConfigCategory {
     public int rentDelinquentApplyHour = 0;
     @Setting(value = "rent-transaction-log-limit", comment = "The amount of transactions to keep for history. Default: 60")
     public int rentTransactionLogLimit = 60;
-    @Setting(value = "sign-update-interval", comment = "The interval in minutes for updating sign data. Default: 5. Set to 0 to disable.")
-    public int signUpdateInterval = 5;
+    @Setting(value = "sign-update-interval", comment = "The interval in minutes for updating sign data. Default: 1. Set to 0 to disable.")
+    public int signUpdateInterval = 1;
     @Setting(value = "tax-transaction-log-limit", comment = "The amount of transactions to keep for history. Default: 60")
     public int taxTransactionLogLimit = 60;
     @Setting(value = "tax-apply-hour", comment = "The specific hour in day to apply tax to all claims. Note: This uses military time and accepts values between 0-23. Default: 0")

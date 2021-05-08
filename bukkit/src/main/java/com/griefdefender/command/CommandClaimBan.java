@@ -54,7 +54,7 @@ public class CommandClaimBan extends BaseCommand {
 
     @CommandCompletion("@gdbantypes @gdmcids @gddummy")
     @CommandAlias("claimban")
-    @Description("Bans target id from all usage.")
+    @Description("%claim-ban")
     @Syntax("hand | <type> <target> [<message>]")
     @Subcommand("ban")
     public void execute(Player player, String type, @Optional String id, @Optional String message) {

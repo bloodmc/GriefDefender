@@ -64,7 +64,7 @@ public class CommandUntrustPlayer extends BaseCommand {
 
     @CommandCompletion("@gdplayers @gdtrusttypes @gddummy")
     @CommandAlias("untrust|ut")
-    @Description("Revokes player access to your claim.")
+    @Description("%untrust-player")
     @Syntax("<player> [<accessor|builder|container|manager>]")
     @Subcommand("untrust player")
     public void execute(Player player, String target, @Optional String type) {

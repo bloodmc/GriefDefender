@@ -384,7 +384,7 @@ public abstract class ClaimOptionBase extends BaseCommand {
         overrideContexts.add(claim.getOverrideClaimContext());
 
         Map<String, OptionData> filteredContextMap = new HashMap<>();
-        for (Map.Entry<Set<Context>, Map<String, String>> mapEntry : PermissionUtil.getInstance().getTransientOptions(GriefDefenderPlugin.GD_OPTION_HOLDER).entrySet()) {
+        for (Map.Entry<Set<Context>, Map<String, List<String>>> mapEntry : PermissionUtil.getInstance().getTransientOptions(GriefDefenderPlugin.GD_OPTION_HOLDER).entrySet()) {
             final Set<Context> contextSet = mapEntry.getKey();
             if (contextSet.contains(claim.getDefaultTypeContext()) || (contextSet.contains(ClaimContexts.GLOBAL_DEFAULT_CONTEXT) || (!claim.isWilderness() && contextSet.contains(ClaimContexts.USER_DEFAULT_CONTEXT)))) {
                 this.addFilteredContexts(src, filteredContextMap, contextSet, MenuType.DEFAULT, mapEntry.getValue());
@@ -421,7 +421,7 @@ public abstract class ClaimOptionBase extends BaseCommand {
             }
         }
 
-        for (Map.Entry<Set<Context>, Map<String, String>> mapEntry : PermissionUtil.getInstance().getPermanentOptions(this.subject).entrySet()) {
+        for (Map.Entry<Set<Context>, Map<String, List<String>>> mapEntry : PermissionUtil.getInstance().getPermanentOptions(this.subject).entrySet()) {
             final Set<Context> contextSet = mapEntry.getKey();
             if (contextSet.contains(ClaimContexts.GLOBAL_DEFAULT_CONTEXT) || (!claim.isWilderness() && contextSet.contains(ClaimContexts.USER_DEFAULT_CONTEXT))) {
                 this.addFilteredContexts(src, filteredContextMap, contextSet, MenuType.DEFAULT, mapEntry.getValue());
@@ -430,11 +430,11 @@ public abstract class ClaimOptionBase extends BaseCommand {
                 this.addFilteredContexts(src, filteredContextMap, contextSet, MenuType.DEFAULT, mapEntry.getValue());
             }
             if (displayType != MenuType.DEFAULT) {
-                if (claim.isTown() || isAdmin) {
+                //if (claim.isTown() || isAdmin) {
                     if (contextSet.contains(claim.getContext())) {
                         this.addFilteredContexts(src, filteredContextMap, contextSet, MenuType.CLAIM, mapEntry.getValue());
                     }
-                }
+                //}
                 if (contextSet.contains(ClaimContexts.GLOBAL_OVERRIDE_CONTEXT) || (!claim.isWilderness() && contextSet.contains(ClaimContexts.USER_OVERRIDE_CONTEXT))) {
                     this.addFilteredContexts(src, filteredContextMap, contextSet, MenuType.OVERRIDE, mapEntry.getValue());
                 }
@@ -452,7 +452,7 @@ public abstract class ClaimOptionBase extends BaseCommand {
         Collections.reverse(inheritParents);
         for (Claim current : inheritParents) {
             GDClaim currentClaim = (GDClaim) current;
-            for (Map.Entry<Set<Context>, Map<String, String>> mapEntry : PermissionUtil.getInstance().getPermanentOptions(this.subject).entrySet()) {
+            for (Map.Entry<Set<Context>, Map<String, List<String>>> mapEntry : PermissionUtil.getInstance().getPermanentOptions(this.subject).entrySet()) {
                 final Set<Context> contextSet = mapEntry.getKey();
                 if (contextSet.contains(currentClaim.getContext())) {
                     inheritPermissionMap.put(mapEntry.getKey(), new ClaimClickData(currentClaim, mapEntry.getValue()));
@@ -518,10 +518,10 @@ public abstract class ClaimOptionBase extends BaseCommand {
         paginationList.sendTo(player, activePage);
     }
 
-    private void addFilteredContexts(GDPermissionUser src, Map<String, OptionData> filteredContextMap, Set<Context> contexts, MenuType type, Map<String, String> permissions) {
+    private void addFilteredContexts(GDPermissionUser src, Map<String, OptionData> filteredContextMap, Set<Context> contexts, MenuType type, Map<String, List<String>> permissions) {
         final Player player = src.getOnlinePlayer();
         final GDPlayerData playerData = src.getInternalPlayerData();
-        for (Map.Entry<String, String> permissionEntry : permissions.entrySet()) {
+        for (Map.Entry<String, List<String>> permissionEntry : permissions.entrySet()) {
             final Option option = OptionRegistryModule.getInstance().getById(permissionEntry.getKey()).orElse(null);
             if (option == null) {
                 continue;
@@ -544,10 +544,21 @@ public abstract class ClaimOptionBase extends BaseCommand {
                 }
             }
             final OptionData optionData = filteredContextMap.get(permissionEntry.getKey());
+            String optionValue = permissionEntry.getValue().get(0);
+            if (option.multiValued()) {
+                optionValue = "";
+                for (String entry : permissionEntry.getValue()) {
+                    if (optionValue.isEmpty()) {
+                        optionValue += entry;
+                    } else {
+                        optionValue = optionValue + "\\|" + entry;
+                    }
+                }
+            }
             if (optionData != null) {
-                optionData.addContexts(option, permissionEntry.getValue(), type, contexts);
+                optionData.addContexts(option, optionValue, type, contexts);
             } else {
-                filteredContextMap.put(permissionEntry.getKey(), new OptionData(option, permissionEntry.getValue(), type, contexts));
+                filteredContextMap.put(permissionEntry.getKey(), new OptionData(option, optionValue, type, contexts));
             }
         }
     }
@@ -677,7 +688,7 @@ public abstract class ClaimOptionBase extends BaseCommand {
         }
 
         TextComponent.Builder builder = TextComponent.builder()
-                    .append("\n\nContexts: \n");
+                    .append("\n\n").append(MessageCache.getInstance().LABEL_CONTEXT).append(": \n");
 
         for (Context context : contexts) {
             final String key = context.getKey();
@@ -793,7 +804,7 @@ public abstract class ClaimOptionBase extends BaseCommand {
                 Integer value = getMenuTypeValue(TypeToken.of(Integer.class), currentValue);
                 if (leftArrow) {
                     if (value == null || value < 1) {
-                        TextAdapter.sendComponent(src.getOnlinePlayer(), TextComponent.of("This value is NOT defined and cannot go any lower."));
+                        TextAdapter.sendComponent(src.getOnlinePlayer(), MessageCache.getInstance().OPTION_UI_NOT_DEFINED.color(TextColor.RED));
                     } else {
                         if ((option == Options.MIN_LEVEL || option == Options.MAX_LEVEL || option == Options.MIN_SIZE_Y || option == Options.MAX_SIZE_Y) && value == 1) {
                             value = null;
@@ -825,7 +836,7 @@ public abstract class ClaimOptionBase extends BaseCommand {
                 Double value = getMenuTypeValue(TypeToken.of(Double.class), currentValue);
                 if (leftArrow) {
                     if (value == null || value < 0) {
-                        TextAdapter.sendComponent(src.getOnlinePlayer(), TextComponent.of("This value is NOT defined and cannot go any lower."));
+                        TextAdapter.sendComponent(src.getOnlinePlayer(), MessageCache.getInstance().OPTION_UI_NOT_DEFINED.color(TextColor.RED));
                     } else {
                         value -= 0.1;
                         if (option == Options.ABANDON_RETURN_RATIO && value <= 0) {

@@ -64,7 +64,7 @@ public class CommandUntrustGroup extends BaseCommand {
 
     @CommandCompletion("@gdgroups @gdtrusttypes @gddummy")
     @CommandAlias("untrustgroup")
-    @Description("Revokes group access to your claim.")
+    @Description("%untrust-group")
     @Syntax("<group> [<accessor|builder|container|manager>]")
     @Subcommand("untrust group")
     public void execute(Player player, String target, @Optional String type) {

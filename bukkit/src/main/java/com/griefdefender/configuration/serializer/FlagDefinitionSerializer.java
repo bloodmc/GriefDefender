@@ -86,8 +86,8 @@ public class FlagDefinitionSerializer implements TypeSerializer<FlagDefinition> 
             Set<Context> flagContexts = new HashSet<>();
             for (String part : parts) {
                 String[] split =  part.split("=");
-                String key = split[0];
-                String value = split[1];
+                String key = split[0].toLowerCase();
+                String value = split[1].toLowerCase();
                 // Handle linked Flag
                 if (key.equalsIgnoreCase("flag")) {
                     final String flagName = value;
@@ -108,11 +108,6 @@ public class FlagDefinitionSerializer implements TypeSerializer<FlagDefinition> 
                             }
                             flagContexts.add(new Context(key, value));
                             break;
-                        case "used_item":
-                        case "item_name":
-                        case ContextKeys.STATE:
-                            flagContexts.add(new Context(key, value));
-                            break;
                         case "server":
                         case "world":
                         case ContextKeys.CLAIM_DEFAULT:
@@ -120,7 +115,8 @@ public class FlagDefinitionSerializer implements TypeSerializer<FlagDefinition> 
                             // gd_claim contexts should always be set at the definition level
                             throw new ObjectMappingException("Invalid context '" + key + "' with value '" + value + "'.\nContext '" + key + "' can only be used for the definition.");
                         default:
-                            throw new ObjectMappingException("Invalid context '" + key + "' with value '" + value + "'.");
+                            flagContexts.add(new Context(key, value));
+                            break;
                     }
                 }
             }

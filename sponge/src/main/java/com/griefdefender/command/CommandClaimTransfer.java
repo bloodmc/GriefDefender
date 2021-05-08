@@ -33,7 +33,7 @@ public class CommandClaimTransfer extends BaseCommand {
 
     @CommandCompletion("@gdplayers @gddummy")
     @CommandAlias("claimtransfer|transferclaim")
-    @Description("Transfers a basic or admin claim to another player.")
+    @Description("%claim-transfer")
     @Syntax("<player>")
     @Subcommand("claim transfer")
     public void execute(Player player, User targetPlayer) {

@@ -39,8 +39,8 @@ import org.spongepowered.api.entity.living.player.Player;
 public class CommandClaimWorldEdit extends BaseCommand {
 
     @CommandAlias("claimwe|claimworldedit")
-    @Description("Uses the worldedit selection to create a claim.")
-    @Subcommand("claim worldedit|claim we")
+    @Description("%claim-worldedit")
+    @Subcommand("claim worldedit|we")
     public void execute(Player player) {
         if (GriefDefenderPlugin.getInstance().getWorldEditProvider() == null) {
             GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().COMMAND_WORLDEDIT_MISSING);

@@ -57,7 +57,7 @@ import org.bukkit.entity.Player;
 public class CommandAdjustBonusClaimBlocksAll extends BaseCommand {
 
     @CommandAlias("acball|adjustclaimblocksall")
-    @Description("Adjusts bonus claim block total for all online players by amount specified")
+    @Description("%player-adjust-bonus-blocks-all")
     @Syntax("<amount>")
     @Subcommand("player adjustbonusblocksall")
     public void execute(CommandSender src, int amount) {

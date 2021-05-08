@@ -49,7 +49,6 @@ import com.griefdefender.event.GDCauseStackManager;
 import com.griefdefender.event.GDGroupTrustClaimEvent;
 import com.griefdefender.permission.GDPermissionGroup;
 import com.griefdefender.permission.GDPermissions;
-import com.griefdefender.util.PermissionUtil;
 import net.kyori.text.Component;
 import net.kyori.text.adapter.bukkit.TextAdapter;
 
@@ -63,7 +62,7 @@ public class CommandUntrustGroup extends BaseCommand {
 
     @CommandCompletion("@gdgroups @gdtrusttypes @gddummy")
     @CommandAlias("untrustgroup")
-    @Description("Revokes group access to your claim.")
+    @Description("%untrust-group")
     @Syntax("<group> [<accessor|builder|container|manager>]")
     @Subcommand("untrust group")
     public void execute(Player player, String target, @Optional String type) {

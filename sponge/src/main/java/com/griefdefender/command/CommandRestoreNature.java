@@ -41,7 +41,7 @@ import org.spongepowered.api.entity.living.player.Player;
 public class CommandRestoreNature extends BaseCommand {
 
     @CommandAlias("modenature")
-    @Description("Switches the shovel tool to restoration mode.")
+    @Description("%mode-nature")
     @Subcommand("mode nature")
     public void execute(Player player) {
         if (true) {

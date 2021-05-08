@@ -135,6 +135,8 @@ import com.griefdefender.command.CommandUntrustPlayer;
 import com.griefdefender.command.CommandUntrustPlayerAll;
 import com.griefdefender.command.gphelper.CommandAccessTrust;
 import com.griefdefender.command.gphelper.CommandContainerTrust;
+import com.griefdefender.command.gphelper.CommandTrapped;
+import com.griefdefender.command.gphelper.CommandUnlockDrops;
 import com.griefdefender.configuration.FlagConfig;
 import com.griefdefender.configuration.GriefDefenderConfig;
 import com.griefdefender.configuration.MessageDataConfig;
@@ -158,12 +160,12 @@ import com.griefdefender.internal.registry.GDBlockType;
 import com.griefdefender.internal.registry.GDEntityType;
 import com.griefdefender.internal.registry.GDItemType;
 import com.griefdefender.internal.registry.ItemTypeRegistryModule;
+import com.griefdefender.internal.registry.TileEntityTypeRegistryModule;
 import com.griefdefender.internal.schematic.GDClaimSchematic;
 import com.griefdefender.internal.util.NMSUtil;
 import com.griefdefender.listener.BlockEventHandler;
 import com.griefdefender.listener.EntityEventHandler;
 import com.griefdefender.listener.MCClansEventHandler;
-import com.griefdefender.listener.NucleusEventHandler;
 import com.griefdefender.listener.PlayerEventHandler;
 import com.griefdefender.listener.WorldEventHandler;
 import com.griefdefender.migrator.GPSpongeMigrator;
@@ -175,11 +177,15 @@ import com.griefdefender.permission.GDPermissionUser;
 import com.griefdefender.permission.flag.GDFlagData;
 import com.griefdefender.permission.flag.GDFlagDefinition;
 import com.griefdefender.permission.flag.GDFlags;
+import com.griefdefender.permission.option.GDOptions;
 import com.griefdefender.provider.DynmapProvider;
 import com.griefdefender.provider.LuckPermsProvider;
 import com.griefdefender.provider.MCClansProvider;
 import com.griefdefender.provider.NucleusProvider;
+import com.griefdefender.provider.NucleusProviderV2;
+import com.griefdefender.provider.NucleusProviderLegacy;
 import com.griefdefender.provider.PermissionProvider;
+import com.griefdefender.provider.PlaceholderProvider;
 import com.griefdefender.registry.ChatTypeRegistryModule;
 import com.griefdefender.registry.ClaimTypeRegistryModule;
 import com.griefdefender.registry.ClaimVisualTypeRegistryModule;
@@ -226,7 +232,6 @@ import org.spongepowered.api.event.game.GameReloadEvent;
 import org.spongepowered.api.event.game.state.GameAboutToStartServerEvent;
 import org.spongepowered.api.event.game.state.GamePreInitializationEvent;
 import org.spongepowered.api.event.game.state.GameStartedServerEvent;
-import org.spongepowered.api.event.service.ChangeServiceProviderEvent;
 import org.spongepowered.api.plugin.PluginContainer;
 import org.spongepowered.api.profile.GameProfile;
 import org.spongepowered.api.service.economy.EconomyService;
@@ -320,8 +325,8 @@ public class GriefDefenderPlugin {
     public boolean permPluginInstalled = false;
 
     public GDBlockType createVisualBlock;
-    public GDItemType modificationTool;
-    public GDItemType investigationTool;
+    public String modificationTool;
+    public String investigationTool;
 
     public static boolean debugLogging = false;
     public static boolean debugActive = false;
@@ -517,13 +522,6 @@ public class GriefDefenderPlugin {
         }
     }
 
-    @Listener
-    public void onChangeServiceProvider(ChangeServiceProviderEvent event) {
-        if (event.getNewProvider() instanceof PermissionService && this.validateSpongeVersion()) {
-            ((PermissionService) event.getNewProvider()).registerContextCalculator(new ClaimContextCalculator());
-        }
-    }
-
     private boolean validateSpongeVersion() {
         if (SpongeImplHooks.isDeobfuscatedEnvironment()) {
             this.logger.info("De-obfuscated environment detected! Use at your own risk!");
@@ -572,6 +570,7 @@ public class GriefDefenderPlugin {
             return;
         }
         this.permissionProvider = new LuckPermsProvider();
+        this.permissionService.registerContextCalculator(new ClaimContextCalculator());
 
         instance = this;
         this.getLogger().info("GriefDefender boot start.");
@@ -613,7 +612,6 @@ public class GriefDefenderPlugin {
         CreateModeTypeRegistryModule.getInstance().registerDefaults();
         GameModeTypeRegistryModule.getInstance().registerDefaults();
         WeatherTypeRegistryModule.getInstance().registerDefaults();
-        OptionRegistryModule.getInstance().registerDefaults();
         GriefDefender.getRegistry().registerBuilderSupplier(PaymentTransaction.Builder.class, GDPaymentTransaction.PaymentTransactionBuilder::new);
         GriefDefender.getRegistry().registerBuilderSupplier(Claim.Builder.class, GDClaim.ClaimBuilder::new);
         GriefDefender.getRegistry().registerBuilderSupplier(FlagData.Builder.class, GDFlagData.FlagDataBuilder::new);
@@ -631,6 +629,7 @@ public class GriefDefenderPlugin {
         BlockTypeRegistryModule.getInstance().registerDefaults();
         EntityTypeRegistryModule.getInstance().registerDefaults();
         ItemTypeRegistryModule.getInstance().registerDefaults();
+        TileEntityTypeRegistryModule.getInstance().registerDefaults();
         this.loadConfig();
         this.registerBaseCommands();
         final Path migratedPath = this.configPath.resolve("_gpSpongeMigrated");
@@ -660,12 +659,10 @@ public class GriefDefenderPlugin {
         if (Sponge.getPluginManager().getPlugin("mcclans").isPresent()) {
             this.clanApiProvider = new MCClansProvider();
         }
-        try {
-            if (Sponge.getPluginManager().getPlugin("nucleus").isPresent()) {
-                this.nucleusApiProvider = new NucleusProvider();
-            }
-        } catch (Throwable t) {
-            // ignore
+        if(Sponge.getPluginManager().getPlugin("PlaceholderAPI").isPresent()){
+            this.getLogger().info("Detected PlaceholderAPI. Enabling GD PlaceholderAPI expansion...");
+            new PlaceholderProvider();
+            this.getLogger().info("GriefDefender PlaceholderAPI expansion enabled!");
         }
         if (Sponge.getPluginManager().getPlugin("worldedit").isPresent() || Sponge.getPluginManager().getPlugin("fastasyncworldedit").isPresent()) {
             this.worldEditProvider = new GDWorldEditProvider();
@@ -689,14 +686,23 @@ public class GriefDefenderPlugin {
             }
         }
 
+        try {
+            if (Sponge.getPluginManager().getPlugin("nucleus").isPresent()) {
+                try {
+                    Class.forName("io.github.nucleuspowered.nucleus.api.events.NucleusHomeEvent");
+                    this.nucleusApiProvider = new NucleusProviderLegacy();
+                } catch (ClassNotFoundException e) {
+                    this.nucleusApiProvider = new NucleusProviderV2();
+                }
+            }
+        } catch (Throwable t) {
+            // ignore
+        }
+
         Sponge.getEventManager().registerListeners(GDBootstrap.getInstance(), new BlockEventHandler(dataStore));
         Sponge.getEventManager().registerListeners(GDBootstrap.getInstance(), new PlayerEventHandler(dataStore, this));
         Sponge.getEventManager().registerListeners(GDBootstrap.getInstance(), new EntityEventHandler(dataStore));
         Sponge.getEventManager().registerListeners(GDBootstrap.getInstance(), new WorldEventHandler());
-        if (this.nucleusApiProvider != null) {
-            Sponge.getEventManager().registerListeners(GDBootstrap.getInstance(), new NucleusEventHandler());
-            this.nucleusApiProvider.registerTokens();
-        }
         if (this.clanApiProvider != null) {
             Sponge.getEventManager().registerListeners(GDBootstrap.getInstance(), new MCClansEventHandler());
         }
@@ -770,14 +776,14 @@ public class GriefDefenderPlugin {
 
         Sponge.getScheduler().createTaskBuilder().delayTicks(1).intervalTicks(1).execute(new PlayerTickTask())
                 .submit(GDBootstrap.getInstance());
-        if (!isEconomyModeEnabled() || GriefDefenderPlugin.getGlobalConfig().getConfig().economy.useClaimBlockTask) {
+        if ((!isEconomyModeEnabled() && GriefDefenderPlugin.getGlobalConfig().getConfig().claim.claimBlockTask) || GriefDefenderPlugin.getGlobalConfig().getConfig().economy.useClaimBlockTask) {
             Sponge.getScheduler().createTaskBuilder().interval(5, TimeUnit.MINUTES).execute(new ClaimBlockTask())
                     .submit(GDBootstrap.getInstance());
         }
 
         if (GriefDefenderPlugin.getInstance().getEconomyService() != null) {
             if (GriefDefenderPlugin.getGlobalConfig().getConfig().economy.isRentSignEnabled()) {
-                Sponge.getScheduler().createTaskBuilder().intervalTicks(GriefDefenderPlugin.getGlobalConfig().getConfig().economy.signUpdateInterval).execute(new SignUpdateTask())
+                Sponge.getScheduler().createTaskBuilder().interval(GriefDefenderPlugin.getGlobalConfig().getConfig().economy.signUpdateInterval, TimeUnit.MINUTES).execute(new SignUpdateTask())
                     .submit(GDBootstrap.getInstance());
             }
             if (GriefDefenderPlugin.getGlobalConfig().getConfig().economy.rentSystem) {
@@ -809,15 +815,93 @@ public class GriefDefenderPlugin {
     }
 
     public void registerBaseCommands() {
-        /*Sponge.getCommandManager().register(this, CommandSpec.builder()
-        .description(Text.of("Lists detailed information on each command."))
-        .permission(GPPermissions.COMMAND_HELP)
-        .executor(new CommandHelp())
-        .build(), "gphelp");*/
-
         SpongeCommandManager manager = new SpongeCommandManager(this.pluginContainer);
         this.commandManager = manager;
-        manager.getCommandReplacements().addReplacement("griefdefender", "gd|griefdefender");
+        manager.getCommandReplacements().addReplacements(
+            "griefdefender", "gd|griefdefender",
+            "abandon-all", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_ABANDON_ALL),
+            "abandon-claim", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_ABANDON_CLAIM),
+            "abandon-top", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_ABANDON_TOP),
+            "abandon-world", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_ABANDON_WORLD),
+            "buy-blocks", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_BUY_BLOCKS),
+            "buy-claim", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_BUY_CLAIM),
+            "callback", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CALLBACK),
+            "claim-ban", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CLAIM_BAN),
+            "claim-bank", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CLAIM_BANK),
+            "claim-clear", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CLAIM_CLEAR),
+            "claim-contract", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CLAIM_CONTRACT),
+            "claim-create", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CLAIM_CREATE),
+            "claim-debug", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CLAIM_DEBUG),
+            "claim-expand", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CLAIM_EXPAND),
+            "claim-farewell", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CLAIM_FAREWELL),
+            "claim-greeting", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CLAIM_GREETING),
+            "claim-ignore", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CLAIM_IGNORE),
+            "claim-info", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CLAIM_INFO),
+            "claim-inherit", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CLAIM_INHERIT),
+            "claim-investigate", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CLAIM_INVESTIGATE),
+            "claim-list", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CLAIM_LIST),
+            "claim-name", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CLAIM_NAME),
+            "claim-rent", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CLAIM_RENT),
+            "claim-reserve", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CLAIM_RESERVE),
+            "claim-restore", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CLAIM_RESTORE),
+            "claim-setspawn", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CLAIM_SETSPAWN),
+            "claim-spawn", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CLAIM_SPAWN),
+            "claim-tax", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CLAIM_TAX),
+            "claim-tool", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CLAIM_TOOL),
+            "claim-transfer", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CLAIM_TRANSFER),
+            "claim-unban", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CLAIM_UNBAN),
+            "claim-worldedit", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CLAIM_WORLDEDIT),
+            "confirm", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CONFIRM),
+            "cuboid", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_CUBOID),
+            "debug", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_DEBUG),
+            "delete-all", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_DELETE_ALL),
+            "delete-all-admin", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_DELETE_ALL_ADMIN),
+            "delete-claim", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_DELETE_CLAIM),
+            "delete-top", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_DELETE_TOP),
+            "economy-block-transfer", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_ECONOMY_BLOCK_TRANSFER),
+            "flag-claim", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_FLAG_CLAIM),
+            "flag-group", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_FLAG_GROUP),
+            "flag-player", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_FLAG_PLAYER),
+            "flag-reset", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_FLAG_RESET),
+            "help", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_HELP),
+            "mode-admin", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_MODE_ADMIN),
+            "mode-basic", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_MODE_BASIC),
+            "mode-claim", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_MODE_CLAIM),
+            "mode-nature", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_MODE_NATURE),
+            "mode-subdivision", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_MODE_SUBDIVISION),
+            "mode-town", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_MODE_TOWN),
+            "option-claim", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_OPTION_CLAIM),
+            "option-group", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_OPTION_GROUP),
+            "option-player", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_OPTION_PLAYER),
+            "permission-group", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_PERMISSION_GROUP),
+            "permission-player", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_PERMISSION_PLAYER),
+            "player-adjust-bonus-blocks", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_PLAYER_ADJUST_BONUS_BLOCKS),
+            "player-adjust-bonus-blocks-all", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_PLAYER_ADJUST_BONUS_BLOCKS_ALL),
+            "player-give-blocks", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_PLAYER_GIVE_BLOCKS),
+            "player-give-pet", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_PLAYER_GIVE_PET),
+            "player-info", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_PLAYER_INFO),
+            "player-set-accrued-blocks", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_PLAYER_SET_ACCRUED_BLOCKS),
+            "player-unlock-drops", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_PLAYER_UNLOCK_DROPS),
+            "reload", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_RELOAD),
+            "schematic", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_SCHEMATIC),
+            "sell-blocks", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_SELL_BLOCKS),
+            "sell-claim", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_SELL_CLAIM),
+            "town-chat", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_TOWN_CHAT),
+            "town-tag", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_TOWN_TAG),
+            "trapped", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_TRAPPED),
+            "trust-access", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_TRUST_ACCESS),
+            "trust-container", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_TRUST_CONTAINER),
+            "trust-group", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_TRUST_GROUP),
+            "trust-group-all", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_TRUST_GROUP_ALL),
+            "trust-list", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_TRUST_LIST),
+            "trust-player", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_TRUST_PLAYER),
+            "trust-player-all", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_TRUST_PLAYER_ALL),
+            "untrust-group", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_UNTRUST_GROUP),
+            "untrust-group-all", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_UNTRUST_GROUP_ALL),
+            "untrust-player", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_UNTRUST_PLAYER),
+            "untrust-player-all", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_UNTRUST_PLAYER_ALL),
+            "version", this.getCommandDescriptionTranslation(MessageStorage.DESCRIPTION_VERSION)
+        );
         manager.registerCommand(new CommandAccessTrust());
         manager.registerCommand(new CommandAdjustBonusClaimBlocks());
         manager.registerCommand(new CommandAdjustBonusClaimBlocksAll());
@@ -890,10 +974,12 @@ public class GriefDefenderPlugin {
         manager.registerCommand(new CommandSetAccruedClaimBlocks());
         manager.registerCommand(new CommandTownChat());
         manager.registerCommand(new CommandTownTag());
+        manager.registerCommand(new CommandTrapped());
         manager.registerCommand(new CommandTrustGroup());
         manager.registerCommand(new CommandTrustPlayer());
         manager.registerCommand(new CommandTrustGroupAll());
         manager.registerCommand(new CommandTrustPlayerAll());
+        manager.registerCommand(new CommandUnlockDrops());
         manager.registerCommand(new CommandUntrustGroup());
         manager.registerCommand(new CommandUntrustPlayer());
         manager.registerCommand(new CommandUntrustGroupAll());
@@ -1073,6 +1159,10 @@ public class GriefDefenderPlugin {
         });
     }
 
+    private String getCommandDescriptionTranslation(String message) {
+        return PlainComponentSerializer.INSTANCE.serialize(messageData.getDescription(message));
+    }
+
     public SpongeCommandManager getCommandManager() {
         return this.commandManager;
     }
@@ -1129,36 +1219,38 @@ public class GriefDefenderPlugin {
             flagConfig.save();
             flagConfig.getConfig().defaultFlagCategory.refreshFlags();
             flagConfig.save();
+            OptionRegistryModule.getInstance().registerDefaults();
             optionConfig = new OptionConfig(this.getConfigPath().resolve("options.conf"));
             optionConfig.getConfig().defaultOptionCategory.checkOptions();
             optionConfig.save();
             BaseStorage.globalConfig.save();
             BaseStorage.USE_GLOBAL_PLAYER_STORAGE = !BaseStorage.globalConfig.getConfig().playerdata.useWorldPlayerData();
             GDFlags.populateFlagStatus();
+            GDOptions.populateOptionStatus();
             CLAIM_BLOCK_SYSTEM = BaseStorage.globalConfig.getConfig().playerdata.claimBlockSystem;
             final GDItemType defaultModTool = ItemTypeRegistryModule.getInstance().getById("minecraft:golden_shovel").orElse(null);
             final GDBlockType defaultCreateVisualBlock = BlockTypeRegistryModule.getInstance().getById("minecraft:diamond_block").orElse(null);
             this.createVisualBlock = BlockTypeRegistryModule.getInstance().getById(BaseStorage.globalConfig.getConfig().visual.claimCreateStartBlock).orElse(defaultCreateVisualBlock);
-            this.modificationTool  = ItemTypeRegistryModule.getInstance().getById(BaseStorage.globalConfig.getConfig().claim.modificationTool).orElse(defaultModTool);
-            this.investigationTool = ItemTypeRegistryModule.getInstance().getById(BaseStorage.globalConfig.getConfig().claim.investigationTool).orElse(ItemTypeRegistryModule.getInstance().getById("minecraft:stick").get());
+            this.modificationTool  = BaseStorage.globalConfig.getConfig().claim.modificationTool;
+            this.investigationTool = BaseStorage.globalConfig.getConfig().claim.investigationTool;
             if (this.dataStore != null) {
                 for (World world : Sponge.getGame().getServer().getWorlds()) {
                     DimensionType dimType = world.getProperties().getDimensionType();
                     final String[] parts = dimType.getId().split(":");
+                    final String worldName = world.getProperties().getWorldName();
                     final Path dimPath = rootConfigPath.resolve(parts[0]).resolve(dimType.getName());
-                    if (!Files.exists(dimPath.resolve(world.getProperties().getWorldName()))) {
+                    if (!Files.exists(dimPath.resolve(worldName))) {
                         try {
-                            Files.createDirectories(rootConfigPath.resolve(dimType.getId()).resolve(world.getName()));
+                            Files.createDirectories(rootConfigPath.resolve(dimType.getId()).resolve(worldName));
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
                     }
-    
+
                     GriefDefenderConfig<ConfigBase> dimConfig = new GriefDefenderConfig<>(ConfigBase.class, dimPath.resolve("dimension.conf"), BaseStorage.globalConfig);
-                    GriefDefenderConfig<ConfigBase> worldConfig = new GriefDefenderConfig<>(ConfigBase.class, dimPath.resolve(world.getProperties().getWorldName()).resolve("world.conf"), dimConfig);
-    
-                    BaseStorage.dimensionConfigMap.put(world.getProperties().getUniqueId(), dimConfig);
-                    BaseStorage.worldConfigMap.put(world.getProperties().getUniqueId(), worldConfig);
+                    BaseStorage.dimensionConfigMap.put(world.getUniqueId(), dimConfig);
+                    GriefDefenderConfig<ConfigBase> worldConfig = new GriefDefenderConfig<>(ConfigBase.class, dimPath.resolve(worldName).resolve("world.conf"), dimConfig);
+                    BaseStorage.worldConfigMap.put(world.getUniqueId(), worldConfig);
     
                     // refresh player data
                     final GDClaimManager claimManager = GriefDefenderPlugin.getInstance().dataStore.getClaimWorldManager(world.getUniqueId());
@@ -1174,10 +1266,10 @@ public class GriefDefenderPlugin {
                         GriefDefenderPlugin.getGlobalConfig().save();
                     }
                     if (this.worldEditProvider != null && GriefDefenderPlugin.getGlobalConfig().getConfig().claim.useWorldEditSchematics) {
-                        this.getLogger().info("Loading schematics for world " + world.getName() + "...");
+                        this.getLogger().info("Loading schematics for world " + worldName + "...");
                         this.worldEditProvider.loadSchematics(world);
                     } else {
-                        this.getLogger().info("Loading sponge schematics for world " + world.getName() + "...");
+                        this.getLogger().info("Loading sponge schematics for world " + worldName + "...");
                         ((FileStorage) this.dataStore).loadSpongeSchematics(world);
                     }
                 }

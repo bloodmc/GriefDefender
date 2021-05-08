@@ -57,7 +57,7 @@ import java.util.function.Consumer;
 public class CommandClaimFlagReset extends BaseCommand {
 
     @CommandAlias("cfr")
-    @Description("Resets a claim to flag defaults.")
+    @Description("%flag-reset")
     @Subcommand("flag reset")
     public void execute(Player player) {
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());

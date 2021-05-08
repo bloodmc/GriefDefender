@@ -295,6 +295,13 @@ public abstract class BaseStorage {
     }
 
     public GDPlayerData getOrCreateGlobalPlayerData(UUID playerUniqueId) {
+        if (BaseStorage.USE_GLOBAL_PLAYER_STORAGE) {
+            final GDPlayerData playerData = GLOBAL_PLAYER_DATA.get(playerUniqueId);
+            if (playerData != null) {
+                return playerData;
+            }
+        }
+
         GDClaimManager claimWorldManager = this.getClaimWorldManager(null);
         return claimWorldManager.getOrCreatePlayerData(playerUniqueId);
     }
@@ -304,6 +311,13 @@ public abstract class BaseStorage {
     }
 
     public GDPlayerData getOrCreatePlayerData(UUID worldUniqueId, UUID playerUniqueId) {
+        if (BaseStorage.USE_GLOBAL_PLAYER_STORAGE) {
+            final GDPlayerData playerData = GLOBAL_PLAYER_DATA.get(playerUniqueId);
+            if (playerData != null) {
+                return playerData;
+            }
+        }
+
         GDClaimManager claimWorldManager = this.getClaimWorldManager(worldUniqueId);
         return claimWorldManager.getOrCreatePlayerData(playerUniqueId);
     }
@@ -417,8 +431,8 @@ public abstract class BaseStorage {
     }
 
     private void setDefaultOptions(Set<Context> contexts, Map<String, String> defaultOptions) {
-        final Map<Set<Context>, Map<String, String>> permanentOptions = PermissionUtil.getInstance().getPermanentOptions(GriefDefenderPlugin.DEFAULT_HOLDER);
-        final Map<String, String> options = permanentOptions.get(contexts);
+        final Map<Set<Context>, Map<String, List<String>>> permanentOptions = PermissionUtil.getInstance().getPermanentOptions(GriefDefenderPlugin.DEFAULT_HOLDER);
+        final Map<String, List<String>> options = permanentOptions.get(contexts);
         GriefDefenderPlugin.getInstance().executor.execute(() -> {
             for (Map.Entry<String, String> optionEntry : defaultOptions.entrySet()) {
                 final Option option = OptionRegistryModule.getInstance().getById(optionEntry.getKey()).orElse(null);
@@ -432,7 +446,7 @@ public abstract class BaseStorage {
                 // Transient options are checked first so we must ignore setting if a persisted option exists
                 boolean foundPersisted = false;
                 if (options != null) {
-                    for (Entry<String, String> mapEntry : options.entrySet()) {
+                    for (Entry<String, List<String>> mapEntry : options.entrySet()) {
                         if (mapEntry.getKey().equalsIgnoreCase(option.getPermission())) {
                             foundPersisted = true;
                             break;

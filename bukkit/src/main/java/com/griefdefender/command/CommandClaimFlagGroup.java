@@ -51,7 +51,7 @@ public class CommandClaimFlagGroup extends ClaimFlagBase {
 
     @CommandCompletion("@gdgroups @gdflags @gdmcids @gdtristates @gdcontexts @gddummy")
     @CommandAlias("cfg")
-    @Description("Gets/Sets flag permission for a group in claim you are standing in.")
+    @Description("%flag-group")
     @Syntax("<group> <flag> <target> <value> [context[key=value]]")
     @Subcommand("flag group")
     public void execute(Player player, String group, @Optional String[] args) throws InvalidCommandArgument {

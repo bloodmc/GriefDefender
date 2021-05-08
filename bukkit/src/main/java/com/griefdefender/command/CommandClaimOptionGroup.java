@@ -51,7 +51,7 @@ public class CommandClaimOptionGroup extends ClaimOptionBase {
 
     @CommandCompletion("@gdgroups @gdoptions @gdcontexts @gddummy")
     @CommandAlias("cog")
-    @Description("Gets/Sets option for a group in claim you are standing in.")
+    @Description("%option-group")
     @Syntax("<group> <option> <value> [context[key=value]]")
     @Subcommand("option group")
     public void execute(Player player, String group, @Optional String[] args) throws InvalidCommandArgument {

@@ -27,6 +27,7 @@ package com.griefdefender.command;
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.CommandPermission;
+import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Subcommand;
 import co.aikar.commands.annotation.Syntax;
 import com.flowpowered.math.vector.Vector3i;
@@ -103,6 +104,7 @@ public class CommandClaimInfo extends BaseCommand {
     }
 
     @CommandAlias("claiminfo")
+    @Description("%claim-info")
     @Syntax("[claim_uuid]")
     @Subcommand("claim info")
     public void execute(CommandSource src, String[] args) {
@@ -306,19 +308,17 @@ public class CommandClaimInfo extends BaseCommand {
                          .clickEvent(ClickEvent.runCommand(GDCallbackHolder.getInstance().createCallbackRunCommand(Consumer -> { CommandHelper.displayClaimBankInfo(src, gdClaim, gdClaim.isTown() ? true : false, true); })))
                          .build();
              }
-             forSaleText = TextComponent.builder()
+             TextComponent.Builder forSaleBuilder = TextComponent.builder()
                      .append(MessageCache.getInstance().CLAIMINFO_UI_FOR_SALE.color(TextColor.YELLOW))
                      .append(" : ")
-                     .append(getClickableInfoText(src, claim, FOR_SALE, claim.getEconomyData().isForSale() ? MessageCache.getInstance().LABEL_YES.color(TextColor.GREEN) : MessageCache.getInstance().LABEL_NO.color(TextColor.GRAY))).build();
+                     .append(claim.getEconomyData().isForSale() ? MessageCache.getInstance().LABEL_YES.color(TextColor.GREEN) : MessageCache.getInstance().LABEL_NO.color(TextColor.GRAY));
              if (claim.getEconomyData().isForSale()) {
-                 forSaleText = TextComponent.builder()
-                         .append(forSaleText)
-                         .append("  ")
-                         .append(MessageCache.getInstance().LABEL_PRICE.color(TextColor.YELLOW))
-                         .append(" : ")
-                         .append(String.valueOf(claim.getEconomyData().getSalePrice()), TextColor.GOLD)
-                         .build();
+                 forSaleBuilder.append("  ")
+                     .append(MessageCache.getInstance().LABEL_PRICE.color(TextColor.YELLOW))
+                     .append(" : ")
+                     .append(String.valueOf(claim.getEconomyData().getSalePrice()), TextColor.GOLD);
              }
+             forSaleText = forSaleBuilder.build();
         }
 
         Component claimId = TextComponent.builder()

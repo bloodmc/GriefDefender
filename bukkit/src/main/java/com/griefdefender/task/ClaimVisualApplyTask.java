@@ -109,6 +109,10 @@ public class ClaimVisualApplyTask implements Runnable {
             this.playerData.createBlockVisualTransactions.put(visualUniqueId, new ArrayList<>(this.visualization.getVisualTransactions()));
             this.playerData.createBlockVisualRevertRunnables.put(visualUniqueId, runnable);
         }
+        if (this.visualization.getClaim() != null && GriefDefenderPlugin.getInstance().getWorldEditProvider() != null) {
+            GriefDefenderPlugin.getInstance().getWorldEditProvider().stopDragVisual(this.player);
+            GriefDefenderPlugin.getInstance().getWorldEditProvider().displayClaimCUIVisual(this.visualization.getClaim(), this.player, this.playerData);
+        }
         this.playerData.claimVisualRevertTasks.put(visualUniqueId, Bukkit.getServer().getScheduler().runTaskLaterAsynchronously(GDBootstrap.getInstance(), runnable, tickTime));
     }
 }

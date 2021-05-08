@@ -39,6 +39,8 @@ import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.cache.MessageCache;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.permission.GDPermissions;
+import com.griefdefender.storage.BaseStorage;
+
 import net.kyori.text.Component;
 import net.kyori.text.adapter.bukkit.TextAdapter;
 import org.bukkit.Bukkit;
@@ -53,29 +55,40 @@ public class CommandAdjustBonusClaimBlocks extends BaseCommand {
 
     @CommandCompletion("@gdplayers @gddummy")
     @CommandAlias("acb|adjustclaimblocks")
-    @Description("Adjusts a player's bonus claim block total by amount specified")
+    @Description("%player-adjust-bonus-blocks")
     @Syntax("<player> <amount>")
     @Subcommand("player adjustbonusblocks")
     public void execute(CommandSender src, OfflinePlayer user, int amount, @Optional String worldName) {
-        World world = worldName == null ? null : Bukkit.getServer().getWorld(worldName);
-        if (world == null) {
-            if (src instanceof Player) {
-                world = ((Player) src).getWorld();
-            } else {
-                world = Bukkit.getServer().getWorlds().get(0);
+        World world = null;
+        GDPlayerData playerData = null;
+        if (BaseStorage.USE_GLOBAL_PLAYER_STORAGE) {
+            playerData = BaseStorage.GLOBAL_PLAYER_DATA.get(user.getUniqueId());
+            if (playerData == null) {
+                playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreateGlobalPlayerData(user.getUniqueId());
             }
+        } else {
+            world = worldName == null ? null : Bukkit.getServer().getWorld(worldName);
+            if (world == null) {
+                if (src instanceof Player) {
+                    world = ((Player) src).getWorld();
+                } else {
+                    world = Bukkit.getServer().getWorlds().get(0);
+                }
+            }
+            playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(world.getUID(), user.getUniqueId());
         }
-        if (world == null || !GriefDefenderPlugin.getInstance().claimsEnabledForWorld(world.getUID())) {
+
+        if (!BaseStorage.USE_GLOBAL_PLAYER_STORAGE && (world == null || !GriefDefenderPlugin.getInstance().claimsEnabledForWorld(world.getUID()))) {
             GriefDefenderPlugin.sendMessage(src, MessageCache.getInstance().CLAIM_DISABLED_WORLD);
             return;
         }
 
-        GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(world.getUID(), user.getUniqueId());
-        playerData.setBonusClaimBlocks(playerData.getBonusClaimBlocks() + amount);
+        final int totalBonus = playerData.getBonusClaimBlocks();
+        playerData.setBonusClaimBlocks(totalBonus + amount);
         final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ADJUST_BONUS_BLOCKS_SUCCESS, ImmutableMap.of(
                 "player", user.getName(),
                 "amount", amount,
-                "total", playerData.getBonusClaimBlocks() + amount));
+                "total", totalBonus + amount));
         TextAdapter.sendComponent(src, message);
         GriefDefenderPlugin.getInstance().getLogger().info(
                 src.getName() + " adjusted " + user.getName() + "'s bonus claim blocks by " + amount + ".");

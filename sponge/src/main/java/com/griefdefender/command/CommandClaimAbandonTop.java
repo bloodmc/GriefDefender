@@ -40,7 +40,7 @@ public class CommandClaimAbandonTop extends CommandClaimAbandon {
     }
 
     @CommandAlias("abandontop")
-    @Description("Abandons top level claim")
+    @Description("%abandon-top")
     @Subcommand("abandon top")
     public void execute(Player player) {
         super.execute(player);

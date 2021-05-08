@@ -41,7 +41,7 @@ import org.spongepowered.api.entity.living.player.Player;
 public class CommandClaimBasic extends BaseCommand {
 
     @CommandAlias("modebasic|basicclaims|bc")
-    @Description("Switches the shovel tool back to basic claims mode")
+    @Description("%mode-basic")
     @Subcommand("mode basic")
     public void execute(Player player) {
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());

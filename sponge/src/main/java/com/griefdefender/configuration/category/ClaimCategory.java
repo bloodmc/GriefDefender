@@ -41,10 +41,17 @@ public class ClaimCategory extends ConfigCategory {
             + "\nEx. If you add 'minecraft:creeper' to the list, creepers would not be able to hurt entities above sea level."
             + "\nNote: This will have higher priority than 'explosion-entity' flag.")
     public List<String> explosionEntitySurfaceBlacklist = new ArrayList<>();
-    @Setting(value = "explosion-cancel-block-limit", comment = "The affected explosion block size limit to cancel events."
-            + "\nEx. If set to '50', and a creeper explodes which affects 51+ blocks, the event will cancel when the first protected block is found."
-            + "\nNote: To disable, set value to '0'.")
-    public int explosionCancelBlockLimit = 50;
+    @Setting(value = "explosion-surface-block-level", comment = "The 'Y' block level that is considered the surface for explosions. (Default: 63)")
+    public int explosionSurfaceBlockLevel = 63;
+    @Setting(value = "claim-block-task-move-threshold", comment = "The minimum threshold of movement (in blocks) required to receive accrued claim blocks. (Default: 0)"
+            + "\nNote: The claim block task runs every 5 minutes which is the time each player will get to move the required amount of blocks.")
+    public int claimBlockTaskMoveThreshold = 0;
+    @Setting(value = "claim-block-task", comment = "Whether claim block task should run to accrue blocks for players. (Default: True)"
+            + "\nNote: If in economy-mode, use setting 'use-claim-block-task' under economy category."
+            + "\nNote: To configure amount accrued, see 'blocks-accrued-per-hour' option at https://github.com/bloodmc/GriefDefender/wiki/Options-(Meta)#global-options")
+    public boolean claimBlockTask = true;
+    @Setting(value = "claim-create-radius-limit", comment = "The radius limit for the /claimcreate command. (Default: 256)")
+    public int claimCreateRadiusLimit = 256;
     @Setting(value = "worldedit-schematics", comment = "Whether to use WorldEdit for schematics. Default: false"
             + "\nNote: If you were using schematics in older GD/GP versions and want old schematics to work then you should keep this setting disabled.")
     public boolean useWorldEditSchematics = false;
@@ -73,6 +80,8 @@ public class ClaimCategory extends ConfigCategory {
     @Setting(value = "claims-enabled",
             comment = "Whether claiming is enabled or not. (0 = Disabled, 1 = Enabled)")
     public int claimsEnabled = 1;
+    @Setting(value = "player-trapped-cooldown", comment = "The cooldown time, in seconds, when using the '/trapped' command. (Default: 300)")
+    public int trappedCooldown = 300;
     @Setting(value = "protect-tamed-entities", comment = "Whether tamed entities should be protected in claims. Default: true")
     public boolean protectTamedEntities = true;
     @Setting(value = "reserved-claim-names", comment = "A list of reserved claim names for use only by administrators."

@@ -92,7 +92,7 @@ public class CommandClaimList extends BaseCommand {
     @CommandCompletion("@gdplayers @gdworlds @gddummy")
     @CommandAlias("claimlist|claimslist")
     @Syntax("[<player>|<player> <world>]")
-    @Description("List information about a player's claim blocks and claims.")
+    @Description("%claim-list")
     @Subcommand("claim list")
     public void execute(Player src, @Optional User targetPlayer, @Optional World world) {
         GDPermissionUser user = null;

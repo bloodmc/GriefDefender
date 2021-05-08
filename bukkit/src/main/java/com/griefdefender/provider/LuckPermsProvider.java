@@ -387,8 +387,8 @@ public class LuckPermsProvider implements PermissionProvider {
                 }
             }
         }
-        Map<Set<Context>, Map<String, String>> optionMap = this.getPermanentOptions(holder);
-        for (Entry<Set<Context>, Map<String, String>> mapEntry : optionMap.entrySet()) {
+        Map<Set<Context>, Map<String, List<String>>> optionMap = this.getPermanentOptions(holder);
+        for (Entry<Set<Context>, Map<String, List<String>>> mapEntry : optionMap.entrySet()) {
             for (Context context : mapEntry.getKey()) {
                 if (context.getKey().equalsIgnoreCase("gd_claim") && context.getValue().equalsIgnoreCase(claimUniqueId.toString())) {
                     this.clearPermissions(holder, mapEntry.getKey());
@@ -440,7 +440,7 @@ public class LuckPermsProvider implements PermissionProvider {
         return cachedData.getPermissionMap();
     }
 
-    public Map<String, String> getOptions(GDPermissionHolder holder, Set<Context> contexts) {
+    public Map<String, List<String>> getOptions(GDPermissionHolder holder, Set<Context> contexts) {
         ImmutableContextSet set = this.getLPContexts(contexts).immutableCopy();
         final PermissionHolder permissionHolder = this.getLuckPermsHolder(holder);
         if (permissionHolder == null) {
@@ -450,9 +450,9 @@ public class LuckPermsProvider implements PermissionProvider {
         final QueryOptions query = QueryOptions.builder(QueryMode.CONTEXTUAL).option(DataQueryOrderFunction.KEY, DEFAULT_DATA_QUERY_ORDER).context(set).build();
         CachedMetaData cachedData = permissionHolder.getCachedData().getMetaData(query);
         // TODO
-        Map<String, String> metaMap = new HashMap<>();
+        Map<String, List<String>> metaMap = new HashMap<>();
         for (Map.Entry<String, List<String>> mapEntry : cachedData.getMeta().entrySet()) {
-            metaMap.put(mapEntry.getKey(), mapEntry.getValue().get(0));
+            metaMap.put(mapEntry.getKey(), mapEntry.getValue());
         }
         return metaMap;
     }
@@ -543,14 +543,14 @@ public class LuckPermsProvider implements PermissionProvider {
         return transientPermissionMap;
     }
 
-    public Map<Set<Context>, Map<String, String>> getPermanentOptions(GDPermissionHolder holder) {
+    public Map<Set<Context>, Map<String, List<String>>> getPermanentOptions(GDPermissionHolder holder) {
         final PermissionHolder permissionHolder = this.getLuckPermsHolder(holder);
         if (permissionHolder == null) {
             return new HashMap<>();
         }
 
         final Collection<Node> nodes = permissionHolder.data().toCollection();
-        Map<Set<Context>, Map<String, String>> permanentPermissionMap = new TreeMap<Set<Context>, Map<String, String>>(CONTEXT_COMPARATOR);
+        Map<Set<Context>, Map<String, List<String>>> permanentPermissionMap = new TreeMap<Set<Context>, Map<String, List<String>>>(CONTEXT_COMPARATOR);
         for (Node node : nodes) {
             if (node.getType() != NodeType.META) {
                 continue;
@@ -558,26 +558,35 @@ public class LuckPermsProvider implements PermissionProvider {
 
             final MetaNode metaNode = (MetaNode) node;
             final Set<Context> contexts = getGPContexts(node.getContexts());
-            Map<String, String> metaEntry = permanentPermissionMap.get(contexts);
+            Map<String, List<String>> metaEntry = permanentPermissionMap.get(contexts);
             if (metaEntry == null) {
                 metaEntry = new HashMap<>();
-                metaEntry.put(metaNode.getMetaKey(), metaNode.getMetaValue());
+                final List<String> values = new ArrayList<>();
+                values.add(metaNode.getMetaValue());
+                metaEntry.put(metaNode.getMetaKey(), values);
                 permanentPermissionMap.put(contexts, metaEntry);
             } else {
-                metaEntry.put(metaNode.getMetaKey(), metaNode.getMetaValue());
+                List<String> values = metaEntry.get(metaNode.getMetaKey());
+                if (values == null) {
+                    values = new ArrayList<>();
+                    values.add(metaNode.getMetaValue());
+                    metaEntry.put(metaNode.getMetaKey(), values);
+                } else {
+                    values.add(metaNode.getMetaValue());
+                }
             }
         }
         return permanentPermissionMap;
     }
 
-    public Map<Set<Context>, Map<String, String>> getTransientOptions(GDPermissionHolder holder) {
+    public Map<Set<Context>, Map<String, List<String>>> getTransientOptions(GDPermissionHolder holder) {
         final PermissionHolder permissionHolder = this.getLuckPermsHolder(holder);
         if (permissionHolder == null) {
             return new HashMap<>();
         }
 
         final Collection<Node> nodes = permissionHolder.transientData().toCollection();
-        Map<Set<Context>, Map<String, String>> permanentPermissionMap = new TreeMap<Set<Context>, Map<String, String>>(CONTEXT_COMPARATOR);
+        Map<Set<Context>, Map<String, List<String>>> permanentPermissionMap = new TreeMap<Set<Context>, Map<String, List<String>>>(CONTEXT_COMPARATOR);
         for (Node node : nodes) {
             if (node.getType() != NodeType.META) {
                 continue;
@@ -585,62 +594,25 @@ public class LuckPermsProvider implements PermissionProvider {
 
             final MetaNode metaNode = (MetaNode) node;
             final Set<Context> contexts = getGPContexts(node.getContexts());
-            Map<String, String> metaEntry = permanentPermissionMap.get(contexts);
+            Map<String, List<String>> metaEntry = permanentPermissionMap.get(contexts);
             if (metaEntry == null) {
                 metaEntry = new HashMap<>();
-                metaEntry.put(metaNode.getMetaKey(), metaNode.getMetaValue());
+                final List<String> values = new ArrayList<>();
+                values.add(metaNode.getMetaValue());
+                metaEntry.put(metaNode.getMetaKey(), values);
                 permanentPermissionMap.put(contexts, metaEntry);
             } else {
-                metaEntry.put(metaNode.getMetaKey(), metaNode.getMetaValue());
+                List<String> values = metaEntry.get(metaNode.getMetaKey());
+                if (values == null) {
+                    values = new ArrayList<>();
+                    values.add(metaNode.getMetaValue());
+                    metaEntry.put(metaNode.getMetaKey(), values);
+                } else {
+                    values.add(metaNode.getMetaValue());
+                }
             }
         }
         return permanentPermissionMap;
-    }
-
-    public Map<String, String> getPermanentOptions(GDPermissionHolder holder, Set<Context> contexts) {
-        final PermissionHolder permissionHolder = this.getLuckPermsHolder(holder);
-        if (permissionHolder == null) {
-            return new HashMap<>();
-        }
-
-        final Collection<Node> nodes = permissionHolder.data().toCollection();
-        final Map<String, String> options = new HashMap<>();
-        for (Node node : nodes) {
-            if (node.getType() != NodeType.META) {
-                continue;
-            }
-
-            final MetaNode metaNode = (MetaNode) node;
-            if (contexts == null) {
-                options.put(metaNode.getMetaKey(), metaNode.getMetaValue());
-            } else if (getGPContexts(node.getContexts()).containsAll(contexts)) {
-                options.put(metaNode.getMetaKey(), metaNode.getMetaValue());
-            }
-        }
-        return options;
-    }
-
-    public Map<String, String> getTransientOptions(GDPermissionHolder holder, Set<Context> contexts) {
-        final PermissionHolder permissionHolder = this.getLuckPermsHolder(holder);
-        if (permissionHolder == null) {
-            return new HashMap<>();
-        }
-
-        final Collection<Node> nodes = permissionHolder.transientData().toCollection();
-        final Map<String, String> options = new HashMap<>();
-        for (Node node : nodes) {
-            if (node.getType() != NodeType.META) {
-                continue;
-            }
-
-            final MetaNode metaNode = (MetaNode) node;
-            if (contexts == null) {
-                options.put(metaNode.getMetaKey(), metaNode.getMetaValue());
-            } else if (getGPContexts(node.getContexts()).containsAll(contexts)) {
-                options.put(metaNode.getMetaKey(), metaNode.getMetaValue());
-            }
-        }
-        return options;
     }
 
     public Map<Set<Context>, Map<String, Boolean>> getAllPermissions(GDPermissionHolder holder) {
@@ -762,9 +734,18 @@ public class LuckPermsProvider implements PermissionProvider {
             return null;
         }
 
-        final QueryOptions query = QueryOptions.builder(QueryMode.CONTEXTUAL).option(DataQueryOrderFunction.KEY, DEFAULT_DATA_QUERY_ORDER).context(set).build();
+        // First check user persistent data
+        QueryOptions query = QueryOptions.builder(QueryMode.CONTEXTUAL).option(DataQueryOrderFunction.KEY, DEFAULT_DATA_QUERY_ORDER).option(DataTypeFilterFunction.KEY, USER_PERSISTENT_ONLY).context(set).build();
         CachedMetaData metaData = permissionHolder.getCachedData().getMetaData(query);
         List<String> list = metaData.getMeta().get(option.getPermission());
+        if (list != null) {
+            return list;
+        }
+
+        // Now check default persistent data
+        query = QueryOptions.builder(QueryMode.CONTEXTUAL).option(DataQueryOrderFunction.KEY, DEFAULT_DATA_QUERY_ORDER).option(DataTypeFilterFunction.KEY, DEFAULT_PERSISTENT_ONLY).context(set).build();
+        metaData = permissionHolder.getCachedData().getMetaData(query);
+        list = metaData.getMeta().get(option.getPermission());
         if (list == null) {
             return new ArrayList<>();
         }

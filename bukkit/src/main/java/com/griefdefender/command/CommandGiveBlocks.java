@@ -36,7 +36,7 @@ public class CommandGiveBlocks extends BaseCommand {
 
     @CommandCompletion("@gdplayers @gddummy")
     @CommandAlias("giveblocks")
-    @Description("Gives claim blocks to another player.")
+    @Description("%player-give-blocks")
     @Syntax("<player> <amount>")
     @Subcommand("giveblocks")
     public void execute(Player src, OfflinePlayer targetPlayer, int amount) {

@@ -38,6 +38,8 @@ import com.griefdefender.GriefDefenderPlugin;
 import com.griefdefender.cache.MessageCache;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.permission.GDPermissions;
+import com.griefdefender.storage.BaseStorage;
+
 import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.adapter.spongeapi.TextAdapter;
@@ -54,29 +56,40 @@ public class CommandAdjustBonusClaimBlocks extends BaseCommand {
 
     @CommandCompletion("@gdplayers @gddummy")
     @CommandAlias("acb|adjustclaimblocks")
-    @Description("Updates a player's accrued claim block total")
+    @Description("%player-adjust-bonus-blocks")
     @Syntax("<player> <amount>")
     @Subcommand("player adjustbonusblocks")
     public void execute(CommandSource src, User user, int amount, @Optional String world) {
-        WorldProperties worldProperties = world == null ? null : Sponge.getServer().getWorldProperties(world).orElse(null);
-        if (worldProperties == null) {
-            if (src instanceof Player) {
-                worldProperties = ((Player) src).getWorld().getProperties();
-            } else {
-                worldProperties = Sponge.getServer().getDefaultWorld().get();
+        WorldProperties worldProperties = null;
+        GDPlayerData playerData = null;
+        if (BaseStorage.USE_GLOBAL_PLAYER_STORAGE) {
+            playerData = BaseStorage.GLOBAL_PLAYER_DATA.get(user.getUniqueId());
+            if (playerData == null) {
+                playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreateGlobalPlayerData(user.getUniqueId());
             }
+        } else {
+            worldProperties = world == null ? null : Sponge.getServer().getWorldProperties(world).orElse(null);
+            if (worldProperties == null) {
+                if (src instanceof Player) {
+                    worldProperties = ((Player) src).getWorld().getProperties();
+                } else {
+                    worldProperties = Sponge.getServer().getDefaultWorld().get();
+                }
+            }
+            playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(worldProperties.getUniqueId(), user.getUniqueId());
         }
-        if (worldProperties == null || !GriefDefenderPlugin.getInstance().claimsEnabledForWorld(worldProperties.getUniqueId())) {
+
+        if (!BaseStorage.USE_GLOBAL_PLAYER_STORAGE && (worldProperties == null || !GriefDefenderPlugin.getInstance().claimsEnabledForWorld(worldProperties.getUniqueId()))) {
             GriefDefenderPlugin.sendMessage(src, MessageCache.getInstance().CLAIM_DISABLED_WORLD);
             return;
         }
 
-        GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(worldProperties.getUniqueId(), user.getUniqueId());
-        playerData.setBonusClaimBlocks(playerData.getBonusClaimBlocks() + amount);
+        final int totalBonus = playerData.getBonusClaimBlocks();
+        playerData.setBonusClaimBlocks(totalBonus + amount);
         final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ADJUST_BONUS_BLOCKS_SUCCESS, ImmutableMap.of(
                 "player", user.getName(),
                 "amount", amount,
-                "total", playerData.getBonusClaimBlocks() + amount));
+                "total", totalBonus + amount));
         TextAdapter.sendComponent(src, message);
         GriefDefenderPlugin.getInstance().getLogger().info(
                 src.getName() + " adjusted " + user.getName() + "'s bonus claim blocks by " + amount + ".");

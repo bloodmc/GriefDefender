@@ -71,6 +71,7 @@ public class DefaultOptionCategory extends ConfigCategory {
         this.defaultUserOptions.put(Options.PLAYER_FLY_SPEED.getName(), "0");
         this.defaultUserOptions.put(Options.PLAYER_GAMEMODE.getName(), "undefined");
         this.defaultUserOptions.put(Options.PLAYER_HEALTH_REGEN.getName(), "0");
+        this.defaultUserOptions.put(Options.PLAYER_ITEM_DROP_LOCK.getName(), "false");
         this.defaultUserOptions.put(Options.PLAYER_KEEP_INVENTORY.getName(), "undefined");
         this.defaultUserOptions.put(Options.PLAYER_KEEP_LEVEL.getName(), "undefined");
         this.defaultUserOptions.put(Options.PLAYER_TELEPORT_DELAY.getName(), "0");
@@ -80,6 +81,7 @@ public class DefaultOptionCategory extends ConfigCategory {
         this.defaultUserOptions.put(Options.PVP_COMBAT_COMMAND.getName(), "false");
         this.defaultUserOptions.put(Options.PVP_COMBAT_TELEPORT.getName(), "false");
         this.defaultUserOptions.put(Options.PVP_COMBAT_TIMEOUT.getName(), "15");
+        this.defaultUserOptions.put(Options.PVP_ITEM_DROP_LOCK.getName(), "false");
         this.defaultUserOptions.put(Options.RAID.getName(), "true");
         this.defaultUserOptions.put(Options.RADIUS_INSPECT.getName(), "100");
         this.defaultUserOptions.put(Options.RENT_EXPIRATION.getName(), "7");

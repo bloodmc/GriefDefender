@@ -46,6 +46,8 @@ import org.bukkit.scheduler.BukkitTask;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.reflect.TypeToken;
+import com.griefdefender.api.Tristate;
+import com.griefdefender.api.User;
 import com.griefdefender.api.claim.Claim;
 import com.griefdefender.api.claim.ClaimType;
 import com.griefdefender.api.claim.ShovelType;
@@ -90,6 +92,7 @@ public class GDPlayerData implements PlayerData {
     public Location endShovelLocation;
     public Location lastValidInspectLocation;
     public Location lastNonAirInspectLocation;
+    public boolean isInvestigating = false;
     public boolean claimMode = false;
     public boolean claimTool = true;
     public ShovelType shovelMode = ShovelTypes.BASIC;
@@ -109,6 +112,9 @@ public class GDPlayerData implements PlayerData {
     public boolean debugClaimPermissions = false;
     public boolean inTown = false;
     public boolean townChat = false;
+    public boolean lockPlayerDeathDrops = false;
+    public boolean trappedRequest = false;
+    public boolean runningPlayerCommands = false;
     public List<Component> chatLines = new ArrayList<>();
     public Instant recordChatTimestamp;
     public Instant commandInputTimestamp;
@@ -139,6 +145,7 @@ public class GDPlayerData implements PlayerData {
     public Location teleportLocation;
 
     public Instant lastPvpTimestamp;
+    public Instant lastTrappedTimestamp;
 
     // cached global option values
     public int minClaimLevel;
@@ -169,7 +176,6 @@ public class GDPlayerData implements PlayerData {
     public boolean userOptionBypassPlayerGamemode = false;
 
     // option cache
-    public Boolean optionNoFly = null;
     public Boolean optionNoGodMode = null;
     public Double optionFlySpeed = null;
     public Double optionWalkSpeed = null;
@@ -241,6 +247,11 @@ public class GDPlayerData implements PlayerData {
             this.playerID = subject.getUniqueId();
             this.dataInitialized = true;
         });
+    }
+
+    @Override
+    public User getUser() {
+        return this.getSubject();
     }
 
     @Override
@@ -355,7 +366,7 @@ public class GDPlayerData implements PlayerData {
 
         for (int i = 0; i < visualTransactions.size(); i++) {
             BlockSnapshot snapshot = visualTransactions.get(i).getOriginal();
-            // If original block does not exist, do not send to player
+            // If original block does not exist or chunk is not loaded, do not send to player
             if (!snapshot.matchesWorldState()) {
                 if (claim != null) {
                     claim.markVisualDirty = true;
@@ -590,7 +601,7 @@ public class GDPlayerData implements PlayerData {
                     GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().PERMISSION_CLAIM_CREATE);
                 }
                 return false;
-            } else if (!player.hasPermission(GDPermissions.CLAIM_CUBOID_SUBDIVISION)) {
+            } else if (createMode == CreateModeTypes.VOLUME && !player.hasPermission(GDPermissions.CLAIM_CUBOID_SUBDIVISION)) {
                 if (sendMessage) {
                     GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().PERMISSION_CUBOID);
                     GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().COMMAND_CUBOID_DISABLED);
@@ -761,6 +772,25 @@ public class GDPlayerData implements PlayerData {
         return totalTax;
     }
 
+    @Override
+    public boolean canPvp(Claim claim) {
+        if (!((GDClaim) claim).getWorld().getPVP()) {
+            return false;
+        }
+        if (!claim.isPvpAllowed()) {
+            return false;
+        }
+
+        if (GDOptions.PVP) {
+            final Tristate result = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Tristate.class), this.getSubject(), Options.PVP, claim);
+            if (result != Tristate.UNDEFINED) {
+                return result.asBoolean();
+            }
+        }
+        return true;
+    }
+
+    @Override
     public boolean inPvpCombat() {
         final Player player = this.getSubject().getOnlinePlayer();
         if (this.lastPvpTimestamp == null || player == null) {
@@ -781,7 +811,12 @@ public class GDPlayerData implements PlayerData {
         return true;
     }
 
-    public int getPvpCombatTimeRemaining() {
+    @Override
+    public int getRemainingPvpCombatTime(Claim claim) {
+        return this.getPvpCombatTimeRemaining((GDClaim) claim);
+    }
+
+    public int getPvpCombatTimeRemaining(GDClaim claim) {
         final Player player = this.getSubject().getOnlinePlayer();
         if (this.lastPvpTimestamp == null || player == null) {
             return 0;
@@ -789,8 +824,8 @@ public class GDPlayerData implements PlayerData {
 
         final Instant now = Instant.now();
         int combatTimeout = 0;
-        if (GDOptions.isOptionEnabled(Options.PVP_COMBAT_TIMEOUT)) {
-            combatTimeout = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), player, Options.PVP_COMBAT_TIMEOUT);
+        if (GDOptions.PVP_COMBAT_TIMEOUT) {
+            combatTimeout = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), player, Options.PVP_COMBAT_TIMEOUT, claim);
         }
         if (combatTimeout <= 0) {
             return 0;
@@ -855,7 +890,6 @@ public class GDPlayerData implements PlayerData {
     }
 
     public void resetOptionCache() {
-        this.optionNoFly = null;
         this.optionNoGodMode = null;
         this.optionFlySpeed = null;
         this.optionWalkSpeed = null;
@@ -880,5 +914,8 @@ public class GDPlayerData implements PlayerData {
         this.commandInputTimestamp = null;
         this.recordChatTimestamp = null;
         this.tempVisualUniqueId = null;
+        if (GriefDefenderPlugin.getInstance().getWorldEditProvider() != null) {
+            GriefDefenderPlugin.getInstance().getWorldEditProvider().revertAllVisuals(this.playerID);
+        }
     }
 }

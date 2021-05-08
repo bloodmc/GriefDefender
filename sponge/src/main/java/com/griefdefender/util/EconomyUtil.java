@@ -71,6 +71,7 @@ import org.spongepowered.api.entity.Item;
 import org.spongepowered.api.entity.living.monster.Monster;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.service.economy.Currency;
+import org.spongepowered.api.service.economy.EconomyService;
 import org.spongepowered.api.service.economy.account.Account;
 import org.spongepowered.api.service.economy.transaction.ResultType;
 import org.spongepowered.api.service.economy.transaction.TransactionResult;
@@ -92,6 +93,7 @@ import java.util.function.Consumer;
 
 public class EconomyUtil {
 
+    private final EconomyService economyService = GriefDefenderPlugin.getInstance().economyService.orElse(null);
     private static EconomyUtil instance;
 
     public static EconomyUtil getInstance() {
@@ -100,6 +102,35 @@ public class EconomyUtil {
 
     static {
         instance = new EconomyUtil();
+    }
+
+    public TransactionResult withdrawTax(GDClaim claim, UUID playerUniqueId, double taxOwed) {
+        if (GriefDefenderPlugin.getGlobalConfig().getConfig().economy.bankSystem) {
+            final Account bankAccount = this.economyService.getOrCreateAccount(claim.getUniqueId().toString()).orElse(null);
+            if (bankAccount != null) {
+                final Currency defaultCurrency = GriefDefenderPlugin.getInstance().economyService.get().getDefaultCurrency();
+                final double bankBalance = bankAccount.getBalance(defaultCurrency).doubleValue();
+                if (bankBalance > 0) {
+                    TransactionResult withdrawResponse = null;
+                    if (taxOwed == bankBalance || bankBalance > taxOwed) {
+                        withdrawResponse = bankAccount.withdraw(defaultCurrency, BigDecimal.valueOf(taxOwed), Sponge.getCauseStackManager().getCurrentCause());
+                        if (withdrawResponse.getResult() == ResultType.SUCCESS) {
+                            claim.getData().getEconomyData().addPaymentTransaction(
+                                    new GDPaymentTransaction(TransactionType.BANK_WITHDRAW, TransactionResultType.SUCCESS, playerUniqueId, Instant.now(), taxOwed));
+                            return withdrawResponse;
+                        }
+                    } else {
+                        withdrawResponse = bankAccount.withdraw(defaultCurrency, BigDecimal.valueOf(bankBalance), Sponge.getCauseStackManager().getCurrentCause());
+                        if (withdrawResponse.getResult() == ResultType.SUCCESS) {
+                            taxOwed -= bankBalance;
+                            claim.getData().getEconomyData().addPaymentTransaction(
+                                    new GDPaymentTransaction(TransactionType.BANK_WITHDRAW, TransactionResultType.SUCCESS, playerUniqueId, Instant.now(), bankBalance));
+                        }
+                    }
+                }
+            }
+        }
+        return withdrawFunds(playerUniqueId, taxOwed);
     }
 
     public void economyCreateClaimConfirmation(Player player, GDPlayerData playerData, int height, Vector3i point1, Vector3i point2, ClaimType claimType, boolean cuboid, Claim parent) {
@@ -160,10 +191,6 @@ public class EconomyUtil {
                         "type", gdClaim.getFriendlyNameType(true)));
                 GriefDefenderPlugin.sendMessage(player, message);
                 final GDWorldEditProvider worldEditProvider = GriefDefenderPlugin.getInstance().worldEditProvider;
-                if (worldEditProvider != null) {
-                    worldEditProvider.stopDragVisual(player);
-                    worldEditProvider.displayClaimCUIVisual(gdClaim, player, playerData, false);
-                }
                 final GDClaimVisual visual = gdClaim.getVisualizer();
                 if (visual.getVisualTransactions().isEmpty()) {
                     visual.createClaimBlockVisuals(height, player.getLocation(), playerData);
@@ -326,8 +353,8 @@ public class EconomyUtil {
             }
 
             final double salePrice = claim.getEconomyData().getSalePrice();
-            final TransactionResult response = depositFunds(owner.getOfflinePlayer().getUniqueId(), salePrice);
-            if (response.getResult() == ResultType.SUCCESS) {
+            final ResultType transactionResult = owner.getOfflinePlayer() == null ? ResultType.SUCCESS :  depositFunds(owner.getOfflinePlayer().getUniqueId(), salePrice).getResult();
+            if (transactionResult == ResultType.SUCCESS) {
                 final TransactionResult withdrawResponse = withdrawFunds(player.getUniqueId(), salePrice);
                 final Component message = GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.ECONOMY_CLAIM_BUY_CONFIRMED,
                     ImmutableMap.of(

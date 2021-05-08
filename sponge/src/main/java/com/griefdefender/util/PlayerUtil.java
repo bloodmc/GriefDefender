@@ -41,7 +41,6 @@ import com.griefdefender.api.permission.option.type.WeatherType;
 import com.griefdefender.api.permission.option.type.WeatherTypes;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
-import com.griefdefender.internal.util.BlockUtil;
 import com.griefdefender.internal.util.NMSUtil;
 import com.griefdefender.permission.GDPermissionUser;
 import net.kyori.text.Component;
@@ -69,6 +68,7 @@ import org.spongepowered.api.world.World;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 import javax.annotation.Nullable;
 
@@ -325,5 +325,52 @@ public class PlayerUtil {
         }
 
         return claim;
+    }
+
+    public Location<World> getSafeClaimLocation(GDClaim claim) {
+        final int minClaimLevel = claim.getOwnerMinClaimLevel();
+        double claimY = claim.getOwnerPlayerData() == null ? 65.0D : (minClaimLevel > 65.0D ? minClaimLevel : 65);
+        if (claim.isCuboid()) {
+            claimY = claim.lesserBoundaryCorner.getY();
+        }
+
+        final int random = ThreadLocalRandom.current().nextInt(2, 20 + 1);
+        final int randomCorner = ThreadLocalRandom.current().nextInt(1, 4 + 1);
+        Location<World> claimCorner = null;
+        switch (randomCorner) {
+            case 1: // SW
+                claimCorner = new Location<>(claim.getWorld(), claim.lesserBoundaryCorner.getX() - random, claimY, claim.greaterBoundaryCorner.getZ() + random);
+            case 2: // NW
+                claimCorner = new Location<>(claim.getWorld(), claim.lesserBoundaryCorner.getX() - random, claimY, claim.lesserBoundaryCorner.getZ() - random);
+            case 3: // SE
+                claimCorner = new Location<>(claim.getWorld(), claim.greaterBoundaryCorner.getX() + random, claimY, claim.greaterBoundaryCorner.getZ() + random);
+            case 4: // NE
+                claimCorner = new Location<>(claim.getWorld(), claim.greaterBoundaryCorner.getX() + random, claimY, claim.lesserBoundaryCorner.getZ() - random);
+        }
+
+        final Location<World> safeLocation = Sponge.getTeleportHelper().getSafeLocation(claimCorner, 64, 16, 2).orElse(null);
+        if (safeLocation != null) {
+            return safeLocation;
+        }
+
+        // If no safe location was found, fall back to corner
+        return claimCorner;
+    }
+
+    public boolean forceItemInteract(ItemType itemType, Player player) {
+        final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());
+        if (playerData.claimMode) {
+            return true;
+        }
+        if (!playerData.claimTool) {
+            return GriefDefenderPlugin.getGlobalConfig().getConfig().mod.forceItemInteract(itemType.getId());
+        }
+        if (GriefDefenderPlugin.getInstance().modificationTool != null && itemType.getId().equals(GriefDefenderPlugin.getInstance().modificationTool)) {
+            return true;
+        }
+        if (GriefDefenderPlugin.getInstance().investigationTool != null && itemType.getId().equals(GriefDefenderPlugin.getInstance().investigationTool)) {
+            return true;
+        }
+        return GriefDefenderPlugin.getGlobalConfig().getConfig().mod.forceItemInteract(itemType.getId());
     }
 }

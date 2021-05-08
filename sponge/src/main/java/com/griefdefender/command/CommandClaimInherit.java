@@ -42,7 +42,7 @@ import org.spongepowered.api.entity.living.player.Player;
 public class CommandClaimInherit extends BaseCommand {
 
     @CommandAlias("claiminherit")
-    @Description("Toggles subdivision inherit mode.")
+    @Description("%claim-inherit")
     @Subcommand("claim inherit")
     public void execute(Player player) {
         final GDPlayerData playerData = GriefDefenderPlugin.getInstance().dataStore.getOrCreatePlayerData(player.getWorld(), player.getUniqueId());

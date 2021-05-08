@@ -48,4 +48,26 @@ public class GDTrustClaimEvent extends GDClaimEvent implements TrustClaimEvent {
     public TrustType getTrustType() {
         return this.trustType;
     }
+
+    public static class Add extends GDTrustClaimEvent implements TrustClaimEvent.Add {
+
+        public Add(Claim claim, TrustType trustType) {
+            super(claim, trustType);
+        }
+
+        public Add(List<Claim> claims, TrustType trustType) {
+            super(claims, trustType);
+        }
+    }
+
+    public static class Remove extends GDTrustClaimEvent implements TrustClaimEvent.Remove {
+
+        public Remove(Claim claim, TrustType trustType) {
+            super(claim, trustType);
+        }
+
+        public Remove(List<Claim> claims, TrustType trustType) {
+            super(claims, trustType);
+        }
+    }
 }
