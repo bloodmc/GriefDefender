@@ -31,7 +31,7 @@ import org.bukkit.inventory.ItemStack;
 
 import com.griefdefender.api.permission.Context;
 
-import me.mrCookieSlime.Slimefun.Objects.SlimefunItem.SlimefunItem;
+import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 import me.mrCookieSlime.Slimefun.api.BlockStorage;
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenuPreset;
 
