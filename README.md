@@ -25,3 +25,25 @@ For information on migrating from [GriefPrevention](https://github.com/Minecraft
 [Spigot]: https://www.spigotmc.org/wiki/buildtools/
 [SpongeForge]: https://www.spongepowered.org/downloads/spongeforge
 [SpongeVanilla]: https://www.spongepowered.org/downloads/spongevanilla
+
+## Building
+### Linux
+
+Git Clone the repository with the submodules.
+
+   ```git clone --recurse-submodules https://github.com/bloodmc/GriefDefender.git```
+   
+cd into the repository
+
+    cd GriefDefender
+
+Make gradlew executable
+`chmod +x gradlew`
+
+run the build
+
+    ./gradlew build
+
+Note: if the build fails you should uncomment on line 123 in bukkit/build.gradle:  
+`//compileOnly "com.github.slimefun:slimefun4:master-SNAPSHOT`"
+remove the brackets
