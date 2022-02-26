@@ -35,11 +35,15 @@ import org.spongepowered.api.Sponge;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.Item;
+import org.spongepowered.api.entity.Transform;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.gamemode.GameMode;
 import org.spongepowered.api.entity.living.player.gamemode.GameModes;
 import org.spongepowered.api.entity.projectile.Projectile;
+import org.spongepowered.api.event.Cancellable;
+import org.spongepowered.api.event.Event;
 import org.spongepowered.api.event.entity.MoveEntityEvent;
+import org.spongepowered.api.event.entity.living.humanoid.player.RespawnPlayerEvent;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.world.Location;
@@ -103,8 +107,12 @@ public class CommonEntityEventHandler {
         this.storage = GriefDefenderPlugin.getInstance().dataStore;
     }
 
-    public boolean onEntityMove(MoveEntityEvent event, Location<World> fromLocation, Location<World> toLocation, Entity targetEntity){
+    public boolean onEntityMove(Event event, Location<World> fromLocation, Location<World> toLocation, Entity targetEntity){
         if (targetEntity instanceof Item || targetEntity instanceof Projectile) {
+            return true;
+        }
+
+        if ((!GDFlags.ENTER_CLAIM && !GDFlags.EXIT_CLAIM) || fromLocation.getBlockPosition().equals(toLocation.getBlockPosition())) {
             return true;
         }
 
@@ -127,14 +135,16 @@ public class CommonEntityEventHandler {
                 }
             }
         }
-        if ((!GDFlags.ENTER_CLAIM && !GDFlags.EXIT_CLAIM) || fromLocation.getBlockPosition().equals(toLocation.getBlockPosition())) {
-            return true;
-        }
         if (user != null) {
             if (user.getInternalPlayerData().trappedRequest) {
                 GriefDefenderPlugin.sendMessage(player, MessageCache.getInstance().COMMAND_TRAPPED_CANCEL_MOVE);
                 user.getInternalPlayerData().trappedRequest = false;
                 user.getInternalPlayerData().teleportDelay = 0;
+            }
+        }
+        if (player != null && user != null) {
+            if (event instanceof MoveEntityEvent.Teleport && user.getInternalPlayerData().runningPlayerCommands) {
+                return true;
             }
         }
 
@@ -168,27 +178,32 @@ public class CommonEntityEventHandler {
                 // enter
                 if (GDFlags.ENTER_CLAIM && GDPermissionManager.getInstance().getFinalPermission(event, toLocation, toClaim, Flags.ENTER_CLAIM, targetEntity, targetEntity, user) == Tristate.FALSE) {
                     gpEvent.cancelled(true);
-                    if (event != null) {
-                        event.setCancelled(true);
+                    if (event != null && event instanceof Cancellable) {
+                        ((Cancellable) event).setCancelled(true);
                     }
                 }
 
                 // exit
                 if (GDFlags.EXIT_CLAIM && GDPermissionManager.getInstance().getFinalPermission(event, fromLocation, fromClaim, Flags.EXIT_CLAIM, targetEntity, targetEntity, user) == Tristate.FALSE) {
                     gpEvent.cancelled(true);
-                    if (event != null) {
-                        event.setCancelled(true);
+                    if (event != null && event instanceof Cancellable) {
+                        ((Cancellable) event).setCancelled(true);
                     }
                 }
 
                 GriefDefender.getEventManager().post(gpEvent);
                 if (gpEvent.cancelled()) {
-                    if (event != null) {
-                        event.setCancelled(true);
+                    if (event != null && event instanceof Cancellable) {
+                        ((Cancellable) event).setCancelled(true);
                     }
                     if (!(targetEntity instanceof Player) && EntityUtils.getOwnerUniqueId(targetEntity) == null) {
                         targetEntity.remove();
                     }
+                    if (event instanceof RespawnPlayerEvent) {
+                        // Respawn player in safe location in source claim
+                        ((RespawnPlayerEvent) event).setToTransform(new Transform<World>(PlayerUtil.getInstance().getSafeClaimLocation(fromClaim)));
+                    }
+                    GDTimings.ENTITY_MOVE_EVENT.stopTimingIfSync();
                     return false;
                 }
             }
@@ -237,10 +252,11 @@ public class CommonEntityEventHandler {
 
         GDBorderClaimEvent gpEvent = new GDBorderClaimEvent(targetEntity, fromClaim, toClaim);
         if (user != null && toClaim.isUserTrusted(user, TrustTypes.ACCESSOR)) {
-            final GDPlayerData playerData = user.getInternalPlayerData();
             GriefDefender.getEventManager().post(gpEvent);
             if (gpEvent.cancelled()) {
-                event.setCancelled(true);
+                if (event instanceof Cancellable) {
+                    ((Cancellable) event).setCancelled(true);
+                }
                 if (!(targetEntity instanceof Player) && EntityUtils.getOwnerUniqueId(targetEntity) == null) {
                     targetEntity.remove();
                 }
@@ -248,6 +264,11 @@ public class CommonEntityEventHandler {
                 if (player != null && cancelMessage != null) {
                     TextAdapter.sendComponent(player, cancelMessage);
                 }
+                if (event instanceof RespawnPlayerEvent) {
+                    // Respawn player in safe location in source claim
+                    ((RespawnPlayerEvent) event).setToTransform(new Transform<World>(PlayerUtil.getInstance().getSafeClaimLocation(fromClaim)));
+                }
+                GDTimings.ENTITY_MOVE_EVENT.stopTimingIfSync();
                 return false;
             } else {
                     final boolean showGpPrefix = GriefDefenderPlugin.getGlobalConfig().getConfig().message.enterExitShowGdPrefix;
@@ -294,8 +315,14 @@ public class CommonEntityEventHandler {
                         this.checkPlayerGodMode(user, fromClaim, toClaim);
                         this.checkPlayerWalkSpeed(user, fromClaim, toClaim);
                         this.checkPlayerWeather(user, fromClaim, toClaim, false);
-                        this.runPlayerCommands(fromClaim, user, false);
-                        this.runPlayerCommands(toClaim, user, true);
+                        // Exit command - Don't run if to claim is child of from claim
+                        if (!toClaim.isParent(fromClaim)) {
+                            this.runPlayerCommands(fromClaim, user, false);
+                        }
+                        // Enter command - Don't run if to claim is parent of from claim
+                        if (!fromClaim.isParent(toClaim)) {
+                            this.runPlayerCommands(toClaim, user, true);
+                        }
                     }
             }
 
@@ -335,9 +362,15 @@ public class CommonEntityEventHandler {
                     TextAdapter.sendComponent(player, cancelMessage);
                 }
 
-                event.setCancelled(true);
+                if (event instanceof Cancellable) {
+                    ((Cancellable) event).setCancelled(true);
+                }
                 if (!(targetEntity instanceof Player) && EntityUtils.getOwnerUniqueId(targetEntity) == null) {
                     targetEntity.remove();
+                }
+                if (event instanceof RespawnPlayerEvent) {
+                    // Respawn player in safe location in source claim
+                    ((RespawnPlayerEvent) event).setToTransform(new Transform<World>(PlayerUtil.getInstance().getSafeClaimLocation(fromClaim)));
                 }
                 GDTimings.ENTITY_MOVE_EVENT.stopTimingIfSync();
                 return false;
@@ -346,20 +379,22 @@ public class CommonEntityEventHandler {
             if (player != null) {
                 if (GDFlags.ENTITY_RIDING && onMount) {
                     if (GDPermissionManager.getInstance().getFinalPermission(event, targetEntity.getLocation(), toClaim, Flags.ENTITY_RIDING, player, targetEntity, player, TrustTypes.ACCESSOR, true) == Tristate.FALSE) {
-                        event.setCancelled(true);
-                        Location<World> safeLocation = Sponge.getGame().getTeleportHelper()
-                                .getSafeLocation(fromLocation, 80, 0)
-                                .orElseGet(() -> Sponge.getGame().getTeleportHelper()
-                                        .getSafeLocation(fromLocation, 80, 6)
-                                        .orElse(world.getSpawnLocation())
-                                );
-                        targetEntity.getBaseVehicle().clearPassengers();
-                        player.setTransform(player.getTransform().setLocation(safeLocation));
-                        GDTimings.ENTITY_MOVE_EVENT.stopTimingIfSync();
-                        return false;
+                        if (event instanceof Cancellable) {
+                            ((Cancellable) event).setCancelled(true);
+                            Location<World> safeLocation = Sponge.getGame().getTeleportHelper()
+                                    .getSafeLocation(fromLocation, 80, 0)
+                                    .orElseGet(() -> Sponge.getGame().getTeleportHelper()
+                                            .getSafeLocation(fromLocation, 80, 6)
+                                            .orElse(world.getSpawnLocation())
+                                    );
+                            targetEntity.getBaseVehicle().clearPassengers();
+                            player.setTransform(player.getTransform().setLocation(safeLocation));
+                            GDTimings.ENTITY_MOVE_EVENT.stopTimingIfSync();
+                            return false;
+                        }
                     }
                 }
-                final GDPlayerData playerData = user.getInternalPlayerData();
+
                 final boolean showGpPrefix = GriefDefenderPlugin.getGlobalConfig().getConfig().message.enterExitShowGdPrefix;
                 Component welcomeMessage = gpEvent.getEnterMessage().orElse(null);
                 if (welcomeMessage != null && !welcomeMessage.equals(TextComponent.empty()) && !fromClaim.isParent(toClaim)) {
@@ -404,8 +439,14 @@ public class CommonEntityEventHandler {
                     this.checkPlayerGodMode(user, fromClaim, toClaim);
                     this.checkPlayerWalkSpeed(user, fromClaim, toClaim);
                     this.checkPlayerWeather(user, fromClaim, toClaim, false);
-                    this.runPlayerCommands(fromClaim, user, false);
-                    this.runPlayerCommands(toClaim, user, true);
+                    // Exit command - Don't run if to claim is child of from claim
+                    if (!toClaim.isParent(fromClaim)) {
+                        this.runPlayerCommands(fromClaim, user, false);
+                    }
+                    // Enter command - Don't run if to claim is parent of from claim
+                    if (!fromClaim.isParent(toClaim)) {
+                        this.runPlayerCommands(toClaim, user, true);
+                    }
                 }
             }
         }
@@ -428,7 +469,11 @@ public class CommonEntityEventHandler {
         if (!GDOptions.PLAYER_COMMAND_ENTER && !GDOptions.PLAYER_COMMAND_EXIT) {
             return;
         }
+        if (user.getInternalPlayerData().runningPlayerCommands) {
+            return;
+        }
 
+        user.getInternalPlayerData().runningPlayerCommands = true;
         List<String> rawCommandList = new ArrayList<>();
         Set<Context> contexts = new HashSet<>();
         if (player.getUniqueId().equals(claim.getOwnerUniqueId())) {
@@ -461,6 +506,7 @@ public class CommonEntityEventHandler {
         if (rawCommandList != null) {
             runCommand(claim, player, rawCommandList, false);
         }
+        user.getInternalPlayerData().runningPlayerCommands = false;
     }
 
     private void runCommand(GDClaim claim, Player player, List<String> rawCommandList, boolean runAsConsole) {
@@ -475,6 +521,10 @@ public class CommonEntityEventHandler {
                 String args = command.replace(baseCommand + " ", "");
                 baseCommand = baseCommand.replace("\\", "").replace("/", "");
                 args = args.replace("%player%", player.getName());
+                // Handle WorldEdit commands
+                if (command.startsWith("//") && !baseCommand.startsWith("/")) {
+                    baseCommand = "/" + baseCommand;
+                }
                 if (runAsConsole) {
                     CommandHelper.executeCommand(Sponge.getServer().getConsole(), baseCommand, args);
                 } else {

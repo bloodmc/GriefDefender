@@ -114,6 +114,7 @@ public class GDPlayerData implements PlayerData {
     public boolean townChat = false;
     public boolean lockPlayerDeathDrops = false;
     public boolean trappedRequest = false;
+    public boolean runningPlayerCommands = false;
     public List<Component> chatLines = new ArrayList<>();
     public Instant recordChatTimestamp;
     public Instant commandInputTimestamp;

@@ -36,9 +36,7 @@ import com.griefdefender.api.permission.option.Options;
 import com.griefdefender.cache.PermissionHolderCache;
 import com.griefdefender.claim.GDClaim;
 import com.griefdefender.claim.GDClaimManager;
-import com.griefdefender.configuration.GriefDefenderConfig;
 import com.griefdefender.economy.GDPaymentTransaction;
-import com.griefdefender.event.GDCauseStackManager;
 import com.griefdefender.event.GDTaxClaimEvent;
 import com.griefdefender.permission.GDPermissionManager;
 import com.griefdefender.permission.GDPermissionUser;
@@ -61,10 +59,10 @@ import java.util.UUID;
 
 public class TaxApplyTask extends BukkitRunnable {
 
-    Economy economy;
+    private static Economy economy;
 
     public TaxApplyTask() {
-        this.economy = GriefDefenderPlugin.getInstance().getVaultProvider().getApi();
+        economy = GriefDefenderPlugin.getInstance().getVaultProvider().getApi();
         int taxHour = GriefDefenderPlugin.getGlobalConfig().getConfig().economy.taxApplyHour;
         long delay = TaskUtil.computeDelay(taxHour, 0, 0);
         this.runTaskTimer(GDBootstrap.getInstance(), delay, 1728000L);
@@ -73,8 +71,8 @@ public class TaxApplyTask extends BukkitRunnable {
     @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
     public void run() {
-        if (this.economy == null) {
-            this.economy = GriefDefenderPlugin.getInstance().getVaultProvider().getApi();
+        if (economy == null) {
+            economy = GriefDefenderPlugin.getInstance().getVaultProvider().getApi();
         }
         for (World world : Bukkit.getWorlds()) {
             if (!GriefDefenderPlugin.getInstance().claimsEnabledForWorld(world.getUID())) {
@@ -123,7 +121,7 @@ public class TaxApplyTask extends BukkitRunnable {
         }
     }
 
-    private void handleClaimTax(GDClaim claim, GDPlayerData playerData, boolean inTown) {
+    public static void handleClaimTax(GDClaim claim, GDPlayerData playerData, boolean inTown) {
         final GDPermissionUser user = PermissionHolderCache.getInstance().getOrCreateUser(playerData.getUniqueId());
         final OfflinePlayer player = user.getOfflinePlayer();
         double taxRate = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Double.class), user, Options.TAX_RATE, claim);
@@ -136,7 +134,7 @@ public class TaxApplyTask extends BukkitRunnable {
         final double taxBalance = claim.getEconomyData().getTaxBalance();
         taxRate = event.getTaxRate();
         taxOwed = taxBalance + (claim.getClaimBlocks() * taxRate);
-        final EconomyResponse response = EconomyUtil.getInstance().withdrawFunds(player, taxOwed);
+        final EconomyResponse response = EconomyUtil.getInstance().withdrawTax(claim, player, taxOwed);
         if (!response.transactionSuccess()) {
             final Instant localNow = Instant.now();
             Instant taxPastDueDate = claim.getEconomyData().getTaxPastDueDate();
@@ -170,7 +168,7 @@ public class TaxApplyTask extends BukkitRunnable {
                     .getEconomyData()
                     .addPaymentTransaction(new GDPaymentTransaction(TransactionType.TAX, TransactionResultType.SUCCESS, Instant.now(), taxOwed));
                 if (town.getEconomyAccountId().isPresent()) {
-                    this.economy.bankDeposit(town.getEconomyAccountId().get().toString(), taxOwed);
+                    economy.bankDeposit(town.getEconomyAccountId().get().toString(), taxOwed);
                 }
             }
             claim.getData().save();

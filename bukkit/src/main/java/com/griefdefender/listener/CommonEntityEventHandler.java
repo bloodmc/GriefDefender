@@ -41,6 +41,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.Vehicle;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.ItemStack;
 
 import com.flowpowered.math.vector.Vector3i;
@@ -68,6 +69,7 @@ import com.griefdefender.command.CommandHelper;
 import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.event.GDBorderClaimEvent;
 import com.griefdefender.internal.registry.ItemTypeRegistryModule;
+import com.griefdefender.internal.util.NMSUtil;
 import com.griefdefender.internal.util.VecHelper;
 import com.griefdefender.permission.GDPermissionManager;
 import com.griefdefender.permission.GDPermissionUser;
@@ -109,11 +111,12 @@ public class CommonEntityEventHandler {
 
         final Vector3i fromPos = VecHelper.toVector3i(fromLocation);
         final Vector3i toPos = VecHelper.toVector3i(toLocation);
-        final Player player = targetEntity instanceof Player ? (Player) targetEntity : null;
-        final GDPermissionUser user = player != null ? PermissionHolderCache.getInstance().getOrCreateUser(player) : null;
         if (fromPos.equals(toPos)) {
             return true;
         }
+
+        final Player player = targetEntity instanceof Player ? (Player) targetEntity : null;
+        final GDPermissionUser user = player != null ? PermissionHolderCache.getInstance().getOrCreateUser(player) : null;
         if (user != null) {
             if (user.getOnlinePlayer() == null) {
                 // Most likely NPC, ignore
@@ -188,6 +191,10 @@ public class CommonEntityEventHandler {
                 if (player != null && cancelMessage != null) {
                     TextAdapter.sendComponent(player, cancelMessage);
                 }
+                if (event instanceof PlayerRespawnEvent) {
+                    ((PlayerRespawnEvent) event).setRespawnLocation(PlayerUtil.getInstance().getSafeClaimLocation(fromClaim));
+                }
+                GDTimings.ENTITY_MOVE_EVENT.stopTiming();
                 return false;
             } else {
                 final boolean showGpPrefix = GriefDefenderPlugin.getGlobalConfig().getConfig().message.enterExitShowGdPrefix;
@@ -232,15 +239,21 @@ public class CommonEntityEventHandler {
                 } else {
                     playerData.inTown = false;
                 }
-                if (player != null) {
+                if (player != null && user.getOnlinePlayer() != null) {
                     this.checkPlayerFlight(user, fromClaim, toClaim);
                     this.checkPlayerFlySpeed(user, fromClaim, toClaim);
                     this.checkPlayerGameMode(user, fromClaim, toClaim);
                     this.checkPlayerGodMode(user, fromClaim, toClaim);
                     this.checkPlayerWalkSpeed(user, fromClaim, toClaim);
                     this.checkPlayerWeather(user, fromClaim, toClaim, false);
-                    this.runPlayerCommands(fromClaim, user, false);
-                    this.runPlayerCommands(toClaim, user, true);
+                    // Exit command - Don't run if to claim is child of from claim
+                    if (!toClaim.isParent(fromClaim)) {
+                        this.runPlayerCommands(fromClaim, user, false);
+                    }
+                    // Enter command - Don't run if to claim is parent of from claim
+                    if (!fromClaim.isParent(toClaim)) {
+                        this.runPlayerCommands(toClaim, user, true);
+                    }
                 }
             }
 
@@ -291,6 +304,9 @@ public class CommonEntityEventHandler {
                 if (event instanceof Cancellable) {
                     ((Cancellable) event).setCancelled(true);
                 }
+                if (event instanceof PlayerRespawnEvent) {
+                    ((PlayerRespawnEvent) event).setRespawnLocation(PlayerUtil.getInstance().getSafeClaimLocation(fromClaim));
+                }
                 GDTimings.ENTITY_MOVE_EVENT.stopTiming();
                 return false;
             }
@@ -340,15 +356,21 @@ public class CommonEntityEventHandler {
                     playerData.inTown = false;
                 }
 
-                if (player != null) {
+                if (player != null && user.getOnlinePlayer() != null) {
                     this.checkPlayerFlight(user, fromClaim, toClaim);
                     this.checkPlayerFlySpeed(user, fromClaim, toClaim);
                     this.checkPlayerGameMode(user, fromClaim, toClaim);
                     this.checkPlayerGodMode(user, fromClaim, toClaim);
                     this.checkPlayerWalkSpeed(user, fromClaim, toClaim);
                     this.checkPlayerWeather(user, fromClaim, toClaim, false);
-                    this.runPlayerCommands(fromClaim, user, false);
-                    this.runPlayerCommands(toClaim, user, true);
+                    // Exit command - Don't run if to claim is child of from claim
+                    if (!toClaim.isParent(fromClaim)) {
+                        this.runPlayerCommands(fromClaim, user, false);
+                    }
+                    // Enter command - Don't run if to claim is parent of from claim
+                    if (!fromClaim.isParent(toClaim)) {
+                        this.runPlayerCommands(toClaim, user, true);
+                    }
                 }
             }
         }
@@ -371,7 +393,11 @@ public class CommonEntityEventHandler {
         if (!GDOptions.PLAYER_COMMAND_ENTER && !GDOptions.PLAYER_COMMAND_EXIT) {
             return;
         }
+        if (user.getInternalPlayerData().runningPlayerCommands) {
+            return;
+        }
 
+        user.getInternalPlayerData().runningPlayerCommands = true;
         List<String> rawCommandList = new ArrayList<>();
         Set<Context> contexts = new HashSet<>();
         if (player.getUniqueId().equals(claim.getOwnerUniqueId())) {
@@ -404,6 +430,7 @@ public class CommonEntityEventHandler {
         if (rawCommandList != null) {
             runCommand(claim, player, rawCommandList, false);
         }
+        user.getInternalPlayerData().runningPlayerCommands = false;
     }
 
     private void runCommand(GDClaim claim, Player player, List<String> rawCommandList, boolean runAsConsole) {
@@ -418,6 +445,10 @@ public class CommonEntityEventHandler {
                 String args = command.replace(baseCommand + " ", "");
                 baseCommand = baseCommand.replace("\\", "").replace("/", "");
                 args = args.replace("%player%", player.getName());
+                // Handle WorldEdit commands
+                if (command.startsWith("//") && !baseCommand.startsWith("/")) {
+                    baseCommand = "/" + baseCommand;
+                }
                 if (runAsConsole) {
                     CommandHelper.executeCommand(Bukkit.getConsoleSender(), baseCommand, args);
                 } else {
@@ -504,7 +535,7 @@ public class CommonEntityEventHandler {
             return;
         }
         final Player player = user.getOnlinePlayer();
-        if (player == null || !player.isInvulnerable()) {
+        if (player == null || !NMSUtil.getInstance().isInvulnerable(player)) {
             // Most likely Citizens NPC
             return;
         }

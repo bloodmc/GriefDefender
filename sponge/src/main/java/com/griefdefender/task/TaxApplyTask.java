@@ -126,7 +126,7 @@ public class TaxApplyTask implements Runnable {
             final double taxBalance = claim.getEconomyData().getTaxBalance();
             taxRate = event.getTaxRate();
             taxOwed = taxBalance + (claim.getClaimBlocks() * taxRate);
-            final TransactionResult result = EconomyUtil.withdrawFunds(user.getUniqueId(), taxOwed);
+            final TransactionResult result = EconomyUtil.getInstance().withdrawTax(claim, user.getUniqueId(), taxOwed);
             if (result.getResult() != ResultType.SUCCESS) {
                 final Instant localNow = Instant.now();
                 Instant taxPastDueDate = claim.getEconomyData().getTaxPastDueDate();

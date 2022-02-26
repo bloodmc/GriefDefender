@@ -346,8 +346,9 @@ public class PermissionsExProvider implements PermissionProvider {
     }
 
     @Override
-    public Map<String, String> getOptions(GDPermissionHolder holder, Set<Context> contexts) {
-        return holderToPEXSubject(holder).getOptions(contextsGDToPEX(contexts));
+    public Map<String, List<String>> getOptions(GDPermissionHolder holder, Set<Context> contexts) {
+        //return holderToPEXSubject(holder).getOptions(contextsGDToPEX(contexts));
+        return new HashMap<>();
     }
 
     @Override
@@ -367,23 +368,15 @@ public class PermissionsExProvider implements PermissionProvider {
     }
 
     @Override
-    public Map<Set<Context>, Map<String, String>> getPermanentOptions(GDPermissionHolder holder) {
-        return tKeys(holderToPEXSubject(holder).data().get().getAllOptions());
+    public Map<Set<Context>, Map<String, List<String>>> getPermanentOptions(GDPermissionHolder holder) {
+        //return tKeys(holderToPEXSubject(holder).data().get().getAllOptions());
+        return new HashMap<>();
     }
 
     @Override
-    public Map<Set<Context>, Map<String, String>> getTransientOptions(GDPermissionHolder holder) {
-        return tKeys(holderToPEXSubject(holder).transientData().get().getAllOptions());
-    }
-
-    @Override
-    public Map<String, String> getPermanentOptions(GDPermissionHolder holder, Set<Context> contexts) {
-        return holderToPEXSubject(holder).data().get().getOptions(contextsGDToPEX(contexts));
-    }
-
-    @Override
-    public Map<String, String> getTransientOptions(GDPermissionHolder holder, Set<Context> contexts) {
-        return holderToPEXSubject(holder).transientData().get().getOptions(contextsGDToPEX(contexts));
+    public Map<Set<Context>, Map<String, List<String>>> getTransientOptions(GDPermissionHolder holder) {
+        //return tKeys(holderToPEXSubject(holder).transientData().get().getAllOptions());
+        return new HashMap<>();
     }
 
     @Override

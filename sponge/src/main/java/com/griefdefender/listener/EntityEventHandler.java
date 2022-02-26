@@ -392,6 +392,17 @@ public class EntityEventHandler {
                     }
                 }
 
+                if (user == null) {
+                    final UUID uuid = NMSUtil.getInstance().getEntityOwnerUUID(entity);
+                    if (uuid != null) {
+                        final GDPermissionUser gdUser  = PermissionHolderCache.getInstance().getOrCreateUser(uuid);
+                        if (GDPermissionManager.getInstance().getFinalPermission(event, entity.getLocation(), targetClaim, flag, actualSource, entity, gdUser, TrustTypes.ACCESSOR, true) == Tristate.FALSE) {
+                            return false;
+                        }
+
+                        return true;
+                    }
+                }
                 if (GDPermissionManager.getInstance().getFinalPermission(event, entity.getLocation(), targetClaim, flag, actualSource, entity, user, TrustTypes.ACCESSOR, true) == Tristate.FALSE) {
                     return false;
                 }

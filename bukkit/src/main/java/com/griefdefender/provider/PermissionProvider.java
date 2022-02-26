@@ -138,21 +138,24 @@ public interface PermissionProvider {
      * Clears all permissions that contain {@link Context}
      * from passed holder.
      * 
-     * @param claim The claim
+     * @param holder The holder
+     * @param context The context
      */
     void clearPermissions(GDPermissionHolder holder, Context context);
 
     /**
      * Clears all permissions that contain {@link Context}'s
-     * from passed player.
+     * from passed holder.
      * 
-     * @param claim The claim
+     * @param holder The holder
+     * @param contexts The contexts
      */
     void clearPermissions(GDPermissionHolder holder, Set<Context> contexts);
 
     /**
      * Checks if holder has permission.
      * 
+     * @param holder The holder
      * @param permission The permission
      * @return whether the holder has permission
      */
@@ -174,7 +177,7 @@ public interface PermissionProvider {
      * @param contexts The contexts required
      * @return An immutable map of cached options or empty if none.
      */
-    Map<String, String> getOptions(GDPermissionHolder holder, Set<Context> contexts);
+    Map<String, List<String>> getOptions(GDPermissionHolder holder, Set<Context> contexts);
 
     /**
      * Gets all persisted permissions.
@@ -205,7 +208,7 @@ public interface PermissionProvider {
      * @param holder The holder
      * @return An immutable map of persisted options or empty if none.
      */
-    Map<Set<Context>, Map<String, String>> getPermanentOptions(GDPermissionHolder holder);
+    Map<Set<Context>, Map<String, List<String>>> getPermanentOptions(GDPermissionHolder holder);
 
     /**
      * Gets all transient options with associated contexts of holder.
@@ -213,23 +216,7 @@ public interface PermissionProvider {
      * @param holder The holder
      * @return An immutable map of transient options or empty if none.
      */
-    Map<Set<Context>, Map<String, String>> getTransientOptions(GDPermissionHolder holder);
-
-    /**
-     * Gets all persisted options and associated values of holder.
-     * 
-     * @param holder The holder
-     * @return An immutable map of persisted options or empty if none.
-     */
-    Map<String, String> getPermanentOptions(GDPermissionHolder holder, Set<Context> contexts);
-
-    /**
-     * Gets all transient options and associated values of holder.
-     * 
-     * @param holder The holder
-     * @return An immutable map of transient options or empty if none.
-     */
-    Map<String, String> getTransientOptions(GDPermissionHolder holder, Set<Context> contexts);
+    Map<Set<Context>, Map<String, List<String>>> getTransientOptions(GDPermissionHolder holder);
 
     /**
      * Gets all persisted permissions, including inherited nodes, with associated contexts of holder.

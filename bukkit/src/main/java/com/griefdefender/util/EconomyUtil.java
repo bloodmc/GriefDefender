@@ -104,6 +104,31 @@ public class EconomyUtil {
         instance = new EconomyUtil();
     }
 
+    public EconomyResponse withdrawTax(GDClaim claim, OfflinePlayer player, double taxOwed) {
+        if (GriefDefenderPlugin.getGlobalConfig().getConfig().economy.bankSystem) {
+            final EconomyResponse balanceResponse = this.vaultProvider.getApi().bankBalance(claim.getUniqueId().toString());
+            if (balanceResponse.transactionSuccess() && balanceResponse.balance > 0) {
+                EconomyResponse withdrawResponse = null;
+                if (taxOwed == balanceResponse.balance || balanceResponse.balance > taxOwed) {
+                    withdrawResponse = this.vaultProvider.getApi().bankWithdraw(claim.getUniqueId().toString(), taxOwed);
+                    if (withdrawResponse.transactionSuccess()) {
+                        claim.getData().getEconomyData().addPaymentTransaction(
+                                new GDPaymentTransaction(TransactionType.BANK_WITHDRAW, TransactionResultType.SUCCESS, player.getUniqueId(), Instant.now(), taxOwed));
+                        return withdrawResponse;
+                    }
+                } else {
+                    withdrawResponse = this.vaultProvider.getApi().bankWithdraw(claim.getUniqueId().toString(), balanceResponse.balance);
+                    if (withdrawResponse.transactionSuccess()) {
+                        taxOwed -= balanceResponse.balance;
+                        claim.getData().getEconomyData().addPaymentTransaction(
+                                new GDPaymentTransaction(TransactionType.BANK_WITHDRAW, TransactionResultType.SUCCESS, player.getUniqueId(), Instant.now(), balanceResponse.balance));
+                    }
+                }
+            }
+        }
+        return this.withdrawFunds(player, taxOwed);
+    }
+
     public EconomyResponse withdrawFunds(OfflinePlayer player, double funds) {
         final Double balance = this.vaultProvider.getApi().getBalance(player);
         if (funds < 0) {

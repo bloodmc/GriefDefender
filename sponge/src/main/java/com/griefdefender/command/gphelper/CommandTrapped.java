@@ -45,18 +45,15 @@ import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.permission.GDPermissionManager;
 import com.griefdefender.permission.GDPermissions;
 import com.griefdefender.permission.option.GDOptions;
+import com.griefdefender.util.PlayerUtil;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.concurrent.ThreadLocalRandom;
 
-import org.spongepowered.api.Sponge;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.gamemode.GameMode;
 import org.spongepowered.api.entity.living.player.gamemode.GameModes;
-import org.spongepowered.api.world.Location;
-import org.spongepowered.api.world.World;
 
 @CommandAlias("%griefdefender")
 @CommandPermission(GDPermissions.COMMAND_TRAPPED)
@@ -111,34 +108,7 @@ public class CommandTrapped extends BaseCommand {
             return;
         }
 
-        final int minClaimLevel = claim.getOwnerMinClaimLevel();
-        double claimY = claim.getOwnerPlayerData() == null ? 65.0D : (minClaimLevel > 65.0D ? minClaimLevel : 65);
-        if (claim.isCuboid()) {
-            claimY = claim.lesserBoundaryCorner.getY();
-        }
-
-        final int random = ThreadLocalRandom.current().nextInt(2, 20 + 1);
-        final int randomCorner = ThreadLocalRandom.current().nextInt(1, 4 + 1);
-        Location<World> claimCorner = null;
-        switch (randomCorner) {
-            case 1: // SW
-                claimCorner = new Location<>(claim.getWorld(), claim.lesserBoundaryCorner.getX() - random, claimY, claim.greaterBoundaryCorner.getZ() + random);
-            case 2: // NW
-                claimCorner = new Location<>(claim.getWorld(), claim.lesserBoundaryCorner.getX() - random, claimY, claim.lesserBoundaryCorner.getZ() - random);
-            case 3: // SE
-                claimCorner = new Location<>(claim.getWorld(), claim.greaterBoundaryCorner.getX() + random, claimY, claim.greaterBoundaryCorner.getZ() + random);
-            case 4: // NE
-                claimCorner = new Location<>(claim.getWorld(), claim.greaterBoundaryCorner.getX() + random, claimY, claim.lesserBoundaryCorner.getZ() - random);
-        }
-
-        final Location<World> safeLocation = Sponge.getTeleportHelper().getSafeLocation(claimCorner, 64, 16, 2).orElse(null);
-        if (safeLocation != null) {
-            playerData.teleportLocation = safeLocation;
-        } else {
-            // If no safe location was found, fall back to corner
-            playerData.teleportLocation = claimCorner;
-        }
-
+        playerData.teleportLocation = PlayerUtil.getInstance().getSafeClaimLocation(claim);
         int teleportDelay = 0;
         if (GDOptions.PLAYER_TELEPORT_DELAY) {
             teleportDelay = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), player, Options.PLAYER_TELEPORT_DELAY, claim);

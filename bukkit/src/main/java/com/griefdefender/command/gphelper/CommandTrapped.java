@@ -45,14 +45,12 @@ import com.griefdefender.configuration.MessageStorage;
 import com.griefdefender.permission.GDPermissionManager;
 import com.griefdefender.permission.GDPermissions;
 import com.griefdefender.permission.option.GDOptions;
-import com.griefdefender.util.SafeTeleportHelper;
+import com.griefdefender.util.PlayerUtil;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.concurrent.ThreadLocalRandom;
 
 import org.bukkit.GameMode;
-import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
 @CommandAlias("%griefdefender")
@@ -108,34 +106,7 @@ public class CommandTrapped extends BaseCommand {
             return;
         }
 
-        final int minClaimLevel = claim.getOwnerMinClaimLevel();
-        double claimY = claim.getOwnerPlayerData() == null ? 65.0D : (minClaimLevel > 65.0D ? minClaimLevel : 65);
-        if (claim.isCuboid()) {
-            claimY = claim.lesserBoundaryCorner.getY();
-        }
-
-        final int random = ThreadLocalRandom.current().nextInt(2, 20 + 1);
-        final int randomCorner = ThreadLocalRandom.current().nextInt(1, 4 + 1);
-        Location claimCorner = null;
-        switch (randomCorner) {
-            case 1: // SW
-                claimCorner = new Location(claim.getWorld(), claim.lesserBoundaryCorner.getX() - random, claimY, claim.greaterBoundaryCorner.getZ() + random);
-            case 2: // NW
-                claimCorner = new Location(claim.getWorld(), claim.lesserBoundaryCorner.getX() - random, claimY, claim.lesserBoundaryCorner.getZ() - random);
-            case 3: // SE
-                claimCorner = new Location(claim.getWorld(), claim.greaterBoundaryCorner.getX() + random, claimY, claim.greaterBoundaryCorner.getZ() + random);
-            case 4: // NE
-                claimCorner = new Location(claim.getWorld(), claim.greaterBoundaryCorner.getX() + random, claimY, claim.lesserBoundaryCorner.getZ() - random);
-        }
-
-        final Location safeLocation = SafeTeleportHelper.getInstance().getSafeLocation(claimCorner, 64, 16, 2).orElse(null);
-        if (safeLocation != null) {
-            playerData.teleportLocation = safeLocation;
-        } else {
-            // If no safe location was found, fall back to corner
-            playerData.teleportLocation = claimCorner;
-        }
-
+        playerData.teleportLocation = PlayerUtil.getInstance().getSafeClaimLocation(claim);
         int teleportDelay = 0;
         if (GDOptions.PLAYER_TELEPORT_DELAY) {
             teleportDelay = GDPermissionManager.getInstance().getInternalOptionValue(TypeToken.of(Integer.class), player, Options.PLAYER_TELEPORT_DELAY, claim);

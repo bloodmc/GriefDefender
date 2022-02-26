@@ -217,12 +217,6 @@ public class BlockEventHandler {
             return;
         }
 
-        if (source instanceof Player && !hasFakePlayer && tileEntity == null) {
-            // handle in normal events
-            GDTimings.BLOCK_PRE_EVENT.stopTimingIfSync();
-            return;
-        }
-
         if (sourceLocation != null) {
             GDPlayerData playerData = null;
             if (user != null) {
@@ -790,29 +784,6 @@ public class BlockEventHandler {
             return;
         }
 
-        // handle ice form/melt
-        if (event.getTransactions().size() == 1) {
-            final BlockSnapshot sourceBlock = event.getTransactions().get(0).getOriginal();
-            final BlockSnapshot targetBlock = event.getTransactions().get(0).getFinal();
-            if (NMSUtil.getInstance().isBlockWater(sourceBlock.getState().getType()) && NMSUtil.getInstance().isBlockIce(targetBlock.getState().getType())) {
-                final Location<World> loc = targetBlock.getLocation().get();
-                final GDClaim claim = this.dataStore.getClaimAt(loc);
-                final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, loc, claim, Flags.BLOCK_MODIFY, sourceBlock, targetBlock, (Player) null, true);
-                if (result == Tristate.FALSE) {
-                    event.setCancelled(true);
-                }
-                return;
-            } else if (NMSUtil.getInstance().isBlockIce(sourceBlock.getState().getType()) && NMSUtil.getInstance().isBlockWater(targetBlock.getState().getType())) {
-                final Location<World> loc = targetBlock.getLocation().get();
-                final GDClaim claim = this.dataStore.getClaimAt(loc);
-                final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, loc, claim, Flags.BLOCK_MODIFY, sourceBlock, targetBlock, (Player) null, true);
-                if (result == Tristate.FALSE) {
-                    event.setCancelled(true);
-                }
-                return;
-            }
-        }
-
         ItemStackSnapshot itemSnapshot = event.getContext().get(EventContextKeys.USED_ITEM).orElse(null);
         if (itemSnapshot != null) {
             if (itemSnapshot.getType().equals(ItemTypes.BUCKET)) {
@@ -824,6 +795,29 @@ public class BlockEventHandler {
         GDClaim sourceClaim = null;
         LocatableBlock locatable = null;
         final User user = CauseContextHelper.getEventUser(event);
+        // handle ice form/melt
+        if (!(event.getCause().root() instanceof Entity) && event.getTransactions().size() == 1) {
+            final BlockSnapshot sourceBlock = event.getTransactions().get(0).getOriginal();
+            final BlockSnapshot targetBlock = event.getTransactions().get(0).getFinal();
+            if (NMSUtil.getInstance().isBlockWater(sourceBlock.getState().getType()) && NMSUtil.getInstance().isBlockIce(targetBlock.getState().getType())) {
+                final Location<World> loc = targetBlock.getLocation().get();
+                final GDClaim claim = this.dataStore.getClaimAt(loc);
+                final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, loc, claim, Flags.BLOCK_MODIFY, sourceBlock, targetBlock, user, true);
+                if (result == Tristate.FALSE) {
+                    event.setCancelled(true);
+                }
+                return;
+            } else if (NMSUtil.getInstance().isBlockIce(sourceBlock.getState().getType()) && NMSUtil.getInstance().isBlockWater(targetBlock.getState().getType())) {
+                final Location<World> loc = targetBlock.getLocation().get();
+                final GDClaim claim = this.dataStore.getClaimAt(loc);
+                final Tristate result = GDPermissionManager.getInstance().getFinalPermission(event, loc, claim, Flags.BLOCK_MODIFY, sourceBlock, targetBlock, user, true);
+                if (result == Tristate.FALSE) {
+                    event.setCancelled(true);
+                }
+                return;
+            }
+        }
+
         if (source instanceof LocatableBlock) {
             locatable = (LocatableBlock) source;
             if (user != null && user instanceof Player) {

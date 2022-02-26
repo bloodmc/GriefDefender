@@ -79,7 +79,7 @@ public class ClaimBlockTask extends BukkitRunnable {
                             if ((currentTotal + accruedBlocks) > playerData.getMaxAccruedClaimBlocks()) {
                                 playerData.setAccruedClaimBlocks(playerData.getMaxAccruedClaimBlocks());
                                 playerData.lastAfkCheckLocation = player.getLocation();
-                                return;
+                                continue;
                             }
 
                             playerData.setAccruedClaimBlocks(playerData.getAccruedClaimBlocks() + accruedBlocks);

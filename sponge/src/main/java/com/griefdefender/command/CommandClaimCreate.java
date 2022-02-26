@@ -88,6 +88,13 @@ public class CommandClaimCreate extends BaseCommand {
             return;
         }
 
+        final int radiusLimit = GriefDefenderPlugin.getGlobalConfig().getConfig().claim.claimCreateRadiusLimit;
+        if (radius > radiusLimit) {
+            GriefDefenderPlugin.sendMessage(player, GriefDefenderPlugin.getInstance().messageData.getMessage(MessageStorage.CREATE_FAILED_RESULT,
+                    ImmutableMap.of("reason", "Radius exceeds limit of " + radiusLimit + ".")));
+            return;
+        }
+
         final Vector3i lesserBoundary = new Vector3i(
                 location.getBlockX() - radius,
                 minClaimLevel,

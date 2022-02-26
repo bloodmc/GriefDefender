@@ -75,6 +75,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -372,5 +373,35 @@ public class PlayerUtil {
         }
 
         return claim;
+    }
+
+    public Location getSafeClaimLocation(GDClaim claim) {
+        final int minClaimLevel = claim.getOwnerMinClaimLevel();
+        double claimY = claim.getOwnerPlayerData() == null ? 65.0D : (minClaimLevel > 65.0D ? minClaimLevel : 65);
+        if (claim.isCuboid()) {
+            claimY = claim.lesserBoundaryCorner.getY();
+        }
+
+        final int random = ThreadLocalRandom.current().nextInt(2, 20 + 1);
+        final int randomCorner = ThreadLocalRandom.current().nextInt(1, 4 + 1);
+        Location claimCorner = null;
+        switch (randomCorner) {
+            case 1: // SW
+                claimCorner = new Location(claim.getWorld(), claim.lesserBoundaryCorner.getX() - random, claimY, claim.greaterBoundaryCorner.getZ() + random);
+            case 2: // NW
+                claimCorner = new Location(claim.getWorld(), claim.lesserBoundaryCorner.getX() - random, claimY, claim.lesserBoundaryCorner.getZ() - random);
+            case 3: // SE
+                claimCorner = new Location(claim.getWorld(), claim.greaterBoundaryCorner.getX() + random, claimY, claim.greaterBoundaryCorner.getZ() + random);
+            case 4: // NE
+                claimCorner = new Location(claim.getWorld(), claim.greaterBoundaryCorner.getX() + random, claimY, claim.lesserBoundaryCorner.getZ() - random);
+        }
+
+        final Location safeLocation = SafeTeleportHelper.getInstance().getSafeLocation(claimCorner, 64, 16, 2).orElse(null);
+        if (safeLocation != null) {
+            return safeLocation;
+        }
+
+        // If no safe location was found, fall back to corner
+        return claimCorner;
     }
 }

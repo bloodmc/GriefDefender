@@ -43,6 +43,7 @@ import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.living.Living;
 import org.spongepowered.api.entity.living.player.User;
+import org.spongepowered.api.entity.projectile.source.ProjectileSource;
 import org.spongepowered.api.event.Event;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.cause.EventContext;
@@ -75,8 +76,15 @@ public class CauseContextHelper {
         if (cause != null) {
             user = cause.first(User.class).orElse(null);
             if (user == null) {
-                // check for FakePlayer in context
-                user = cause.getContext().get(EventContextKeys.FAKE_PLAYER).orElse(null);
+                // check projectile source
+                final ProjectileSource projectileSource = cause.getContext().get(EventContextKeys.PROJECTILE_SOURCE).orElse(null);
+                if (projectileSource != null && projectileSource instanceof User) {
+                    user = (User) projectileSource;
+                }
+                if (user == null) {
+                    // check for FakePlayer in context
+                    user = cause.getContext().get(EventContextKeys.FAKE_PLAYER).orElse(null);
+                }
             }
             if (user != null && user instanceof Entity && NMSUtil.getInstance().isFakePlayer((Entity) user)) {
                 fakePlayer = user;

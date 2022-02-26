@@ -3,5 +3,6 @@ main: com.griefdefender.GDBootstrap
 softdepend: [dynmap, PlaceholderAPI, WorldEdit, WorldGuard, Vault]
 depend: [LuckPerms]
 load: STARTUP
-version: '1.5.9'
+loadafter: [EliteEnchantments]
+version: '1.5.10'
 api-version: 1.13
